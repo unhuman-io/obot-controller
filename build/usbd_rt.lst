@@ -1,0 +1,760 @@
+ARM GAS  /tmp/ccicHsLv.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"usbd_rt.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	USBD_RT
+  18              		.section	.data.USBD_RT,"aw"
+  19              		.align	2
+  22              	USBD_RT:
+  23 0000 00000000 		.word	USBD_CDC_Init
+  24 0004 00000000 		.word	USBD_CDC_DeInit
+  25 0008 00000000 		.word	USBD_CDC_Setup
+  26 000c 00000000 		.word	0
+  27 0010 00000000 		.word	USBD_CDC_EP0_RxReady
+  28 0014 00000000 		.word	USBD_CDC_DataIn
+  29 0018 00000000 		.word	USBD_CDC_DataOut
+  30 001c 00000000 		.word	0
+  31 0020 00000000 		.word	0
+  32 0024 00000000 		.word	0
+  33 0028 00000000 		.word	0
+  34 002c 00000000 		.word	USBD_CDC_GetFSCfgDesc
+  35 0030 00000000 		.word	0
+  36 0034 00000000 		.word	0
+  37              		.global	USBD_CDC_CfgFSDesc
+  38              		.section	.data.USBD_CDC_CfgFSDesc,"aw"
+  39              		.align	2
+  42              	USBD_CDC_CfgFSDesc:
+  43 0000 09       		.byte	9
+  44 0001 02       		.byte	2
+  45 0002 20       		.byte	32
+  46 0003 00       		.byte	0
+  47 0004 01       		.byte	1
+  48 0005 01       		.byte	1
+  49 0006 01       		.byte	1
+  50 0007 C0       		.byte	-64
+  51 0008 32       		.byte	50
+  52 0009 09       		.byte	9
+  53 000a 04       		.byte	4
+  54 000b 00       		.byte	0
+  55 000c 00       		.byte	0
+  56 000d 02       		.byte	2
+  57 000e 00       		.byte	0
+  58 000f 00       		.byte	0
+  59 0010 00       		.byte	0
+  60 0011 00       		.byte	0
+  61 0012 07       		.byte	7
+ARM GAS  /tmp/ccicHsLv.s 			page 2
+
+
+  62 0013 05       		.byte	5
+  63 0014 81       		.byte	-127
+  64 0015 02       		.byte	2
+  65 0016 40       		.byte	64
+  66 0017 00       		.byte	0
+  67 0018 00       		.byte	0
+  68 0019 07       		.byte	7
+  69 001a 05       		.byte	5
+  70 001b 01       		.byte	1
+  71 001c 02       		.byte	2
+  72 001d 40       		.byte	64
+  73 001e 00       		.byte	0
+  74 001f 00       		.byte	0
+  75              		.comm	data,64,4
+  76              		.section	.text.USBD_CDC_Init,"ax",%progbits
+  77              		.align	1
+  78              		.arch armv7e-m
+  79              		.syntax unified
+  80              		.thumb
+  81              		.thumb_func
+  82              		.fpu fpv4-sp-d16
+  84              	USBD_CDC_Init:
+  85              	.LFB328:
+  86              		.file 1 "Src/usb/usbd_rt.c"
+   1:Src/usb/usbd_rt.c **** #include "usbd_rt.h"
+   2:Src/usb/usbd_rt.c **** #include "usbd_ctlreq.h"
+   3:Src/usb/usbd_rt.c **** 
+   4:Src/usb/usbd_rt.c **** 
+   5:Src/usb/usbd_rt.c **** 
+   6:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_Init(USBD_HandleTypeDef *pdev,
+   7:Src/usb/usbd_rt.c ****                               uint8_t cfgidx);
+   8:Src/usb/usbd_rt.c **** 
+   9:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_DeInit(USBD_HandleTypeDef *pdev,
+  10:Src/usb/usbd_rt.c ****                                 uint8_t cfgidx);
+  11:Src/usb/usbd_rt.c **** 
+  12:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_Setup(USBD_HandleTypeDef *pdev,
+  13:Src/usb/usbd_rt.c ****                                USBD_SetupReqTypedef *req);
+  14:Src/usb/usbd_rt.c **** 
+  15:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_DataIn(USBD_HandleTypeDef *pdev,
+  16:Src/usb/usbd_rt.c ****                                 uint8_t epnum);
+  17:Src/usb/usbd_rt.c **** 
+  18:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_DataOut(USBD_HandleTypeDef *pdev,
+  19:Src/usb/usbd_rt.c ****                                  uint8_t epnum);
+  20:Src/usb/usbd_rt.c **** 
+  21:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_EP0_RxReady(USBD_HandleTypeDef *pdev);
+  22:Src/usb/usbd_rt.c **** 
+  23:Src/usb/usbd_rt.c **** static uint8_t  *USBD_CDC_GetFSCfgDesc(uint16_t *length);
+  24:Src/usb/usbd_rt.c **** 
+  25:Src/usb/usbd_rt.c **** 
+  26:Src/usb/usbd_rt.c **** 
+  27:Src/usb/usbd_rt.c **** 
+  28:Src/usb/usbd_rt.c **** USBD_ClassTypeDef  USBD_RT =
+  29:Src/usb/usbd_rt.c **** {
+  30:Src/usb/usbd_rt.c ****   USBD_CDC_Init,
+  31:Src/usb/usbd_rt.c ****   USBD_CDC_DeInit,
+  32:Src/usb/usbd_rt.c ****   USBD_CDC_Setup,
+  33:Src/usb/usbd_rt.c ****   NULL,                 /* EP0_TxSent, */
+ARM GAS  /tmp/ccicHsLv.s 			page 3
+
+
+  34:Src/usb/usbd_rt.c ****   USBD_CDC_EP0_RxReady,
+  35:Src/usb/usbd_rt.c ****   USBD_CDC_DataIn,
+  36:Src/usb/usbd_rt.c ****   USBD_CDC_DataOut,
+  37:Src/usb/usbd_rt.c ****   NULL,
+  38:Src/usb/usbd_rt.c ****   NULL,
+  39:Src/usb/usbd_rt.c ****   NULL,
+  40:Src/usb/usbd_rt.c ****   NULL,
+  41:Src/usb/usbd_rt.c ****   USBD_CDC_GetFSCfgDesc,
+  42:Src/usb/usbd_rt.c ****   NULL,
+  43:Src/usb/usbd_rt.c ****   NULL,
+  44:Src/usb/usbd_rt.c **** };
+  45:Src/usb/usbd_rt.c **** 
+  46:Src/usb/usbd_rt.c **** /* USB CDC device Configuration Descriptor */
+  47:Src/usb/usbd_rt.c **** __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
+  48:Src/usb/usbd_rt.c **** {
+  49:Src/usb/usbd_rt.c ****   /*Configuration Descriptor*/
+  50:Src/usb/usbd_rt.c ****   0x09,   /* bLength: Configuration Descriptor size */
+  51:Src/usb/usbd_rt.c ****   USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
+  52:Src/usb/usbd_rt.c ****   USB_CDC_CONFIG_DESC_SIZ,                /* wTotalLength:no of returned bytes */
+  53:Src/usb/usbd_rt.c ****   0x00,
+  54:Src/usb/usbd_rt.c ****   0x01,   /* bNumInterfaces: 2 interface */
+  55:Src/usb/usbd_rt.c ****   0x01,   /* bConfigurationValue: Configuration value */
+  56:Src/usb/usbd_rt.c ****   0x01,   /* iConfiguration: Index of string descriptor describing the configuration */
+  57:Src/usb/usbd_rt.c ****   0xC0,   /* bmAttributes: self powered */
+  58:Src/usb/usbd_rt.c ****   0x32,   /* MaxPower 0 mA */
+  59:Src/usb/usbd_rt.c **** 
+  60:Src/usb/usbd_rt.c ****   /*---------------------------------------------------------------------------*/
+  61:Src/usb/usbd_rt.c **** 
+  62:Src/usb/usbd_rt.c ****   /*Interface Descriptor */
+  63:Src/usb/usbd_rt.c ****   0x09,   /* bLength: Interface Descriptor size */
+  64:Src/usb/usbd_rt.c ****   USB_DESC_TYPE_INTERFACE,  /* bDescriptorType: Interface */
+  65:Src/usb/usbd_rt.c ****   /* Interface descriptor type */
+  66:Src/usb/usbd_rt.c ****   0x00,   /* bInterfaceNumber: Number of Interface */
+  67:Src/usb/usbd_rt.c ****   0x00,   /* bAlternateSetting: Alternate setting */
+  68:Src/usb/usbd_rt.c ****   0x02,   /* bNumEndpoints: two endpoints used */
+  69:Src/usb/usbd_rt.c ****   0x00,   /* bInterfaceClass: Communication Interface Class */
+  70:Src/usb/usbd_rt.c ****   0x00,   /* bInterfaceSubClass: Abstract Control Model */
+  71:Src/usb/usbd_rt.c ****   0x00,   /* bInterfaceProtocol: Common AT commands */
+  72:Src/usb/usbd_rt.c ****   0x00,   /* iInterface: */
+  73:Src/usb/usbd_rt.c **** 
+  74:Src/usb/usbd_rt.c ****   /*Endpoint OUT Descriptor*/
+  75:Src/usb/usbd_rt.c ****   0x07,   /* bLength: Endpoint Descriptor size */
+  76:Src/usb/usbd_rt.c ****   USB_DESC_TYPE_ENDPOINT,      /* bDescriptorType: Endpoint */
+  77:Src/usb/usbd_rt.c ****   CDC_IN_EP,                        /* bEndpointAddress */
+  78:Src/usb/usbd_rt.c ****   0x02,                              /* bmAttributes: Bulk */
+  79:Src/usb/usbd_rt.c ****   LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),  /* wMaxPacketSize: */
+  80:Src/usb/usbd_rt.c ****   HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
+  81:Src/usb/usbd_rt.c ****   0x00,                              /* bInterval: ignore for Bulk transfer */
+  82:Src/usb/usbd_rt.c **** 
+  83:Src/usb/usbd_rt.c ****   /*Endpoint IN Descriptor*/
+  84:Src/usb/usbd_rt.c ****   0x07,   /* bLength: Endpoint Descriptor size */
+  85:Src/usb/usbd_rt.c ****   USB_DESC_TYPE_ENDPOINT,      /* bDescriptorType: Endpoint */
+  86:Src/usb/usbd_rt.c ****   CDC_OUT_EP,                         /* bEndpointAddress */
+  87:Src/usb/usbd_rt.c ****   0x02,                              /* bmAttributes: Bulk */
+  88:Src/usb/usbd_rt.c ****   LOBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),  /* wMaxPacketSize: */
+  89:Src/usb/usbd_rt.c ****   HIBYTE(CDC_DATA_FS_MAX_PACKET_SIZE),
+  90:Src/usb/usbd_rt.c ****   0x00                               /* bInterval: ignore for Bulk transfer */
+ARM GAS  /tmp/ccicHsLv.s 			page 4
+
+
+  91:Src/usb/usbd_rt.c **** } ;
+  92:Src/usb/usbd_rt.c **** 
+  93:Src/usb/usbd_rt.c **** 
+  94:Src/usb/usbd_rt.c **** uint8_t data[64];
+  95:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
+  96:Src/usb/usbd_rt.c **** {
+  87              		.loc 1 96 1
+  88              		.cfi_startproc
+  89              		@ args = 0, pretend = 0, frame = 16
+  90              		@ frame_needed = 1, uses_anonymous_args = 0
+  91 0000 80B5     		push	{r7, lr}
+  92              	.LCFI0:
+  93              		.cfi_def_cfa_offset 8
+  94              		.cfi_offset 7, -8
+  95              		.cfi_offset 14, -4
+  96 0002 84B0     		sub	sp, sp, #16
+  97              	.LCFI1:
+  98              		.cfi_def_cfa_offset 24
+  99 0004 00AF     		add	r7, sp, #0
+ 100              	.LCFI2:
+ 101              		.cfi_def_cfa_register 7
+ 102 0006 7860     		str	r0, [r7, #4]
+ 103 0008 0B46     		mov	r3, r1
+ 104 000a FB70     		strb	r3, [r7, #3]
+  97:Src/usb/usbd_rt.c ****   uint8_t ret = 0U;
+ 105              		.loc 1 97 11
+ 106 000c 0023     		movs	r3, #0
+ 107 000e FB73     		strb	r3, [r7, #15]
+  98:Src/usb/usbd_rt.c ****   /* Open EP IN */
+  99:Src/usb/usbd_rt.c ****   USBD_LL_OpenEP(pdev, CDC_IN_EP, USBD_EP_TYPE_BULK,
+ 108              		.loc 1 99 3
+ 109 0010 4023     		movs	r3, #64
+ 110 0012 0222     		movs	r2, #2
+ 111 0014 8121     		movs	r1, #129
+ 112 0016 7868     		ldr	r0, [r7, #4]
+ 113 0018 FFF7FEFF 		bl	USBD_LL_OpenEP
+ 100:Src/usb/usbd_rt.c ****                   CDC_DATA_FS_IN_PACKET_SIZE);
+ 101:Src/usb/usbd_rt.c **** 
+ 102:Src/usb/usbd_rt.c ****   pdev->ep_in[CDC_IN_EP & 0xFU].is_used = 1U;
+ 114              		.loc 1 102 41
+ 115 001c 7B68     		ldr	r3, [r7, #4]
+ 116 001e 0122     		movs	r2, #1
+ 117 0020 DA62     		str	r2, [r3, #44]
+ 103:Src/usb/usbd_rt.c **** 
+ 104:Src/usb/usbd_rt.c ****   /* Open EP OUT */
+ 105:Src/usb/usbd_rt.c ****   USBD_LL_OpenEP(pdev, CDC_OUT_EP, USBD_EP_TYPE_BULK,
+ 118              		.loc 1 105 3
+ 119 0022 4023     		movs	r3, #64
+ 120 0024 0222     		movs	r2, #2
+ 121 0026 0121     		movs	r1, #1
+ 122 0028 7868     		ldr	r0, [r7, #4]
+ 123 002a FFF7FEFF 		bl	USBD_LL_OpenEP
+ 106:Src/usb/usbd_rt.c ****                   CDC_DATA_FS_OUT_PACKET_SIZE);
+ 107:Src/usb/usbd_rt.c **** 
+ 108:Src/usb/usbd_rt.c ****   pdev->ep_out[CDC_OUT_EP & 0xFU].is_used = 1U;
+ 124              		.loc 1 108 43
+ 125 002e 7B68     		ldr	r3, [r7, #4]
+ARM GAS  /tmp/ccicHsLv.s 			page 5
+
+
+ 126 0030 0122     		movs	r2, #1
+ 127 0032 C3F86C21 		str	r2, [r3, #364]
+ 109:Src/usb/usbd_rt.c **** 
+ 110:Src/usb/usbd_rt.c ****   /* Prepare Out endpoint to receive next packet */
+ 111:Src/usb/usbd_rt.c ****   USBD_LL_PrepareReceive(pdev, CDC_OUT_EP,data,
+ 128              		.loc 1 111 3
+ 129 0036 4023     		movs	r3, #64
+ 130 0038 044A     		ldr	r2, .L3
+ 131 003a 0121     		movs	r1, #1
+ 132 003c 7868     		ldr	r0, [r7, #4]
+ 133 003e FFF7FEFF 		bl	USBD_LL_PrepareReceive
+ 112:Src/usb/usbd_rt.c ****                           CDC_DATA_FS_OUT_PACKET_SIZE);
+ 113:Src/usb/usbd_rt.c **** 
+ 114:Src/usb/usbd_rt.c ****   return ret;
+ 134              		.loc 1 114 10
+ 135 0042 FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 115:Src/usb/usbd_rt.c **** }
+ 136              		.loc 1 115 1
+ 137 0044 1846     		mov	r0, r3
+ 138 0046 1037     		adds	r7, r7, #16
+ 139              	.LCFI3:
+ 140              		.cfi_def_cfa_offset 8
+ 141 0048 BD46     		mov	sp, r7
+ 142              	.LCFI4:
+ 143              		.cfi_def_cfa_register 13
+ 144              		@ sp needed
+ 145 004a 80BD     		pop	{r7, pc}
+ 146              	.L4:
+ 147              		.align	2
+ 148              	.L3:
+ 149 004c 00000000 		.word	data
+ 150              		.cfi_endproc
+ 151              	.LFE328:
+ 153              		.section	.text.USBD_CDC_DeInit,"ax",%progbits
+ 154              		.align	1
+ 155              		.syntax unified
+ 156              		.thumb
+ 157              		.thumb_func
+ 158              		.fpu fpv4-sp-d16
+ 160              	USBD_CDC_DeInit:
+ 161              	.LFB329:
+ 116:Src/usb/usbd_rt.c **** 
+ 117:Src/usb/usbd_rt.c **** 
+ 118:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_DeInit(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
+ 119:Src/usb/usbd_rt.c **** {
+ 162              		.loc 1 119 1
+ 163              		.cfi_startproc
+ 164              		@ args = 0, pretend = 0, frame = 16
+ 165              		@ frame_needed = 1, uses_anonymous_args = 0
+ 166 0000 80B5     		push	{r7, lr}
+ 167              	.LCFI5:
+ 168              		.cfi_def_cfa_offset 8
+ 169              		.cfi_offset 7, -8
+ 170              		.cfi_offset 14, -4
+ 171 0002 84B0     		sub	sp, sp, #16
+ 172              	.LCFI6:
+ 173              		.cfi_def_cfa_offset 24
+ARM GAS  /tmp/ccicHsLv.s 			page 6
+
+
+ 174 0004 00AF     		add	r7, sp, #0
+ 175              	.LCFI7:
+ 176              		.cfi_def_cfa_register 7
+ 177 0006 7860     		str	r0, [r7, #4]
+ 178 0008 0B46     		mov	r3, r1
+ 179 000a FB70     		strb	r3, [r7, #3]
+ 120:Src/usb/usbd_rt.c ****   uint8_t ret = 0U;
+ 180              		.loc 1 120 11
+ 181 000c 0023     		movs	r3, #0
+ 182 000e FB73     		strb	r3, [r7, #15]
+ 121:Src/usb/usbd_rt.c **** 
+ 122:Src/usb/usbd_rt.c ****   /* Close EP IN */
+ 123:Src/usb/usbd_rt.c ****   USBD_LL_CloseEP(pdev, CDC_IN_EP);
+ 183              		.loc 1 123 3
+ 184 0010 8121     		movs	r1, #129
+ 185 0012 7868     		ldr	r0, [r7, #4]
+ 186 0014 FFF7FEFF 		bl	USBD_LL_CloseEP
+ 124:Src/usb/usbd_rt.c ****   pdev->ep_in[CDC_IN_EP & 0xFU].is_used = 0U;
+ 187              		.loc 1 124 41
+ 188 0018 7B68     		ldr	r3, [r7, #4]
+ 189 001a 0022     		movs	r2, #0
+ 190 001c DA62     		str	r2, [r3, #44]
+ 125:Src/usb/usbd_rt.c **** 
+ 126:Src/usb/usbd_rt.c ****   /* Close EP OUT */
+ 127:Src/usb/usbd_rt.c ****   USBD_LL_CloseEP(pdev, CDC_OUT_EP);
+ 191              		.loc 1 127 3
+ 192 001e 0121     		movs	r1, #1
+ 193 0020 7868     		ldr	r0, [r7, #4]
+ 194 0022 FFF7FEFF 		bl	USBD_LL_CloseEP
+ 128:Src/usb/usbd_rt.c ****   pdev->ep_out[CDC_OUT_EP & 0xFU].is_used = 0U;
+ 195              		.loc 1 128 43
+ 196 0026 7B68     		ldr	r3, [r7, #4]
+ 197 0028 0022     		movs	r2, #0
+ 198 002a C3F86C21 		str	r2, [r3, #364]
+ 129:Src/usb/usbd_rt.c **** 
+ 130:Src/usb/usbd_rt.c ****   return ret;
+ 199              		.loc 1 130 10
+ 200 002e FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 131:Src/usb/usbd_rt.c **** }
+ 201              		.loc 1 131 1
+ 202 0030 1846     		mov	r0, r3
+ 203 0032 1037     		adds	r7, r7, #16
+ 204              	.LCFI8:
+ 205              		.cfi_def_cfa_offset 8
+ 206 0034 BD46     		mov	sp, r7
+ 207              	.LCFI9:
+ 208              		.cfi_def_cfa_register 13
+ 209              		@ sp needed
+ 210 0036 80BD     		pop	{r7, pc}
+ 211              		.cfi_endproc
+ 212              	.LFE329:
+ 214              		.section	.text.USBD_CDC_Setup,"ax",%progbits
+ 215              		.align	1
+ 216              		.syntax unified
+ 217              		.thumb
+ 218              		.thumb_func
+ 219              		.fpu fpv4-sp-d16
+ARM GAS  /tmp/ccicHsLv.s 			page 7
+
+
+ 221              	USBD_CDC_Setup:
+ 222              	.LFB330:
+ 132:Src/usb/usbd_rt.c **** 
+ 133:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_Setup(USBD_HandleTypeDef *pdev,
+ 134:Src/usb/usbd_rt.c ****                                USBD_SetupReqTypedef *req)
+ 135:Src/usb/usbd_rt.c **** {
+ 223              		.loc 1 135 1
+ 224              		.cfi_startproc
+ 225              		@ args = 0, pretend = 0, frame = 16
+ 226              		@ frame_needed = 1, uses_anonymous_args = 0
+ 227 0000 80B5     		push	{r7, lr}
+ 228              	.LCFI10:
+ 229              		.cfi_def_cfa_offset 8
+ 230              		.cfi_offset 7, -8
+ 231              		.cfi_offset 14, -4
+ 232 0002 84B0     		sub	sp, sp, #16
+ 233              	.LCFI11:
+ 234              		.cfi_def_cfa_offset 24
+ 235 0004 00AF     		add	r7, sp, #0
+ 236              	.LCFI12:
+ 237              		.cfi_def_cfa_register 7
+ 238 0006 7860     		str	r0, [r7, #4]
+ 239 0008 3960     		str	r1, [r7]
+ 136:Src/usb/usbd_rt.c ****   uint8_t ret = USBD_OK;
+ 240              		.loc 1 136 11
+ 241 000a 0023     		movs	r3, #0
+ 242 000c FB73     		strb	r3, [r7, #15]
+ 137:Src/usb/usbd_rt.c **** 
+ 138:Src/usb/usbd_rt.c ****   USBD_CtlError(pdev, req);
+ 243              		.loc 1 138 3
+ 244 000e 3968     		ldr	r1, [r7]
+ 245 0010 7868     		ldr	r0, [r7, #4]
+ 246 0012 FFF7FEFF 		bl	USBD_CtlError
+ 139:Src/usb/usbd_rt.c ****   ret = USBD_FAIL;
+ 247              		.loc 1 139 7
+ 248 0016 0223     		movs	r3, #2
+ 249 0018 FB73     		strb	r3, [r7, #15]
+ 140:Src/usb/usbd_rt.c **** 
+ 141:Src/usb/usbd_rt.c ****   return ret;
+ 250              		.loc 1 141 10
+ 251 001a FB7B     		ldrb	r3, [r7, #15]	@ zero_extendqisi2
+ 142:Src/usb/usbd_rt.c **** }
+ 252              		.loc 1 142 1
+ 253 001c 1846     		mov	r0, r3
+ 254 001e 1037     		adds	r7, r7, #16
+ 255              	.LCFI13:
+ 256              		.cfi_def_cfa_offset 8
+ 257 0020 BD46     		mov	sp, r7
+ 258              	.LCFI14:
+ 259              		.cfi_def_cfa_register 13
+ 260              		@ sp needed
+ 261 0022 80BD     		pop	{r7, pc}
+ 262              		.cfi_endproc
+ 263              	.LFE330:
+ 265              		.section	.text.USBD_CDC_DataIn,"ax",%progbits
+ 266              		.align	1
+ 267              		.syntax unified
+ARM GAS  /tmp/ccicHsLv.s 			page 8
+
+
+ 268              		.thumb
+ 269              		.thumb_func
+ 270              		.fpu fpv4-sp-d16
+ 272              	USBD_CDC_DataIn:
+ 273              	.LFB331:
+ 143:Src/usb/usbd_rt.c **** 
+ 144:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
+ 145:Src/usb/usbd_rt.c **** {
+ 274              		.loc 1 145 1
+ 275              		.cfi_startproc
+ 276              		@ args = 0, pretend = 0, frame = 16
+ 277              		@ frame_needed = 1, uses_anonymous_args = 0
+ 278              		@ link register save eliminated.
+ 279 0000 80B4     		push	{r7}
+ 280              	.LCFI15:
+ 281              		.cfi_def_cfa_offset 4
+ 282              		.cfi_offset 7, -4
+ 283 0002 85B0     		sub	sp, sp, #20
+ 284              	.LCFI16:
+ 285              		.cfi_def_cfa_offset 24
+ 286 0004 00AF     		add	r7, sp, #0
+ 287              	.LCFI17:
+ 288              		.cfi_def_cfa_register 7
+ 289 0006 7860     		str	r0, [r7, #4]
+ 290 0008 0B46     		mov	r3, r1
+ 291 000a FB70     		strb	r3, [r7, #3]
+ 146:Src/usb/usbd_rt.c ****   PCD_HandleTypeDef *hpcd = pdev->pData;
+ 292              		.loc 1 146 22
+ 293 000c 7B68     		ldr	r3, [r7, #4]
+ 294 000e D3F8C032 		ldr	r3, [r3, #704]
+ 295 0012 FB60     		str	r3, [r7, #12]
+ 147:Src/usb/usbd_rt.c ****   return USBD_OK;
+ 296              		.loc 1 147 10
+ 297 0014 0023     		movs	r3, #0
+ 148:Src/usb/usbd_rt.c **** }
+ 298              		.loc 1 148 1
+ 299 0016 1846     		mov	r0, r3
+ 300 0018 1437     		adds	r7, r7, #20
+ 301              	.LCFI18:
+ 302              		.cfi_def_cfa_offset 4
+ 303 001a BD46     		mov	sp, r7
+ 304              	.LCFI19:
+ 305              		.cfi_def_cfa_register 13
+ 306              		@ sp needed
+ 307 001c 5DF8047B 		ldr	r7, [sp], #4
+ 308              	.LCFI20:
+ 309              		.cfi_restore 7
+ 310              		.cfi_def_cfa_offset 0
+ 311 0020 7047     		bx	lr
+ 312              		.cfi_endproc
+ 313              	.LFE331:
+ 315              		.section	.text.USBD_CDC_DataOut,"ax",%progbits
+ 316              		.align	1
+ 317              		.syntax unified
+ 318              		.thumb
+ 319              		.thumb_func
+ 320              		.fpu fpv4-sp-d16
+ARM GAS  /tmp/ccicHsLv.s 			page 9
+
+
+ 322              	USBD_CDC_DataOut:
+ 323              	.LFB332:
+ 149:Src/usb/usbd_rt.c **** 
+ 150:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
+ 151:Src/usb/usbd_rt.c **** {
+ 324              		.loc 1 151 1
+ 325              		.cfi_startproc
+ 326              		@ args = 0, pretend = 0, frame = 8
+ 327              		@ frame_needed = 1, uses_anonymous_args = 0
+ 328 0000 80B5     		push	{r7, lr}
+ 329              	.LCFI21:
+ 330              		.cfi_def_cfa_offset 8
+ 331              		.cfi_offset 7, -8
+ 332              		.cfi_offset 14, -4
+ 333 0002 82B0     		sub	sp, sp, #8
+ 334              	.LCFI22:
+ 335              		.cfi_def_cfa_offset 16
+ 336 0004 00AF     		add	r7, sp, #0
+ 337              	.LCFI23:
+ 338              		.cfi_def_cfa_register 7
+ 339 0006 7860     		str	r0, [r7, #4]
+ 340 0008 0B46     		mov	r3, r1
+ 341 000a FB70     		strb	r3, [r7, #3]
+ 152:Src/usb/usbd_rt.c ****     /* Prepare Out endpoint to receive next packet */
+ 153:Src/usb/usbd_rt.c ****   USBD_LL_PrepareReceive(pdev, CDC_OUT_EP,data,
+ 342              		.loc 1 153 3
+ 343 000c 4023     		movs	r3, #64
+ 344 000e 054A     		ldr	r2, .L13
+ 345 0010 0121     		movs	r1, #1
+ 346 0012 7868     		ldr	r0, [r7, #4]
+ 347 0014 FFF7FEFF 		bl	USBD_LL_PrepareReceive
+ 154:Src/usb/usbd_rt.c ****                           CDC_DATA_FS_OUT_PACKET_SIZE);
+ 155:Src/usb/usbd_rt.c ****   return USBD_OK;
+ 348              		.loc 1 155 10
+ 349 0018 0023     		movs	r3, #0
+ 156:Src/usb/usbd_rt.c **** }
+ 350              		.loc 1 156 1
+ 351 001a 1846     		mov	r0, r3
+ 352 001c 0837     		adds	r7, r7, #8
+ 353              	.LCFI24:
+ 354              		.cfi_def_cfa_offset 8
+ 355 001e BD46     		mov	sp, r7
+ 356              	.LCFI25:
+ 357              		.cfi_def_cfa_register 13
+ 358              		@ sp needed
+ 359 0020 80BD     		pop	{r7, pc}
+ 360              	.L14:
+ 361 0022 00BF     		.align	2
+ 362              	.L13:
+ 363 0024 00000000 		.word	data
+ 364              		.cfi_endproc
+ 365              	.LFE332:
+ 367              		.section	.text.USBD_CDC_EP0_RxReady,"ax",%progbits
+ 368              		.align	1
+ 369              		.syntax unified
+ 370              		.thumb
+ 371              		.thumb_func
+ARM GAS  /tmp/ccicHsLv.s 			page 10
+
+
+ 372              		.fpu fpv4-sp-d16
+ 374              	USBD_CDC_EP0_RxReady:
+ 375              	.LFB333:
+ 157:Src/usb/usbd_rt.c **** 
+ 158:Src/usb/usbd_rt.c **** 
+ 159:Src/usb/usbd_rt.c **** static uint8_t  USBD_CDC_EP0_RxReady(USBD_HandleTypeDef *pdev)
+ 160:Src/usb/usbd_rt.c **** {
+ 376              		.loc 1 160 1
+ 377              		.cfi_startproc
+ 378              		@ args = 0, pretend = 0, frame = 8
+ 379              		@ frame_needed = 1, uses_anonymous_args = 0
+ 380              		@ link register save eliminated.
+ 381 0000 80B4     		push	{r7}
+ 382              	.LCFI26:
+ 383              		.cfi_def_cfa_offset 4
+ 384              		.cfi_offset 7, -4
+ 385 0002 83B0     		sub	sp, sp, #12
+ 386              	.LCFI27:
+ 387              		.cfi_def_cfa_offset 16
+ 388 0004 00AF     		add	r7, sp, #0
+ 389              	.LCFI28:
+ 390              		.cfi_def_cfa_register 7
+ 391 0006 7860     		str	r0, [r7, #4]
+ 161:Src/usb/usbd_rt.c ****   if ((pdev->pUserData != NULL) )
+ 162:Src/usb/usbd_rt.c ****   {
+ 163:Src/usb/usbd_rt.c ****   }
+ 164:Src/usb/usbd_rt.c ****   return USBD_OK;
+ 392              		.loc 1 164 10
+ 393 0008 0023     		movs	r3, #0
+ 165:Src/usb/usbd_rt.c **** }
+ 394              		.loc 1 165 1
+ 395 000a 1846     		mov	r0, r3
+ 396 000c 0C37     		adds	r7, r7, #12
+ 397              	.LCFI29:
+ 398              		.cfi_def_cfa_offset 4
+ 399 000e BD46     		mov	sp, r7
+ 400              	.LCFI30:
+ 401              		.cfi_def_cfa_register 13
+ 402              		@ sp needed
+ 403 0010 5DF8047B 		ldr	r7, [sp], #4
+ 404              	.LCFI31:
+ 405              		.cfi_restore 7
+ 406              		.cfi_def_cfa_offset 0
+ 407 0014 7047     		bx	lr
+ 408              		.cfi_endproc
+ 409              	.LFE333:
+ 411              		.section	.text.USBD_CDC_GetFSCfgDesc,"ax",%progbits
+ 412              		.align	1
+ 413              		.syntax unified
+ 414              		.thumb
+ 415              		.thumb_func
+ 416              		.fpu fpv4-sp-d16
+ 418              	USBD_CDC_GetFSCfgDesc:
+ 419              	.LFB334:
+ 166:Src/usb/usbd_rt.c **** 
+ 167:Src/usb/usbd_rt.c **** 
+ 168:Src/usb/usbd_rt.c **** static uint8_t  *USBD_CDC_GetFSCfgDesc(uint16_t *length)
+ARM GAS  /tmp/ccicHsLv.s 			page 11
+
+
+ 169:Src/usb/usbd_rt.c **** {
+ 420              		.loc 1 169 1
+ 421              		.cfi_startproc
+ 422              		@ args = 0, pretend = 0, frame = 8
+ 423              		@ frame_needed = 1, uses_anonymous_args = 0
+ 424              		@ link register save eliminated.
+ 425 0000 80B4     		push	{r7}
+ 426              	.LCFI32:
+ 427              		.cfi_def_cfa_offset 4
+ 428              		.cfi_offset 7, -4
+ 429 0002 83B0     		sub	sp, sp, #12
+ 430              	.LCFI33:
+ 431              		.cfi_def_cfa_offset 16
+ 432 0004 00AF     		add	r7, sp, #0
+ 433              	.LCFI34:
+ 434              		.cfi_def_cfa_register 7
+ 435 0006 7860     		str	r0, [r7, #4]
+ 170:Src/usb/usbd_rt.c ****   *length = sizeof(USBD_CDC_CfgFSDesc);
+ 436              		.loc 1 170 11
+ 437 0008 7B68     		ldr	r3, [r7, #4]
+ 438 000a 2022     		movs	r2, #32
+ 439 000c 1A80     		strh	r2, [r3]	@ movhi
+ 171:Src/usb/usbd_rt.c ****   return USBD_CDC_CfgFSDesc;
+ 440              		.loc 1 171 10
+ 441 000e 034B     		ldr	r3, .L19
+ 172:Src/usb/usbd_rt.c **** }
+ 442              		.loc 1 172 1
+ 443 0010 1846     		mov	r0, r3
+ 444 0012 0C37     		adds	r7, r7, #12
+ 445              	.LCFI35:
+ 446              		.cfi_def_cfa_offset 4
+ 447 0014 BD46     		mov	sp, r7
+ 448              	.LCFI36:
+ 449              		.cfi_def_cfa_register 13
+ 450              		@ sp needed
+ 451 0016 5DF8047B 		ldr	r7, [sp], #4
+ 452              	.LCFI37:
+ 453              		.cfi_restore 7
+ 454              		.cfi_def_cfa_offset 0
+ 455 001a 7047     		bx	lr
+ 456              	.L20:
+ 457              		.align	2
+ 458              	.L19:
+ 459 001c 00000000 		.word	USBD_CDC_CfgFSDesc
+ 460              		.cfi_endproc
+ 461              	.LFE334:
+ 463              		.section	.text.usb_send,"ax",%progbits
+ 464              		.align	1
+ 465              		.global	usb_send
+ 466              		.syntax unified
+ 467              		.thumb
+ 468              		.thumb_func
+ 469              		.fpu fpv4-sp-d16
+ 471              	usb_send:
+ 472              	.LFB335:
+ 173:Src/usb/usbd_rt.c **** 
+ 174:Src/usb/usbd_rt.c **** void usb_send(USBD_HandleTypeDef *pdev, uint8_t *pbuff, uint16_t length) {
+ARM GAS  /tmp/ccicHsLv.s 			page 12
+
+
+ 473              		.loc 1 174 74
+ 474              		.cfi_startproc
+ 475              		@ args = 0, pretend = 0, frame = 16
+ 476              		@ frame_needed = 1, uses_anonymous_args = 0
+ 477              		@ link register save eliminated.
+ 478 0000 80B4     		push	{r7}
+ 479              	.LCFI38:
+ 480              		.cfi_def_cfa_offset 4
+ 481              		.cfi_offset 7, -4
+ 482 0002 85B0     		sub	sp, sp, #20
+ 483              	.LCFI39:
+ 484              		.cfi_def_cfa_offset 24
+ 485 0004 00AF     		add	r7, sp, #0
+ 486              	.LCFI40:
+ 487              		.cfi_def_cfa_register 7
+ 488 0006 F860     		str	r0, [r7, #12]
+ 489 0008 B960     		str	r1, [r7, #8]
+ 490 000a 1346     		mov	r3, r2
+ 491 000c FB80     		strh	r3, [r7, #6]	@ movhi
+ 175:Src/usb/usbd_rt.c **** 
+ 176:Src/usb/usbd_rt.c ****   //USBD_LL_Transmit(pdev, CDC_IN_EP, pbuff,
+ 177:Src/usb/usbd_rt.c ****   //                      length);
+ 178:Src/usb/usbd_rt.c **** 
+ 179:Src/usb/usbd_rt.c **** }
+ 492              		.loc 1 179 1
+ 493 000e 00BF     		nop
+ 494 0010 1437     		adds	r7, r7, #20
+ 495              	.LCFI41:
+ 496              		.cfi_def_cfa_offset 4
+ 497 0012 BD46     		mov	sp, r7
+ 498              	.LCFI42:
+ 499              		.cfi_def_cfa_register 13
+ 500              		@ sp needed
+ 501 0014 5DF8047B 		ldr	r7, [sp], #4
+ 502              	.LCFI43:
+ 503              		.cfi_restore 7
+ 504              		.cfi_def_cfa_offset 0
+ 505 0018 7047     		bx	lr
+ 506              		.cfi_endproc
+ 507              	.LFE335:
+ 509              		.text
+ 510              	.Letext0:
+ 511              		.file 2 "/opt/gcc-arm-none-eabi-8-2019-q3-update/arm-none-eabi/include/machine/_default_types.h"
+ 512              		.file 3 "/opt/gcc-arm-none-eabi-8-2019-q3-update/lib/gcc/arm-none-eabi/8.3.1/include/stddef.h"
+ 513              		.file 4 "/opt/gcc-arm-none-eabi-8-2019-q3-update/arm-none-eabi/include/sys/_types.h"
+ 514              		.file 5 "/opt/gcc-arm-none-eabi-8-2019-q3-update/arm-none-eabi/include/sys/reent.h"
+ 515              		.file 6 "/opt/gcc-arm-none-eabi-8-2019-q3-update/arm-none-eabi/include/sys/lock.h"
+ 516              		.file 7 "/opt/gcc-arm-none-eabi-8-2019-q3-update/arm-none-eabi/include/sys/_stdint.h"
+ 517              		.file 8 "/opt/gcc-arm-none-eabi-8-2019-q3-update/arm-none-eabi/include/stdlib.h"
+ 518              		.file 9 "Drivers/CMSIS/Include/core_cm4.h"
+ 519              		.file 10 "Drivers/CMSIS/Device/ST/STM32G4xx/Include/system_stm32g4xx.h"
+ 520              		.file 11 "Drivers/CMSIS/Device/ST/STM32G4xx/Include/stm32g474xx.h"
+ 521              		.file 12 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_def.h"
+ 522              		.file 13 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_flash.h"
+ 523              		.file 14 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_ll_usb.h"
+ 524              		.file 15 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pcd.h"
+ 525              		.file 16 "Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal.h"
+ARM GAS  /tmp/ccicHsLv.s 			page 13
+
+
+ 526              		.file 17 "Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h"
+ 527              		.file 18 "Src/usb/usbd_rt.h"
+ARM GAS  /tmp/ccicHsLv.s 			page 14
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 usbd_rt.c
+     /tmp/ccicHsLv.s:22     .data.USBD_RT:0000000000000000 USBD_RT
+     /tmp/ccicHsLv.s:19     .data.USBD_RT:0000000000000000 $d
+     /tmp/ccicHsLv.s:84     .text.USBD_CDC_Init:0000000000000000 USBD_CDC_Init
+     /tmp/ccicHsLv.s:160    .text.USBD_CDC_DeInit:0000000000000000 USBD_CDC_DeInit
+     /tmp/ccicHsLv.s:221    .text.USBD_CDC_Setup:0000000000000000 USBD_CDC_Setup
+     /tmp/ccicHsLv.s:374    .text.USBD_CDC_EP0_RxReady:0000000000000000 USBD_CDC_EP0_RxReady
+     /tmp/ccicHsLv.s:272    .text.USBD_CDC_DataIn:0000000000000000 USBD_CDC_DataIn
+     /tmp/ccicHsLv.s:322    .text.USBD_CDC_DataOut:0000000000000000 USBD_CDC_DataOut
+     /tmp/ccicHsLv.s:418    .text.USBD_CDC_GetFSCfgDesc:0000000000000000 USBD_CDC_GetFSCfgDesc
+     /tmp/ccicHsLv.s:42     .data.USBD_CDC_CfgFSDesc:0000000000000000 USBD_CDC_CfgFSDesc
+     /tmp/ccicHsLv.s:39     .data.USBD_CDC_CfgFSDesc:0000000000000000 $d
+                            *COM*:0000000000000040 data
+     /tmp/ccicHsLv.s:77     .text.USBD_CDC_Init:0000000000000000 $t
+     /tmp/ccicHsLv.s:149    .text.USBD_CDC_Init:000000000000004c $d
+     /tmp/ccicHsLv.s:154    .text.USBD_CDC_DeInit:0000000000000000 $t
+     /tmp/ccicHsLv.s:215    .text.USBD_CDC_Setup:0000000000000000 $t
+     /tmp/ccicHsLv.s:266    .text.USBD_CDC_DataIn:0000000000000000 $t
+     /tmp/ccicHsLv.s:316    .text.USBD_CDC_DataOut:0000000000000000 $t
+     /tmp/ccicHsLv.s:363    .text.USBD_CDC_DataOut:0000000000000024 $d
+     /tmp/ccicHsLv.s:368    .text.USBD_CDC_EP0_RxReady:0000000000000000 $t
+     /tmp/ccicHsLv.s:412    .text.USBD_CDC_GetFSCfgDesc:0000000000000000 $t
+     /tmp/ccicHsLv.s:459    .text.USBD_CDC_GetFSCfgDesc:000000000000001c $d
+     /tmp/ccicHsLv.s:464    .text.usb_send:0000000000000000 $t
+     /tmp/ccicHsLv.s:471    .text.usb_send:0000000000000000 usb_send
+
+UNDEFINED SYMBOLS
+USBD_LL_OpenEP
+USBD_LL_PrepareReceive
+USBD_LL_CloseEP
+USBD_CtlError

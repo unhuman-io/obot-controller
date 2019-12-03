@@ -181,6 +181,8 @@ int main(void)
   hadc2.Instance->CR |= ADC_CR_JADSTART;
   hadc3.Instance->CR |= ADC_CR_JADSTART;
 
+  HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -259,7 +261,7 @@ void SystemClock_Config(void)
   pInit.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
   pInit.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000,1000);
   pInit.ErrorLimitValue = 34;
-  pInit.HSI48CalibrationValue = 29;
+  pInit.HSI48CalibrationValue = 32;
 
   HAL_RCCEx_CRSConfig(&pInit);
 }
@@ -765,14 +767,14 @@ static void MX_TIM5_Init(void)
   htim5.Instance = TIM5;
   htim5.Init.Prescaler = 0;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 0;
+  htim5.Init.Period = 0xffffffff;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_IC_Init(&htim5) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -911,14 +913,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-    /*Configure GPIO pin : PC2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */

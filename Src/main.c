@@ -499,7 +499,7 @@ static void MX_ADC3_Init(void)
   }
   /** Configure Injected Channel 
   */
-  sConfigInjected.InjectedChannel = ADC_CHANNEL_5;
+  sConfigInjected.InjectedChannel = ADC_CHANNEL_VOPAMP3_ADC3;
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_1;
   sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_12CYCLES_5;
   sConfigInjected.InjectedSingleDiff = ADC_SINGLE_ENDED;
@@ -518,7 +518,7 @@ static void MX_ADC3_Init(void)
   }
   /** Configure Injected Channel 
   */
-  sConfigInjected.InjectedChannel = ADC_CHANNEL_VOPAMP3_ADC3;
+  sConfigInjected.InjectedChannel = ADC_CHANNEL_5;
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_2;
   if (HAL_ADCEx_InjectedConfigChannel(&hadc3, &sConfigInjected) != HAL_OK)
   {

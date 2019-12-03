@@ -3,4 +3,10 @@
         "USE_HAL_DRIVER",
         "STM32G474xx"
     ],
+    "files.associations": {
+        "main.h": "c",
+        "foc_i.h": "c",
+        "stm32g4xx_it.h": "c",
+        "util.h": "c"
+    },
 }

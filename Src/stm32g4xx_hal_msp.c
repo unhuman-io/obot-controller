@@ -87,6 +87,7 @@ void HAL_MspInit(void)
 }
 
 static uint32_t HAL_RCC_ADC12_CLK_ENABLED=0;
+static uint32_t HAL_RCC_ADC345_CLK_ENABLED=0;
 
 /**
 * @brief ADC MSP Initialization
@@ -164,7 +165,10 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 
   /* USER CODE END ADC3_MspInit 0 */
     /* Peripheral clock enable */
-    __HAL_RCC_ADC345_CLK_ENABLE();
+    HAL_RCC_ADC345_CLK_ENABLED++;
+    if(HAL_RCC_ADC345_CLK_ENABLED==1){
+      __HAL_RCC_ADC345_CLK_ENABLE();
+    }
   
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**ADC3 GPIO Configuration    
@@ -178,6 +182,34 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
   /* USER CODE BEGIN ADC3_MspInit 1 */
 
   /* USER CODE END ADC3_MspInit 1 */
+  }
+  else if(hadc->Instance==ADC4)
+  {
+  /* USER CODE BEGIN ADC4_MspInit 0 */
+
+  /* USER CODE END ADC4_MspInit 0 */
+    /* Peripheral clock enable */
+    HAL_RCC_ADC345_CLK_ENABLED++;
+    if(HAL_RCC_ADC345_CLK_ENABLED==1){
+      __HAL_RCC_ADC345_CLK_ENABLE();
+    }
+  /* USER CODE BEGIN ADC4_MspInit 1 */
+
+  /* USER CODE END ADC4_MspInit 1 */
+  }
+  else if(hadc->Instance==ADC5)
+  {
+  /* USER CODE BEGIN ADC5_MspInit 0 */
+
+  /* USER CODE END ADC5_MspInit 0 */
+    /* Peripheral clock enable */
+    HAL_RCC_ADC345_CLK_ENABLED++;
+    if(HAL_RCC_ADC345_CLK_ENABLED==1){
+      __HAL_RCC_ADC345_CLK_ENABLE();
+    }
+  /* USER CODE BEGIN ADC5_MspInit 1 */
+
+  /* USER CODE END ADC5_MspInit 1 */
   }
 
 }
@@ -257,7 +289,10 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
   /* USER CODE END ADC3_MspDeInit 0 */
     /* Peripheral clock disable */
-    __HAL_RCC_ADC345_CLK_DISABLE();
+    HAL_RCC_ADC345_CLK_ENABLED--;
+    if(HAL_RCC_ADC345_CLK_ENABLED==0){
+      __HAL_RCC_ADC345_CLK_DISABLE();
+    }
   
     /**ADC3 GPIO Configuration    
     PB13     ------> ADC3_IN5 
@@ -267,6 +302,34 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
   /* USER CODE BEGIN ADC3_MspDeInit 1 */
 
   /* USER CODE END ADC3_MspDeInit 1 */
+  }
+  else if(hadc->Instance==ADC4)
+  {
+  /* USER CODE BEGIN ADC4_MspDeInit 0 */
+
+  /* USER CODE END ADC4_MspDeInit 0 */
+    /* Peripheral clock disable */
+    HAL_RCC_ADC345_CLK_ENABLED--;
+    if(HAL_RCC_ADC345_CLK_ENABLED==0){
+      __HAL_RCC_ADC345_CLK_DISABLE();
+    }
+  /* USER CODE BEGIN ADC4_MspDeInit 1 */
+
+  /* USER CODE END ADC4_MspDeInit 1 */
+  }
+  else if(hadc->Instance==ADC5)
+  {
+  /* USER CODE BEGIN ADC5_MspDeInit 0 */
+
+  /* USER CODE END ADC5_MspDeInit 0 */
+    /* Peripheral clock disable */
+    HAL_RCC_ADC345_CLK_ENABLED--;
+    if(HAL_RCC_ADC345_CLK_ENABLED==0){
+      __HAL_RCC_ADC345_CLK_DISABLE();
+    }
+  /* USER CODE BEGIN ADC5_MspDeInit 1 */
+
+  /* USER CODE END ADC5_MspDeInit 1 */
   }
 
 }
@@ -363,6 +426,131 @@ void HAL_HRTIM_MspDeInit(HRTIM_HandleTypeDef* hhrtim)
   /* USER CODE BEGIN HRTIM1_MspDeInit 1 */
 
   /* USER CODE END HRTIM1_MspDeInit 1 */
+  }
+
+}
+
+/**
+* @brief OPAMP MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hopamp: OPAMP handle pointer
+* @retval None
+*/
+void HAL_OPAMP_MspInit(OPAMP_HandleTypeDef* hopamp)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(hopamp->Instance==OPAMP3)
+  {
+  /* USER CODE BEGIN OPAMP3_MspInit 0 */
+
+  /* USER CODE END OPAMP3_MspInit 0 */
+  
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**OPAMP3 GPIO Configuration    
+    PB13     ------> OPAMP3_VINP 
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN OPAMP3_MspInit 1 */
+
+  /* USER CODE END OPAMP3_MspInit 1 */
+  }
+  else if(hopamp->Instance==OPAMP4)
+  {
+  /* USER CODE BEGIN OPAMP4_MspInit 0 */
+
+  /* USER CODE END OPAMP4_MspInit 0 */
+  
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**OPAMP4 GPIO Configuration    
+    PB11     ------> OPAMP4_VINP 
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_11;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN OPAMP4_MspInit 1 */
+
+  /* USER CODE END OPAMP4_MspInit 1 */
+  }
+  else if(hopamp->Instance==OPAMP6)
+  {
+  /* USER CODE BEGIN OPAMP6_MspInit 0 */
+
+  /* USER CODE END OPAMP6_MspInit 0 */
+  
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**OPAMP6 GPIO Configuration    
+    PB12     ------> OPAMP6_VINP 
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN OPAMP6_MspInit 1 */
+
+  /* USER CODE END OPAMP6_MspInit 1 */
+  }
+
+}
+
+/**
+* @brief OPAMP MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hopamp: OPAMP handle pointer
+* @retval None
+*/
+void HAL_OPAMP_MspDeInit(OPAMP_HandleTypeDef* hopamp)
+{
+  if(hopamp->Instance==OPAMP3)
+  {
+  /* USER CODE BEGIN OPAMP3_MspDeInit 0 */
+
+  /* USER CODE END OPAMP3_MspDeInit 0 */
+  
+    /**OPAMP3 GPIO Configuration    
+    PB13     ------> OPAMP3_VINP 
+    */
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13);
+
+  /* USER CODE BEGIN OPAMP3_MspDeInit 1 */
+
+  /* USER CODE END OPAMP3_MspDeInit 1 */
+  }
+  else if(hopamp->Instance==OPAMP4)
+  {
+  /* USER CODE BEGIN OPAMP4_MspDeInit 0 */
+
+  /* USER CODE END OPAMP4_MspDeInit 0 */
+  
+    /**OPAMP4 GPIO Configuration    
+    PB11     ------> OPAMP4_VINP 
+    */
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_11);
+
+  /* USER CODE BEGIN OPAMP4_MspDeInit 1 */
+
+  /* USER CODE END OPAMP4_MspDeInit 1 */
+  }
+  else if(hopamp->Instance==OPAMP6)
+  {
+  /* USER CODE BEGIN OPAMP6_MspDeInit 0 */
+
+  /* USER CODE END OPAMP6_MspDeInit 0 */
+  
+    /**OPAMP6 GPIO Configuration    
+    PB12     ------> OPAMP6_VINP 
+    */
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_12);
+
+  /* USER CODE BEGIN OPAMP6_MspDeInit 1 */
+
+  /* USER CODE END OPAMP6_MspDeInit 1 */
   }
 
 }

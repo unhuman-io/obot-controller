@@ -23,8 +23,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.adc1_gain = -3.26/4096/(.007*40),  // V/count * A/Vr / Vo/Vr (3.3/4096 / R / Gain)
     .fast_loop_param.adc2_gain = -3.26/4096/(.007*40),
     .fast_loop_param.adc3_gain = -3.26/4096/(.007*40), 
-    .fast_loop_param.motor_encoder.dir = 1,
-    .fast_loop_param.phase_mode = 1,
+    .fast_loop_param.motor_encoder.dir = -1,
+    .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 20000,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = 402,
@@ -38,7 +38,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
 #include "cogprocessed.csv"
     },
     .startup_param.do_phase_lock = 1,
-    .startup_param.phase_lock_current = 2,
-    .startup_param.phase_lock_duration = 2,
+    .startup_param.phase_lock_current = 4,
+    .startup_param.phase_lock_duration = 4,
     .name = "J1",
 };

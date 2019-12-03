@@ -173,7 +173,7 @@ static uint8_t  *USBD_CDC_GetFSCfgDesc(uint16_t *length)
 
 void usb_send(USBD_HandleTypeDef *pdev, uint8_t *pbuff, uint16_t length) {
 
-  //USBD_LL_Transmit(pdev, CDC_IN_EP, pbuff,
+  // USBD_LL_Transmit(pdev, CDC_IN_EP, pbuff,
   //                      length);
 
 }

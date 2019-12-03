@@ -248,7 +248,7 @@ void ADC1_2_IRQHandler(void)
   uint8_t lsu_start = get_lsu_count();
   uint8_t fold_start = DWT->FOLDCNT;
   fast_loop_update();
-  if (i++ > 10000){
+  if (i++ > 10){
     i=0;
   main_loop_update();
   }

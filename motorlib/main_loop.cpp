@@ -41,7 +41,7 @@ void MainLoop::update() {
   float iq_des = controller_.step(receive_data_.position_desired, fast_loop_status_.motor_position.position) + \
               receive_data_.current_desired;
 
- // fast_loop_set_iq_des(iq_des);
+  fast_loop_set_iq_des(iq_des);
   SendData send_data;
   send_data.iq = fast_loop_status_.foc_status.measured.i_q;
   send_data.host_timestamp_received = receive_data_.host_timestamp;

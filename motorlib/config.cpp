@@ -10,7 +10,7 @@
 #include "actuator.h"
 
 const Config config;
-static Actuator actuator_ = {config_items.fast_loop};
+static Actuator actuator_ = {config_items.fast_loop, config_items.main_loop};
 
 Config::Config() :
     fast_loop(config_items.fast_loop),

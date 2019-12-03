@@ -31,7 +31,7 @@ void PWM::voltage_mode() {
 }
 
 void PWM::set_frequency_hz(uint32_t frequency_hz) {
-    regs_.ARR = 180e6/2/frequency_hz; // todo not enabled at startup
+    regs_.ARR = 170e6/2/frequency_hz; // todo not enabled at startup
     period_ = hrperiod;// 180e6/2/frequency_hz;
     half_period_ = period_/2; 
 }

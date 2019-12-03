@@ -10,8 +10,8 @@ static struct {
     Encoder motor_encoder = {reinterpret_cast<volatile int32_t *>(&TIM5->CNT)};
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     PWM motor_pwm = {initial_param.fast_loop_param.pwm_frequency, *const_cast<uint32_t*>(&HRTIM1_TIMD->CMP1xR), 
-                          *const_cast<uint32_t*>(&HRTIM1_TIME->CMP1xR), 
-                          *const_cast<uint32_t*>(&HRTIM1_TIMF->CMP1xR),
+                          *const_cast<uint32_t*>(&HRTIM1_TIMF->CMP1xR), 
+                          *const_cast<uint32_t*>(&HRTIM1_TIME->CMP1xR),
                           *TIM8, enable};
     FastLoop fast_loop = {motor_pwm, motor_encoder};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR1)), 

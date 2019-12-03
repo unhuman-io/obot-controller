@@ -26,8 +26,8 @@ void FastLoop::update() {
     timestamp_ = get_clock();
 
     // get ADC
-    adc1 = ADC1->JDR1;
-    adc2 = ADC2->JDR1;
+    adc1 = ADC2->JDR1;
+    adc2 = ADC1->JDR1;
     adc3 = ADC3->JDR1;
     foc_command_.measured.i_a = param_.adc1_gain*(adc1-param_.adc1_offset) - ia_bias_;
     foc_command_.measured.i_b = param_.adc2_gain*(adc2-param_.adc2_offset) - ib_bias_;

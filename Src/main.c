@@ -49,7 +49,7 @@ ADC_HandleTypeDef hadc3;
 
 HRTIM_HandleTypeDef hhrtim1;
 
-SPI_HandleTypeDef hspi2;
+SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi3;
 DMA_HandleTypeDef hdma_spi3_rx;
 DMA_HandleTypeDef hdma_spi3_tx;
@@ -73,9 +73,9 @@ static void MX_HRTIM1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_ADC3_Init(void);
-static void MX_SPI2_Init(void);
 static void MX_SPI3_Init(void);
 static void MX_TIM5_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -85,7 +85,7 @@ static void MX_TIM5_Init(void);
 uint16_t drv_regs_error = 0;
 
 uint16_t drv_regs[] = {
-  (2<<11) | 0x00,  // control_reg 0x20, 3 PWM mode
+  (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
   (3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
   (4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
                                 // moderate drive current (.57,1.14A)
@@ -135,9 +135,9 @@ int main(void)
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_ADC3_Init();
-  MX_SPI2_Init();
   MX_SPI3_Init();
   MX_TIM5_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start(&hadc1);
    HAL_ADC_Start(&hadc2);
@@ -148,18 +148,18 @@ int main(void)
   for (uint8_t i=0; i<sizeof(drv_regs)/sizeof(uint16_t); i++) {
     uint16_t reg_out = drv_regs[i];
     uint16_t reg_in = 0;
-    HAL_SPI_TransmitReceive(&hspi2, (uint8_t *) &reg_out, (uint8_t *) &reg_in, 1, 10);
+    HAL_SPI_TransmitReceive(&hspi1, (uint8_t *) &reg_out, (uint8_t *) &reg_in, 1, 10);
      reg_out |= (1<<15); // switch to read mode
-     HAL_SPI_TransmitReceive(&hspi2, (uint8_t *) &reg_out, (uint8_t *) &reg_in, 1, 10);
+     HAL_SPI_TransmitReceive(&hspi1, (uint8_t *) &reg_out, (uint8_t *) &reg_in, 1, 10);
     if ((reg_in & 0x7FF) != (reg_out & 0x7FF)) {
       drv_regs_error |= 1 << i;
     }
   }
   uint32_t deadtime = 10;
   uint32_t deadprescale = 0;
-  HRTIM1->sTimerxRegs[0].OUTxR |= HRTIM_OUTR_DTEN;
-  HRTIM1->sTimerxRegs[0].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
-  HRTIM1->sTimerxRegs[0].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
+  HRTIM1->sTimerxRegs[3].OUTxR |= HRTIM_OUTR_DTEN;
+  HRTIM1->sTimerxRegs[3].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
+  HRTIM1->sTimerxRegs[3].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
   HRTIM1->sTimerxRegs[4].OUTxR |= HRTIM_OUTR_DTEN;
   HRTIM1->sTimerxRegs[4].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
   HRTIM1->sTimerxRegs[4].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
@@ -280,7 +280,6 @@ static void MX_ADC1_Init(void)
 
   ADC_MultiModeTypeDef multimode = {0};
   ADC_InjectionConfTypeDef sConfigInjected = {0};
-  ADC_ChannelConfTypeDef sConfig = {0};
 
   /* USER CODE BEGIN ADC1_Init 1 */
 
@@ -298,8 +297,6 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIG_HRTIM_TRG5;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
   hadc1.Init.OversamplingMode = DISABLE;
@@ -316,7 +313,7 @@ static void MX_ADC1_Init(void)
   }
   /** Configure Injected Channel 
   */
-  sConfigInjected.InjectedChannel = ADC_CHANNEL_12;
+  sConfigInjected.InjectedChannel = ADC_CHANNEL_11;
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_1;
   sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_12CYCLES_5;
   sConfigInjected.InjectedSingleDiff = ADC_SINGLE_ENDED;
@@ -338,18 +335,6 @@ static void MX_ADC1_Init(void)
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_2;
   sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_6CYCLES_5;
   if (HAL_ADCEx_InjectedConfigChannel(&hadc1, &sConfigInjected) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel 
-  */
-  sConfig.Channel = ADC_CHANNEL_12;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_6CYCLES_5;
-  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-  sConfig.Offset = 0;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -383,14 +368,14 @@ static void MX_ADC2_Init(void)
   hadc2.Init.Resolution = ADC_RESOLUTION_12B;
   hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc2.Init.GainCompensation = 0;
-  hadc2.Init.ScanConvMode = ADC_SCAN_ENABLE;
-  hadc2.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc2.Init.LowPowerAutoWait = DISABLE;
   hadc2.Init.ContinuousConvMode = DISABLE;
   hadc2.Init.NbrOfConversion = 1;
   hadc2.Init.DiscontinuousConvMode = DISABLE;
   hadc2.Init.DMAContinuousRequests = DISABLE;
-  hadc2.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
+  hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc2.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
@@ -398,27 +383,19 @@ static void MX_ADC2_Init(void)
   }
   /** Configure Injected Channel 
   */
-  sConfigInjected.InjectedChannel = ADC_CHANNEL_12;
+  sConfigInjected.InjectedChannel = ADC_CHANNEL_14;
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_1;
   sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_12CYCLES_5;
   sConfigInjected.InjectedSingleDiff = ADC_SINGLE_ENDED;
   sConfigInjected.InjectedOffsetNumber = ADC_OFFSET_NONE;
   sConfigInjected.InjectedOffset = 0;
-  sConfigInjected.InjectedNbrOfConversion = 2;
+  sConfigInjected.InjectedNbrOfConversion = 1;
   sConfigInjected.InjectedDiscontinuousConvMode = DISABLE;
   sConfigInjected.AutoInjectedConv = DISABLE;
   sConfigInjected.QueueInjectedContext = DISABLE;
   sConfigInjected.ExternalTrigInjecConv = ADC_EXTERNALTRIGINJEC_HRTIM_TRG5;
   sConfigInjected.ExternalTrigInjecConvEdge = ADC_EXTERNALTRIGINJECCONV_EDGE_RISING;
   sConfigInjected.InjecOversamplingMode = DISABLE;
-  if (HAL_ADCEx_InjectedConfigChannel(&hadc2, &sConfigInjected) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Injected Channel 
-  */
-  sConfigInjected.InjectedRank = ADC_INJECTED_RANK_2;
-  sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_6CYCLES_5;
   if (HAL_ADCEx_InjectedConfigChannel(&hadc2, &sConfigInjected) != HAL_OK)
   {
     Error_Handler();
@@ -476,7 +453,7 @@ static void MX_ADC3_Init(void)
   }
   /** Configure Injected Channel 
   */
-  sConfigInjected.InjectedChannel = ADC_CHANNEL_12;
+  sConfigInjected.InjectedChannel = ADC_CHANNEL_5;
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_1;
   sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_12CYCLES_5;
   sConfigInjected.InjectedSingleDiff = ADC_SINGLE_ENDED;
@@ -542,7 +519,7 @@ static void MX_HRTIM1_Init(void)
   {
     Error_Handler();
   }
-  pADCTriggerCfg.UpdateSource = HRTIM_ADCTRIGGERUPDATE_TIMER_A;
+  pADCTriggerCfg.UpdateSource = HRTIM_ADCTRIGGERUPDATE_TIMER_D;
   pADCTriggerCfg.Trigger = HRTIM_ADCTRIGGEREVENT13_TIMERF_RESET;
   if (HAL_HRTIM_ADCTriggerConfig(&hhrtim1, HRTIM_ADCTRIGGER_1, &pADCTriggerCfg) != HAL_OK)
   {
@@ -571,8 +548,8 @@ static void MX_HRTIM1_Init(void)
   {
     Error_Handler();
   }
-  pADCTriggerCfg.UpdateSource = HRTIM_ADCTRIGGERUPDATE_TIMER_A;
-  pADCTriggerCfg.Trigger = HRTIM_ADCTRIGGEREVENT579_TIMERA_PERIOD;
+  pADCTriggerCfg.UpdateSource = HRTIM_ADCTRIGGERUPDATE_TIMER_D;
+  pADCTriggerCfg.Trigger = HRTIM_ADCTRIGGEREVENT579_TIMERD_PERIOD;
   if (HAL_HRTIM_ADCTriggerConfig(&hhrtim1, HRTIM_ADCTRIGGER_7, &pADCTriggerCfg) != HAL_OK)
   {
     Error_Handler();
@@ -585,32 +562,28 @@ static void MX_HRTIM1_Init(void)
   pTimeBaseCfg.RepetitionCounter = 0x00;
   pTimeBaseCfg.PrescalerRatio = HRTIM_PRESCALERRATIO_MUL32;
   pTimeBaseCfg.Mode = HRTIM_MODE_CONTINUOUS;
-  if (HAL_HRTIM_TimeBaseConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, &pTimeBaseCfg) != HAL_OK)
+  if (HAL_HRTIM_TimeBaseConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, &pTimeBaseCfg) != HAL_OK)
   {
     Error_Handler();
   }
   pTimerCtl.UpDownMode = HRTIM_TIMERUPDOWNMODE_UPDOWN;
   pTimerCtl.DualChannelDacEnable = HRTIM_TIMER_DCDE_DISABLED;
 
-  if (HAL_HRTIM_WaveformTimerControl(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, &pTimerCtl) != HAL_OK)
+  if (HAL_HRTIM_WaveformTimerControl(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, &pTimerCtl) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_HRTIM_RollOverModeConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_TIM_FEROM_BOTH|HRTIM_TIM_BMROM_BOTH
+  if (HAL_HRTIM_RollOverModeConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_TIM_FEROM_BOTH|HRTIM_TIM_BMROM_BOTH
                               |HRTIM_TIM_ADROM_BOTH|HRTIM_TIM_OUTROM_BOTH
                               |HRTIM_TIM_ROM_BOTH) != HAL_OK)
   {
     Error_Handler();
   }
   pSimpleOCChannelCfg.Mode = HRTIM_BASICOCMODE_INACTIVE;
-  pSimpleOCChannelCfg.Pulse = 0xFFDF;
+  pSimpleOCChannelCfg.Pulse = 1000;
   pSimpleOCChannelCfg.Polarity = HRTIM_OUTPUTPOLARITY_HIGH;
   pSimpleOCChannelCfg.IdleLevel = HRTIM_OUTPUTIDLELEVEL_INACTIVE;
-  if (HAL_HRTIM_SimpleOCChannelConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_OUTPUT_TA1, &pSimpleOCChannelCfg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_HRTIM_SimpleOCChannelConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_A, HRTIM_OUTPUT_TA2, &pSimpleOCChannelCfg) != HAL_OK)
+  if (HAL_HRTIM_SimpleOCChannelConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD1, &pSimpleOCChannelCfg) != HAL_OK)
   {
     Error_Handler();
   }
@@ -630,7 +603,6 @@ static void MX_HRTIM1_Init(void)
   {
     Error_Handler();
   }
-  pSimpleOCChannelCfg.Pulse = 1000;
   if (HAL_HRTIM_SimpleOCChannelConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TE1, &pSimpleOCChannelCfg) != HAL_OK)
   {
     Error_Handler();
@@ -669,39 +641,42 @@ static void MX_HRTIM1_Init(void)
 }
 
 /**
-  * @brief SPI2 Initialization Function
+  * @brief SPI1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_SPI2_Init(void)
+static void MX_SPI1_Init(void)
 {
 
-  /* USER CODE BEGIN SPI2_Init 0 */
+  /* USER CODE BEGIN SPI1_Init 0 */
 
-  /* USER CODE END SPI2_Init 0 */
+  /* USER CODE END SPI1_Init 0 */
 
-  /* USER CODE BEGIN SPI2_Init 1 */
+  /* USER CODE BEGIN SPI1_Init 1 */
 
-  /* USER CODE END SPI2_Init 1 */
-  /* SPI2 parameter configuration*/
-  hspi2.Instance = SPI2;
-  hspi2.Init.Mode = SPI_MODE_MASTER;
-  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
-  hspi2.Init.TIMode = SPI_TIMODE_ENABLE;
-  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi2.Init.CRCPolynomial = 7;
-  hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN SPI2_Init 2 */
+  /* USER CODE BEGIN SPI1_Init 2 */
 
-  /* USER CODE END SPI2_Init 2 */
+  /* USER CODE END SPI1_Init 2 */
 
 }
 
@@ -894,9 +869,6 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -915,13 +887,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);

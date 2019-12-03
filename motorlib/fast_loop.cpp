@@ -51,9 +51,14 @@ void FastLoop::update() {
  //   float iq_ff = param_.cogging.gain * (param_.cogging.table[i] + ifrac * (param_.cogging.table[(i+1) & (COGGING_TABLE_SIZE-1)] - param_.cogging.table[i]));
     float iq_ff = param_.cogging.gain * param_.cogging.table[i];
 
+        Sincos sincos;
+    sincos = sincos1(2 * (float) M_PI * id_des * (timestamp_*(1.0f/180e6f)));
+    foc_command_.desired.i_q = iq_des*(id_des > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
+    foc_command_.measured.motor_encoder = 0;
+
     // update FOC
-    foc_command_.measured.motor_encoder = phase_mode_*(motor_enc - motor_electrical_zero_pos_)*(2*(float) M_PI  * inv_motor_encoder_cpr_);
-    foc_command_.desired.i_q = iq_des_gain_ * (iq_des + iq_ff);
+    //foc_command_.measured.motor_encoder = phase_mode_*(motor_enc - motor_electrical_zero_pos_)*(2*(float) M_PI  * inv_motor_encoder_cpr_);
+    //foc_command_.desired.i_q = iq_des_gain_ * (iq_des + iq_ff);
 
 //         Sincos sincos;
 //         static uint32_t counter=0;

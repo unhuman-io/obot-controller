@@ -26,7 +26,7 @@ const float FOC::Kc[2][3] = {{2.0/3, -1.0/3, -1.0/3},
 
 #include "../st_device.h"
 
-float alpha_current = .01;
+float alpha_current = 1;
 float id_last = 0, iq_last=0;
 float alpha_current2 = 1;
 float ial_last = 0, ibe_last=0;

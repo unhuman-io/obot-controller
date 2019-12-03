@@ -91,7 +91,7 @@ uint16_t drv_regs[] = {
                                 // moderate drive current (.57,1.14A)
   (5<<11) | 0x020,  // ocp_reg     0x20 -> 50 ns dead time, 
                               //latched ocp, 4 us ocp deglitch, 0.06 Vds thresh
-  (6<<11) | 0x2C0, // csa_reg     0x280 -> bidirectional current, 40V/V
+  (6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
 };         
 
 /* USER CODE END 0 */
@@ -144,6 +144,9 @@ int main(void)
     HAL_ADC_Start(&hadc3);
 
     SPI3->CR1 |= SPI_CR1_SPE; 
+  
+  GPIOC->ODR |= GPIO_ODR_OD11; // drv enable
+  HAL_Delay(10);
 
   for (uint8_t i=0; i<sizeof(drv_regs)/sizeof(uint16_t); i++) {
     uint16_t reg_out = drv_regs[i];
@@ -182,7 +185,7 @@ int main(void)
   hadc3.Instance->CR |= ADC_CR_JADSTART;
 
   HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL);
-  GPIOC->ODR |= GPIO_ODR_OD11; // drv enable
+
 
   /* USER CODE END 2 */
 
@@ -635,16 +638,13 @@ static void MX_SPI1_Init(void)
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.TIMode = SPI_TIMODE_ENABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();

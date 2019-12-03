@@ -238,11 +238,11 @@ void DMA1_Channel2_IRQHandler(void)
 /**
   * @brief This function handles ADC1 and ADC2 global interrupt.
   */
- int i = 0;
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
-  GPIOC->BSRR |= GPIO_BSRR_BS3;
+  static int i = 0;
+  GPIOC->BSRR |= GPIO_BSRR_BS12;
   uint32_t t_start = get_clock();
   uint8_t cpi_start = get_cpi_count();
   uint8_t lsu_start = get_lsu_count();
@@ -265,7 +265,7 @@ hadc1.Instance->ISR &= ~ADC_ISR_JEOC;
   lsu_diff = get_lsu_count() - lsu_start;
   fold_diff = DWT->FOLDCNT - fold_start;
   inst = t_exec - cpi_diff - lsu_diff;
-  GPIOC->BSRR |= GPIO_BSRR_BR3;
+  GPIOC->BSRR |= GPIO_BSRR_BR12;
   /* USER CODE END ADC1_2_IRQn 1 */
 }
 
@@ -282,20 +282,6 @@ void USB_LP_IRQHandler(void)
   /* USER CODE BEGIN USB_LP_IRQn 1 */
   GPIOC->BSRR |= GPIO_BSRR_BR2;
   /* USER CODE END USB_LP_IRQn 1 */
-}
-
-/**
-  * @brief This function handles EXTI line[15:10] interrupts.
-  */
-void EXTI15_10_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI15_10_IRQn 0 */
-
-  /* USER CODE END EXTI15_10_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
-  /* USER CODE BEGIN EXTI15_10_IRQn 1 */
-
-  /* USER CODE END EXTI15_10_IRQn 1 */
 }
 
 /**

@@ -4,12 +4,12 @@
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.pwm_frequency = 100000,
-    .fast_loop_param.foc_param.pi_d.kp=0,
-    .fast_loop_param.foc_param.pi_d.ki=0,
+    .fast_loop_param.foc_param.pi_d.kp=0.5,
+    .fast_loop_param.foc_param.pi_d.ki=0.02,
     .fast_loop_param.foc_param.pi_d.ki_limit=2.5,
     .fast_loop_param.foc_param.pi_d.command_max=3,
-    .fast_loop_param.foc_param.pi_q.kp=0,
-    .fast_loop_param.foc_param.pi_q.ki=0,
+    .fast_loop_param.foc_param.pi_q.kp=0.5,
+    .fast_loop_param.foc_param.pi_q.ki=0.02,
     .fast_loop_param.foc_param.pi_q.ki_limit=2.5,
     .fast_loop_param.foc_param.pi_q.command_max=3,
     .fast_loop_param.foc_param.num_poles = 20,

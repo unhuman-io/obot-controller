@@ -432,8 +432,8 @@ g_pfnVectors:
 	; .weak	USART3_IRQHandler
 	; .thumb_set USART3_IRQHandler,Default_Handler
 
-//	; ; .weak	EXTI15_10_IRQHandler
-//	; ; .thumb_set EXTI15_10_IRQHandler,Default_Handler
+	.weak	EXTI15_10_IRQHandler
+	.thumb_set EXTI15_10_IRQHandler,Default_Handler
 
 	; .weak	RTC_Alarm_IRQHandler
 	; .thumb_set RTC_Alarm_IRQHandler,Default_Handler

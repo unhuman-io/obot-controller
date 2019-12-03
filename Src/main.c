@@ -170,10 +170,10 @@ int main(void)
   //HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_TESWU;
   HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN;
 
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TD1);
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TD2);
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TE2);
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF1);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD1);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD2);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TE2);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TF1);
   HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TE1);
   HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF2);
   hadc1.Instance->CR |= ADC_CR_JADSTART;
@@ -520,7 +520,7 @@ static void MX_HRTIM1_Init(void)
   {
     Error_Handler();
   }
-  pADCTriggerCfg.UpdateSource = HRTIM_ADCTRIGGERUPDATE_TIMER_D;
+  pADCTriggerCfg.UpdateSource = HRTIM_ADCTRIGGERUPDATE_TIMER_F;
   pADCTriggerCfg.Trigger = HRTIM_ADCTRIGGEREVENT13_TIMERF_RESET;
   if (HAL_HRTIM_ADCTriggerConfig(&hhrtim1, HRTIM_ADCTRIGGER_1, &pADCTriggerCfg) != HAL_OK)
   {
@@ -530,32 +530,12 @@ static void MX_HRTIM1_Init(void)
   {
     Error_Handler();
   }
-  pADCTriggerCfg.Trigger = HRTIM_ADCTRIGGEREVENT24_TIMERF_PERIOD;
-  if (HAL_HRTIM_ADCTriggerConfig(&hhrtim1, HRTIM_ADCTRIGGER_2, &pADCTriggerCfg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_HRTIM_ADCPostScalerConfig(&hhrtim1, HRTIM_ADCTRIGGER_2, 0x0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  pADCTriggerCfg.UpdateSource = HRTIM_ADCTRIGGERUPDATE_TIMER_F;
-  pADCTriggerCfg.Trigger = HRTIM_ADCTRIGGEREVENT579_TIMERF_RESET;
+  pADCTriggerCfg.Trigger = HRTIM_ADCTRIGGEREVENT579_TIMERF_PERIOD;
   if (HAL_HRTIM_ADCTriggerConfig(&hhrtim1, HRTIM_ADCTRIGGER_5, &pADCTriggerCfg) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_HRTIM_ADCPostScalerConfig(&hhrtim1, HRTIM_ADCTRIGGER_5, 0x1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  pADCTriggerCfg.UpdateSource = HRTIM_ADCTRIGGERUPDATE_TIMER_D;
-  pADCTriggerCfg.Trigger = HRTIM_ADCTRIGGEREVENT579_TIMERD_PERIOD;
-  if (HAL_HRTIM_ADCTriggerConfig(&hhrtim1, HRTIM_ADCTRIGGER_7, &pADCTriggerCfg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_HRTIM_ADCPostScalerConfig(&hhrtim1, HRTIM_ADCTRIGGER_7, 0x0) != HAL_OK)
+  if (HAL_HRTIM_ADCPostScalerConfig(&hhrtim1, HRTIM_ADCTRIGGER_5, 0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -580,8 +560,8 @@ static void MX_HRTIM1_Init(void)
   {
     Error_Handler();
   }
-  pSimpleOCChannelCfg.Mode = HRTIM_BASICOCMODE_INACTIVE;
-  pSimpleOCChannelCfg.Pulse = 1000;
+  pSimpleOCChannelCfg.Mode = HRTIM_BASICOCMODE_ACTIVE;
+  pSimpleOCChannelCfg.Pulse = hrperiod/2;
   pSimpleOCChannelCfg.Polarity = HRTIM_OUTPUTPOLARITY_HIGH;
   pSimpleOCChannelCfg.IdleLevel = HRTIM_OUTPUTIDLELEVEL_INACTIVE;
   if (HAL_HRTIM_SimpleOCChannelConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD1, &pSimpleOCChannelCfg) != HAL_OK)
@@ -619,18 +599,12 @@ static void MX_HRTIM1_Init(void)
     Error_Handler();
   }
   if (HAL_HRTIM_RollOverModeConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_TIM_FEROM_BOTH|HRTIM_TIM_BMROM_BOTH
-                              |HRTIM_TIM_ADROM_BOTH|HRTIM_TIM_OUTROM_BOTH
+                              |HRTIM_TIM_ADROM_VALLEY|HRTIM_TIM_OUTROM_BOTH
                               |HRTIM_TIM_ROM_BOTH) != HAL_OK)
   {
     Error_Handler();
   }
-  pSimpleOCChannelCfg.Pulse = 3000;
   if (HAL_HRTIM_SimpleOCChannelConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF1, &pSimpleOCChannelCfg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  pSimpleOCChannelCfg.Pulse = 4000;
-  if (HAL_HRTIM_SimpleOCChannelConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF2, &pSimpleOCChannelCfg) != HAL_OK)
   {
     Error_Handler();
   }
@@ -870,11 +844,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3|GPIO_PIN_11, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_SET);
 
   /*Configure GPIO pin : PG10 */
   GPIO_InitStruct.Pin = GPIO_PIN_10;
@@ -889,9 +860,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+  /*Configure GPIO pin : PC12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 }
 

@@ -94,6 +94,7 @@ usb_communication.cpp\
 spi_encoder.cpp\
 Src/main2.cpp\
 usb.cpp\
+actuator.cpp\
 
 
 # ASM sources

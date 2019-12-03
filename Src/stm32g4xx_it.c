@@ -65,8 +65,8 @@ extern PCD_HandleTypeDef hpcd_USB_FS;
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern HRTIM_HandleTypeDef hhrtim1;
-extern DMA_HandleTypeDef hdma_spi3_rx;
 extern DMA_HandleTypeDef hdma_spi3_tx;
+extern DMA_HandleTypeDef hdma_spi3_rx;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -214,11 +214,10 @@ void DMA1_Channel1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
 
-#if 0
   /* USER CODE END DMA1_Channel1_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_spi3_rx);
+  HAL_DMA_IRQHandler(&hdma_spi3_tx);
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
-#endif
+
   /* USER CODE END DMA1_Channel1_IRQn 1 */
 }
 
@@ -230,7 +229,7 @@ void DMA1_Channel2_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel2_IRQn 0 */
 
   /* USER CODE END DMA1_Channel2_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_spi3_tx);
+  HAL_DMA_IRQHandler(&hdma_spi3_rx);
   /* USER CODE BEGIN DMA1_Channel2_IRQn 1 */
 
   /* USER CODE END DMA1_Channel2_IRQn 1 */

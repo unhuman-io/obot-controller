@@ -29,9 +29,9 @@ void FastLoop::update() {
     adc1 = ADC2->JDR1;
     adc2 = ADC1->JDR1;
     adc3 = ADC3->JDR1;
-    // adc1 = ADC5->JDR1;  // op amp channels
-    // adc2 = ADC4->JDR1;
-    // adc3 = ADC3->JDR2;
+    adc1 = ADC5->JDR1;  // op amp channels
+    adc2 = ADC4->JDR1;
+    adc3 = ADC3->JDR2;
     foc_command_.measured.i_a = param_.adc1_gain*(adc1-param_.adc1_offset) - ia_bias_;
     foc_command_.measured.i_b = param_.adc2_gain*(adc2-param_.adc2_offset) - ib_bias_;
     foc_command_.measured.i_c = param_.adc3_gain*(adc3-param_.adc3_offset) - ic_bias_;

@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "../motorlib/foc_i.h"
 #include "../motorlib/config.h"
+void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -240,7 +241,7 @@ void DMA1_Channel2_IRQHandler(void)
 /**
   * @brief This function handles ADC1 and ADC2 global interrupt.
   */
-void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
+
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */

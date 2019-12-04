@@ -67,6 +67,7 @@ extern ADC_HandleTypeDef hadc2;
 extern HRTIM_HandleTypeDef hhrtim1;
 extern DMA_HandleTypeDef hdma_spi3_tx;
 extern DMA_HandleTypeDef hdma_spi3_rx;
+extern TIM_HandleTypeDef htim1;
 extern PCD_HandleTypeDef hpcd_USB_FS;
 /* USER CODE BEGIN EV */
 
@@ -251,7 +252,7 @@ void ADC1_2_IRQHandler(void)
   fast_loop_update();
   if (i++ > 10){
     i=0;
-  main_loop_update();
+  //main_loop_update();
   }
   cpi_diff1 = get_cpi_count() - cpi_start;
 #if 0
@@ -300,6 +301,20 @@ void USB_LP_IRQHandler(void)
 #endif
 
   /* USER CODE END USB_LP_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 update interrupt and TIM16 global interrupt.
+  */
+void TIM1_UP_TIM16_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
+  main_loop_update();
+  /* USER CODE END TIM1_UP_TIM16_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 1 */
+
+  /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
 }
 
 /**

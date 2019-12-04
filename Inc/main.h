@@ -62,6 +62,7 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 #define hrperiod 27200*2
+#define main_loop_period 170e6/10000
 #define USART1_TX_Pin GPIO_PIN_4
 #define USART1_TX_GPIO_Port GPIOC
 #define USART1_RX_Pin GPIO_PIN_5

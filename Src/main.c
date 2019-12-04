@@ -20,7 +20,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -64,10 +63,12 @@ TIM_HandleTypeDef htim5;
 
 UART_HandleTypeDef huart1;
 
+PCD_HandleTypeDef hpcd_USB_FS;
+
 /* USER CODE BEGIN PV */
 #include "../motorlib/param.h"
 #include "main2.h"
-#include "usb/usbd_rt_if.h"
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,6 +88,7 @@ static void MX_ADC5_Init(void);
 static void MX_OPAMP3_Init(void);
 static void MX_OPAMP4_Init(void);
 static void MX_OPAMP6_Init(void);
+static void MX_USB_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -140,7 +142,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_USB_Device_Init();
   MX_HRTIM1_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
@@ -154,6 +155,7 @@ int main(void)
   MX_OPAMP3_Init();
   MX_OPAMP4_Init();
   MX_OPAMP6_Init();
+  MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc2);
@@ -1064,6 +1066,39 @@ static void MX_USART1_UART_Init(void)
   /* USER CODE BEGIN USART1_Init 2 */
 
   /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
+  * @brief USB Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USB_PCD_Init(void)
+{
+
+  /* USER CODE BEGIN USB_Init 0 */
+
+  /* USER CODE END USB_Init 0 */
+
+  /* USER CODE BEGIN USB_Init 1 */
+
+  /* USER CODE END USB_Init 1 */
+  hpcd_USB_FS.Instance = USB;
+  hpcd_USB_FS.Init.dev_endpoints = 8;
+  hpcd_USB_FS.Init.speed = PCD_SPEED_FULL;
+  hpcd_USB_FS.Init.phy_itface = PCD_PHY_EMBEDDED;
+  hpcd_USB_FS.Init.Sof_enable = DISABLE;
+  hpcd_USB_FS.Init.low_power_enable = DISABLE;
+  hpcd_USB_FS.Init.lpm_enable = DISABLE;
+  hpcd_USB_FS.Init.battery_charging_enable = DISABLE;
+  if (HAL_PCD_Init(&hpcd_USB_FS) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USB_Init 2 */
+
+  /* USER CODE END USB_Init 2 */
 
 }
 

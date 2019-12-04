@@ -985,7 +985,7 @@ HAL_StatusTypeDef HAL_PCD_Stop(PCD_HandleTypeDef *hpcd)
   return HAL_OK;
 }
 
-#include "usbd_def.h"
+
 /**
   * @brief  This function handles PCD interrupt request.
   * @param  hpcd PCD handle
@@ -1650,10 +1650,6 @@ PCD_StateTypeDef HAL_PCD_GetState(PCD_HandleTypeDef *hpcd)
   * @{
   */
 
-int c = 0;
-int setp = 0;
-int abc = 0;
-int in = 0;
 
 /**
   * @brief  This function handles PCD Endpoint interrupt request.
@@ -1686,7 +1682,6 @@ static HAL_StatusTypeDef PCD_EP_ISR_Handler(PCD_HandleTypeDef *hpcd)
 
         /* DIR = 0      => IN  int */
         /* DIR = 0 implies that (EP_CTR_TX = 1) always  */
-        in++;
         PCD_CLEAR_TX_EP_CTR(hpcd->Instance, PCD_ENDP0);
         ep = &hpcd->IN_ep[0];
 
@@ -1714,11 +1709,10 @@ static HAL_StatusTypeDef PCD_EP_ISR_Handler(PCD_HandleTypeDef *hpcd)
         /* DIR = 1 & (CTR_TX | CTR_RX) => 2 int pending */
         ep = &hpcd->OUT_ep[0];
         wEPVal = PCD_GET_ENDPOINT(hpcd->Instance, PCD_ENDP0);
-        abc++;
+
         if ((wEPVal & USB_EP_SETUP) != 0U)
         {
           /* Get SETUP Packet*/
-          setp++;
           ep->xfer_count = PCD_GET_EP_RX_CNT(hpcd->Instance, ep->num);
 
           USB_ReadPMA(hpcd->Instance, (uint8_t *)hpcd->Setup,
@@ -1731,20 +1725,6 @@ static HAL_StatusTypeDef PCD_EP_ISR_Handler(PCD_HandleTypeDef *hpcd)
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)
           hpcd->SetupStageCallback(hpcd);
 #else
-          if ((((USBD_HandleTypeDef*)hpcd->pData)->request.bmRequest & 0x7FU) == 0) {
-            // std requets
-            if (((((USBD_HandleTypeDef*)hpcd->pData)->request.bRequest) == 6)) {
-              int a = 1;
-              if ((((((USBD_HandleTypeDef*)hpcd->pData)->request.wValue) >> 8) == 3)) {
-                int b = 1; // string
-                USBD_SetupReqTypedef request = ((USBD_HandleTypeDef*)hpcd->pData)->request;
-                c |= 1 << (request.wValue & 0xFF);
-                if (request.wValue & 0xFF) {
-                  int d = 1;
-                }
-              }
-            }
-          }
           HAL_PCD_SetupStageCallback(hpcd);
 #endif /* USE_HAL_PCD_REGISTER_CALLBACKS */
         }

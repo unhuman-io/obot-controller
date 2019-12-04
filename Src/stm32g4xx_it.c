@@ -61,7 +61,6 @@ uint16_t inst;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern PCD_HandleTypeDef hpcd_USB_FS;
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern HRTIM_HandleTypeDef hhrtim1;
@@ -267,21 +266,6 @@ hadc1.Instance->ISR &= ~ADC_ISR_JEOC;
   inst = t_exec - cpi_diff - lsu_diff;
   GPIOC->BSRR |= GPIO_BSRR_BR12;
   /* USER CODE END ADC1_2_IRQn 1 */
-}
-
-/**
-  * @brief This function handles USB low priority interrupt remap.
-  */
-void USB_LP_IRQHandler(void)
-{
-  /* USER CODE BEGIN USB_LP_IRQn 0 */
-  GPIOC->BSRR |= GPIO_BSRR_BS2;
-  usb_interrupt();
-  /* USER CODE END USB_LP_IRQn 0 */
-  HAL_PCD_IRQHandler(&hpcd_USB_FS);
-  /* USER CODE BEGIN USB_LP_IRQn 1 */
-  GPIOC->BSRR |= GPIO_BSRR_BR2;
-  /* USER CODE END USB_LP_IRQn 1 */
 }
 
 /**

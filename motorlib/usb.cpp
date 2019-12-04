@@ -113,6 +113,20 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0x01
 };
 
+// todo protect
+int USB1::receive_data(uint8_t endpoint, uint8_t * const data, uint8_t length) {
+    if (new_rx_data_) {
+        new_rx_data_ = false;
+        length = std::min(length,count_rx_);
+        for (int i=0; i<length; i++) {
+            data[i] = rx_buffer_[i];
+        }
+        return length;
+    } else {
+        return 0;
+    }
+}
+
  void USB1::handle_setup_packet(uint8_t *setup_data) {
     switch(setup_data[0]) {
         case 0x80:  // standard request get
@@ -153,10 +167,10 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
                 case 0x05:  // set address
                     device_address_ = setup_data[2];
                     send_data(0,0,0);
+                    // set device address after acknowledge
                     while((USB->EP0R & USB_EPTX_STAT) == USB_EP_TX_VALID);
                     USB->DADDR &= ~USB_DADDR_ADD; 
                     USB->DADDR |= device_address_;
-                    //send_data(0,0,0); // core seems to know to still send this as address 0, todo check
                     break;
                 case 0x09: // set configuration
                     // enable endpoint 2 IN (TX)
@@ -164,13 +178,11 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
                     USBPMA->btable[2].ADDR_TX = offsetof(USBPMA_TypeDef, buffer[2].EP_TX);
                     epr_set_toggle(2, USB_EP_TX_NAK, USB_EPTX_STAT);
                         // sets the toggle only bits to NAK, hardware better not change EPR during operation
-                    // tx interrupt ?
                     
                     // enable endpoint 2 OUT (RX)
                     USBPMA->btable[2].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[2].EP_RX);
                     USBPMA->btable[2].COUNT_RX = (1 << USB_COUNT2_RX_BLSIZE_Pos) | (2 << USB_COUNT2_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation
                     epr_set_toggle(2, USB_EP_RX_VALID, USB_EPRX_STAT); // as above with TX
-                    // rx interrupt?
                     
                     // setup status phase    
                     send_data(0,0,0);

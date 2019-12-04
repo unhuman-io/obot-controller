@@ -87,10 +87,7 @@ class USB1 {
     }
 
     // receive up to length bytes from endpoint, return number of bytes read
-    int receive_data(uint8_t endpoint, uint8_t * const data, uint8_t length) {
-        
-        return 0;
-    }
+    int receive_data(uint8_t endpoint, uint8_t * const data, uint8_t length);
 
 
     void send_string(uint8_t endpoint, const char *str, uint8_t length) {
@@ -154,9 +151,10 @@ class USB1 {
         // Endpoint correct transfer interrupt
         if(USB->ISTR & USB_ISTR_CTR)
         {
-            switch (USB->ISTR & USB_ISTR_EP_ID) {
+            uint16_t istr = USB->ISTR;
+            switch (istr & USB_ISTR_EP_ID) {
                 case 0:
-                    if (USB->ISTR & USB_ISTR_DIR) { // RX
+                    if (istr & USB_ISTR_DIR) { // RX
                         if (USB->EP0R & USB_EP_SETUP) {
                             uint8_t buffer[64];
                             uint8_t byte_count = USBPMA->btable[0].COUNT_RX & USB_COUNT0_RX_COUNT0_RX;
@@ -176,15 +174,23 @@ class USB1 {
                     }
                     break;
                 case 2:
-                    if (USB->ISTR & USB_ISTR_DIR) { // RX
+                    if (istr & USB_ISTR_DIR) { // RX
                         USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
-                        epr_set_toggle(0, USB_EP_RX_VALID, USB_EPRX_STAT);
+                        count_rx_ = (USBPMA->btable[2].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                        read_pma(count_rx_, USBPMA->buffer[2].EP_RX, rx_buffer_);
+                        new_rx_data_ = true;
+                        epr_set_toggle(2, USB_EP_RX_VALID, USB_EPRX_STAT);
                     }
                     if (USB->EP2R & USB_EP_CTR_TX) {
                         USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
                     }
                     break;
             }
+        }
+
+        if (USB->ISTR & USB_ISTR_ERR) {
+            error_count_++;
+            USB->ISTR &= ~USB_ISTR_ERR;
         }
     }
 
@@ -193,6 +199,10 @@ class USB1 {
 
     uint8_t device_address_ = 0;
     uint16_t interface_ = 0;
+    bool new_rx_data_ = false;
+    uint8_t count_rx_ = 0;
+    uint8_t rx_buffer_[64];
+    uint32_t error_count_ = 0;
     uint8_t go_to_bootloader = 0; // todo different
 };
 

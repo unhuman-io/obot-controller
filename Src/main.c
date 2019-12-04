@@ -212,6 +212,11 @@ int main(void)
   hadc4.Instance->CR |= ADC_CR_JADSTART;
   hadc5.Instance->CR |= ADC_CR_JADSTART;
 
+  // interrupt priorities
+  HAL_NVIC_SetPriority(USB_HP_IRQn, 2, 0);
+  HAL_NVIC_SetPriority(USB_LP_IRQn, 3, 0);
+  //HAL_NVIC_SetPriority(timer, 1, 0);
+
   HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL);
   USB->CNTR &= ~(USB_CNTR_SOFM | USB_CNTR_ESOFM); // Don't need these interrupts
   USB_DevConnect(USB);

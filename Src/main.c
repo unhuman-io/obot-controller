@@ -67,7 +67,7 @@ PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
 #include "../motorlib/param.h"
-#include "main2.h"
+//#include "main2.h"
 
 /* USER CODE END PV */
 
@@ -116,7 +116,7 @@ uint16_t drv_regs[] = {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  init();
+
   /* USER CODE END 1 */
   
 

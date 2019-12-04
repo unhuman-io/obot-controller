@@ -19,6 +19,7 @@ extern const Config config;
 extern "C" {
 #endif // __cplusplus
     void actuator_run();
+    void usb_interrupt();
 
 #ifdef __cplusplus
 }

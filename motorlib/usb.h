@@ -86,8 +86,6 @@ class USB1 {
     }
 
 
-
- private:
     void send_string(uint8_t endpoint, const char *str, uint8_t length) {
         uint16_t str_out[length+1] = {};
         uint8_t length_total = 2 + 2*length;
@@ -151,7 +149,7 @@ class USB1 {
         {
             switch (USB->ISTR & USB_ISTR_EP_ID) {
                 case 0:
-                    if (USB->ISTR & USB_ISTR_DIR == 1) { // RX
+                    if (USB->ISTR & USB_ISTR_DIR) { // RX
                         if (USB->EP0R & USB_EP_SETUP) {
                             uint8_t buffer[64];
                             uint8_t byte_count = USBPMA->btable[0].COUNT_RX & USB_COUNT0_RX_COUNT0_RX;
@@ -229,6 +227,7 @@ class USB1 {
         // }
     }
 
+ private:
     void handle_setup_packet(uint8_t *setup_data);
 
     uint8_t device_address_ = 0;

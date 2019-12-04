@@ -213,7 +213,8 @@ int main(void)
   hadc5.Instance->CR |= ADC_CR_JADSTART;
 
   HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL);
-
+  USB->CNTR &= ~(USB_CNTR_SOFM | USB_CNTR_ESOFM); // Don't need these interrupts
+  USB_DevConnect(USB);
 
   /* USER CODE END 2 */
 

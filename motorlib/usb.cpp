@@ -75,7 +75,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   /*Endpoint 2 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
-  2,                     /* bEndpointAddress */
+  0x82,                     /* bEndpointAddress */
   0x02,                           /* bmAttributes: Interrupt */
   LOBYTE(64),     /* wMaxPacketSize: */
   HIBYTE(64),
@@ -152,9 +152,11 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
             switch (setup_data[1]) {
                 case 0x05:  // set address
                     device_address_ = setup_data[2];
+                    send_data(0,0,0);
+                    while((USB->EP0R & USB_EPTX_STAT) == USB_EP_TX_VALID);
                     USB->DADDR &= ~USB_DADDR_ADD; 
                     USB->DADDR |= device_address_;
-                    send_data(0,0,0); // core seems to know to still send this as address 0, todo check
+                    //send_data(0,0,0); // core seems to know to still send this as address 0, todo check
                     break;
                 case 0x09: // set configuration
                     // enable endpoint 2 IN (TX)

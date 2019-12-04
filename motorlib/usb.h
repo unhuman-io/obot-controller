@@ -53,23 +53,28 @@ typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 byte
 #define USBPMA ((USBPMA_TypeDef *) USB_PMAADDR)
 
 typedef struct {
-    __IO uint16_t EPR;
-    __IO uint16_t reserved;
-} USBEPR_TypeDef[7];
+    struct {
+        __IO uint16_t EPR;
+        __IO uint16_t reserved;
+    } EP[8];
+} USBEPR_TypeDef;
+
 #define USBEPR ((USBEPR_TypeDef *) &(USB->EP0R))
 
 
-
-#define USBx USB_OTG_FS
 class USB1 {
  public:
     // limited to 64 bytes
-    void send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
-        if ((USBEPR[endpoint]->EPR & USB_EPTX_STAT) != USB_EP_TX_NAK) {
-            // simply return if transfer in progress
-            return;
+    void send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool wait = true) {
+        uint16_t epr2 = USBEPR->EP[2].EPR;
+        uint16_t epr = USBEPR->EP[endpoint].EPR;
+        if ((epr & USB_EPTX_STAT) == USB_EP_TX_VALID) {
+            if (wait) {
+                while((epr & USB_EPTX_STAT) == USB_EP_TX_VALID);
+            } else {
+                return;
+            }
         }
-        //USBPMA->btable[1].COUNT_TX = 2;
         uint8_t length16 = (length+1)>>1;
         __IO uint16_t * pma_address = USBPMA->buffer[endpoint].EP_TX;
         for(int i=0; i<length16; i++) {
@@ -111,11 +116,11 @@ class USB1 {
     // special function due to difficulty of toggle bits and clear bits;
     // hopefully hardware doesn't change values during this function
     void epr_set_toggle(uint8_t endpoint, uint16_t set_bits, uint16_t set_mask) {
-        uint16_t epr = USBEPR[endpoint]->EPR;
+        uint16_t epr = USBEPR->EP[endpoint].EPR;
         uint16_t epr_toggle = (epr & set_mask) ^ set_bits;
         uint16_t epr_normal = epr & USB_EPREG_MASK;
         uint16_t epr_total = epr_normal | epr_toggle | USB_EP_CTR_TX | USB_EP_CTR_RX; // always write 1 to not clear CTR
-        USBEPR[endpoint]->EPR = epr_total;
+        USBEPR->EP[endpoint].EPR = epr_total;
     }
 
     void interrupt() {
@@ -125,7 +130,7 @@ class USB1 {
             // Set up endpoint 0
             USB->EP0R = USB_EP_CONTROL;
             USBPMA->btable[0].ADDR_TX = offsetof(USBPMA_TypeDef, buffer[0].EP_TX);
-            epr_set_toggle(0, USB_EP_TX_DIS, USB_EPTX_STAT | USB_EP_DTOG_TX);
+            epr_set_toggle(0, USB_EP_TX_NAK, USB_EPTX_STAT | USB_EP_DTOG_TX);
                 // sets the toggle only bits to DIS and clears DTOG, hardware better not change EPR during operation
             USBPMA->btable[0].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[0].EP_RX);
             USBPMA->btable[0].COUNT_RX =  (1 << USB_COUNT0_RX_BLSIZE_Pos) | (2 << USB_COUNT0_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation
@@ -155,76 +160,21 @@ class USB1 {
                             uint8_t byte_count = USBPMA->btable[0].COUNT_RX & USB_COUNT0_RX_COUNT0_RX;
                             read_pma(byte_count, USBPMA->buffer[0].EP_RX, buffer);
                             handle_setup_packet(buffer);
-                            // renable rx on ep0
-                            epr_set_toggle(0, USB_EP_RX_VALID, USB_EPTX_STAT);
-
                             // clear CTR
+                            USB->EP0R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
+                            // renable rx on ep0
+                            epr_set_toggle(0, USB_EP_RX_VALID, USB_EPRX_STAT);
+                        } else { // non setup rx
+                            USB->EP0R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
+                            epr_set_toggle(0, USB_EP_RX_VALID, USB_EPRX_STAT);
                         }
+                    }
+                    if (USB->EP0R & USB_EP_CTR_TX) {
+                        USB->EP0R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
                     }
                     break;
             }
         }
-        //     uint32_t temp = USBx->GRXSTSP;
-        
-        //     uint8_t ep_number = temp & USB_OTG_GRXSTSP_EPNUM;
-        //     uint8_t byte_count = (temp & USB_OTG_GRXSTSP_BCNT) >> USB_OTG_GRXSTSP_BCNT_Pos;
-        //     uint8_t packet_status = (temp & USB_OTG_PKTSTS) >> USB_OTG_PKTSTS_Pos;
-            
-        //     if (packet_status == STS_DATA_UPDT) {
-
-        //         read_fifo(byte_count, rx_data_[ep_number]);
-        //         new_rx_data_[ep_number] = true;
-        //     }
-        //     if (packet_status == STS_SETUP_UPDT) {
-        //         read_fifo(byte_count, reinterpret_cast<uint32_t *>(setup_data));
-        //     }
-        //     if (ep_number == 2) {
-        //         USBx_OUTEP(2)->DOEPTSIZ = 0x80040; 
-        //         USBx_OUTEP(2)->DOEPCTL |= USB_OTG_DOEPCTL_EPENA | USB_OTG_DOEPCTL_CNAK ;
-        //     }
-        // }
-
-        // if(USBx->GINTSTS & USB_OTG_GINTSTS_OEPINT)
-        // {
-        //     uint16_t out_ep_interrupt = (USBx_DEVICE->DAINT & USBx_DEVICE->DAINTMSK) >> 16u;    // endpoints with out interrupts
-        //     if (out_ep_interrupt & 1) { // endpoint 0 interrupt
-        //         if (USBx_OUTEP(0)->DOEPINT & USB_OTG_DOEPINT_XFRC) {
-        //             // transfer complete
-        //         }
-        //         if (USBx_OUTEP(0)->DOEPINT & USB_OTG_DOEPINT_STUP) {
-        //             // setup phase done
-        //             handle_setup_packet(setup_data);
-        //         }
-        //         USBx_OUTEP(0)->DOEPINT = 0xFFFF;
-        //     }
-        //     if (out_ep_interrupt & (1<<2)) { // endpoint 2 interrupt
-        //         if (USBx_OUTEP(2)->DOEPINT & USB_OTG_DOEPINT_XFRC) {
-        //             // transfer complete
-        //             // USBx_OUTEP(2)->DOEPTSIZ = 0x80040; 
-        //             // USBx_OUTEP(2)->DOEPCTL |= USB_OTG_DOEPCTL_EPENA | USB_OTG_DOEPCTL_CNAK ;
-        //         }
-        //         USBx_OUTEP(2)->DOEPINT = 0xFFFF;
-        //     }
-        // }
-
-        // if(USBx->GINTSTS & USB_OTG_GINTSTS_IEPINT)
-        // {
-        //     uint16_t in_ep_interrupt = (USBx_DEVICE->DAINT & USBx_DEVICE->DAINTMSK) & 0xFFFF;    // endpoints with out interrupts
-        //     if (in_ep_interrupt & 1) { // endpoint 0 interrupt
-        //         if (USBx_INEP(0)->DIEPINT & USB_OTG_DOEPINT_XFRC) {
-        //             // transfer complete
-        //             if (device_address_) {
-        //                 //asm("bkpt");
-        //                 // USBx_DEVICE->DCFG &= ~USB_OTG_DCFG_DAD;
-        //                 // USBx_DEVICE->DCFG |= device_address_ << USB_OTG_DCFG_DAD_Pos;
-        //             }
-        //         }
-        //         USBx_INEP(0)->DIEPINT = 0xFFFF;
-        //     }
-        //     if (in_ep_interrupt & (1 << 2)) {
-        //         USBx_INEP(2)->DIEPINT = 0xFFFF;
-        //     }
-        // }
     }
 
  private:

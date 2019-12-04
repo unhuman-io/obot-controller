@@ -14,41 +14,12 @@ typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 byte
     __IO uint16_t ADDR_RX;
     __IO uint16_t COUNT_RX;
     } btable[8];
-    // __IO uint16_t ADDR1_TX;
-    // __IO uint16_t COUNT1_TX;
-    // __IO uint16_t ADDR1_RX;
-    // __IO uint16_t COUNT1_RX;
-    // __IO uint16_t ADDR2_TX;
-    // __IO uint16_t COUNT2_TX;
-    // __IO uint16_t ADDR2_RX;
-    // __IO uint16_t COUNT2_RX;
-    // __IO uint16_t ADDR3_TX;
-    // __IO uint16_t COUNT3_TX;
-    // __IO uint16_t ADDR3_RX;
-    // __IO uint16_t COUNT3_RX;
-    // __IO uint16_t ADDR4_TX;
-    // __IO uint16_t COUNT4_TX;
-    // __IO uint16_t ADDR4_RX;
-    // __IO uint16_t COUNT4_RX;
-    // __IO uint16_t ADDR5_TX;
-    // __IO uint16_t COUNT5_TX;
-    // __IO uint16_t ADDR5_RX;
-    // __IO uint16_t COUNT5_RX;
-    // __IO uint16_t ADDR6_TX;
-    // __IO uint16_t COUNT6_TX;
-    // __IO uint16_t ADDR6_RX;
-    // __IO uint16_t COUNT6_RX;
-    // __IO uint16_t ADDR7_TX;
-    // __IO uint16_t COUNT7_TX;
-    // __IO uint16_t ADDR7_RX;
-    // __IO uint16_t COUNT7_RX;
+
     // below buffer is user specified
     struct {
     __IO uint16_t EP_TX[32];
     __IO uint16_t EP_RX[48];
     } buffer[3];
-    // __IO uint16_t EP2_TX[32];
-    // __IO uint16_t EP2_RX[48];
 } USBPMA_TypeDef;
 #define USBPMA ((USBPMA_TypeDef *) USB_PMAADDR)
 
@@ -58,7 +29,6 @@ typedef struct {
         __IO uint16_t reserved;
     } EP[8];
 } USBEPR_TypeDef;
-
 #define USBEPR ((USBEPR_TypeDef *) &(USB->EP0R))
 
 
@@ -66,17 +36,14 @@ class USB1 {
  public:
     // limited to 64 bytes
     void send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool wait = true) {
-        uint16_t epr2 = USBEPR->EP[2].EPR;
-        uint16_t epr = USBEPR->EP[endpoint].EPR;
-        if ((epr & USB_EPTX_STAT) == USB_EP_TX_VALID) {
+        while ((USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID) {
             if (wait) {
-                while((USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID);
+                continue;
             } else {
-                do {
-                    epr_set_toggle(endpoint, USB_EP_TX_NAK, USB_EPTX_STAT);
-                } while ((USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID);
+                epr_set_toggle(endpoint, USB_EP_TX_NAK, USB_EPTX_STAT);
             }
         }
+        
         uint8_t length16 = (length+1)>>1;
         __IO uint16_t * pma_address = USBPMA->buffer[endpoint].EP_TX;
         for(int i=0; i<length16; i++) {

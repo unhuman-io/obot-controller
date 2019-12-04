@@ -22,7 +22,7 @@ TARGET = bort2
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og -O0
+OPT = -Og -O3
 
 
 #######################################

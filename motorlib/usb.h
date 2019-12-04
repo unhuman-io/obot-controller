@@ -70,9 +70,11 @@ class USB1 {
         uint16_t epr = USBEPR->EP[endpoint].EPR;
         if ((epr & USB_EPTX_STAT) == USB_EP_TX_VALID) {
             if (wait) {
-                while((epr & USB_EPTX_STAT) == USB_EP_TX_VALID);
+                while((USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID);
             } else {
-                return;
+                do {
+                    epr_set_toggle(endpoint, USB_EP_TX_NAK, USB_EPTX_STAT);
+                } while ((USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID);
             }
         }
         uint8_t length16 = (length+1)>>1;
@@ -171,6 +173,15 @@ class USB1 {
                     }
                     if (USB->EP0R & USB_EP_CTR_TX) {
                         USB->EP0R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
+                    }
+                    break;
+                case 2:
+                    if (USB->ISTR & USB_ISTR_DIR) { // RX
+                        USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
+                        epr_set_toggle(0, USB_EP_RX_VALID, USB_EPRX_STAT);
+                    }
+                    if (USB->EP2R & USB_EP_CTR_TX) {
+                        USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
                     }
                     break;
             }

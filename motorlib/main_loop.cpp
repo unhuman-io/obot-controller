@@ -49,7 +49,7 @@ void MainLoop::update() {
   send_data.joint_position = 0;
   send_data.reserved[0] = fast_loop_status_.foc_status.measured.i_0;
   //  USB_send(reinterpret_cast<uint8_t *>(&count_),sizeof(count_));
-  //communication_.send_data(send_data);
+  communication_.send_data(send_data);
   led_.update();
 }
 

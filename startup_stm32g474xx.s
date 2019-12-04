@@ -284,33 +284,33 @@ g_pfnVectors:
 * this definition.
 *
 *******************************************************************************/
-/*
-	.weak	NMI_Handler
-	.thumb_set NMI_Handler,Infinite_Loop1
 
-	.weak	HardFault_Handler
-	.thumb_set HardFault_Handler,Infinite_Loop2
+//	.weak	NMI_Handler
+//	.thumb_set NMI_Handler,Infinite_Loop1
 
-	; .weak	MemManage_Handler
-	; .thumb_set MemManage_Handler,Default_Handler
+//	.weak	HardFault_Handler
+//	.thumb_set HardFault_Handler,Infinite_Loop2
 
-	; .weak	BusFault_Handler
-	; .thumb_set BusFault_Handler,Default_Handler
+//	; .weak	MemManage_Handler
+//	; .thumb_set MemManage_Handler,Default_Handler
 
-	; .weak	UsageFault_Handler
-	; .thumb_set UsageFault_Handler,Default_Handler
+//	; .weak	BusFault_Handler
+//	; .thumb_set BusFault_Handler,Default_Handler
 
-	; .weak	SVC_Handler
-	; .thumb_set SVC_Handler,Default_Handler
+//	; .weak	UsageFault_Handler
+//	; .thumb_set UsageFault_Handler,Default_Handler
 
-	; .weak	DebugMon_Handler
-	; .thumb_set DebugMon_Handler,Default_Handler
+//	; .weak	SVC_Handler
+//	; .thumb_set SVC_Handler,Default_Handler
 
-	; .weak	PendSV_Handler
-	; .thumb_set PendSV_Handler,Default_Handler
+//	; .weak	DebugMon_Handler
+//	; .thumb_set DebugMon_Handler,Default_Handler
 
-	; .weak	SysTick_Handler
-	; .thumb_set SysTick_Handler,Default_Handler*/
+//	; .weak	PendSV_Handler
+//	; .thumb_set PendSV_Handler,Default_Handler
+
+//	; .weak	SysTick_Handler
+//	; .thumb_set SysTick_Handler,Default_Handler*/
 
 	.weak	WWDG_IRQHandler
 	.thumb_set WWDG_IRQHandler,Infinite_Loop5
@@ -345,11 +345,11 @@ g_pfnVectors:
 	; .weak	EXTI4_IRQHandler
 	; .thumb_set EXTI4_IRQHandler,Default_Handler
 
-	; .weak	DMA1_Channel1_IRQHandler
-	; .thumb_set DMA1_Channel1_IRQHandler,Default_Handler
+//	; .weak	DMA1_Channel1_IRQHandler
+//	; .thumb_set DMA1_Channel1_IRQHandler,Default_Handler
 
-	; .weak	DMA1_Channel2_IRQHandler
-	; .thumb_set DMA1_Channel2_IRQHandler,Default_Handler
+//	; .weak	DMA1_Channel2_IRQHandler
+//	; .thumb_set DMA1_Channel2_IRQHandler,Default_Handler
 
 	; .weak	DMA1_Channel3_IRQHandler
 	; .thumb_set DMA1_Channel3_IRQHandler,Default_Handler
@@ -369,11 +369,11 @@ g_pfnVectors:
 //	.weak	ADC1_2_IRQHandler
 //	.thumb_set ADC1_2_IRQHandler,Infinite_Loop3
 */
-	; .weak	USB_HP_IRQHandler
-	; .thumb_set USB_HP_IRQHandler,Default_Handler
+//	; .weak	USB_HP_IRQHandler
+//	; .thumb_set USB_HP_IRQHandler,Default_Handler
 /*
-	; ; .weak	USB_LP_IRQHandler
-	; ; .thumb_set USB_LP_IRQHandler,Default_Handler
+//	; ; .weak	USB_LP_IRQHandler
+//	; ; .thumb_set USB_LP_IRQHandler,Default_Handler
 */
 	; .weak	FDCAN1_IT0_IRQHandler
 	; .thumb_set FDCAN1_IT0_IRQHandler,Default_Handler
@@ -387,8 +387,8 @@ g_pfnVectors:
 	; .weak	TIM1_BRK_TIM15_IRQHandler
 	; .thumb_set TIM1_BRK_TIM15_IRQHandler,Default_Handler
 
-	; .weak	TIM1_UP_TIM16_IRQHandler
-	; .thumb_set TIM1_UP_TIM16_IRQHandler,Default_Handler
+//	; .weak	TIM1_UP_TIM16_IRQHandler
+//	; .thumb_set TIM1_UP_TIM16_IRQHandler,Default_Handler
 
 	; .weak	TIM1_TRG_COM_TIM17_IRQHandler
 	; .thumb_set TIM1_TRG_COM_TIM17_IRQHandler,Default_Handler

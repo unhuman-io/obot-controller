@@ -240,6 +240,7 @@ void DMA1_Channel2_IRQHandler(void)
 /**
   * @brief This function handles ADC1 and ADC2 global interrupt.
   */
+void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
@@ -250,10 +251,6 @@ void ADC1_2_IRQHandler(void)
   uint8_t lsu_start = get_lsu_count();
   uint8_t fold_start = DWT->FOLDCNT;
   fast_loop_update();
-  if (i++ > 10){
-    i=0;
-  //main_loop_update();
-  }
   cpi_diff1 = get_cpi_count() - cpi_start;
 #if 0
   /* USER CODE END ADC1_2_IRQn 0 */

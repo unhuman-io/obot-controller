@@ -10,31 +10,29 @@
 #include "foc_i.h"
 
 void MainLoop::init() {
-    communication_.init();
+    //communication_.init();
 }
-
-#include "../Src/usb/usbd_rt_if.h"
 
 void MainLoop::update() {
   count_++;
-  // int count_received = communication_.receive_data(&receive_data_);
-  // if (count_received) {
-  //   if (mode_ != static_cast<MainControlMode>(receive_data_.mode_desired)) {
-  //     mode_ = static_cast<MainControlMode>(receive_data_.mode_desired);
-  //     switch (mode_) {
-  //       case OPEN:
-  //       default:
-  //         fast_loop_open_mode();
-  //         break;
-  //       case BRAKE:
-  //         fast_loop_brake_mode();
-  //         break;
-  //       case NORMAL_CONTROL:
-  //         fast_loop_current_mode();
-  //         break;
-  //     }
-  //   }
-  // }
+  int count_received = communication_.receive_data(&receive_data_);
+  if (count_received) {
+    if (mode_ != static_cast<MainControlMode>(receive_data_.mode_desired)) {
+      mode_ = static_cast<MainControlMode>(receive_data_.mode_desired);
+      switch (mode_) {
+        case OPEN:
+        default:
+          fast_loop_open_mode();
+          break;
+        case BRAKE:
+          fast_loop_brake_mode();
+          break;
+        case NORMAL_CONTROL:
+          fast_loop_current_mode();
+          break;
+      }
+    }
+  }
   
   fast_loop_get_status(&fast_loop_status_);
 
@@ -49,9 +47,9 @@ void MainLoop::update() {
   send_data.motor_encoder = fast_loop_status_.motor_position.raw;
   send_data.motor_position = fast_loop_status_.motor_position.position;
   send_data.joint_position = 0;
-  send_data.reserved[0] = fast_loop_status_.foc_status.measured.i_0;
-    USB_send(reinterpret_cast<uint8_t *>(&count_),sizeof(count_));
- // communication_.send_data(send_data);
+  send_data.reserved[0] = 0;
+  //  USB_send(reinterpret_cast<uint8_t *>(&count_),sizeof(count_));
+  communication_.send_data(send_data);
   led_.update();
 }
 

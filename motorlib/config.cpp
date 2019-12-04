@@ -5,11 +5,14 @@
 #include "encoder.h"
 #include "pwm.h"
 #include "gpio.h"
+#include "usb.h"
 
-#include "dev_00_aksim2.cpp"
+
 #include "actuator.h"
 
 const Config config;
+static USB1 usb_;
+#include "dev_00_aksim2.cpp"
 static Actuator actuator_ = {config_items.fast_loop, config_items.main_loop};
 
 Config::Config() :
@@ -20,4 +23,8 @@ Config::Config() :
 
 void actuator_run() {
     actuator_.run();
+}
+
+void usb_interrupt() {
+    usb_.interrupt();
 }

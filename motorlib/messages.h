@@ -184,7 +184,7 @@ typedef struct {
     float joint_position;               // joint position in radians
     float iq;                           // Measured motor current in A line-line
     int32_t motor_encoder;              // motor position in raw counts
-    float reserved[2];
+    uint32_t reserved[2];
 } SendData;
 
 typedef struct {
@@ -192,6 +192,7 @@ typedef struct {
     uint8_t mode_desired;               // 0: open, 1: brake, 2: active
     float current_desired;              // motor current desired in A line-line
     float position_desired;             // motor position desired in rad
+    uint32_t reserved[3];
 } ReceiveData;
 
 #endif

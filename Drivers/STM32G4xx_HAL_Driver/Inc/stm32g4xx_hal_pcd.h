@@ -465,7 +465,6 @@ PCD_StateTypeDef HAL_PCD_GetState(PCD_HandleTypeDef *hpcd);
 #define PCD_SET_EP_TX_STATUS(USBx, bEpNum, wState) do { \
    register uint16_t _wRegVal; \
    \
-    while((PCD_GET_ENDPOINT(USBx, bEpNum) & USB_EP_TX_VALID) == USB_EP_TX_VALID) {} \
     _wRegVal = PCD_GET_ENDPOINT((USBx), (bEpNum)) & USB_EPTX_DTOGMASK; \
    /* toggle first bit ? */ \
    if ((USB_EPTX_DTOG1 & (wState))!= 0U) \
@@ -489,7 +488,7 @@ PCD_StateTypeDef HAL_PCD_GetState(PCD_HandleTypeDef *hpcd);
   */
 #define PCD_SET_EP_RX_STATUS(USBx, bEpNum,wState) do { \
     register uint16_t _wRegVal; \
-   \
+    \
     _wRegVal = PCD_GET_ENDPOINT((USBx), (bEpNum)) & USB_EPRX_DTOGMASK; \
     /* toggle first bit ? */ \
     if ((USB_EPRX_DTOG1 & (wState))!= 0U) \

@@ -5,7 +5,6 @@
 
 class Communication {
  public:
-    virtual void init() = 0;
     virtual int receive_data(ReceiveData * const data) = 0;
     virtual void send_data(const SendData &data) = 0;
 };

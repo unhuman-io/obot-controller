@@ -18,6 +18,6 @@ static struct {
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR4)), true};
     PIDController controller;
-    USBCommunication communication;
+    USBCommunication communication = {usb_};
     MainLoop main_loop = {controller, communication, led};
 } config_items;

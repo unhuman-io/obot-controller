@@ -1,7 +1,7 @@
 #ifndef SPI_ENCODER
 #define SPI_ENCODER
 
-#include "encoder.h"
+#include "../../encoder.h"
 #include "../st_device.h"
 
 

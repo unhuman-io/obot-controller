@@ -17,7 +17,7 @@ class Hysteresis {
 
 class KahanSum {
  public:
-    float add(float input) __attribute__((section (".ccmram")))
+    float add(float input) //__attribute__((section (".ccmram")))
     {
         float y = input - c_;
         float t = sum_ + y;
@@ -25,7 +25,7 @@ class KahanSum {
         sum_ = t;
         return sum_;
     }
-    float value() const __attribute__((section (".ccmram")))
+    float value() const //__attribute__((section (".ccmram")))
     {
         return sum_;
     }

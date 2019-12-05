@@ -1,5 +1,5 @@
 #include "spi_encoder.h"
-#include "gpio.h"
+#include "../../gpio.h"
 
 void SPIEncoder::trigger() {
     gpio_cs_.clear();

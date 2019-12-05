@@ -25,6 +25,9 @@ void HRPWM::brake_mode() {
     regs_.sTimerxRegs[ch_b_].RSTx1R = HRTIM_RST1R_SRT;
     regs_.sTimerxRegs[ch_c_].RSTx1R = HRTIM_RST1R_SRT;
     regs_.sCommonRegs.CR1 = 0x0; // enable updates
+    regs_.sTimerxRegs[ch_a_].RSTx1R = HRTIM_RST1R_SRT;
+    regs_.sTimerxRegs[ch_b_].RSTx1R = HRTIM_RST1R_SRT;
+    regs_.sTimerxRegs[ch_c_].RSTx1R = HRTIM_RST1R_SRT;
 }
 
 void HRPWM::voltage_mode() {

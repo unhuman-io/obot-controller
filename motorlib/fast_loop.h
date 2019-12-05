@@ -16,6 +16,7 @@ class FastLoop {
     void maintenance();
     void set_id_des(float id) { id_des = id; }
     void set_iq_des(float iq) { if (mode_ == CURRENT_MODE) iq_des = iq; }
+    void set_reserved(float reserved) { reserved_ = reserved; }
     void phase_lock_mode(float id);
     void current_mode();
     void voltage_mode();
@@ -47,7 +48,7 @@ class FastLoop {
     uint16_t adc1, adc2, adc3;
     FOCCommand foc_command_ = {};
 
-    int32_t motor_index_pos_;
+    int32_t motor_index_pos_ = 0;
     int32_t motor_electrical_zero_pos_;
     float inv_motor_encoder_cpr_;
     int32_t frequency_hz_ = 100000;
@@ -58,6 +59,7 @@ class FastLoop {
     float v_bus_ = 12;
     mcu_time timestamp_;
    Encoder &encoder_;
+   float reserved_ = 0;
 };
 
 #endif

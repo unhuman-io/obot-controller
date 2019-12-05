@@ -56,11 +56,48 @@ defined in linker script */
  * @retval : None
 */
 
+.set RCC_BASE,        0x40021000
+.set RCC_CSR_OFFSET,  0x94
+.set RCC_CSR_SFTRSTF_POS, 28
+.set RCC_CSR_RMVF_POS,    23
+.set RCC_CSR_PINRSTF_POS,    26
+
+.set RCC_APB2SMENR,         0x40021080
+.set RCC_SYSCFGEN_POS,    0
+.set SYSCFG_MEMRMP,	      0x40010000
+
     .section	.text.Reset_Handler
+Reboot_Loader:
+    ldr     r0, =RCC_APB2SMENR 
+    ldr     r1, =#(1<<RCC_SYSCFGEN_POS) 
+    str     r1, [r0]
+	nop		/* found experimentally that this is needed */
+    ldr     r0, =#SYSCFG_MEMRMP /* SYSCFG_MEMRMP */
+    ldr     r1, =0x00000001 /* MAP ROM AT ZERO */
+    str     r1, [r0]
+    ldr     r0, =0x1FFF0000 /* ROM BASE */
+    ldr     SP,[r0]     /* SP @ +0 */
+    ldr     r0,[r0, #4]     /* PC @ +4 */
+    bx      r0
+
+
 	.weak	Reset_Handler
 	.type	Reset_Handler, %function
 Reset_Handler:
+	ldr r0, =RCC_BASE
+	ldr r1, [r0, #RCC_CSR_OFFSET]
+	tst r1, #(1<<RCC_CSR_SFTRSTF_POS)
+	orr r1, #(1<<RCC_CSR_RMVF_POS)
+	str r1, [r0, #RCC_CSR_OFFSET]
+	beq Original_Reset_Handler
+	ldr r0, =go_to_bootloader
+	ldr r1, [r0]
+	cmp r1, #0
+	mov r1, #0
+	str r1, [r0]
+	bne Reboot_Loader
 
+Original_Reset_Handler:
   ldr   r0, =_estack
   mov   sp, r0          /* set stack pointer */
 

@@ -2,7 +2,8 @@
 #include <algorithm>
 #include <cstring>
 
-#include "stm32g4xx_hal.h"
+#include "stm32g4xx.h"
+#include "../../util.h"
 
 typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 bytes, reception buffers need two additional bytes for CRC
     struct {
@@ -361,8 +362,11 @@ void USB1::interrupt() {
             break;
         case 0x21:  // interface class request
             if ((setup_data[1] == 0) && (interface_ == 1)) { // dfu detach
-                go_to_bootloader = true;
                 send_data(0,0,0);
+                while ((USB->EP0R & USB_EPTX_STAT) == USB_EP_TX_VALID); // wait for packet to go through
+                ms_delay(10);
+                go_to_bootloader = true;
+                NVIC_SystemReset();
             } else {
                 send_stall(0);
             }

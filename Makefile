@@ -23,7 +23,7 @@ TARGET = bort2
 DEBUG = 1
 # optimization
 OPT = -Og -O3
-LTO = -flto
+LTO = #-flto
 
 
 #######################################

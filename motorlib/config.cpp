@@ -3,7 +3,7 @@
 #include "communication.h"
 #include "control_fun.h"
 #include "encoder.h"
-#include "pwm.h"
+#include "peripheral/pwm.h"
 #include "gpio.h"
 #include "peripheral/usb.h"
 

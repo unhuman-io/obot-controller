@@ -11,8 +11,8 @@ class QEPEncoder : public Encoder {
       counter_reg_ = reinterpret_cast<volatile int32_t *>(&(regs_.CNT));
       index_reg_ = reinterpret_cast<volatile int32_t *>(&(regs_.CCR3));
    }
-   virtual int32_t get_value() { return *counter_reg_; }
-   virtual void trigger() {}
+   virtual int32_t get_value() { return *counter_reg_; } __attribute__((section (".ccmram")));
+   virtual void trigger() {} __attribute__((section (".ccmram")));
    virtual int32_t get_index_pos() { return *index_reg_; }
    virtual bool index_received() { return regs_.SR & TIM_SR_CC3IF; }
  private:

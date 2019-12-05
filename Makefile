@@ -81,7 +81,6 @@ foc_i.cpp\
 foc.cpp\
 gpio.cpp\
 main_loop.cpp\
-pwm.cpp\
 sincos.cpp\
 config.cpp\
 usb_communication.cpp\
@@ -89,6 +88,7 @@ spi_encoder.cpp\
 actuator.cpp\
 util.cpp\
 motorlib/peripheral/stm32g4/usb.cpp\
+hrpwm.cpp\
 #aksim2_encoder.cpp\
 
 # ASM sources

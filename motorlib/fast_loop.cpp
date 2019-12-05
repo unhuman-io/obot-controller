@@ -2,7 +2,7 @@
 #include "fast_loop.h"
 #include "foc.h"
 #include <cmath>
-#include "pwm.h"
+#include "peripheral/pwm.h"
 #include "util.h"
 #include "encoder.h"
 #include "../st_device.h"

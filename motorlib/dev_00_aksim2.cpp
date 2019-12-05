@@ -1,13 +1,14 @@
 #include "aksim2_encoder.h"
 #include "usb_communication.h"
 #include "../st_device.h"
+#include "qep_encoder.h"
 
 extern const volatile Param initial_param;
 
 static struct {
     //GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     //Aksim2Encoder motor_encoder = {*SPI3, motor_encoder_cs};
-    Encoder motor_encoder = {reinterpret_cast<volatile int32_t *>(&TIM5->CNT)};
+    QEPEncoder motor_encoder = {*TIM5};
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     PWM motor_pwm = {initial_param.fast_loop_param.pwm_frequency, *const_cast<uint32_t*>(&HRTIM1_TIMD->CMP1xR), 
                           *const_cast<uint32_t*>(&HRTIM1_TIMF->CMP1xR), 

@@ -84,13 +84,12 @@ main_loop.cpp\
 pwm.cpp\
 sincos.cpp\
 config.cpp\
-aksim2_encoder.cpp\
 usb_communication.cpp\
 spi_encoder.cpp\
 actuator.cpp\
 util.cpp\
 motorlib/peripheral/stm32g4/usb.cpp\
-
+#aksim2_encoder.cpp\
 
 # ASM sources
 ASM_SOURCES =  \

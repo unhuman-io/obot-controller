@@ -12,7 +12,7 @@
 
 const Config config;
 static USB1 usb_;
-#include "dev_00_aksim2.cpp"
+#include "config_g474_boost.cpp"
 static Actuator actuator_ = {config_items.fast_loop, config_items.main_loop};
 
 Config::Config() :

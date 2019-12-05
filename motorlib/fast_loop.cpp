@@ -66,7 +66,7 @@ void FastLoop::update() {
         pwm_.set_voltage(&foc_status->command.v_a);
     }
 
-    dt_ = (timestamp_ - last_timestamp_)*(1.0f/CPU_FREQUENCY_HZ);
+    dt_ = (timestamp_ - last_timestamp_)*(float) (1.0f/CPU_FREQUENCY_HZ);
     dt_sum_ += dt_;
     last_timestamp_ = timestamp_;
     t_seconds_.add(dt_);

@@ -13,7 +13,7 @@ class FastLoop {
  public:
     FastLoop(PWM &pwm, Encoder &encoder); // TODO consider changing encoder to template
     ~FastLoop();
-    void update()  __attribute__((section (".ccmram")));;
+    void update()  __attribute__((section (".ccmram")));
     void maintenance();
     void set_id_des(float id) { id_des = id; }
     void set_iq_des(float iq) { if (mode_ == CURRENT_MODE) iq_des = iq; }

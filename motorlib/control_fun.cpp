@@ -39,6 +39,23 @@ float fsat(float a, float sat) {
     // return a;
 }
 
+float fsignf(float a) {
+    return a>=0 ? 1 : -1;
+}
+
+void Hysteresis::set_hysteresis(float value) {
+    hysteresis_ = value;
+}
+
+float Hysteresis::step(float value) {
+    if (value - value_ > hysteresis_) {
+        value_ = value - hysteresis_;
+    } else if (value - value_ < -hysteresis_) {
+        value_ = value + hysteresis_;
+    }
+    return value_;
+}
+
 void PIController::set_param(const PIParam &pi_param) {
     ki_ = pi_param.ki;
     kp_ = pi_param.kp;
@@ -59,13 +76,27 @@ void PIDController::set_param(const PIDParam &param) {
     ki_limit_ = param.ki_limit;
     kd_ = param.kd;
     command_max_ = param.command_max;
+    error_dot_filter_.set_frequency(param.velocity_filter_frequency_hz);
+    hysteresis_.set_hysteresis(command_max_/kp_);
 }
 
 float PIDController::step(float desired, float measured) {
-    float error = desired - measured;
-    float error_dot = error-error_last_;
+    // if (desired != last_desired_) {
+    //     last_desired_ = desired;
+    //     hysteresis_.set_value(desired);
+    // }
+
+   // float proxy_desired = desired; //hysteresis_.step(measured);
+    float proxy_desired = rate_limit_.step(desired);
+    float error = proxy_desired - measured;
+    float error_dot = error_dot_filter_.update((error-error_last_)/dt_);
     error_last_ = error;
     ki_sum_ += ki_ * error;
     ki_sum_ = fsat(ki_sum_, ki_limit_);
     return fsat(kp_*error + ki_sum_ + kd_*error_dot, command_max_);
+}
+
+float PIDDeadbandController::step(float desired, float deadband, float measured) {
+    float desired_with_deadband = fsignf(desired-measured)*fmaxf(fabsf(desired-measured) - deadband, 0) + measured;
+    return PIDController::step(desired_with_deadband, measured);
 }

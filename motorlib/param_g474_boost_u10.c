@@ -15,7 +15,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.foc_param.num_poles = 20,
     .main_loop_param.gear_ratio = 50,
     .main_loop_param.kt = .012*sqrt(.5),
-    .startup_param.startup_mode = NORMAL_CONTROL,
+    .startup_param.startup_mode = CURRENT,
     .main_loop_param.update_frequency = 10000,
     .fast_loop_param.adc1_offset = 1980,
     .fast_loop_param.adc2_offset = 1980,
@@ -31,9 +31,10 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .main_loop_param.torque_bias = 0.025,
     .main_loop_param.torque_gain = -25,
     .fast_loop_param.vbus_gain = 3.26/4096*(82.+4.99)/4.99,
-    .main_loop_param.controller_param.kp = 0,
-    .main_loop_param.controller_param.kd = 0,
-    .main_loop_param.controller_param.command_max = 3,
+    .main_loop_param.controller_param.kp = 100,
+    .main_loop_param.controller_param.kd = .5,
+    .main_loop_param.controller_param.velocity_filter_frequency_hz = 100,
+    .main_loop_param.controller_param.command_max = 5,
     .fast_loop_param.cogging.table = {
 #include "cogprocessed.csv"
     },

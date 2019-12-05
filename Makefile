@@ -69,7 +69,7 @@ Src/main.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
 motorlib/param.c \
-param_dev_00_robo.c \
+param_g474_boost_u10.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 

@@ -7,6 +7,7 @@
         "main.h": "c",
         "foc_i.h": "c",
         "stm32g4xx_it.h": "c",
-        "util.h": "c"
+        "util.h": "c",
+        "cmath": "cpp"
     },
 }

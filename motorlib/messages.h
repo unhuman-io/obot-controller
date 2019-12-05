@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define MAX_DATA_LENGTH 120 // bytes
-typedef int32_t mcu_time;
+typedef uint32_t mcu_time;
 
 typedef struct {
     float kp;
@@ -20,6 +20,7 @@ typedef struct {
     float ki_limit;
     float kd;
     float command_max;
+    float velocity_filter_frequency_hz;
 } PIDParam;
 
 typedef struct {
@@ -49,10 +50,13 @@ typedef struct {
     float vbus_gain;
 } FastLoopParam;
 
-enum MainControlMode {OPEN, BRAKE, NORMAL_CONTROL};
+enum MainControlMode {OPEN, DAMPED, CURRENT, POSITION, CURRENT_TUNING, POSITION_TUNING};
 typedef struct {
     int32_t update_frequency;
     PIDParam controller_param;
+    struct {
+        float cpr;
+    } output_encoder;
     float torque_gain, torque_bias;
     float kt;
     float gear_ratio;
@@ -103,9 +107,11 @@ typedef struct {
         int32_t raw;
         float position;
         float velocity;
+        int32_t index_pos;
     } motor_position;
     float motor_mechanical_position;
     FOCCommand foc_command;
+    float t_seconds;
 } FastLoopStatus;
 
 typedef struct {
@@ -184,15 +190,15 @@ typedef struct {
     float joint_position;               // joint position in radians
     float iq;                           // Measured motor current in A line-line
     int32_t motor_encoder;              // motor position in raw counts
-    uint32_t reserved[2];
+    float reserved[2];
 } SendData;
 
 typedef struct {
     uint32_t host_timestamp;            // Value from host
-    uint8_t mode_desired;               // 0: open, 1: brake, 2: active
+    uint8_t mode_desired;               // 0: open, 1: damped, 2: active
     float current_desired;              // motor current desired in A line-line
     float position_desired;             // motor position desired in rad
-    uint32_t reserved[3];
+    float reserved;            // no position control for values < abs(position_deadband - position_desired)
 } ReceiveData;
 
 #endif

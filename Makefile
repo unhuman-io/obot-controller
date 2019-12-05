@@ -87,9 +87,9 @@ config.cpp\
 aksim2_encoder.cpp\
 usb_communication.cpp\
 spi_encoder.cpp\
-usb.cpp\
 actuator.cpp\
 util.cpp\
+motorlib/peripheral/stm32g4/usb.cpp\
 
 
 # ASM sources

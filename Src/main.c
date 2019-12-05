@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "../motorlib/config.h"
+uint8_t go_to_bootloader = 0;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

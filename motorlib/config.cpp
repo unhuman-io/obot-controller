@@ -5,7 +5,7 @@
 #include "encoder.h"
 #include "pwm.h"
 #include "gpio.h"
-#include "usb.h"
+#include "peripheral/usb.h"
 
 
 #include "actuator.h"

@@ -244,12 +244,12 @@ void DMA1_Channel2_IRQHandler(void)
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
-  static int i = 0;
   GPIOC->BSRR |= GPIO_BSRR_BS12;
   uint32_t t_start = get_clock();
   uint8_t cpi_start = get_cpi_count();
   uint8_t lsu_start = get_lsu_count();
   uint8_t fold_start = DWT->FOLDCNT;
+  asm("NOP");
   fast_loop_update();
   cpi_diff1 = get_cpi_count() - cpi_start;
 #if 0

@@ -5,13 +5,15 @@
 #include "fast_loop.h"
 #include "main_loop.h"
 
+template <class PWM, class Encoder>
 class Actuator;
 
+template <class PWM, class Encoder>
 struct Config {
     Config();
-    FastLoop &fast_loop;
+    FastLoop<PWM, Encoder> &fast_loop;
     MainLoop &main_loop;
-    Actuator &actuator;
+    Actuator<PWM, Encoder> &actuator;
 };
 
 extern const Config config;

@@ -4,7 +4,8 @@
 #include "fast_loop.h"
 #include "main_loop.h"
 
-void Actuator::run() {
+template <class PWM, class Encoder>
+void Actuator<PWM, Encoder>::run() {
     // zero current sensors in voltage mode to try to eliminate bias from pwm noise, could also do open mode
     fast_loop_.voltage_mode();
     uint32_t t_start = get_clock();

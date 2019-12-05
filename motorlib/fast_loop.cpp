@@ -7,20 +7,25 @@
 #include "encoder.h"
 #include "../st_device.h"
 
-FastLoop::FastLoop(PWM &pwm, Encoder &encoder) : pwm_(pwm), encoder_(encoder) {
+template <class PWM, class Encoder>
+FastLoop<PWM, Encoder>::FastLoop(PWM &pwm, Encoder &encoder) : pwm_(pwm), encoder_(encoder) {
     foc_ = new FOC;
 }
 
-FastLoop::~FastLoop() {
+template <class PWM, class Encoder>
+FastLoop<PWM, Encoder>::~FastLoop() {
     delete foc_;
 }
 
 // called at fixed frequency in an interrupt
-void FastLoop::update() {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::update() {
     // trigger encoder read
+    asm("NOP");
     encoder_.trigger();
-
+    asm("NOP");
     timestamp_ = get_clock();
+    //asm("bkpt");
 
     // get ADC
     adc1 = ADC2->JDR1;
@@ -73,7 +78,8 @@ void FastLoop::update() {
 }
 
 // called at a slow frequency in a non interrupt
-void FastLoop::maintenance() {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::maintenance() {
     if (encoder_.index_received()) {
         motor_index_pos_ = encoder_.get_index_pos();
         if (param_.motor_encoder.use_index_electrical_offset_pos) {
@@ -92,7 +98,8 @@ void FastLoop::maintenance() {
     pwm_.set_vbus(v_bus_);
 }
 
-void FastLoop::set_param(const FastLoopParam &fast_loop_param) {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::set_param(const FastLoopParam &fast_loop_param) {
     foc_->set_param(fast_loop_param.foc_param);
     param_ = fast_loop_param;
     set_phase_mode();
@@ -100,18 +107,21 @@ void FastLoop::set_param(const FastLoopParam &fast_loop_param) {
     frequency_hz_ = param_.pwm_frequency;
 }
 
-void FastLoop::voltage_mode() {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::voltage_mode() {
     pwm_.voltage_mode();
     mode_ = VOLTAGE_MODE;
 }
 
-void FastLoop::zero_current_sensors() {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::zero_current_sensors() {
     ia_bias_ = (1-alpha_zero_)*ia_bias_ + alpha_zero_* param_.adc1_gain*(adc1-param_.adc1_offset);
     ib_bias_ = (1-alpha_zero_)*ib_bias_ + alpha_zero_* param_.adc2_gain*(adc2-param_.adc2_offset);
     ic_bias_ = (1-alpha_zero_)*ic_bias_ + alpha_zero_* param_.adc3_gain*(adc3-param_.adc3_offset);
 }
 
-void FastLoop::phase_lock_mode(float id) {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::phase_lock_mode(float id) {
     phase_mode_ = 0;
     id_des = id;
     iq_des_gain_ = 0;
@@ -119,7 +129,8 @@ void FastLoop::phase_lock_mode(float id) {
     mode_ = PHASE_LOCK_MODE;
 }
 
-void FastLoop::current_mode() {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::current_mode() {
     phase_mode_ = phase_mode_desired_;
     id_des = 0;
     iq_des_gain_ = 1;
@@ -127,17 +138,20 @@ void FastLoop::current_mode() {
     mode_ = CURRENT_MODE;
 }
 
-void FastLoop::brake_mode() {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::brake_mode() {
     pwm_.brake_mode();
     mode_ = BRAKE_MODE;
 }
 
-void FastLoop::open_mode() {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::open_mode() {
     pwm_.open_mode();
     mode_ = OPEN_MODE;
 }
 
-void FastLoop::get_status(FastLoopStatus *fast_loop_status) {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::get_status(FastLoopStatus *fast_loop_status) {
     foc_->get_status(&(fast_loop_status->foc_status));
     fast_loop_status->motor_mechanical_position = motor_mechanical_position_;
     fast_loop_status->foc_command = foc_command_;
@@ -150,6 +164,7 @@ void FastLoop::get_status(FastLoopStatus *fast_loop_status) {
     dt_sum_ = 0;
 }
 
-void FastLoop::set_phase_mode() {
+template <class PWM, class Encoder>
+void FastLoop<PWM, Encoder>::set_phase_mode() {
     phase_mode_desired_ = param_.phase_mode == 0 ? 1 : -1;
 }

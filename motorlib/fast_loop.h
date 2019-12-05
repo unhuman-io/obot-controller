@@ -6,9 +6,8 @@
 #include "control_fun.h"
 
 class FOC;
-class PWM;
-class Encoder;
 
+template <class PWM, class Encoder>
 class FastLoop {
  public:
     FastLoop(PWM &pwm, Encoder &encoder); // TODO consider changing encoder to template
@@ -64,7 +63,7 @@ class FastLoop {
    KahanSum t_seconds_;
    mcu_time last_timestamp_ = 0;
    float dt_ = 0;
-   float dt_sum_ = 0;
+   volatile float dt_sum_ = 0;
 };
 
 #endif

@@ -7,7 +7,9 @@
 #include "encoder.h"
 #include "../st_device.h"
 
-FastLoop::FastLoop(PWM &pwm, Encoder &encoder) : pwm_(pwm), encoder_(encoder) {
+#include "qep_encoder.h"
+#include "peripheral/stm32g4/hrpwm.h"
+FastLoop::FastLoop(HRPWM &pwm, QEPEncoder &encoder) : pwm_(pwm), encoder_(encoder) {
     foc_ = new FOC;
 }
 

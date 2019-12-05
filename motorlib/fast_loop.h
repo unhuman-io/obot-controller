@@ -6,12 +6,12 @@
 #include "control_fun.h"
 
 class FOC;
-class PWM;
-class Encoder;
+class HRPWM;
+class QEPEncoder;
 
 class FastLoop {
  public:
-    FastLoop(PWM &pwm, Encoder &encoder); // TODO consider changing encoder to template
+    FastLoop(HRPWM &pwm, QEPEncoder &encoder); // TODO consider changing encoder to template
     ~FastLoop();
     void update()  __attribute__((section (".ccmram")));
     void maintenance();
@@ -30,7 +30,7 @@ class FastLoop {
  private:
     FastLoopParam param_;
     FOC *foc_;
-    PWM &pwm_;
+    HRPWM &pwm_;
     enum {OPEN_MODE, BRAKE_MODE, CURRENT_MODE, PHASE_LOCK_MODE, VOLTAGE_MODE} mode_ = CURRENT_MODE;
 
     int32_t motor_enc;
@@ -59,7 +59,7 @@ class FastLoop {
     float alpha_zero_ = 0.001;
     float v_bus_ = 12;
     mcu_time timestamp_;
-   Encoder &encoder_;
+   QEPEncoder &encoder_;
    float reserved_ = 0;
    KahanSum t_seconds_;
    mcu_time last_timestamp_ = 0;

@@ -111,7 +111,7 @@ typedef struct {
     } motor_position;
     float motor_mechanical_position;
     FOCCommand foc_command;
-    float t_seconds;
+    float t_seconds, dt;
 } FastLoopStatus;
 
 typedef struct {

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "messages.h"
+#include "control_fun.h"
 
 class FOC;
 class PWM;
@@ -60,6 +61,10 @@ class FastLoop {
     mcu_time timestamp_;
    Encoder &encoder_;
    float reserved_ = 0;
+   KahanSum t_seconds_;
+   mcu_time last_timestamp_ = 0;
+   float dt_ = 0;
+   float dt_sum_ = 0;
 };
 
 #endif

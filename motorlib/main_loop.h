@@ -24,10 +24,12 @@ class MainLoop {
     Communication &communication_;
     LED &led_;
     ReceiveData receive_data_ = {};
+    ReceiveData last_receive_data_ = {};
     uint64_t count_ = 0;
     FastLoopStatus fast_loop_status_ = {};
     MainControlMode mode_ = OPEN;
     Encoder &output_encoder_;
+    float dt_sum_;
 
 
 inline uint16_t minu16(uint16_t a, uint16_t b) {

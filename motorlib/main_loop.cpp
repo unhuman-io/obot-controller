@@ -46,11 +46,12 @@ void MainLoop::update() {
   if (count_received) {
     if (mode_ != static_cast<MainControlMode>(receive_data_.mode_desired)) {
       set_mode(static_cast<MainControlMode>(receive_data_.mode_desired));
+      dt_sum_ = 0;
     }
   }
   output_encoder_.trigger();
   fast_loop_get_status(&fast_loop_status_);
-
+  dt_sum_ += fast_loop_status_.dt;
 
   float iq_des = 0;
   switch (mode_) {
@@ -64,7 +65,13 @@ void MainLoop::update() {
     case POSITION_TUNING: 
     {
       Sincos sincos;
-      sincos = sincos1(2 * (float) M_PI * receive_data_.reserved * fast_loop_status_.t_seconds));
+      if (dt_sum_ > 1.0f/receive_data_.reserved) {
+        dt_sum_ -= 1.0f/receive_data_.reserved;
+      }
+      if (receive_data_.reserved != last_receive_data_.reserved) {
+        dt_sum_ = 0;
+      }
+      sincos = sincos1(2 * (float) M_PI * receive_data_.reserved * fast_loop_status_.t_seconds); //dt_sum_);
       float pos_desired = receive_data_.position_desired*(receive_data_.reserved > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
       float vel_desired = receive_data_.reserved > 0 ? 2 * (float) M_PI * receive_data_.reserved * (1.0f/CPU_FREQUENCY_HZ) * sincos.cos : 0;
       iq_des = controller_.step(pos_desired, vel_desired, fast_loop_status_.motor_position.position);
@@ -85,6 +92,7 @@ void MainLoop::update() {
   send_data.reserved[0] = fast_loop_status_.foc_status.measured.i_0;
   communication_.send_data(send_data);
   led_.update();
+  last_receive_data_ = receive_data_;
 }
 
 void MainLoop::set_param(MainLoopParam &param) {

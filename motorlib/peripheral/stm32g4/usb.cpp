@@ -365,7 +365,7 @@ void USB1::interrupt() {
                 send_data(0,0,0);
                 while ((USB->EP0R & USB_EPTX_STAT) == USB_EP_TX_VALID); // wait for packet to go through
                 ms_delay(10);
-                go_to_bootloader = true;
+                go_to_bootloader = 0xB0;
                 NVIC_SystemReset();
             } else {
                 send_stall(0);

@@ -9,7 +9,7 @@ extern const volatile Param initial_param;
 static struct {
     //GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     //Aksim2Encoder motor_encoder = {*SPI3, motor_encoder_cs};
-    //QEPEncoder motor_encoder = {*TIM5};
+    QEPEncoder output_encoder = {*TIM5};
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     SPIEncoder motor_encoder = {*SPI3, motor_encoder_cs};
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
@@ -20,5 +20,5 @@ static struct {
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
     PIDDeadbandController controller = {1.0/10000};
     USBCommunication communication = {usb_};
-    MainLoop main_loop = {controller, communication, led, motor_encoder};
+    MainLoop main_loop = {controller, communication, led, output_encoder};
 } config_items;

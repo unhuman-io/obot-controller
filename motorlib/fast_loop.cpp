@@ -35,7 +35,7 @@ void FastLoop::update() {
     foc_command_.desired.i_d = id_des;
     
     // get encoder value, may wait a little
-    motor_enc = encoder_.get_value();
+    motor_enc = encoder_.read();
 
     motor_position_ = param_.motor_encoder.dir * 2 * (float) M_PI * inv_motor_encoder_cpr_ * motor_enc;
     motor_velocity =  param_.motor_encoder.dir * (motor_enc-last_motor_enc)*(2*(float) M_PI * inv_motor_encoder_cpr_ * frequency_hz_);

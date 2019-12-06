@@ -49,7 +49,7 @@ void MainLoop::update() {
       dt_sum_ = 0;
     }
   }
-  output_encoder_.trigger();
+  //output_encoder_.trigger();
   fast_loop_get_status(&fast_loop_status_);
   dt_sum_ += fast_loop_status_.dt;
 
@@ -88,7 +88,7 @@ void MainLoop::update() {
   send_data.mcu_timestamp = fast_loop_status_.timestamp;
   send_data.motor_encoder = fast_loop_status_.motor_position.raw;
   send_data.motor_position = fast_loop_status_.motor_position.position;
-  send_data.joint_position = output_encoder_.get_value();//*2.0*(float) M_PI/param_.output_encoder.cpr;
+  //send_data.joint_position = output_encoder_.get_value();//*2.0*(float) M_PI/param_.output_encoder.cpr;
   send_data.reserved[0] = fast_loop_status_.foc_status.measured.i_0;
   communication_.send_data(send_data);
   led_.update();

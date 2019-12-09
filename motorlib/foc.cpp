@@ -26,10 +26,6 @@ const float FOC::Kc[2][3] = {{2.0/3, -1.0/3, -1.0/3},
 
 #include "../st_device.h"
 
-float alpha_current = 1;
-float id_last = 0, iq_last=0;
-float alpha_current2 = 1;
-float ial_last = 0, ibe_last=0;
 FOCStatus * const FOC::step(const FOCCommand &command) {
     status_.measured.position = command.measured.motor_encoder;
     status_.desired.i_d = command.desired.i_d;
@@ -50,25 +46,11 @@ FOCStatus * const FOC::step(const FOCCommand &command) {
                      Kc[1][1] * i_abc_measured[1] +
                      Kc[1][2] * i_abc_measured[2];
 
-    i_alpha_measured = alpha_current2*i_alpha_measured + (1-alpha_current2)*ial_last;
-    ial_last = i_alpha_measured;
-    i_beta_measured = alpha_current2*i_beta_measured + (1-alpha_current2)*ibe_last;
-    ibe_last = i_beta_measured;
-
     float i_d_measured = cos_t * i_alpha_measured - sin_t * i_beta_measured;
     float i_q_measured = sin_t * i_alpha_measured + cos_t * i_beta_measured;
 
-    i_d_measured = alpha_current*i_d_measured + (1-alpha_current)*id_last;
-    id_last = i_d_measured;
-    i_q_measured = alpha_current*i_q_measured + (1-alpha_current)*iq_last;
-    iq_last = i_q_measured;
-
-   float v_d_desired = pi_id_->step(status_.desired.i_d, i_d_measured);
-   float v_q_desired = pi_iq_->step(status_.desired.i_q, i_q_measured);
-    // float v_d_desired = status_.desired.i_d;
-    // float v_q_desired =status_.desired.i_q;
-    //float v_d_desired = 0;
-    //float v_q_desired = status_.desired.i_q*((float) rand()/RAND_MAX-.5);
+    float v_d_desired = pi_id_->step(status_.desired.i_d, i_d_measured);
+    float v_q_desired = pi_iq_->step(status_.desired.i_q, i_q_measured);
 
     float v_alpha_desired = cos_t * v_d_desired + sin_t * v_q_desired;
     float v_beta_desired = -sin_t * v_d_desired + cos_t * v_q_desired;

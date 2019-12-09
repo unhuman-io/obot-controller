@@ -1,5 +1,5 @@
 #include "usb_communication.h"
-#include "usb.h"
+#include "peripheral/usb.h"
 
 
 int USBCommunication::receive_data(ReceiveData * const data) {

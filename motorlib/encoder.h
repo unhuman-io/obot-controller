@@ -2,15 +2,16 @@
 #define ENCODER_H
 
 #include <cstdint>
-#include "../st_device.h"
 
 class Encoder {
  public:
-    Encoder(volatile int32_t *counter_reg) { counter_reg_ = counter_reg; }
-    virtual int32_t get_value() { return *counter_reg_; }
+    Encoder() { }
+    virtual int32_t read() { return 0; }
+    virtual int32_t get_value() const { return 0; }
     virtual void trigger() {}
+    virtual int32_t get_index_pos() { return 0; }
+    virtual bool index_received() { return false; }
  private:
-    volatile int32_t *counter_reg_;
 };
 
 #endif

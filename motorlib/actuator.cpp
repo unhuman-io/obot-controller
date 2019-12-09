@@ -25,5 +25,7 @@ void Actuator::run() {
     while(1) {
         i++;
         fast_loop_.maintenance();
+        fast_loop_.set_param(param()->fast_loop_param);   // to help with debugging
+        main_loop_.set_param(param()->main_loop_param);
     }
 }

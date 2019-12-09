@@ -53,6 +53,8 @@ extern "C" {
 
 void HAL_HRTIM_MspPostInit(HRTIM_HandleTypeDef *hhrtim);
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -63,6 +65,12 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define hrperiod 27200*2
 #define main_loop_period 170e6/10000
+#define hall1_Pin GPIO_PIN_0
+#define hall1_GPIO_Port GPIOC
+#define hall2_Pin GPIO_PIN_1
+#define hall2_GPIO_Port GPIOC
+#define hall3_Pin GPIO_PIN_2
+#define hall3_GPIO_Port GPIOC
 #define USART1_TX_Pin GPIO_PIN_4
 #define USART1_TX_GPIO_Port GPIOC
 #define USART1_RX_Pin GPIO_PIN_5
@@ -71,6 +79,8 @@ void Error_Handler(void);
 #define T_SWDIO_GPIO_Port GPIOA
 #define T_SWCLK_Pin GPIO_PIN_14
 #define T_SWCLK_GPIO_Port GPIOA
+#define led_g_Pin GPIO_PIN_7
+#define led_g_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

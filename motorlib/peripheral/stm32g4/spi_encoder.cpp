@@ -1,5 +1,5 @@
 #include "spi_encoder.h"
-#include "gpio.h"
+#include "../../gpio.h"
 
 void SPIEncoder::trigger() {
     gpio_cs_.clear();
@@ -9,13 +9,20 @@ void SPIEncoder::trigger() {
     regs_.DR = 0;
 }
 
-int32_t SPIEncoder::get_value() {
+int32_t SPIEncoder::read() {
     // wait until SPI_FLAG_RXNE, ma 732 max frequency 25 Mbps, 640 ns (115 cycles at 180 MHz)
     while(!(regs_.SR & SPI_SR_RXNE)); // RXNE: 1 -> data available
-    int16_t data = regs_.DR;
+    uint16_t data = regs_.DR;
+
+    count_ += (int16_t) (data - last_data_); // rollover summing
+    last_data_ = data;
     // wait tdelay, 25 ns ma732
     // 200 ns AEAT-8800
     asm("NOP; NOP; NOP; NOP;");
     gpio_cs_.set();
-    return data;
+    return count_;
+}
+
+int32_t SPIEncoder::get_value() const {
+  return count_;
 }

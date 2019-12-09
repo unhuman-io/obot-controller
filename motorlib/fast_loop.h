@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "messages.h"
+#include "control_fun.h"
 
 class FOC;
 class PWM;
@@ -12,10 +13,11 @@ class FastLoop {
  public:
     FastLoop(PWM &pwm, Encoder &encoder); // TODO consider changing encoder to template
     ~FastLoop();
-    void update()  __attribute__((section (".ccmram")));;
+    void update()  __attribute__((section (".ccmram")));
     void maintenance();
     void set_id_des(float id) { id_des = id; }
     void set_iq_des(float iq) { if (mode_ == CURRENT_MODE) iq_des = iq; }
+    void set_reserved(float reserved) { reserved_ = reserved; }
     void phase_lock_mode(float id);
     void current_mode();
     void voltage_mode();
@@ -47,7 +49,7 @@ class FastLoop {
     uint16_t adc1, adc2, adc3;
     FOCCommand foc_command_ = {};
 
-    int32_t motor_index_pos_;
+    int32_t motor_index_pos_ = 0;
     int32_t motor_electrical_zero_pos_;
     float inv_motor_encoder_cpr_;
     int32_t frequency_hz_ = 100000;
@@ -58,6 +60,11 @@ class FastLoop {
     float v_bus_ = 12;
     mcu_time timestamp_;
    Encoder &encoder_;
+   float reserved_ = 0;
+   KahanSum t_seconds_;
+   mcu_time last_timestamp_ = 0;
+   float dt_ = 0;
+   float dt_sum_ = 0;
 };
 
 #endif

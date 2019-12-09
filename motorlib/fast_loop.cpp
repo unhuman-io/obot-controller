@@ -2,7 +2,7 @@
 #include "fast_loop.h"
 #include "foc.h"
 #include <cmath>
-#include "pwm.h"
+#include "peripheral/pwm.h"
 #include "util.h"
 #include "encoder.h"
 #include "../st_device.h"
@@ -14,9 +14,6 @@ FastLoop::FastLoop(PWM &pwm, Encoder &encoder) : pwm_(pwm), encoder_(encoder) {
 FastLoop::~FastLoop() {
     delete foc_;
 }
-
-#include "sincos.h"
-#define M_PI 3.14159
 
 // called at fixed frequency in an interrupt
 void FastLoop::update() {
@@ -38,7 +35,7 @@ void FastLoop::update() {
     foc_command_.desired.i_d = id_des;
     
     // get encoder value, may wait a little
-    motor_enc = encoder_.get_value();
+    motor_enc = encoder_.read();
 
     motor_position_ = param_.motor_encoder.dir * 2 * (float) M_PI * inv_motor_encoder_cpr_ * motor_enc;
     motor_velocity =  param_.motor_encoder.dir * (motor_enc-last_motor_enc)*(2*(float) M_PI * inv_motor_encoder_cpr_ * frequency_hz_);
@@ -54,26 +51,9 @@ void FastLoop::update() {
  //   float iq_ff = param_.cogging.gain * (param_.cogging.table[i] + ifrac * (param_.cogging.table[(i+1) & (COGGING_TABLE_SIZE-1)] - param_.cogging.table[i]));
     float iq_ff = param_.cogging.gain * param_.cogging.table[i];
 
-    //     Sincos sincos;
-    // sincos = sincos1(2 * (float) M_PI * id_des * (timestamp_*(1.0f/180e6f)));
-    // foc_command_.desired.i_q = iq_des*(id_des > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
-    // foc_command_.measured.motor_encoder = 0;
-
     // update FOC
     foc_command_.measured.motor_encoder = phase_mode_*(motor_enc - motor_electrical_zero_pos_)*(2*(float) M_PI  * inv_motor_encoder_cpr_);
     foc_command_.desired.i_q = iq_des_gain_ * (iq_des + iq_ff);
-
-//         Sincos sincos;
-//         static uint32_t counter=0;
-//         counter++;
-//         if (counter > pow(2,22)) {
-//             counter = 0;
-//         }
-// //        float t = (timestamp_*(1.0f/170e6f))
-//         float t = counter*(1.0f/50000.0f);
-//     sincos = sincos1(2 * (float) M_PI * id_des * t);
-//     foc_command_.desired.i_q = iq_des*(id_des > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
-//     foc_command_.measured.motor_encoder = 0;
     
     FOCStatus *foc_status = foc_->step(foc_command_);
 
@@ -85,14 +65,17 @@ void FastLoop::update() {
     } else {
         pwm_.set_voltage(&foc_status->command.v_a);
     }
+
+    dt_ = (timestamp_ - last_timestamp_)*(float) (1.0f/CPU_FREQUENCY_HZ);
+    dt_sum_ += dt_;
+    last_timestamp_ = timestamp_;
+    t_seconds_.add(dt_);
 }
 
 // called at a slow frequency in a non interrupt
 void FastLoop::maintenance() {
-    if (TIM2->SR & TIM_SR_CC3IF) {
-        // qep index received
-        // TODO cleared by reading CCR3?
-        motor_index_pos_ = TIM2->CCR3;
+    if (encoder_.index_received()) {
+        motor_index_pos_ = encoder_.get_index_pos();
         if (param_.motor_encoder.use_index_electrical_offset_pos) {
           // motor_index_electrical_offset_pos is the value of an electrical zero minus the index position
           // motor_electrical_zero_pos is the offset to the initial encoder value
@@ -101,12 +84,11 @@ void FastLoop::maintenance() {
     }
 
     if (mode_ == PHASE_LOCK_MODE) {
-        motor_electrical_zero_pos_ = TIM5->CNT;
+        motor_electrical_zero_pos_ = encoder_.get_value();
     }
 
     v_bus_ = ADC1->DR*param_.vbus_gain;
     v_bus_ = fmaxf(10, v_bus_);
-    v_bus_ = 24;
     pwm_.set_vbus(v_bus_);
 }
 
@@ -147,10 +129,12 @@ void FastLoop::current_mode() {
 
 void FastLoop::brake_mode() {
     pwm_.brake_mode();
+    mode_ = BRAKE_MODE;
 }
 
 void FastLoop::open_mode() {
     pwm_.open_mode();
+    mode_ = OPEN_MODE;
 }
 
 void FastLoop::get_status(FastLoopStatus *fast_loop_status) {
@@ -161,6 +145,9 @@ void FastLoop::get_status(FastLoopStatus *fast_loop_status) {
     fast_loop_status->motor_position.velocity = motor_velocity_filtered;
     fast_loop_status->motor_position.raw = motor_enc;
     fast_loop_status->timestamp = timestamp_;
+    fast_loop_status->t_seconds = t_seconds_.value();
+    fast_loop_status->dt = dt_sum_;
+    dt_sum_ = 0;
 }
 
 void FastLoop::set_phase_mode() {

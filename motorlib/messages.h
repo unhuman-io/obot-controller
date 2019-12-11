@@ -50,7 +50,7 @@ typedef struct {
     float vbus_gain;
 } FastLoopParam;
 
-enum MainControlMode {OPEN, DAMPED, CURRENT, POSITION, VELOCITY, CURRENT_TUNING, POSITION_TUNING};
+enum MainControlMode {OPEN, DAMPED, CURRENT, POSITION, VELOCITY, CURRENT_TUNING, POSITION_TUNING, BOARD_RESET=255};
 typedef struct {
     int32_t update_frequency;
     PIDParam controller_param;

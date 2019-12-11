@@ -37,6 +37,9 @@ void MainLoop::set_mode(MainControlMode mode) {
       fast_loop_current_mode();
       led_.set_color(LED::BLUE);
       break;
+    case BOARD_RESET:
+      NVIC_SystemReset();
+      break;
   }
   receive_data_.mode_desired = mode;
 }

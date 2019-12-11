@@ -10,6 +10,9 @@
 #   2015-07-22 - first version
 # ------------------------------------------------
 
+GIT_VERSION := $(shell git describe --dirty --always --tags)
+$(shell touch version.h)
+
 ######################################
 # target
 ######################################
@@ -140,6 +143,7 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
+-DGIT_VERSION=\"$(GIT_VERSION)\" \
 -DUSE_HAL_DRIVER \
 -DSTM32G474xx
 

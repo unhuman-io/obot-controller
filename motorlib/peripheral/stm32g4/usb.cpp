@@ -1,6 +1,9 @@
 #include "../usb.h"
 #include <algorithm>
 #include <cstring>
+#include "../../param.h"
+#include "../../otp.h"
+#include "../../../version.h"
 
 #include "stm32g4xx.h"
 #include "../../util.h"
@@ -299,6 +302,22 @@ void USB1::interrupt() {
                             switch (setup_data[2]) {
                                 case 0x00: // language descriptor
                                     send_data(0, reinterpret_cast<const uint8_t *>("\x4\x3\x9\x4"), 4); // english
+                                    break;
+                                // case 0x01:
+                                //     send_string(0, board_id_manufacturer_string(), std::strlen(board_id_manufacturer_string()));
+                                //     break;
+                                // case 0x02:
+                                //     send_string(0, board_id_product_string(), std::strlen(board_id_product_string()));
+                                //     break;
+                                // case 0x03:
+                                //     send_string(0, board_id_serial_number(), std::strlen(board_id_serial_number()));
+                                //     break;
+                                case 0x04:
+                                    // todo add BUILD_DATETIME - need longer string support
+                                    send_string(0, VERSION " " GIT_HASH, std::strlen(VERSION " " GIT_HASH ));
+                                    break;
+                                case 0x05:
+                                    send_string(0, param()->name, std::strlen(param()->name));
                                     break;
                                 default:
                                     send_string(0, "default", std::strlen("default"));

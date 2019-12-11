@@ -80,23 +80,25 @@ void PIDController::set_param(const PIDParam &param) {
     hysteresis_.set_hysteresis(command_max_/kp_);
 }
 
-float PIDController::step(float desired, float measured) {
+float PIDController::step(float desired, float velocity_desired, float measured, float velocity_limit) {
     // if (desired != last_desired_) {
     //     last_desired_ = desired;
     //     hysteresis_.set_value(desired);
     // }
 
    // float proxy_desired = desired; //hysteresis_.step(measured);
+    rate_limit_.set_limit(fabsf(velocity_limit*dt_));
     float proxy_desired = rate_limit_.step(desired);
     float error = proxy_desired - measured;
-    float error_dot = error_dot_filter_.update((error-error_last_)/dt_);
-    error_last_ = error;
+    float velocity_measured = (measured - measured_last_)/dt_;
+    float error_dot = error_dot_filter_.update(velocity_desired - velocity_measured);
+    measured_last_ = measured;
     ki_sum_ += ki_ * error;
     ki_sum_ = fsat(ki_sum_, ki_limit_);
     return fsat(kp_*error + ki_sum_ + kd_*error_dot, command_max_);
 }
 
-float PIDDeadbandController::step(float desired, float deadband, float measured) {
+float PIDDeadbandController::step(float desired, float velocity_desired, float deadband, float measured, float velocity_limit) {
     float desired_with_deadband = fsignf(desired-measured)*fmaxf(fabsf(desired-measured) - deadband, 0) + measured;
-    return PIDController::step(desired_with_deadband, measured);
+    return PIDController::step(desired_with_deadband, velocity_desired, measured, velocity_limit);
 }

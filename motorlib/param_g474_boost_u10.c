@@ -25,7 +25,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.adc3_gain = -3.26/4096/(.007*40), 
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
-    .fast_loop_param.motor_encoder.cpr = 65536,//20000,
+    .fast_loop_param.motor_encoder.cpr = 20000,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = 402,
     .main_loop_param.torque_bias = 0.025,
@@ -40,6 +40,6 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     },
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = 4,
-    .startup_param.phase_lock_duration = 4,
+    .startup_param.phase_lock_duration = 2,
     .name = "J1",
 };

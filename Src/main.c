@@ -109,7 +109,8 @@ uint16_t drv_regs[] = {
                                 // moderate drive current (.57,1.14A)
   (5<<11) | 0x020,  // ocp_reg     0x20 -> 50 ns dead time, 
                               //latched ocp, 4 us ocp deglitch, 0.06 Vds thresh
-  (6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
+  //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
+  (6<<11) | 0x280, // csa_reg     0x280 -> bidirectional current, 20V/V
 };         
 
 /* USER CODE END 0 */

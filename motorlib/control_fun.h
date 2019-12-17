@@ -15,6 +15,8 @@ class Hysteresis {
     float hysteresis_ = 0;
 };
 
+float fsignf(float a);
+
 class KahanSum {
  public:
     float add(float input) //__attribute__((section (".ccmram")))

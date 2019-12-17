@@ -69,7 +69,9 @@ void MainLoop::update() {
               receive_data_.current_desired;
       break;
     case VELOCITY:
-      iq_des = controller_.step(receive_data_.velocity_desired > 0 ? INFINITY : -INFINITY, receive_data_.velocity_desired, receive_data_.reserved, fast_loop_status_.motor_position.position, receive_data_.velocity_desired) + \
+      // saturate position so that current = current max due to kp, so error max = 
+      iq_des = controller_.step(fast_loop_status_.motor_position.position + param_.controller_param.command_max/param_.controller_param.kp*fsignf(receive_data_.velocity_desired), 
+              receive_data_.velocity_desired, receive_data_.reserved, fast_loop_status_.motor_position.position, receive_data_.velocity_desired) + \
               receive_data_.current_desired;
       break;
     case POSITION_TUNING: 

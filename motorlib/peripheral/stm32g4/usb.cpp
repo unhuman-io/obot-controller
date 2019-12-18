@@ -2,11 +2,11 @@
 #include <algorithm>
 #include <cstring>
 #include "../../param.h"
-#include "../../otp.h"
 #include "../../../version.h"
 
 #include "stm32g4xx.h"
 #include "../../util.h"
+#include <cstdio>
 
 typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 bytes, reception buffers need two additional bytes for CRC
     struct {
@@ -50,9 +50,13 @@ typedef struct {
 #define  USBD_IDX_SERIAL_STR                            0x03 
 #define  USBD_IDX_CONFIG_STR                            0x04 
 #define  USBD_IDX_INTERFACE_STR                         0x05 
+#define USBD_BULK_SIZE                                  64
+
+#define         DEVICE_ID1          (UID_BASE) //(0x1FFF7A10)
+#define         DEVICE_ID2          (UID_BASE + 4) 
+#define         DEVICE_ID3          (UID_BASE + 8) 
 
 #define USBD_VID     1155
-#define USBD_PID_FS     (22336+1)
 
 static const uint8_t USB_DEVICE_DESCIPTOR[]=
 {
@@ -66,8 +70,8 @@ static const uint8_t USB_DEVICE_DESCIPTOR[]=
   64,           /*bMaxPacketSize*/
   LOBYTE(USBD_VID),           /*idVendor*/
   HIBYTE(USBD_VID),           /*idVendor*/
-  LOBYTE(USBD_PID_FS),        /*idProduct*/
-  HIBYTE(USBD_PID_FS),        /*idProduct*/
+  LOBYTE(USBD_PID),        /*idProduct*/
+  HIBYTE(USBD_PID),        /*idProduct*/
   0x00,                       /*bcdDevice rel. 2.00*/
   0x02,
   USBD_IDX_MFC_STR,           /*Index of manufacturer  string*/
@@ -81,9 +85,9 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   /*Configuration Descriptor*/
   0x09,   /* bLength: Configuration Descriptor size */
   USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
-  9+9+7+7+9+9,                /* wTotalLength:no of returned bytes */
+  9+9+7+7+9+7+7+9+9,                /* wTotalLength:no of returned bytes */
   0x00,
-  0x02,   /* bNumInterfaces: 2 interface */
+  0x03,   /* bNumInterfaces: 3 interface */
   0x01,   /* bConfigurationValue: Configuration value */
   0x04,   /* iConfiguration: Index of string descriptor describing the configuration */
   0xC0,   /* bmAttributes: self powered */
@@ -107,31 +111,62 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
   0x82,                     /* bEndpointAddress */
-  0x02,                           /* bmAttributes: Interrupt */
-  LOBYTE(64),     /* wMaxPacketSize: */
-  HIBYTE(64),
+  0x02,                           /* bmAttributes: Bulk */
+  LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
+  HIBYTE(USBD_BULK_SIZE),
   0x10,                           /* bInterval: */ 
 
     /*Endpoint 2 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
   2,                     /* bEndpointAddress */
-  0x02,                           /* bmAttributes: Interrupt */
-  LOBYTE(64),     /* wMaxPacketSize: */
-  HIBYTE(64),
+  0x02,                           /* bmAttributes: Bulk */
+  LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
+  HIBYTE(USBD_BULK_SIZE),
+  0x10,                           /* bInterval: */ 
+  /*---------------------------------------------------------------------------*/
+
+    /*Interface Descriptor */
+  0x09,   /* bLength: Interface Descriptor size */
+  USB_DESC_TYPE_INTERFACE,  /* bDescriptorType: Interface */
+  /* Interface descriptor type */
+  0x01,   /* bInterfaceNumber: Number of Interface */
+  0x00,   /* bAlternateSetting: Alternate setting */
+  0x02,   /* bNumEndpoints: One endpoints used */
+  0x00,   /* bInterfaceClass: Communication Interface Class */
+  0x00,   /* bInterfaceSubClass: Abstract Control Model */
+  0x00,   /* bInterfaceProtocol: Common AT commands */
+  0x05,   /* iInterface: */
+  
+  /*Endpoint 1 Descriptor*/
+  0x07,                           /* bLength: Endpoint Descriptor size */
+  USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
+  0x81,                     /* bEndpointAddress */
+  0x02,                           /* bmAttributes: Bulk */
+  LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
+  HIBYTE(USBD_BULK_SIZE),
+  0x10,                           /* bInterval: */ 
+
+    /*Endpoint 1 Descriptor*/
+  0x07,                           /* bLength: Endpoint Descriptor size */
+  USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
+  1,                     /* bEndpointAddress */
+  0x02,                           /* bmAttributes: Bulk */
+  LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
+  HIBYTE(USBD_BULK_SIZE),
   0x10,                           /* bInterval: */ 
   /*---------------------------------------------------------------------------*/
 
 // DFU taken from the st dfu mode descriptor change interface protocol 2 to 1
   0x09,
   0x04,
-  0x01,
+  0x02,
   0x00,
   0x00,
   0xfe,
   0x01,
   0x01,
-  0x00,
+  0x06,
 
   0x09,
   0x21,
@@ -150,8 +185,16 @@ static void epr_set_toggle(uint8_t endpoint, uint16_t set_bits, uint16_t set_mas
 
 static void read_pma(uint8_t byte_count, __IO uint16_t * pma_address, uint8_t *buffer_out);
 
+static void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length);
+
+bool USB1::tx_active(uint8_t endpoint) {
+    return (USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID;
+}
+
+// Wait will pause until last packet has been received, If wait is false, then a buffered packet
+// will be discarded. For wait being false the maximum transmission is USBD_BULK_SIZE (64) bytes.
 void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool wait) {
-    while ((USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID) {
+    while (tx_active(endpoint)) {
         if (wait) {
             continue;
         } else {
@@ -159,6 +202,15 @@ void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool
         }
     }
     
+    if (wait && (length > USBD_BULK_SIZE)) {
+        _send_data(endpoint, data, USBD_BULK_SIZE);
+        send_data(endpoint, data+USBD_BULK_SIZE, length-USBD_BULK_SIZE);
+    } else {
+        _send_data(endpoint, data, length);
+    }
+}
+
+void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
     uint8_t length16 = (length+1)>>1;
     __IO uint16_t * pma_address = USBPMA->buffer[endpoint].EP_TX;
     for(int i=0; i<length16; i++) {
@@ -209,6 +261,19 @@ void epr_set_toggle(uint8_t endpoint, uint16_t set_bits, uint16_t set_mask) {
     uint16_t epr_normal = epr & USB_EPREG_MASK;
     uint16_t epr_total = epr_normal | epr_toggle | USB_EP_CTR_TX | USB_EP_CTR_RX; // always write 1 to not clear CTR
     USBEPR->EP[endpoint].EPR = epr_total;
+}
+
+// This is the serial number used by the bootloader, 13 bytes with null terminator
+void Get_SerialNum(char * buffer)
+{
+  uint32_t deviceserial0, deviceserial1, deviceserial2;
+
+  deviceserial0 = *(uint32_t *)DEVICE_ID1;
+  deviceserial1 = *(uint32_t *)DEVICE_ID2;
+  deviceserial2 = *(uint32_t *)DEVICE_ID3;
+
+  deviceserial0 += deviceserial2;
+  std::sprintf(buffer,"%lX%X",deviceserial0, (uint16_t) (deviceserial1>>16));
 }
 
 void USB1::interrupt() {
@@ -274,6 +339,18 @@ void USB1::interrupt() {
                     USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
                 }
                 break;
+            case 1:
+                if (istr & USB_ISTR_DIR) { // RX
+                    USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
+                    count_rx1_ = (USBPMA->btable[1].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                    read_pma(count_rx1_, USBPMA->buffer[1].EP_RX, rx_buffer1_);
+                    new_rx_data1_ = true;
+                    epr_set_toggle(1, USB_EP_RX_VALID, USB_EPRX_STAT);
+                }
+                if (USB->EP1R & USB_EP_CTR_TX) {
+                    USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
+                }
+                break;
         }
     }
 
@@ -281,6 +358,9 @@ void USB1::interrupt() {
         error_count_++;
         USB->ISTR &= ~USB_ISTR_ERR;
     }
+
+    // clear anything remaining
+    USB->ISTR = 0;
 }
 
  void USB1::handle_setup_packet(uint8_t *setup_data) {
@@ -303,21 +383,28 @@ void USB1::interrupt() {
                                 case 0x00: // language descriptor
                                     send_data(0, reinterpret_cast<const uint8_t *>("\x4\x3\x9\x4"), 4); // english
                                     break;
-                                // case 0x01:
-                                //     send_string(0, board_id_manufacturer_string(), std::strlen(board_id_manufacturer_string()));
-                                //     break;
-                                // case 0x02:
-                                //     send_string(0, board_id_product_string(), std::strlen(board_id_product_string()));
-                                //     break;
-                                // case 0x03:
-                                //     send_string(0, board_id_serial_number(), std::strlen(board_id_serial_number()));
-                                //     break;
+                                case 0x01:
+                                    send_string(0, MANUFACTURER_STRING, std::strlen(MANUFACTURER_STRING));
+                                    break;
+                                case 0x02:
+                                    send_string(0, PRODUCT_STRING, std::strlen(PRODUCT_STRING));
+                                    break;
+                                case 0x03:
+                                { 
+                                    char sn_buffer[13];
+                                    Get_SerialNum(sn_buffer);
+                                    send_string(0, sn_buffer, std::strlen(sn_buffer));
+                                    break;
+                                }
                                 case 0x04:
-                                    // todo add BUILD_DATETIME - need longer string support
-                                    send_string(0, VERSION " " GIT_HASH, std::strlen(VERSION " " GIT_HASH ));
+                                    //send_string(0, "abc", std::strlen("abc"));
+                                    send_string(0, VERSION " " GIT_HASH " " BUILD_DATETIME, std::strlen(VERSION " " GIT_HASH " " BUILD_DATETIME));
                                     break;
                                 case 0x05:
                                     send_string(0, param()->name, std::strlen(param()->name));
+                                    break;
+                                case 0x06:
+                                    send_string(0, "ST DFU mode", std::strlen("ST DFU mode"));
                                     break;
                                 default:
                                     send_string(0, "default", std::strlen("default"));
@@ -355,6 +442,17 @@ void USB1::interrupt() {
                     USBPMA->btable[2].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[2].EP_RX);
                     USBPMA->btable[2].COUNT_RX = (1 << USB_COUNT2_RX_BLSIZE_Pos) | (2 << USB_COUNT2_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation
                     epr_set_toggle(2, USB_EP_RX_VALID, USB_EPRX_STAT); // as above with TX
+
+                    // enable endpoint 1 IN (TX)
+                    USB->EP1R = 1; // Bulk on 1
+                    USBPMA->btable[1].ADDR_TX = offsetof(USBPMA_TypeDef, buffer[1].EP_TX);
+                    epr_set_toggle(1, USB_EP_TX_NAK, USB_EPTX_STAT);
+                        // sets the toggle only bits to NAK, hardware better not change EPR during operation
+                    
+                    // enable endpoint 2 OUT (RX)
+                    USBPMA->btable[1].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[1].EP_RX);
+                    USBPMA->btable[1].COUNT_RX = (1 << USB_COUNT2_RX_BLSIZE_Pos) | (2 << USB_COUNT2_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation
+                    epr_set_toggle(1, USB_EP_RX_VALID, USB_EPRX_STAT); // as above with TX
                     
                     // setup status phase    
                     send_data(0,0,0);

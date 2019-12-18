@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cstring>
 #include "../../param.h"
-#include "../../otp.h"
 #include "../../../version.h"
 
 #include "stm32g4xx.h"

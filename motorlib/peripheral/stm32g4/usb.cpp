@@ -7,6 +7,7 @@
 
 #include "stm32g4xx.h"
 #include "../../util.h"
+#include <cstdio>
 
 typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 bytes, reception buffers need two additional bytes for CRC
     struct {
@@ -51,6 +52,10 @@ typedef struct {
 #define  USBD_IDX_CONFIG_STR                            0x04 
 #define  USBD_IDX_INTERFACE_STR                         0x05 
 #define USBD_BULK_SIZE                                  64
+
+#define         DEVICE_ID1          (UID_BASE) //(0x1FFF7A10)
+#define         DEVICE_ID2          (UID_BASE + 4) 
+#define         DEVICE_ID3          (UID_BASE + 8) 
 
 #define USBD_VID     1155
 
@@ -131,7 +136,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0xfe,
   0x01,
   0x01,
-  0x00,
+  0x06,
 
   0x09,
   0x21,
@@ -224,49 +229,17 @@ void epr_set_toggle(uint8_t endpoint, uint16_t set_bits, uint16_t set_mask) {
     USBEPR->EP[endpoint].EPR = epr_total;
 }
 
-static void Get_SerialNum(void)
+// This is the serial number used by the bootloader, 13 bytes with null terminator
+void Get_SerialNum(char * buffer)
 {
   uint32_t deviceserial0, deviceserial1, deviceserial2;
 
-  //deviceserial0 = *(uint32_t *)DEVICE_ID1;
-  //deviceserial1 = *(uint32_t *)DEVICE_ID2;
-  //deviceserial2 = *(uint32_t *)DEVICE_ID3;
+  deviceserial0 = *(uint32_t *)DEVICE_ID1;
+  deviceserial1 = *(uint32_t *)DEVICE_ID2;
+  deviceserial2 = *(uint32_t *)DEVICE_ID3;
 
   deviceserial0 += deviceserial2;
-
-//   if (deviceserial0 != 0U)
-//   {
-//     IntToUnicode(deviceserial0, &USBD_StringSerial[2], 8U);
-//     IntToUnicode(deviceserial1, &USBD_StringSerial[18], 4U);
-//   }
-}
-
-/**
-  * @brief  Convert Hex 32Bits value into char
-  * @param  value: value to convert
-  * @param  pbuf: pointer to the buffer
-  * @param  len: buffer length
-  * @retval None
-  */
-static void IntToUnicode(uint32_t value, uint8_t *pbuf, uint8_t len)
-{
-  uint8_t idx = 0U;
-
-  for (idx = 0U ; idx < len ; idx ++)
-  {
-    if (((value >> 28)) < 0xAU)
-    {
-      pbuf[ 2U * idx] = (value >> 28) + '0';
-    }
-    else
-    {
-      pbuf[2U * idx] = (value >> 28) + 'A' - 10U;
-    }
-
-    value = value << 4;
-
-    pbuf[2U * idx + 1] = 0U;
-  }
+  std::sprintf(buffer,"%lX%X",deviceserial0, (uint16_t) (deviceserial1>>16));
 }
 
 void USB1::interrupt() {
@@ -371,15 +344,21 @@ void USB1::interrupt() {
                                     send_string(0, PRODUCT_STRING, std::strlen(PRODUCT_STRING));
                                     break;
                                 case 0x03:
-                                    Get_SerialNum();
-                                    send_string(0, "abc", std::strlen("abc"));
+                                { 
+                                    char sn_buffer[13];
+                                    Get_SerialNum(sn_buffer);
+                                    send_string(0, sn_buffer, std::strlen(sn_buffer));
                                     break;
+                                }
                                 case 0x04:
-                                    send_string(0, "abc", std::strlen("abc"));
-                                  //  send_string(0, VERSION " " GIT_HASH " " BUILD_DATETIME, std::strlen(VERSION " " GIT_HASH " " BUILD_DATETIME));
+                                    //send_string(0, "abc", std::strlen("abc"));
+                                    send_string(0, VERSION " " GIT_HASH " " BUILD_DATETIME, std::strlen(VERSION " " GIT_HASH " " BUILD_DATETIME));
                                     break;
                                 case 0x05:
                                     send_string(0, param()->name, std::strlen(param()->name));
+                                    break;
+                                case 0x06:
+                                    send_string(0, "ST DFU mode", std::strlen("ST DFU mode"));
                                     break;
                                 default:
                                     send_string(0, "default", std::strlen("default"));

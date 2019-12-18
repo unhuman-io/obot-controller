@@ -147,6 +147,7 @@ void FastLoop::get_status(FastLoopStatus *fast_loop_status) {
     fast_loop_status->timestamp = timestamp_;
     fast_loop_status->t_seconds = t_seconds_.value();
     fast_loop_status->dt = dt_sum_;
+    fast_loop_status->vbus = v_bus_;
     dt_sum_ = 0;
 }
 

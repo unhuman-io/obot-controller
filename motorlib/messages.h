@@ -112,6 +112,7 @@ typedef struct {
     float motor_mechanical_position;
     FOCCommand foc_command;
     float t_seconds, dt;
+    float vbus;
 } FastLoopStatus;
 
 typedef struct {

@@ -16,6 +16,8 @@ class USB1 {
 
     void send_string(uint8_t endpoint, const char *str, uint8_t length);
 
+    bool tx_active(uint8_t endpoint);
+
     void interrupt();
 
  private:
@@ -28,6 +30,9 @@ class USB1 {
     uint16_t interface_ = 0;
     bool new_rx_data_ = false;
     uint8_t count_rx_ = 0;
+    bool new_rx_data1_ = false;
+    uint8_t count_rx1_ = 0;
+    uint8_t rx_buffer1_[64];
     uint8_t rx_buffer_[64];
     uint32_t error_count_ = 0;
 };

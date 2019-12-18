@@ -20,6 +20,7 @@ extern "C" {
 #endif // __cplusplus
     void actuator_run();
     void usb_interrupt();
+    void send_string(const char * str);
 
 #ifdef __cplusplus
 }

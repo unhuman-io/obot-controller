@@ -86,9 +86,9 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   /*Configuration Descriptor*/
   0x09,   /* bLength: Configuration Descriptor size */
   USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
-  9+9+7+7+9+9,                /* wTotalLength:no of returned bytes */
+  9+9+7+7+9+7+7+9+9,                /* wTotalLength:no of returned bytes */
   0x00,
-  0x02,   /* bNumInterfaces: 2 interface */
+  0x03,   /* bNumInterfaces: 3 interface */
   0x01,   /* bConfigurationValue: Configuration value */
   0x04,   /* iConfiguration: Index of string descriptor describing the configuration */
   0xC0,   /* bmAttributes: self powered */
@@ -112,7 +112,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
   0x82,                     /* bEndpointAddress */
-  0x02,                           /* bmAttributes: Interrupt */
+  0x02,                           /* bmAttributes: Bulk */
   LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
   HIBYTE(USBD_BULK_SIZE),
   0x10,                           /* bInterval: */ 
@@ -121,7 +121,38 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
   2,                     /* bEndpointAddress */
-  0x02,                           /* bmAttributes: Interrupt */
+  0x02,                           /* bmAttributes: Bulk */
+  LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
+  HIBYTE(USBD_BULK_SIZE),
+  0x10,                           /* bInterval: */ 
+  /*---------------------------------------------------------------------------*/
+
+    /*Interface Descriptor */
+  0x09,   /* bLength: Interface Descriptor size */
+  USB_DESC_TYPE_INTERFACE,  /* bDescriptorType: Interface */
+  /* Interface descriptor type */
+  0x01,   /* bInterfaceNumber: Number of Interface */
+  0x00,   /* bAlternateSetting: Alternate setting */
+  0x02,   /* bNumEndpoints: One endpoints used */
+  0x00,   /* bInterfaceClass: Communication Interface Class */
+  0x00,   /* bInterfaceSubClass: Abstract Control Model */
+  0x00,   /* bInterfaceProtocol: Common AT commands */
+  0x05,   /* iInterface: */
+  
+  /*Endpoint 1 Descriptor*/
+  0x07,                           /* bLength: Endpoint Descriptor size */
+  USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
+  0x81,                     /* bEndpointAddress */
+  0x02,                           /* bmAttributes: Bulk */
+  LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
+  HIBYTE(USBD_BULK_SIZE),
+  0x10,                           /* bInterval: */ 
+
+    /*Endpoint 1 Descriptor*/
+  0x07,                           /* bLength: Endpoint Descriptor size */
+  USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
+  1,                     /* bEndpointAddress */
+  0x02,                           /* bmAttributes: Bulk */
   LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
   HIBYTE(USBD_BULK_SIZE),
   0x10,                           /* bInterval: */ 
@@ -130,7 +161,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
 // DFU taken from the st dfu mode descriptor change interface protocol 2 to 1
   0x09,
   0x04,
-  0x01,
+  0x02,
   0x00,
   0x00,
   0xfe,
@@ -157,10 +188,14 @@ static void read_pma(uint8_t byte_count, __IO uint16_t * pma_address, uint8_t *b
 
 static void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length);
 
+bool USB1::tx_active(uint8_t endpoint) {
+    return (USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID;
+}
+
 // Wait will pause until last packet has been received, If wait is false, then a buffered packet
 // will be discarded. For wait being false the maximum transmission is USBD_BULK_SIZE (64) bytes.
 void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool wait) {
-    while ((USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID) {
+    while (tx_active(endpoint)) {
         if (wait) {
             continue;
         } else {
@@ -305,6 +340,18 @@ void USB1::interrupt() {
                     USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
                 }
                 break;
+            case 1:
+                if (istr & USB_ISTR_DIR) { // RX
+                    USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
+                    count_rx1_ = (USBPMA->btable[1].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                    read_pma(count_rx1_, USBPMA->buffer[1].EP_RX, rx_buffer1_);
+                    new_rx_data1_ = true;
+                    epr_set_toggle(1, USB_EP_RX_VALID, USB_EPRX_STAT);
+                }
+                if (USB->EP1R & USB_EP_CTR_TX) {
+                    USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
+                }
+                break;
         }
     }
 
@@ -396,6 +443,17 @@ void USB1::interrupt() {
                     USBPMA->btable[2].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[2].EP_RX);
                     USBPMA->btable[2].COUNT_RX = (1 << USB_COUNT2_RX_BLSIZE_Pos) | (2 << USB_COUNT2_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation
                     epr_set_toggle(2, USB_EP_RX_VALID, USB_EPRX_STAT); // as above with TX
+
+                    // enable endpoint 1 IN (TX)
+                    USB->EP1R = 1; // Bulk on 1
+                    USBPMA->btable[1].ADDR_TX = offsetof(USBPMA_TypeDef, buffer[1].EP_TX);
+                    epr_set_toggle(1, USB_EP_TX_NAK, USB_EPTX_STAT);
+                        // sets the toggle only bits to NAK, hardware better not change EPR during operation
+                    
+                    // enable endpoint 2 OUT (RX)
+                    USBPMA->btable[1].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[1].EP_RX);
+                    USBPMA->btable[1].COUNT_RX = (1 << USB_COUNT2_RX_BLSIZE_Pos) | (2 << USB_COUNT2_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation
+                    epr_set_toggle(1, USB_EP_RX_VALID, USB_EPRX_STAT); // as above with TX
                     
                     // setup status phase    
                     send_data(0,0,0);

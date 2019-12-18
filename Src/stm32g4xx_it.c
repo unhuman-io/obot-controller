@@ -258,7 +258,7 @@ void ADC1_2_IRQHandler(void)
   HAL_ADC_IRQHandler(&hadc2);
   /* USER CODE BEGIN ADC1_2_IRQn 1 */
 #endif
-hadc1.Instance->ISR &= ~ADC_ISR_JEOC;
+hadc1.Instance->ISR = ADC_ISR_JEOC;
   t_exec = get_clock()-t_start;
   cpi_diff = get_cpi_count() - cpi_start;
   lsu_diff = get_lsu_count() - lsu_start;

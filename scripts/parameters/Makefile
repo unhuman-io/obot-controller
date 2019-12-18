@@ -16,9 +16,11 @@ param.bin: param
 
 load: param.bin
 	# can't seem to use :leave here
-	dfu-util -s 0x8060000 -a0 -D param.bin $(DFU)
+	-dfu-util -s 0x8060000 -a0 -D param.bin $(DFU)
+	# :leave workaround
+	-dfu-util -s 0x8000000:leave -a0 -U tmp
 
 clean:
-	rm *.o param param.bin
+	rm *.o param param.bin tmp
 
 FORCE:

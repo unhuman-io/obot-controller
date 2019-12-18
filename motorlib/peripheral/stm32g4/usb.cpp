@@ -50,9 +50,9 @@ typedef struct {
 #define  USBD_IDX_SERIAL_STR                            0x03 
 #define  USBD_IDX_CONFIG_STR                            0x04 
 #define  USBD_IDX_INTERFACE_STR                         0x05 
+#define USBD_BULK_SIZE                                  64
 
 #define USBD_VID     1155
-#define USBD_PID_FS     (22336+1)
 
 static const uint8_t USB_DEVICE_DESCIPTOR[]=
 {
@@ -66,8 +66,8 @@ static const uint8_t USB_DEVICE_DESCIPTOR[]=
   64,           /*bMaxPacketSize*/
   LOBYTE(USBD_VID),           /*idVendor*/
   HIBYTE(USBD_VID),           /*idVendor*/
-  LOBYTE(USBD_PID_FS),        /*idProduct*/
-  HIBYTE(USBD_PID_FS),        /*idProduct*/
+  LOBYTE(USBD_PID),        /*idProduct*/
+  HIBYTE(USBD_PID),        /*idProduct*/
   0x00,                       /*bcdDevice rel. 2.00*/
   0x02,
   USBD_IDX_MFC_STR,           /*Index of manufacturer  string*/
@@ -108,8 +108,8 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
   0x82,                     /* bEndpointAddress */
   0x02,                           /* bmAttributes: Interrupt */
-  LOBYTE(64),     /* wMaxPacketSize: */
-  HIBYTE(64),
+  LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
+  HIBYTE(USBD_BULK_SIZE),
   0x10,                           /* bInterval: */ 
 
     /*Endpoint 2 Descriptor*/
@@ -117,8 +117,8 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
   2,                     /* bEndpointAddress */
   0x02,                           /* bmAttributes: Interrupt */
-  LOBYTE(64),     /* wMaxPacketSize: */
-  HIBYTE(64),
+  LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
+  HIBYTE(USBD_BULK_SIZE),
   0x10,                           /* bInterval: */ 
   /*---------------------------------------------------------------------------*/
 
@@ -150,6 +150,10 @@ static void epr_set_toggle(uint8_t endpoint, uint16_t set_bits, uint16_t set_mas
 
 static void read_pma(uint8_t byte_count, __IO uint16_t * pma_address, uint8_t *buffer_out);
 
+static void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length);
+
+// Wait will pause until last packet has been received, If wait is false, then a buffered packet
+// will be discarded. For wait being false the maximum transmission is USBD_BULK_SIZE (64) bytes.
 void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool wait) {
     while ((USBEPR->EP[endpoint].EPR & USB_EPTX_STAT) == USB_EP_TX_VALID) {
         if (wait) {
@@ -159,6 +163,15 @@ void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool
         }
     }
     
+    if (wait && (length > USBD_BULK_SIZE)) {
+        _send_data(endpoint, data, USBD_BULK_SIZE);
+        send_data(endpoint, data+USBD_BULK_SIZE, length-USBD_BULK_SIZE);
+    } else {
+        _send_data(endpoint, data, length);
+    }
+}
+
+void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
     uint8_t length16 = (length+1)>>1;
     __IO uint16_t * pma_address = USBPMA->buffer[endpoint].EP_TX;
     for(int i=0; i<length16; i++) {
@@ -209,6 +222,51 @@ void epr_set_toggle(uint8_t endpoint, uint16_t set_bits, uint16_t set_mask) {
     uint16_t epr_normal = epr & USB_EPREG_MASK;
     uint16_t epr_total = epr_normal | epr_toggle | USB_EP_CTR_TX | USB_EP_CTR_RX; // always write 1 to not clear CTR
     USBEPR->EP[endpoint].EPR = epr_total;
+}
+
+static void Get_SerialNum(void)
+{
+  uint32_t deviceserial0, deviceserial1, deviceserial2;
+
+  //deviceserial0 = *(uint32_t *)DEVICE_ID1;
+  //deviceserial1 = *(uint32_t *)DEVICE_ID2;
+  //deviceserial2 = *(uint32_t *)DEVICE_ID3;
+
+  deviceserial0 += deviceserial2;
+
+//   if (deviceserial0 != 0U)
+//   {
+//     IntToUnicode(deviceserial0, &USBD_StringSerial[2], 8U);
+//     IntToUnicode(deviceserial1, &USBD_StringSerial[18], 4U);
+//   }
+}
+
+/**
+  * @brief  Convert Hex 32Bits value into char
+  * @param  value: value to convert
+  * @param  pbuf: pointer to the buffer
+  * @param  len: buffer length
+  * @retval None
+  */
+static void IntToUnicode(uint32_t value, uint8_t *pbuf, uint8_t len)
+{
+  uint8_t idx = 0U;
+
+  for (idx = 0U ; idx < len ; idx ++)
+  {
+    if (((value >> 28)) < 0xAU)
+    {
+      pbuf[ 2U * idx] = (value >> 28) + '0';
+    }
+    else
+    {
+      pbuf[2U * idx] = (value >> 28) + 'A' - 10U;
+    }
+
+    value = value << 4;
+
+    pbuf[2U * idx + 1] = 0U;
+  }
 }
 
 void USB1::interrupt() {
@@ -281,6 +339,9 @@ void USB1::interrupt() {
         error_count_++;
         USB->ISTR &= ~USB_ISTR_ERR;
     }
+
+    // clear anything remaining
+    USB->ISTR = 0;
 }
 
  void USB1::handle_setup_packet(uint8_t *setup_data) {
@@ -303,18 +364,19 @@ void USB1::interrupt() {
                                 case 0x00: // language descriptor
                                     send_data(0, reinterpret_cast<const uint8_t *>("\x4\x3\x9\x4"), 4); // english
                                     break;
-                                // case 0x01:
-                                //     send_string(0, board_id_manufacturer_string(), std::strlen(board_id_manufacturer_string()));
-                                //     break;
-                                // case 0x02:
-                                //     send_string(0, board_id_product_string(), std::strlen(board_id_product_string()));
-                                //     break;
-                                // case 0x03:
-                                //     send_string(0, board_id_serial_number(), std::strlen(board_id_serial_number()));
-                                //     break;
+                                case 0x01:
+                                    send_string(0, MANUFACTURER_STRING, std::strlen(MANUFACTURER_STRING));
+                                    break;
+                                case 0x02:
+                                    send_string(0, PRODUCT_STRING, std::strlen(PRODUCT_STRING));
+                                    break;
+                                case 0x03:
+                                    Get_SerialNum();
+                                    send_string(0, "abc", std::strlen("abc"));
+                                    break;
                                 case 0x04:
-                                    // todo add BUILD_DATETIME - need longer string support
-                                    send_string(0, VERSION " " GIT_HASH, std::strlen(VERSION " " GIT_HASH ));
+                                    send_string(0, "abc", std::strlen("abc"));
+                                  //  send_string(0, VERSION " " GIT_HASH " " BUILD_DATETIME, std::strlen(VERSION " " GIT_HASH " " BUILD_DATETIME));
                                     break;
                                 case 0x05:
                                     send_string(0, param()->name, std::strlen(param()->name));

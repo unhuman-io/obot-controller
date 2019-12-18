@@ -51,6 +51,7 @@ typedef struct {
 #define  USBD_IDX_CONFIG_STR                            0x04 
 #define  USBD_IDX_INTERFACE_STR                         0x05 
 #define USBD_BULK_SIZE                                  64
+#define DFU_INTERFACE_NUMBER                            0x02
 
 #define         DEVICE_ID1          (UID_BASE) //(0x1FFF7A10)
 #define         DEVICE_ID2          (UID_BASE + 4) 
@@ -160,7 +161,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
 // DFU taken from the st dfu mode descriptor change interface protocol 2 to 1
   0x09,
   0x04,
-  0x02,
+  DFU_INTERFACE_NUMBER,
   0x00,
   0x00,
   0xfe,
@@ -471,14 +472,14 @@ void USB1::interrupt() {
             }
             break;
         case 0xa1:  // interface class get
-            if ((setup_data[1] == 3) && (interface_ == 1)) { // dfu get_status
+            if ((setup_data[1] == 3) && (interface_ == DFU_INTERFACE_NUMBER)) { // dfu get_status
                 send_data(0,reinterpret_cast<const uint8_t *>("\x00\x00\x00\x00\x00\x00"), 6);
             } else {
                 send_stall(0);
             }
             break;
         case 0x21:  // interface class request
-            if ((setup_data[1] == 0) && (interface_ == 1)) { // dfu detach
+            if ((setup_data[1] == 0) && (interface_ == DFU_INTERFACE_NUMBER)) { // dfu detach
                 send_data(0,0,0);
                 while ((USB->EP0R & USB_EPTX_STAT) == USB_EP_TX_VALID); // wait for packet to go through
                 ms_delay(10);

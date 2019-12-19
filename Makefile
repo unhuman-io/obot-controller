@@ -25,8 +25,8 @@ TARGET = bort2
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og -O3
-LTO = -flto
+OPT = -Og -O0
+LTO = #-flto
 
 
 #######################################
@@ -103,7 +103,7 @@ startup_stm32g474xx.s
 #######################################
 # binaries
 #######################################
-PREFIX = #arm-none-eabi-
+PREFIX = arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
 ifdef GCC_PATH
@@ -113,11 +113,12 @@ CP = $(GCC_PATH)/$(PREFIX)objcopy
 SZ = $(GCC_PATH)/$(PREFIX)size
 CXX = $(GCC_PATH)/$(PREFIX)g++
 else
-CC = $(PREFIX)clang
-AS = $(PREFIX)clang
+CC = clang
+AS = $(PREFIX)gcc
 CP = $(PREFIX)objcopy
 SZ = $(PREFIX)size
-CXX = $(PREFIX)clang++
+CXX = clang++
+LD = ld.lld
 endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
@@ -162,9 +163,9 @@ C_INCLUDES =  \
 
 
 # compile gcc flags
-ASFLAGS = -target arm-none-eabi --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/  $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
+ASFLAGS =  $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
 
-CFLAGS = -target arm-none-eabi --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/ $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
+CFLAGS = -target thumbv7em-none-eabi --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/ $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -182,9 +183,15 @@ CPPFLAGS = $(CFLAGS) -I/opt/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/incl
 LDSCRIPT = STM32G474RETx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys 
+LIBS = -lc_nano -lm -lnosys -lrdimon_nano -lstdc++_nano -lg_nano
 LIBDIR = 
-LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections $(LTO) -u _printf_float
+LDFLAGS := --Bstatic --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/
+LDFLAGS += --build-id
+LDFLAGS += --gc-sections
+LDFLAGS += --Map $(BUILD_DIR)/$(TARGET).map
+LDFLAGS += --script $(LDSCRIPT) 
+LDFLAGS += -Llib -L/opt/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/lib/thumb/v7e-m+fp/hard/ $(LIBS)
+#LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections $(LTO) -u _printf_float
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
@@ -203,16 +210,16 @@ OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
-	$(CXX) -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CXX) -c $(CPPFLAGS) -std=c++11 $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(ASFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(CXX) -v $(CFLAGS) $(OBJECTS) $(LDFLAGS) -o $@
+	$(LD) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)

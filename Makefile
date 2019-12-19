@@ -163,7 +163,7 @@ C_INCLUDES =  \
 
 
 # compile gcc flags
-ASFLAGS =  $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
+ASFLAGS =  $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 CFLAGS = -target thumbv7em-none-eabi --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/ $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
 
@@ -189,7 +189,7 @@ LDFLAGS := --Bstatic --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/
 LDFLAGS += --build-id
 LDFLAGS += --gc-sections
 LDFLAGS += --Map $(BUILD_DIR)/$(TARGET).map
-LDFLAGS += --script $(LDSCRIPT) --build-id=none --gc-sections
+LDFLAGS += --script $(LDSCRIPT) --build-id=none --gc-sections --lto-O3
 LDFLAGS += -Llib -L/opt/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/lib/thumb/v7e-m+fp/hard/ -L/opt/gcc-arm-none-eabi-9-2019-q4-major/lib/gcc/arm-none-eabi/9.2.1/thumb/v7e-m+fp/hard/ $(LIBS)
 #LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections $(LTO) -u _printf_float
 

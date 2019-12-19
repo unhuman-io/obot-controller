@@ -163,7 +163,7 @@ C_INCLUDES =  \
 # compile gcc flags
 ASFLAGS =  $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
-CFLAGS = -target thumbv7em-none-eabi --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/ $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
+CFLAGS = -target thumbv7em-none-eabi --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/ -mexecute-only $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2

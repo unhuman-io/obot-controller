@@ -14,7 +14,7 @@
 const Config config;
 static USB1 usb_;
 #include "config_g474_boost.cpp"
-static Actuator actuator_ = {config_items.fast_loop, config_items.main_loop};
+static Actuator<QEPEncoder, HRPWM> actuator_ = {config_items.fast_loop, config_items.main_loop};
 
 // limited to 64 bytes
 void send_string(const char * str) {

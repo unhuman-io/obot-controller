@@ -4,14 +4,18 @@
 #ifdef __cplusplus
 #include "fast_loop.h"
 #include "main_loop.h"
+#include "hall.h"
+#include "qep_encoder.h"
+//#include "actuator.h"
+#include "peripheral/stm32g4/hrpwm.h"
 
-class Actuator;
+template<class MotorEncoder, class PWM> class Actuator;
 
 struct Config {
     Config();
-    FastLoop &fast_loop;
+    FastLoop<QEPEncoder, HRPWM> &fast_loop;
     MainLoop &main_loop;
-    Actuator &actuator;
+    Actuator<QEPEncoder, HRPWM> &actuator;
 };
 
 extern const Config config;

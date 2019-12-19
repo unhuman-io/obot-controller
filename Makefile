@@ -26,7 +26,7 @@ TARGET = bort2
 DEBUG = 1
 # optimization
 OPT = -Og -O3
-LTO = -flto
+LTO = -flto -fwhole-program-vtables -fforce-emit-vtables
 
 
 #######################################
@@ -79,7 +79,6 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 
 CPP_SOURCES = \
 motorlib/control_fun.cpp\
-fast_loop.cpp\
 foc_i.cpp\
 foc.cpp\
 gpio.cpp\
@@ -87,7 +86,6 @@ main_loop.cpp\
 sincos.cpp\
 config.cpp\
 usb_communication.cpp\
-actuator.cpp\
 util.cpp\
 hall.cpp\
 motorlib/peripheral/stm32g4/usb.cpp\

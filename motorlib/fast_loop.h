@@ -6,9 +6,10 @@
 #include "control_fun.h"
 
 class FOC;
-class PWM;
-class Encoder;
+//class PWM;
+//class Encoder;
 
+template<class Encoder, class PWM>
 class FastLoop {
  public:
     FastLoop(PWM &pwm, Encoder &encoder); // TODO consider changing encoder to template
@@ -66,5 +67,7 @@ class FastLoop {
    float dt_ = 0;
    float dt_sum_ = 0;
 };
+
+#include "fast_loop.cpp"
 
 #endif

@@ -6,7 +6,8 @@
 #include "config.h"
 #include <cstdio>
 
-void Actuator::run() {
+template<class MotorEncoder, class PWM>
+void Actuator<MotorEncoder, PWM>::run() {
     // zero current sensors in voltage mode to try to eliminate bias from pwm noise, could also do open mode
     fast_loop_.voltage_mode();
     uint32_t t_start = get_clock();

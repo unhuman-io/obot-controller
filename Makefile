@@ -25,7 +25,7 @@ TARGET = bort2
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og -O0
+OPT = -Og -O3
 LTO = #-flto
 
 
@@ -183,14 +183,14 @@ CPPFLAGS = $(CFLAGS) -I/opt/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/incl
 LDSCRIPT = STM32G474RETx_FLASH.ld
 
 # libraries
-LIBS = -lc_nano -lm -lnosys -lrdimon_nano -lstdc++_nano -lg_nano
+LIBS = -lc_nano -lm -lnosys -lrdimon_nano -lstdc++_nano -lg_nano -lgcc
 LIBDIR = 
 LDFLAGS := --Bstatic --sysroot /opt/gcc-arm-none-eabi/arm-none-eabi/
 LDFLAGS += --build-id
 LDFLAGS += --gc-sections
 LDFLAGS += --Map $(BUILD_DIR)/$(TARGET).map
-LDFLAGS += --script $(LDSCRIPT) 
-LDFLAGS += -Llib -L/opt/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/lib/thumb/v7e-m+fp/hard/ $(LIBS)
+LDFLAGS += --script $(LDSCRIPT) --build-id=none --gc-sections
+LDFLAGS += -Llib -L/opt/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/lib/thumb/v7e-m+fp/hard/ -L/opt/gcc-arm-none-eabi-9-2019-q4-major/lib/gcc/arm-none-eabi/9.2.1/thumb/v7e-m+fp/hard/ $(LIBS)
 #LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections $(LTO) -u _printf_float
 
 # default action: build all
@@ -219,7 +219,7 @@ $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(ASFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(LD) $(OBJECTS) $(LDFLAGS) -o $@
+	$(LD) $(OBJECTS) /opt/gcc-arm-none-eabi-9-2019-q4-major/lib/gcc/arm-none-eabi/9.2.1/thumb/v7e-m+fp/hard/crti.o $(LDFLAGS) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)

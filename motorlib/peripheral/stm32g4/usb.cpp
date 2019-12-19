@@ -236,7 +236,7 @@ int USB1::receive_data(uint8_t endpoint, uint8_t * const data, uint8_t length) {
 }
 
 void USB1::send_string(uint8_t endpoint, const char *str, uint8_t length) {
-    uint16_t str_out[length+1] = {};
+    uint16_t str_out[length+1];
     uint8_t length_total = 2 + 2*length;
     str_out[0] = length_total | (3 << 8); // header
     for (int i=0; i<length; i++) {

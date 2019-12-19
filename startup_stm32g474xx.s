@@ -69,10 +69,10 @@ defined in linker script */
     .section	.text.Reset_Handler
 Reboot_Loader:
     ldr     r0, =RCC_APB2SMENR 
-    ldr     r1, =#(1<<RCC_SYSCFGEN_POS) 
+    ldr     r1, =(1<<RCC_SYSCFGEN_POS) 
     str     r1, [r0]
 	nop		/* found experimentally that this is needed */
-    ldr     r0, =#SYSCFG_MEMRMP /* SYSCFG_MEMRMP */
+    ldr     r0, =$SYSCFG_MEMRMP /* SYSCFG_MEMRMP */
     ldr     r1, =0x00000001 /* MAP ROM AT ZERO */
     str     r1, [r0]
     ldr     r0, =0x1FFF0000 /* ROM BASE */
@@ -85,10 +85,10 @@ Reboot_Loader:
 	.type	Reset_Handler, %function
 Reset_Handler:
 	ldr r0, =RCC_BASE
-	ldr r1, [r0, #RCC_CSR_OFFSET]
+	ldr r1, [r0, $RCC_CSR_OFFSET]
 	tst r1, #(1<<RCC_CSR_SFTRSTF_POS)
 	orr r1, #(1<<RCC_CSR_RMVF_POS)
-	str r1, [r0, #RCC_CSR_OFFSET]
+	str r1, [r0, $RCC_CSR_OFFSET]
 	beq Original_Reset_Handler
 	ldr r0, =go_to_bootloader
 	ldrb r1, [r0]

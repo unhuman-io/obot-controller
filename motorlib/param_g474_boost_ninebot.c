@@ -1,5 +1,5 @@
 #include "param.h"
-#include "math.h"
+#include <math.h>
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
@@ -14,7 +14,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.foc_param.pi_q.command_max=12,
     .fast_loop_param.foc_param.num_poles = 15,
     .main_loop_param.gear_ratio = 50,
-    .main_loop_param.kt = .012*sqrt(.5),
+    .main_loop_param.kt = 1,//.012*sqrt(.5),
     .startup_param.startup_mode = CURRENT,
     .main_loop_param.update_frequency = 10000,
     .fast_loop_param.adc1_offset = 1980,

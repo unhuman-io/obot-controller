@@ -26,7 +26,7 @@ TARGET = bort2
 DEBUG = 1
 # optimization
 OPT = -Og -O3
-LTO = #-flto
+LTO = -flto
 
 
 #######################################
@@ -219,7 +219,7 @@ $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(ASFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(LD) $(OBJECTS) /opt/gcc-arm-none-eabi-9-2019-q4-major/lib/gcc/arm-none-eabi/9.2.1/thumb/v7e-m+fp/hard/crti.o $(LDFLAGS) -o $@
+	$(LD) $(OBJECTS) /opt/gcc-arm-none-eabi-9-2019-q4-major/lib/gcc/arm-none-eabi/9.2.1/thumb/v7e-m+fp/hard/crt*.o $(LDFLAGS) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)

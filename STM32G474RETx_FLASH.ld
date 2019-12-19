@@ -113,7 +113,7 @@ SECTIONS
 
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
-  } >FLASH
+  } >FLASH  AT> FLASH  /* bug in ld.lld? */
 
   /* Constant data goes into FLASH */
   .rodata :

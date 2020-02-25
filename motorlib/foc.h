@@ -4,10 +4,11 @@
 #include "messages.h"
 
 class PIController;
+class FirstOrderLowPassFilter;
 
 class FOC {
 public:
-    FOC();
+    FOC(float dt);
     ~FOC();
 
     FOCStatus * const step(const FOCCommand &command)  __attribute__((section (".ccmram")));
@@ -19,6 +20,8 @@ private:
     PIController *pi_id_, *pi_iq_;
     FOCStatus status_;
     static const float Kc[2][3];
+    float dt_;
+    FirstOrderLowPassFilter *id_filter_, *iq_filter_;
 };
 
 

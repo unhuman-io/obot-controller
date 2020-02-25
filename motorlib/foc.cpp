@@ -9,14 +9,18 @@
 
 #include <cmath>
 
-FOC::FOC() { //hal::PWM *pwm, const hal::ADC &adc, const Encoder &encoder) : pwm_(pwm), adc_(adc), encoder_(encoder) {
+FOC::FOC(float dt) : dt_(dt) { //hal::PWM *pwm, const hal::ADC &adc, const Encoder &encoder) : pwm_(pwm), adc_(adc), encoder_(encoder) {
     pi_id_ = new PIController();
     pi_iq_ = new PIController();
+    id_filter_ = new FirstOrderLowPassFilter(dt);
+    iq_filter_ = new FirstOrderLowPassFilter(dt);
 }
 
 FOC::~FOC() {
     delete pi_id_;
     delete pi_iq_;
+    delete id_filter_;
+    delete iq_filter_;
 }
 
 #define SQRT3 (float) std::sqrt(3)
@@ -49,8 +53,11 @@ FOCStatus * const FOC::step(const FOCCommand &command) {
     float i_d_measured = cos_t * i_alpha_measured - sin_t * i_beta_measured;
     float i_q_measured = sin_t * i_alpha_measured + cos_t * i_beta_measured;
 
-    float v_d_desired = pi_id_->step(status_.desired.i_d, i_d_measured);
-    float v_q_desired = pi_iq_->step(status_.desired.i_q, i_q_measured);
+    float i_d_measured_filtered = id_filter_->update(i_d_measured);
+    float i_q_measured_filtered = iq_filter_->update(i_q_measured);
+
+    float v_d_desired = pi_id_->step(status_.desired.i_d, i_d_measured_filtered);
+    float v_q_desired = pi_iq_->step(status_.desired.i_q, i_q_measured_filtered);
 
     float v_alpha_desired = cos_t * v_d_desired + sin_t * v_q_desired;
     float v_beta_desired = -sin_t * v_d_desired + cos_t * v_q_desired;
@@ -74,4 +81,6 @@ void FOC::set_param(const FOCParam &param) {
     pi_id_->set_param(param.pi_d);
     pi_iq_->set_param(param.pi_q);
     num_poles_ = param.num_poles;
+    id_filter_->set_frequency(param.current_filter_frequency_hz);
+    iq_filter_->set_frequency(param.current_filter_frequency_hz);
 }

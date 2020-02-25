@@ -11,7 +11,7 @@ class Encoder;
 
 class FastLoop {
  public:
-    FastLoop(PWM &pwm, Encoder &encoder); // TODO consider changing encoder to template
+    FastLoop(float dt, PWM &pwm, Encoder &encoder); // TODO consider changing encoder to template
     ~FastLoop();
     void update()  __attribute__((section (".ccmram")));
     void maintenance();

@@ -8,8 +8,8 @@
 #include "../st_device.h"
 #include "sincos.h"
 
-FastLoop::FastLoop(PWM &pwm, Encoder &encoder) : pwm_(pwm), encoder_(encoder) {
-    foc_ = new FOC;
+FastLoop::FastLoop(float dt, PWM &pwm, Encoder &encoder) : pwm_(pwm), encoder_(encoder) {
+    foc_ = new FOC(dt);
 }
 
 FastLoop::~FastLoop() {

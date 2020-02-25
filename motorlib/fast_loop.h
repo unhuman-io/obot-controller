@@ -17,9 +17,12 @@ class FastLoop {
     void maintenance();
     void set_id_des(float id) { id_des = id; }
     void set_iq_des(float iq) { if (mode_ == CURRENT_MODE) iq_des = iq; }
+    void set_tuning_amplitude(float amplitude) { tuning_amplitude_ = amplitude; }
+    void set_tuning_frequency(float frequency) { tuning_frequency_ = frequency; }
     void set_reserved(float reserved) { reserved_ = reserved; }
     void phase_lock_mode(float id);
     void current_mode();
+    void current_tuning_mode();
     void voltage_mode();
     void brake_mode();
     void open_mode();
@@ -31,7 +34,7 @@ class FastLoop {
     FastLoopParam param_;
     FOC *foc_;
     PWM &pwm_;
-    enum {OPEN_MODE, BRAKE_MODE, CURRENT_MODE, PHASE_LOCK_MODE, VOLTAGE_MODE} mode_ = CURRENT_MODE;
+    enum {OPEN_MODE, BRAKE_MODE, CURRENT_MODE, PHASE_LOCK_MODE, VOLTAGE_MODE, CURRENT_TUNING_MODE} mode_ = CURRENT_MODE;
 
     int32_t motor_enc;
     int32_t last_motor_enc=0;
@@ -64,6 +67,9 @@ class FastLoop {
    KahanSum t_seconds_;
    mcu_time last_timestamp_ = 0;
    float dt_ = 0;
+   float phi_ = 0;
+   float tuning_amplitude_ = 0;
+   float tuning_frequency_ = 0;
 };
 
 #endif

@@ -28,9 +28,12 @@ void MainLoop::set_mode(MainControlMode mode) {
       led_.set_color(LED::ORANGE);
       break;
     case CURRENT:
-    case CURRENT_TUNING:
       fast_loop_current_mode();
       led_.set_color(LED::GREEN);
+      break;
+    case CURRENT_TUNING:
+      fast_loop_current_tuning_mode();
+      led_.set_color(LED::SPRING);
       break;
     case POSITION_TUNING:
       phi_ = 0;
@@ -94,6 +97,9 @@ void MainLoop::update() {
       iq_des = controller_.step(pos_desired, vel_desired, 0, fast_loop_status_.motor_position.position);
       break;
     }
+    case CURRENT_TUNING: 
+      fast_loop_set_tuning_amplitude(receive_data_.current_desired);
+      fast_loop_set_tuning_frequency(receive_data_.reserved);
     default:
       break;
   }

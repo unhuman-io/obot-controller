@@ -21,12 +21,24 @@ void fast_loop_set_iq_des(float iq) {
     config.fast_loop.set_iq_des(iq);
 }
 
+void fast_loop_set_tuning_amplitude(float amplitude) {
+    config.fast_loop.set_tuning_amplitude(amplitude);
+}
+
+void fast_loop_set_tuning_frequency(float frequency){
+    config.fast_loop.set_tuning_frequency(frequency);
+}
+
 void fast_loop_phase_lock_mode(float id) {
     config.fast_loop.phase_lock_mode(id);
 }
 
 void fast_loop_current_mode() {
     config.fast_loop.current_mode();
+}
+
+void fast_loop_current_tuning_mode() {
+    config.fast_loop.current_tuning_mode();
 }
 
 void fast_loop_brake_mode() {

@@ -10,6 +10,7 @@
 #include "encoder.h"
 #include "sincos.h"
 #include "../st_device.h"
+#include "util.h"
 
 void MainLoop::init() {
 }
@@ -31,9 +32,10 @@ void MainLoop::set_mode(MainControlMode mode) {
       fast_loop_current_mode();
       led_.set_color(LED::GREEN);
       break;
+    case POSITION_TUNING:
+      phi_ = 0;
     case POSITION:
     case VELOCITY:
-    case POSITION_TUNING:
       fast_loop_current_mode();
       led_.set_color(LED::BLUE);
       break;
@@ -46,15 +48,16 @@ void MainLoop::set_mode(MainControlMode mode) {
 
 void MainLoop::update() {
   count_++;
+  last_timestamp_ = timestamp_;
+  timestamp_ = get_clock();
   output_encoder_.trigger();
   fast_loop_get_status(&fast_loop_status_);
-  dt_sum_ += fast_loop_status_.dt;
+  dt_ = (timestamp_ - last_timestamp_) * (1.0f/CPU_FREQUENCY_HZ);
 
   int count_received = communication_.receive_data(&receive_data_);
   if (count_received) {
     if (mode_ != static_cast<MainControlMode>(receive_data_.mode_desired)) {
       set_mode(static_cast<MainControlMode>(receive_data_.mode_desired));
-      dt_sum_ = 0;
       controller_.init(fast_loop_status_.motor_position.position);
     }
   }
@@ -76,14 +79,13 @@ void MainLoop::update() {
       break;
     case POSITION_TUNING: 
     {
+      // phi_ is a radian counter at the command frequency doesn't get larger than 2*pi
+      phi_ += 2 * (float) M_PI * fabsf(receive_data_.reserved) * dt_;
+      if (phi_ > 2 * (float) M_PI) {
+        phi_ -= 2 * (float) M_PI;
+      }
       Sincos sincos;
-      if (dt_sum_ > 1.0f/receive_data_.reserved) {
-        dt_sum_ -= 1.0f/receive_data_.reserved;
-      }
-      if (receive_data_.reserved != last_receive_data_.reserved) {
-        dt_sum_ = 0;
-      }
-      sincos = sincos1(2 * (float) M_PI * receive_data_.reserved * fast_loop_status_.t_seconds); //dt_sum_);
+      sincos = sincos1(phi_);
       float pos_desired = receive_data_.position_desired*(receive_data_.reserved > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
       float vel_desired = receive_data_.reserved > 0 ? 2 * (float) M_PI * receive_data_.reserved * (1.0f/CPU_FREQUENCY_HZ) * sincos.cos : 0;
       iq_des = controller_.step(pos_desired, vel_desired, 0, fast_loop_status_.motor_position.position);

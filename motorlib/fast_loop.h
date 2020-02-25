@@ -64,7 +64,6 @@ class FastLoop {
    KahanSum t_seconds_;
    mcu_time last_timestamp_ = 0;
    float dt_ = 0;
-   float dt_sum_ = 0;
 };
 
 #endif

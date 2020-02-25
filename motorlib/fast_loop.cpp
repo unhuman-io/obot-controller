@@ -67,7 +67,6 @@ void FastLoop::update() {
     }
 
     dt_ = (timestamp_ - last_timestamp_)*(float) (1.0f/CPU_FREQUENCY_HZ);
-    dt_sum_ += dt_;
     last_timestamp_ = timestamp_;
     t_seconds_.add(dt_);
 }
@@ -146,9 +145,8 @@ void FastLoop::get_status(FastLoopStatus *fast_loop_status) {
     fast_loop_status->motor_position.raw = motor_enc;
     fast_loop_status->timestamp = timestamp_;
     fast_loop_status->t_seconds = t_seconds_.value();
-    fast_loop_status->dt = dt_sum_;
+    fast_loop_status->dt = dt_;
     fast_loop_status->vbus = v_bus_;
-    dt_sum_ = 0;
 }
 
 void FastLoop::set_phase_mode() {

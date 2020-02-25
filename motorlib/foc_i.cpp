@@ -16,6 +16,7 @@ void fast_loop_maintenance() {
 void fast_loop_set_id_des(float id) {
     config.fast_loop.set_id_des(id);
 }
+
 void fast_loop_set_iq_des(float iq) {
     config.fast_loop.set_iq_des(iq);
 }

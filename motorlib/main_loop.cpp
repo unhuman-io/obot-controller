@@ -48,11 +48,13 @@ void MainLoop::set_mode(MainControlMode mode) {
 
 void MainLoop::update() {
   count_++;
+  output_encoder_.trigger();
+  
   last_timestamp_ = timestamp_;
   timestamp_ = get_clock();
-  output_encoder_.trigger();
-  fast_loop_get_status(&fast_loop_status_);
   dt_ = (timestamp_ - last_timestamp_) * (1.0f/CPU_FREQUENCY_HZ);
+
+  fast_loop_get_status(&fast_loop_status_);
 
   int count_received = communication_.receive_data(&receive_data_);
   if (count_received) {
@@ -80,6 +82,7 @@ void MainLoop::update() {
     case POSITION_TUNING: 
     {
       // phi_ is a radian counter at the command frequency doesn't get larger than 2*pi
+      // only works down to frequencies of .0047 Hz, could use kahansum to go slower
       phi_ += 2 * (float) M_PI * fabsf(receive_data_.reserved) * dt_;
       if (phi_ > 2 * (float) M_PI) {
         phi_ -= 2 * (float) M_PI;

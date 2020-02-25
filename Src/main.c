@@ -237,6 +237,7 @@ int main(void)
   htim1.Instance->DIER |= TIM_DIER_UIE;
   HAL_TIM_Base_Start(&htim1);
   HAL_TIM_Base_Start(&htim4);
+  HAL_TIM_IC_Start(&htim5, TIM_CHANNEL_3); // encoder index
   HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_2);
 
   /* USER CODE END 2 */

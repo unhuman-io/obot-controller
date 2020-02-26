@@ -59,7 +59,7 @@ void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 uint32_t t_exec;
 uint8_t fold_diff, lsu_diff, cpi_diff, cpi_diff1;
 uint16_t inst;
-#include "main2.h"
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/

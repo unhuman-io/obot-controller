@@ -1,3 +1,6 @@
+%% run below to collect cogging data
+%!motor_util set --mode position_tuning --position 5 --reserved .01 && sleep 3; echo "starting read" && date && motor_util read --frequency 10000 > tmp.csv & sleep 1000.01 && date && kill -s SIGINT %echo 
+
 %%
 data = readtable('tmp.csv');
 %%

@@ -19,7 +19,7 @@ static Actuator actuator_ = {config_items.fast_loop, config_items.main_loop};
 // limited to 64 bytes
 void send_string(const char * str) {
     if (!usb_.tx_active(1)) {
-        usb_.send_data(1, (const uint8_t *) str, std::strlen(str), false);
+        usb_.send_data(1, (const uint8_t *) str, std::strlen(str)+1, false);
     }
 }
 

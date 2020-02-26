@@ -36,7 +36,7 @@ void MainLoop::set_mode(MainControlMode mode) {
       led_.set_color(LED::SPRING);
       break;
     case POSITION_TUNING:
-      phi_ = 0;
+      phi_.init();
     case POSITION:
     case VELOCITY:
       fast_loop_current_mode();
@@ -86,12 +86,12 @@ void MainLoop::update() {
     {
       // phi_ is a radian counter at the command frequency doesn't get larger than 2*pi
       // only works down to frequencies of .0047 Hz, could use kahansum to go slower
-      phi_ += 2 * (float) M_PI * fabsf(receive_data_.reserved) * dt_;
-      if (phi_ > 2 * (float) M_PI) {
-        phi_ -= 2 * (float) M_PI;
+      phi_.add(2 * (float) M_PI * fabsf(receive_data_.reserved) * dt_);
+      if (phi_.value() > 2 * (float) M_PI) {
+        phi_.add(-2 * (float) M_PI);
       }
       Sincos sincos;
-      sincos = sincos1(phi_);
+      sincos = sincos1(phi_.value());
       float pos_desired = receive_data_.position_desired*(receive_data_.reserved > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
       float vel_desired = receive_data_.reserved > 0 ? 2 * (float) M_PI * receive_data_.reserved * (1.0f/CPU_FREQUENCY_HZ) * sincos.cos : 0;
       iq_des = controller_.step(pos_desired, vel_desired, 0, fast_loop_status_.motor_position.position);
@@ -109,10 +109,10 @@ void MainLoop::update() {
   send_data.iq = fast_loop_status_.foc_status.measured.i_q;
   send_data.host_timestamp_received = receive_data_.host_timestamp;
   send_data.mcu_timestamp = fast_loop_status_.timestamp;
-  send_data.motor_encoder = fast_loop_status_.motor_position.raw;
+  send_data.motor_encoder = fast_loop_status_.motor_mechanical_position;
   send_data.motor_position = fast_loop_status_.motor_position.position;
   send_data.joint_position = output_encoder_.get_value();//*2.0*(float) M_PI/param_.output_encoder.cpr;
-  send_data.reserved[0] = fast_loop_status_.foc_status.measured.i_0;
+  send_data.reserved[0] = iq_des; //fast_loop_status_.foc_status.measured.i_0;
   communication_.send_data(send_data);
   led_.update();
   last_receive_data_ = receive_data_;

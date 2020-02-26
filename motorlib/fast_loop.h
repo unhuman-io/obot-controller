@@ -44,7 +44,7 @@ class FastLoop {
     float alpha=0.001;
     float phase_mode_ = 1;    // 1: standard or -1: two wires switched
     float phase_mode_desired_ = 1;
-    float motor_mechanical_position_ = 0;
+    int32_t motor_mechanical_position_ = 0;
 
     float iq_des = 0;
     float id_des = 0;

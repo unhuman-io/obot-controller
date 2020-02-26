@@ -7,6 +7,7 @@ class PIDDeadbandController;
 class Communication;
 class Encoder;
 #include <cmath>
+#include "control_fun.h"
 
 class MainLoop {
  public:
@@ -30,7 +31,7 @@ class MainLoop {
     MainControlMode mode_ = OPEN;
     Encoder &output_encoder_;
     float dt_ = 0;
-    float phi_ = 0;
+    KahanSum phi_;
     uint32_t timestamp_ = 0;
     uint32_t last_timestamp_ = 0;
 

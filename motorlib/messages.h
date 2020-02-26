@@ -30,7 +30,7 @@ typedef struct {
     float num_poles;
 } FOCParam;
 
-#define COGGING_TABLE_SIZE 1024  // must be multiple of 2
+#define COGGING_TABLE_SIZE 8192//1024  // must be multiple of 2
 typedef struct {
     int32_t pwm_frequency;
     float adc1_offset, adc2_offset, adc3_offset;

@@ -4,7 +4,7 @@
 #include "messages.h"
 #undef _DEFAULT_SOURCE
 #include <cmath>
-#define M_PI 3.14159f
+#define M_PI 3.1415926f
 class Hysteresis {
  public:
     float step(float);

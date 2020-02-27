@@ -86,14 +86,16 @@ void MainLoop::update() {
     {
       // phi_ is a radian counter at the command frequency doesn't get larger than 2*pi
       // only works down to frequencies of .0047 Hz, could use kahansum to go slower
-      phi_.add(2 * (float) M_PI * fabsf(receive_data_.reserved) * dt_);
+      float frequency_hz = receive_data_.reserved;  // negative frequencies are square waves, positive sine waves
+      float amplitude = receive_data_.position_desired;
+      phi_.add(2 * (float) M_PI * fabsf(frequency_hz) * dt_);
       if (phi_.value() > 2 * (float) M_PI) {
         phi_.add(-2 * (float) M_PI);
       }
       Sincos sincos;
       sincos = sincos1(phi_.value());
-      float pos_desired = receive_data_.position_desired*(receive_data_.reserved > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
-      float vel_desired = receive_data_.reserved > 0 ? 2 * (float) M_PI * receive_data_.reserved * (1.0f/CPU_FREQUENCY_HZ) * sincos.cos : 0;
+      float pos_desired = amplitude*(frequency_hz > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
+      float vel_desired = frequency_hz > 0 ? 2 * (float) M_PI * frequency_hz * sincos.cos : 0;
       iq_des = controller_.step(pos_desired, vel_desired, 0, fast_loop_status_.motor_position.position);
       break;
     }

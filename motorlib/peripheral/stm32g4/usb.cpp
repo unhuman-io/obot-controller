@@ -21,6 +21,7 @@ typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 byte
     __IO uint16_t EP_TX[32];
     __IO uint16_t EP_RX[48];
     } buffer[3];
+    __IO uint16_t EP_TX2[2][32]; // double buffer
 } USBPMA_TypeDef;
 #define USBPMA ((USBPMA_TypeDef *) USB_PMAADDR)
 
@@ -195,11 +196,14 @@ bool USB1::tx_active(uint8_t endpoint) {
 // Wait will pause until last packet has been received, If wait is false, then a buffered packet
 // will be discarded. For wait being false the maximum transmission is USBD_BULK_SIZE (64) bytes.
 void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool wait) {
+      GPIOC->BSRR |= GPIO_BSRR_BS12;
     while (tx_active(endpoint)) {
         if (wait) {
             continue;
         } else {
-            epr_set_toggle(endpoint, USB_EP_TX_NAK, USB_EPTX_STAT);
+            // need to double buffer
+            //epr_set_toggle(endpoint, USB_EP_TX_NAK, USB_EPTX_STAT);
+            break;
         }
     }
     
@@ -209,16 +213,31 @@ void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool
     } else {
         _send_data(endpoint, data, length);
     }
+      GPIOC->BSRR |= GPIO_BSRR_BR12;
 }
 
 void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
     uint8_t length16 = (length+1)>>1;
     __IO uint16_t * pma_address = USBPMA->buffer[endpoint].EP_TX;
+    if (endpoint == 2) {
+        int swbuf = (USBEPR->EP[3].EPR & USB_EP_DTOG_RX) >> 14;
+        pma_address = USBPMA->EP_TX2[swbuf];
+    }
     for(int i=0; i<length16; i++) {
         pma_address[i] = ((const uint16_t *) data)[i];
     }
-    USBPMA->btable[endpoint].COUNT_TX = length;
-    epr_set_toggle(endpoint, USB_EP_TX_VALID, USB_EPTX_STAT);
+    if (endpoint == 2) {
+        while ( ((USBEPR->EP[3].EPR & USB_EP_DTOG_TX) >> 6) != ((USBEPR->EP[3].EPR & USB_EP_DTOG_RX) >> 14) ) {
+            USBEPR->EP[3].EPR  = (USBEPR->EP[3].EPR & USB_EPREG_MASK) | USB_EP_CTR_TX | USB_EP_CTR_RX | USB_EP_DTOG_TX;
+        }
+         USBEPR->EP[3].EPR  = (USBEPR->EP[3].EPR & USB_EPREG_MASK) | USB_EP_CTR_TX | USB_EP_CTR_RX | USB_EP_DTOG_RX;
+         USBPMA->btable[3].COUNT_TX = length;
+         USBPMA->btable[3].COUNT_RX = length;
+         epr_set_toggle(3, USB_EP_TX_VALID, USB_EPTX_STAT);
+    } else {
+        USBPMA->btable[endpoint].COUNT_TX = length;
+        epr_set_toggle(endpoint, USB_EP_TX_VALID, USB_EPTX_STAT);
+    }
 }
 
 // todo protect
@@ -434,11 +453,13 @@ void USB1::interrupt() {
                     break;
                 case 0x09: // set configuration
                     // enable endpoint 2 IN (TX)
-                    USB->EP2R = 2; // Bulk on 2
-                    USBPMA->btable[2].ADDR_TX = offsetof(USBPMA_TypeDef, buffer[2].EP_TX);
-                    epr_set_toggle(2, USB_EP_TX_NAK, USB_EPTX_STAT);
+                    USB->EP3R = 0x102; // Bulk on 2 double buf
+                    USBPMA->btable[3].ADDR_TX = offsetof(USBPMA_TypeDef, EP_TX2);
+                    USBPMA->btable[3].ADDR_RX = offsetof(USBPMA_TypeDef, EP_TX2)+64;
+                    epr_set_toggle(3, USB_EP_TX_NAK, USB_EPTX_STAT);
                         // sets the toggle only bits to NAK, hardware better not change EPR during operation
                     
+                    USB->EP2R = 2;
                     // enable endpoint 2 OUT (RX)
                     USBPMA->btable[2].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[2].EP_RX);
                     USBPMA->btable[2].COUNT_RX = (1 << USB_COUNT2_RX_BLSIZE_Pos) | (2 << USB_COUNT2_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation

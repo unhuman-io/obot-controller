@@ -371,6 +371,11 @@ void USB1::interrupt() {
                     USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
                 }
                 break;
+            case 3:
+                if (USB->EP3R & USB_EP_CTR_TX) {
+                    USB->EP3R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
+                }
+                break;
         }
     }
 

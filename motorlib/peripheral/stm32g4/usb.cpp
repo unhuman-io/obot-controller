@@ -196,7 +196,6 @@ bool USB1::tx_active(uint8_t endpoint) {
 // Wait will pause until last packet has been received, If wait is false, then a buffered packet
 // will be discarded. For wait being false the maximum transmission is USBD_BULK_SIZE (64) bytes.
 void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool wait) {
-      GPIOC->BSRR |= GPIO_BSRR_BS12;
     while (tx_active(endpoint)) {
         if (wait) {
             continue;
@@ -213,13 +212,13 @@ void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool
     } else {
         _send_data(endpoint, data, length);
     }
-      GPIOC->BSRR |= GPIO_BSRR_BR12;
 }
 
 void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
     uint8_t length16 = (length+1)>>1;
     __IO uint16_t * pma_address = USBPMA->buffer[endpoint].EP_TX;
     if (endpoint == 2) {
+        // double buffered DTOG_RX points to software_buffer to load, 0 or 1
         int swbuf = (USBEPR->EP[3].EPR & USB_EP_DTOG_RX) >> 14;
         pma_address = USBPMA->EP_TX2[swbuf];
     }
@@ -227,13 +226,16 @@ void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
         pma_address[i] = ((const uint16_t *) data)[i];
     }
     if (endpoint == 2) {
+        // toggle DTOG_TX to the buffer to the software_buffer that was just loaded
         while ( ((USBEPR->EP[3].EPR & USB_EP_DTOG_TX) >> 6) != ((USBEPR->EP[3].EPR & USB_EP_DTOG_RX) >> 14) ) {
             USBEPR->EP[3].EPR  = (USBEPR->EP[3].EPR & USB_EPREG_MASK) | USB_EP_CTR_TX | USB_EP_CTR_RX | USB_EP_DTOG_TX;
         }
-         USBEPR->EP[3].EPR  = (USBEPR->EP[3].EPR & USB_EPREG_MASK) | USB_EP_CTR_TX | USB_EP_CTR_RX | USB_EP_DTOG_RX;
-         USBPMA->btable[3].COUNT_TX = length;
-         USBPMA->btable[3].COUNT_RX = length;
-         epr_set_toggle(3, USB_EP_TX_VALID, USB_EPTX_STAT);
+        // toggle the software_buffer to the now open buffer
+        USBEPR->EP[3].EPR  = (USBEPR->EP[3].EPR & USB_EPREG_MASK) | USB_EP_CTR_TX | USB_EP_CTR_RX | USB_EP_DTOG_RX;
+        // both counts are used, one for each buffer, just load both
+        USBPMA->btable[3].COUNT_TX = length;
+        USBPMA->btable[3].COUNT_RX = length;
+        epr_set_toggle(3, USB_EP_TX_VALID, USB_EPTX_STAT);
     } else {
         USBPMA->btable[endpoint].COUNT_TX = length;
         epr_set_toggle(endpoint, USB_EP_TX_VALID, USB_EPTX_STAT);

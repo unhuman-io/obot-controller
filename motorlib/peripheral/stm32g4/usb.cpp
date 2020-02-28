@@ -244,11 +244,11 @@ void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
 
 // todo protect
 int USB1::receive_data(uint8_t endpoint, uint8_t * const data, uint8_t length) {
-    if (new_rx_data_) {
-        new_rx_data_ = false;
-        length = std::min(length,count_rx_);
+    if (new_rx_data_[endpoint]) {
+        new_rx_data_[endpoint] = false;
+        length = std::min(length,count_rx_[endpoint]);
         for (int i=0; i<length; i++) {
-            data[i] = rx_buffer_[i];
+            data[i] = rx_buffer_[endpoint][i];
         }
         return length;
     } else {
@@ -352,9 +352,9 @@ void USB1::interrupt() {
             case 2:
                 if (istr & USB_ISTR_DIR) { // RX
                     USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
-                    count_rx_ = (USBPMA->btable[2].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
-                    read_pma(count_rx_, USBPMA->buffer[2].EP_RX, rx_buffer_);
-                    new_rx_data_ = true;
+                    count_rx_[2] = (USBPMA->btable[2].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                    read_pma(count_rx_[2], USBPMA->buffer[2].EP_RX, rx_buffer_[2]);
+                    new_rx_data_[2] = true;
                     epr_set_toggle(2, USB_EP_RX_VALID, USB_EPRX_STAT);
                 }
                 if (USB->EP2R & USB_EP_CTR_TX) {
@@ -364,9 +364,9 @@ void USB1::interrupt() {
             case 1:
                 if (istr & USB_ISTR_DIR) { // RX
                     USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
-                    count_rx1_ = (USBPMA->btable[1].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
-                    read_pma(count_rx1_, USBPMA->buffer[1].EP_RX, rx_buffer1_);
-                    new_rx_data1_ = true;
+                    count_rx_[1] = (USBPMA->btable[1].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                    read_pma(count_rx_[1], USBPMA->buffer[1].EP_RX, rx_buffer_[1]);
+                    new_rx_data_[1] = true;
                     epr_set_toggle(1, USB_EP_RX_VALID, USB_EPRX_STAT);
                 }
                 if (USB->EP1R & USB_EP_CTR_TX) {

@@ -28,12 +28,9 @@ class USB1 {
 
     uint8_t device_address_ = 0;
     uint16_t interface_ = 0;
-    bool new_rx_data_ = false;
-    uint8_t count_rx_ = 0;
-    bool new_rx_data1_ = false;
-    uint8_t count_rx1_ = 0;
-    uint8_t rx_buffer1_[64];
-    uint8_t rx_buffer_[64];
+    bool new_rx_data_[3] = {};
+    uint8_t count_rx_[3] = {};
+    uint8_t rx_buffer_[3][64] = {};
     uint32_t error_count_ = 0;
 };
 

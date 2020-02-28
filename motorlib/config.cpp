@@ -23,6 +23,16 @@ void send_string(const char * str) {
     }
 }
 
+char *get_string() {
+    static char buf[64];
+    int count = usb_.receive_data(1, (uint8_t *) buf, 64);
+    if (count) {
+        return buf;
+    } else {
+        return NULL;
+    }
+}
+
 Config::Config() :
     fast_loop(config_items.fast_loop),
     main_loop(config_items.main_loop),

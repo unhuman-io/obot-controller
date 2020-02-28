@@ -21,6 +21,7 @@ extern "C" {
     void actuator_run();
     void usb_interrupt();
     void send_string(const char * str);
+    char *get_string();
 
 #ifdef __cplusplus
 }

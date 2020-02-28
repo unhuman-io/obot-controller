@@ -34,6 +34,7 @@ class MainLoop {
     KahanSum phi_;
     uint32_t timestamp_ = 0;
     uint32_t last_timestamp_ = 0;
+    friend class Actuator;
 
 
 inline uint16_t minu16(uint16_t a, uint16_t b) {

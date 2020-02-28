@@ -85,18 +85,25 @@ void MainLoop::update() {
     case POSITION_TUNING: 
     {
       // phi_ is a radian counter at the command frequency doesn't get larger than 2*pi
-      // only works down to frequencies of .0047 Hz, could use kahansum to go slower
       float frequency_hz = receive_data_.reserved;  // negative frequencies are square waves, positive sine waves
       float amplitude = receive_data_.position_desired;
+
+      // KahanSum allows for and summing of dt_ allows for low frequencies without losing resolution
       phi_.add(2 * (float) M_PI * fabsf(frequency_hz) * dt_);
       if (phi_.value() > 2 * (float) M_PI) {
         phi_.add(-2 * (float) M_PI);
       }
       Sincos sincos;
       sincos = sincos1(phi_.value());
-      float pos_desired = amplitude*(frequency_hz > 0 ? sincos.sin : ((sincos.sin > 0) - (sincos.sin < 0)));
-      float vel_desired = frequency_hz > 0 ? 2 * (float) M_PI * frequency_hz * sincos.cos : 0;
-      iq_des = controller_.step(pos_desired, vel_desired, 0, fast_loop_status_.motor_position.position);
+      float position_desired, velocity_desired;
+      if (frequency_hz > 0) { // sin wave
+        position_desired = amplitude * sincos.sin;
+        velocity_desired = 2 * (float) M_PI * frequency_hz * amplitude * sincos.cos;
+      } else { // square wave
+        position_desired = amplitude * fsignf(sincos.sin);
+        velocity_desired = 0;
+      }
+      iq_des = controller_.step(position_desired, velocity_desired, 0, fast_loop_status_.motor_position.position);
       break;
     }
     case CURRENT_TUNING: 

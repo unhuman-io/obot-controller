@@ -82,22 +82,27 @@ private:
 class RateLimiter {
  public:
     void set_limit(float limit) { limit_ = limit; }
-    void init(float value) { last_value_ = value; }
+    void init(float value) { last_value_ = value; velocity_ = 0;}
     float step(float value) {
         float out_value = value;
         if (value > (last_value_ + limit_)) {
             out_value = last_value_ + limit_;
+            velocity_ = limit_;
         } else if (value < (last_value_ - limit_)) {
             out_value = last_value_ - limit_;
+            velocity_ = -limit_;
         } else {
             out_value = value;
+            velocity_ = value - last_value_;
         }
 
         last_value_ = out_value;
         return out_value;
     }
+    float get_velocity() const { return velocity_; }
  private:
     float limit_ = INFINITY;
+    float velocity_ = 0;
     float last_value_ = 0;
 };
 

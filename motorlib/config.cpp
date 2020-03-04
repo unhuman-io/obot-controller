@@ -26,6 +26,7 @@ void send_string(const char * str) {
 char *get_string() {
     static char buf[64];
     int count = usb_.receive_data(1, (uint8_t *) buf, 64);
+    buf[count] = 0;
     if (count) {
         return buf;
     } else {

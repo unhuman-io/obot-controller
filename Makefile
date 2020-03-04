@@ -94,6 +94,7 @@ motorlib/peripheral/stm32g4/usb.cpp\
 hrpwm.cpp\
 spi_encoder.cpp\
 ams_encoder.cpp\
+parameter_api.cpp\
 
 # ASM sources
 ASM_SOURCES =  \

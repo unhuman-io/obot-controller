@@ -24,6 +24,8 @@ void Actuator::run() {
     fast_loop_.current_mode();
     fast_loop_.set_iq_des(0);
 
+    send_string("finished startup");
+
     FastLoopStatus fast_loop_status;
     ParameterAPI api;
     api.add_api_variable("kp", new APIFloat(&main_loop_.controller_.kp_));

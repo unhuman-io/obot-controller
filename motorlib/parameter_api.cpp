@@ -35,6 +35,9 @@ std::string ParameterAPI::parse_string(std::string s) {
     //     set_api_variable(sm[0], sm[1]);
     // } else {
     //std::istringstream iss(s);
+    if (s.c_str()[0] == '.') {
+        s = last_string_;
+    }
     auto equal_pos = s.find("=");
     if (equal_pos != std::string::npos) {
         auto variable = trim(s.substr(0,equal_pos));
@@ -44,13 +47,14 @@ std::string ParameterAPI::parse_string(std::string s) {
     } else {
         out = get_api_variable(s);
     }
+    last_string_ = s;
     return out;
 }
 
-std::string APIFloat::get() const {
-    return std::to_string(*f_);
+void APIFloat::set(std::string s) {
+    *value_ = std::stof(s);
 }
 
-void APIFloat::set(std::string s) {
-    *f_ = std::stof(s);
+void APIUint32::set(std::string s) {
+    *value_ = std::stoi(s);
 }

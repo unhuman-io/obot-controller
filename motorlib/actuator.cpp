@@ -7,6 +7,11 @@
 #include <cstdio>
 #include "parameter_api.h"
 
+extern uint32_t t_exec_fastloop;
+extern uint32_t t_exec_mainloop;
+extern uint32_t t_period_fastloop;
+extern uint32_t t_period_mainloop;
+
 void Actuator::run() {
     // zero current sensors in voltage mode to try to eliminate bias from pwm noise, could also do open mode
     fast_loop_.voltage_mode();
@@ -30,6 +35,10 @@ void Actuator::run() {
     ParameterAPI api;
     api.add_api_variable("kp", new APIFloat(&main_loop_.controller_.kp_));
     api.add_api_variable("kd", new APIFloat(&main_loop_.controller_.kd_));
+    api.add_api_variable("t_exec_fastloop", new APIUint32(&t_exec_fastloop));
+    api.add_api_variable("t_exec_mainloop", new APIUint32(&t_exec_mainloop));
+    api.add_api_variable("t_period_fastloop", new APIUint32(&t_period_fastloop));
+    api.add_api_variable("t_period_mainloop", new APIUint32(&t_period_mainloop));
     while(1) {
        // fast_loop_.get_status(&fast_loop_status);
         char *s = get_string();

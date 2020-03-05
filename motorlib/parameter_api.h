@@ -4,19 +4,33 @@
 #include <string>
 #include <map>
 
+
 class APIVariable {
  public:
-    virtual std::string get() const = 0;
-    virtual void set(std::string) = 0;
+   virtual std::string get() const = 0;
+   virtual void set(std::string) = 0;
 };
 
-class APIFloat : public APIVariable {
+template<class T>
+class APIVariable2 : public APIVariable {
  public:
-    APIFloat(float *f) : f_(f) {};
-    std::string get() const;
-    void set(std::string);
- private:
-    float *f_;
+   APIVariable2(T *value) : value_(value) {};
+   virtual std::string get() const { return std::to_string(*value_); }
+   virtual void set(std::string) = 0;
+ protected:
+   T *value_;
+};
+
+class APIFloat : public APIVariable2<float> {
+ public:
+   APIFloat(float *f) : APIVariable2(f) {}
+   void set(std::string);
+};
+
+class APIUint32 : public APIVariable2<uint32_t> {
+ public:
+   APIUint32(uint32_t *u) : APIVariable2(u) {}
+   void set(std::string);
 };
 
 // allows for setting variables through text commands
@@ -29,6 +43,7 @@ class ParameterAPI {
     std::string parse_string(std::string);
  private:
     std::map<std::string, APIVariable *> variable_map_;
+    std::string last_string_;
 };
 
 #endif

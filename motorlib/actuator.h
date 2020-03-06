@@ -3,11 +3,9 @@
 #include "messages.h"
 
 #include "util.h"
-#include "fast_loop.h"
-#include "main_loop.h"
 #include "param.h"
 
-//template<typename FastLoop, typename MainLoop>
+template<typename FastLoop, typename MainLoop>
 class Actuator {
  public:
     Actuator(FastLoop &fast_loop, MainLoop &main_loop) : fast_loop_(fast_loop), main_loop_(main_loop) {}

@@ -4,6 +4,7 @@
 class USB1;
 class FastLoop;
 class MainLoop;
+template<typename FastLoop, typename MainLoop>
 class Actuator;
 
 class System {
@@ -17,7 +18,7 @@ class System {
     static char *get_string();
 // private:
     static USB1 usb_;
-    static Actuator actuator_;
+    static Actuator<FastLoop, MainLoop> actuator_;
 };
 
 extern "C" {

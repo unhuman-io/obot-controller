@@ -36,4 +36,4 @@ static struct {
     MainLoop main_loop = {fast_loop, controller, communication, led, output_encoder};
 } config_items;
 
-Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop};
+Actuator<FastLoop, MainLoop> System::actuator_ = {config_items.fast_loop, config_items.main_loop};

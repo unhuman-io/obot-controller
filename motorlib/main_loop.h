@@ -150,6 +150,7 @@ class MainLoop {
     KahanSum phi_;
     uint32_t timestamp_ = 0;
     uint32_t last_timestamp_ = 0;
+    template<typename, typename>
     friend class System;
 
 

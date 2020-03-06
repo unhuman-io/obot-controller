@@ -14,10 +14,14 @@
 
 extern const volatile Param initial_param;
 
-USB1 System::usb_;
-
 typedef FastLoop<HRPWM, QEPEncoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
+typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
+typedef System<ActuatorConfig, USB1> SystemConfig;
+
+template<>
+USB1 SystemConfig ::usb_ = {};
+
 
 static struct {
     QEPEncoder motor_encoder = {*TIM5};
@@ -35,8 +39,29 @@ static struct {
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
     PIDDeadbandController controller = {1.0/10000};
-    USBCommunication communication = {System::usb_};
+    USBCommunication communication = {SystemConfig::usb_};
     MainLoopConfig main_loop = {fast_loop, controller, communication, led, output_encoder};
 } config_items;
 
-Actuator<FastLoopConfig, MainLoopConfig> System::actuator_ = {config_items.fast_loop, config_items.main_loop};
+template<>
+ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop};
+
+void system_init() {
+    SystemConfig::init();
+}
+
+void system_run() {
+    SystemConfig::run();
+}
+
+void main_loop_interrupt() {
+    SystemConfig::main_loop_interrupt();
+}
+
+void fast_loop_interrupt() {
+    SystemConfig::fast_loop_interrupt();
+}
+
+void usb_interrupt() {
+    SystemConfig::usb_interrupt();
+}

@@ -121,6 +121,7 @@ private:
     Hysteresis hysteresis_;
     RateLimiter rate_limit_;
     FirstOrderLowPassFilter error_dot_filter_;
+    template<typename, typename>
     friend class System;
 };
 

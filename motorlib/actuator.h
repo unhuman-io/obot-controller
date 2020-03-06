@@ -36,5 +36,6 @@ class Actuator {
 private:
     FastLoop &fast_loop_;
     MainLoop &main_loop_;
+    template<typename, typename>
     friend class System;
 };

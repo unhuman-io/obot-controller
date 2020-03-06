@@ -84,7 +84,6 @@ motorlib/control_fun.cpp\
 foc.cpp\
 gpio.cpp\
 sincos.cpp\
-system.cpp\
 usb_communication.cpp\
 util.cpp\
 hall.cpp\

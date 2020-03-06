@@ -121,7 +121,7 @@ private:
     Hysteresis hysteresis_;
     RateLimiter rate_limit_;
     FirstOrderLowPassFilter error_dot_filter_;
-    friend class Actuator;
+    friend class System;
 };
 
 class PIDDeadbandController : public PIDController {

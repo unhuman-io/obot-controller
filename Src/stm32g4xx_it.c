@@ -23,8 +23,7 @@
 #include "stm32g4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../motorlib/foc_i.h"
-#include "../motorlib/config.h"
+#include "../motorlib/system.h"
 void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 /* USER CODE END Includes */
 
@@ -250,7 +249,7 @@ void ADC1_2_IRQHandler(void)
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
   GPIOC->BSRR |= GPIO_BSRR_BS12;
   INTERRUPT_PROFILE_START;
-  fast_loop_update();
+  fast_loop_interrupt();
 #if 0
   /* USER CODE END ADC1_2_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
@@ -302,7 +301,7 @@ void TIM1_UP_TIM16_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
   INTERRUPT_PROFILE_START;
-  main_loop_update();
+  main_loop_interrupt();
   /* USER CODE END TIM1_UP_TIM16_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 1 */

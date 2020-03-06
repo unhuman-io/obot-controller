@@ -1,12 +1,20 @@
 #include "usb_communication.h"
 #include "../st_device.h"
+#include "system.h"
 #include "qep_encoder.h"
 #include "peripheral/stm32g4/hrpwm.h"
 #include "peripheral/stm32g4/spi_encoder.h"
 #include "peripheral/stm32g4/ams_encoder.h"
 #include "hall.h"
+#include "fast_loop.h"
+#include "main_loop.h"
+#include "led.h"
+#include "peripheral/usb.h"
+#include "actuator.h"
 
 extern const volatile Param initial_param;
+
+USB1 System::usb_;
 
 static struct {
     QEPEncoder motor_encoder = {*TIM5};
@@ -24,6 +32,8 @@ static struct {
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
     PIDDeadbandController controller = {1.0/10000};
-    USBCommunication communication = {usb_};
-    MainLoop main_loop = {controller, communication, led, output_encoder};
+    USBCommunication communication = {System::usb_};
+    MainLoop main_loop = {fast_loop, controller, communication, led, output_encoder};
 } config_items;
+
+Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop};

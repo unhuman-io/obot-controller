@@ -18,6 +18,8 @@ $(shell touch version.h)
 ######################################
 TARGET = bort2
 
+CONFIG_FILE = config_g474_boost.cpp
+
 
 ######################################
 # building variables
@@ -80,12 +82,11 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 CPP_SOURCES = \
 motorlib/control_fun.cpp\
 fast_loop.cpp\
-foc_i.cpp\
 foc.cpp\
 gpio.cpp\
 main_loop.cpp\
 sincos.cpp\
-config.cpp\
+system.cpp\
 usb_communication.cpp\
 actuator.cpp\
 util.cpp\
@@ -95,6 +96,7 @@ hrpwm.cpp\
 spi_encoder.cpp\
 ams_encoder.cpp\
 parameter_api.cpp\
+$(CONFIG_FILE)
 
 # ASM sources
 ASM_SOURCES =  \
@@ -207,7 +209,7 @@ $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
-	$(CXX) -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CXX) -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@

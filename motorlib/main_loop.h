@@ -6,13 +6,14 @@ class LED;
 class PIDDeadbandController;
 class Communication;
 class Encoder;
+class FastLoop;
 #include <cmath>
 #include "control_fun.h"
 
 class MainLoop {
  public:
-    MainLoop(PIDDeadbandController &controller, Communication &communication, LED &led, Encoder &output_encoder) : 
-        controller_(controller), communication_(communication), led_(led), output_encoder_(output_encoder) {}
+    MainLoop(FastLoop &fast_loop, PIDDeadbandController &controller, Communication &communication, LED &led, Encoder &output_encoder) : 
+        fast_loop_(fast_loop), controller_(controller), communication_(communication), led_(led), output_encoder_(output_encoder) {}
     void init();
     void update();
     void set_param(MainLoopParam &);
@@ -21,6 +22,7 @@ class MainLoop {
     LED* led() { return &led_; }
  private:
     MainLoopParam param_;
+    FastLoop &fast_loop_;
     PIDDeadbandController &controller_;
     Communication &communication_;
     LED &led_;
@@ -34,7 +36,7 @@ class MainLoop {
     KahanSum phi_;
     uint32_t timestamp_ = 0;
     uint32_t last_timestamp_ = 0;
-    friend class Actuator;
+    friend class System;
 
 
 inline uint16_t minu16(uint16_t a, uint16_t b) {

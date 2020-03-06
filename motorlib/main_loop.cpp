@@ -6,11 +6,11 @@
 #include <cmath>
 
 #include "usb_communication.h"
-#include "foc_i.h"
 #include "encoder.h"
 #include "sincos.h"
 #include "../st_device.h"
 #include "util.h"
+#include "fast_loop.h"
 
 void MainLoop::init() {
 }
@@ -20,26 +20,26 @@ void MainLoop::set_mode(MainControlMode mode) {
   switch (mode) {
     case OPEN:
     default:
-      fast_loop_open_mode();
+      fast_loop_.open_mode();
       led_.set_color(LED::AZURE);
       break;
     case DAMPED:
-      fast_loop_brake_mode();
+      fast_loop_.brake_mode();
       led_.set_color(LED::ORANGE);
       break;
     case CURRENT:
-      fast_loop_current_mode();
+      fast_loop_.current_mode();
       led_.set_color(LED::GREEN);
       break;
     case CURRENT_TUNING:
-      fast_loop_current_tuning_mode();
+      fast_loop_.current_tuning_mode();
       led_.set_color(LED::SPRING);
       break;
     case POSITION_TUNING:
       phi_.init();
     case POSITION:
     case VELOCITY:
-      fast_loop_current_mode();
+      fast_loop_.current_mode();
       led_.set_color(LED::BLUE);
       break;
     case BOARD_RESET:
@@ -57,7 +57,7 @@ void MainLoop::update() {
   timestamp_ = get_clock();
   dt_ = (timestamp_ - last_timestamp_) * (1.0f/CPU_FREQUENCY_HZ);
 
-  fast_loop_get_status(&fast_loop_status_);
+  fast_loop_.get_status(&fast_loop_status_);
 
   int count_received = communication_.receive_data(&receive_data_);
   if (count_received) {
@@ -107,13 +107,13 @@ void MainLoop::update() {
       break;
     }
     case CURRENT_TUNING: 
-      fast_loop_set_tuning_amplitude(receive_data_.current_desired);
-      fast_loop_set_tuning_frequency(receive_data_.reserved);
+      fast_loop_.set_tuning_amplitude(receive_data_.current_desired);
+      fast_loop_.set_tuning_frequency(receive_data_.reserved);
     default:
       break;
   }
 
-  fast_loop_set_iq_des(iq_des);
+  fast_loop_.set_iq_des(iq_des);
   SendData send_data;
   send_data.iq = fast_loop_status_.foc_status.measured.i_q;
   send_data.host_timestamp_received = receive_data_.host_timestamp;

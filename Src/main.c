@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../motorlib/config.h"
+#include "../motorlib/system.h"
 uint8_t go_to_bootloader = 0;
 /* USER CODE END Includes */
 
@@ -142,10 +142,8 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-        DWT->CTRL = 0x400003FF | (1ul<<17) | DWT_CTRL_LSUEVTENA_Msk | DWT_CTRL_FOLDEVTENA_Msk;
-  init_param_from_flash();
-    fast_loop_set_param(&param()->fast_loop_param);
-  main_loop_set_param(&param()->main_loop_param);
+  DWT->CTRL = 0x400003FF | (1ul<<17) | DWT_CTRL_LSUEVTENA_Msk | DWT_CTRL_FOLDEVTENA_Msk;
+  system_init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -248,7 +246,7 @@ int main(void)
   while (1)
   {
     i++;
-    actuator_run();
+    system_run();
    // USB_send(&i,sizeof(int));
     /* USER CODE END WHILE */
 

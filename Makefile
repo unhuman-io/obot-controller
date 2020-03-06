@@ -88,7 +88,6 @@ main_loop.cpp\
 sincos.cpp\
 system.cpp\
 usb_communication.cpp\
-actuator.cpp\
 util.cpp\
 hall.cpp\
 motorlib/peripheral/stm32g4/usb.cpp\

@@ -16,6 +16,9 @@
 #include "main_loop.h"
 #include "parameter_api.h"
 
+#include "qep_encoder.h"
+#include "peripheral/stm32g4/hrpwm.h"
+
 extern uint32_t t_exec_fastloop;
 extern uint32_t t_exec_mainloop;
 extern uint32_t t_period_fastloop;
@@ -30,7 +33,6 @@ void System::run() {
 
     send_string("finished startup");
 
-    FastLoopStatus fast_loop_status;
     ParameterAPI api;
     api.add_api_variable("kp", new APIFloat(&actuator_.main_loop_.controller_.kp_));
     api.add_api_variable("kd", new APIFloat(&actuator_.main_loop_.controller_.kd_));

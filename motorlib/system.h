@@ -2,7 +2,11 @@
 
 #ifdef __cplusplus
 class USB1;
+class HRPWM;
+class QEPEncoder;
+template<typename PWM, typename Encoder>
 class FastLoop;
+template<class FastLoop>
 class MainLoop;
 template<typename FastLoop, typename MainLoop>
 class Actuator;
@@ -18,7 +22,7 @@ class System {
     static char *get_string();
 // private:
     static USB1 usb_;
-    static Actuator<FastLoop, MainLoop> actuator_;
+    static Actuator<FastLoop<HRPWM, QEPEncoder>, MainLoop<FastLoop<HRPWM, QEPEncoder>>> actuator_;
 };
 
 extern "C" {

@@ -81,10 +81,8 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 
 CPP_SOURCES = \
 motorlib/control_fun.cpp\
-fast_loop.cpp\
 foc.cpp\
 gpio.cpp\
-main_loop.cpp\
 sincos.cpp\
 system.cpp\
 usb_communication.cpp\

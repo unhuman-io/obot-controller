@@ -16,6 +16,9 @@ extern const volatile Param initial_param;
 
 USB1 System::usb_;
 
+typedef FastLoop<HRPWM, QEPEncoder> FastLoopConfig;
+typedef MainLoop<FastLoopConfig> MainLoopConfig;
+
 static struct {
     QEPEncoder motor_encoder = {*TIM5};
     // GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
@@ -27,13 +30,13 @@ static struct {
     //AMSEncoder motor_encoder = {*SPI3, motor_encoder_cs};
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {static_cast<uint32_t>(initial_param.fast_loop_param.pwm_frequency), *HRTIM1, 3, 5, 4};
-    FastLoop fast_loop = {1.0/initial_param.fast_loop_param.pwm_frequency, motor_pwm, motor_encoder};
+    FastLoopConfig fast_loop = {1.0/initial_param.fast_loop_param.pwm_frequency, motor_pwm, motor_encoder};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
     PIDDeadbandController controller = {1.0/10000};
     USBCommunication communication = {System::usb_};
-    MainLoop main_loop = {fast_loop, controller, communication, led, output_encoder};
+    MainLoopConfig main_loop = {fast_loop, controller, communication, led, output_encoder};
 } config_items;
 
-Actuator<FastLoop, MainLoop> System::actuator_ = {config_items.fast_loop, config_items.main_loop};
+Actuator<FastLoopConfig, MainLoopConfig> System::actuator_ = {config_items.fast_loop, config_items.main_loop};

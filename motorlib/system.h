@@ -22,8 +22,10 @@ class System {
         send_string("finished startup");
 
         ParameterAPI api;
+        uint32_t cpu_frequency = CPU_FREQUENCY_HZ;
         api.add_api_variable("kp", new APIFloat(&actuator_.main_loop_.controller_.kp_));
         api.add_api_variable("kd", new APIFloat(&actuator_.main_loop_.controller_.kd_));
+        api.add_api_variable("cpu_frequency", new APIUint32(&cpu_frequency));
         api.add_api_variable("t_exec_fastloop", new APIUint32(&t_exec_fastloop));
         api.add_api_variable("t_exec_mainloop", new APIUint32(&t_exec_mainloop));
         api.add_api_variable("t_period_fastloop", new APIUint32(&t_period_fastloop));

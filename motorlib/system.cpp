@@ -14,13 +14,37 @@
 
 #include "fast_loop.h"
 #include "main_loop.h"
+#include "parameter_api.h"
+
+extern uint32_t t_exec_fastloop;
+extern uint32_t t_exec_mainloop;
+extern uint32_t t_period_fastloop;
+extern uint32_t t_period_mainloop;
 
 void System::init() {
     actuator_.set_param(param()->fast_loop_param, param()->main_loop_param);
 }
 
 void System::run() {
-    actuator_.run();
+    actuator_.start();
+
+    send_string("finished startup");
+
+    FastLoopStatus fast_loop_status;
+    ParameterAPI api;
+    api.add_api_variable("kp", new APIFloat(&actuator_.main_loop_.controller_.kp_));
+    api.add_api_variable("kd", new APIFloat(&actuator_.main_loop_.controller_.kd_));
+    api.add_api_variable("t_exec_fastloop", new APIUint32(&t_exec_fastloop));
+    api.add_api_variable("t_exec_mainloop", new APIUint32(&t_exec_mainloop));
+    api.add_api_variable("t_period_fastloop", new APIUint32(&t_period_fastloop));
+    api.add_api_variable("t_period_mainloop", new APIUint32(&t_period_mainloop));
+    while(1) {
+        char *s = System::get_string();
+        if (s != NULL) {
+            System::send_string(api.parse_string(s).c_str());
+        }
+        actuator_.maintenance();
+    }
 }
 
 void System::main_loop_interrupt() {

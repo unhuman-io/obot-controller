@@ -284,13 +284,14 @@ void USB_HP_IRQHandler(void)
 void USB_LP_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_IRQn 0 */
+  gpio_usb_GPIO_Port->BSRR |= gpio_usb_Pin; 
   usb_interrupt();
 #if 0
   /* USER CODE END USB_LP_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_LP_IRQn 1 */
 #endif
-
+  gpio_usb_GPIO_Port->BSRR |= gpio_usb_Pin << 16; 
   /* USER CODE END USB_LP_IRQn 1 */
 }
 
@@ -300,12 +301,14 @@ void USB_LP_IRQHandler(void)
 void TIM1_UP_TIM16_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
+  gpio_ml_GPIO_Port->BSRR |= gpio_ml_Pin; 
   INTERRUPT_PROFILE_START;
   main_loop_interrupt();
   /* USER CODE END TIM1_UP_TIM16_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 1 */
   INTERRUPT_PROFILE_END(mainloop);
+  gpio_ml_GPIO_Port->BSRR |= gpio_ml_Pin << 16; 
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
 }
 

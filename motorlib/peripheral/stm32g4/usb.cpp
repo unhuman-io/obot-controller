@@ -236,6 +236,7 @@ void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
 int USB1::receive_data(uint8_t endpoint, uint8_t * const data, uint8_t length) {
     if (new_rx_data_[endpoint]) {
         new_rx_data_[endpoint] = false;
+        asm("nop"); // addresses unknown bug
         length = std::min(length,count_rx_[endpoint]);
         for (int i=0; i<length; i++) {
             data[i] = rx_buffer_[endpoint][i];

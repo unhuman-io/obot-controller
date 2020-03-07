@@ -28,7 +28,7 @@ class USB1 {
 
     uint8_t device_address_ = 0;
     uint16_t interface_ = 0;
-    bool new_rx_data_[3] = {};
+    volatile bool new_rx_data_[3] = {};
     uint8_t count_rx_[3] = {};
     uint8_t rx_buffer_[3][64] = {};
     uint32_t error_count_ = 0;

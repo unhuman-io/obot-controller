@@ -12,9 +12,9 @@ jobs:
       with:
         release: '9-2019-q4'
     - name: make
-      run: make
+      run: make -C boost_g474
     - name: Archive production artifacts
       uses: actions/upload-artifact@v1
       with:
         name: bort2.elf
-        path: build/bort2.elf
+        path: boost_g474/build/bort2.elf

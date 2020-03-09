@@ -21,6 +21,7 @@ typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 byte
     __IO uint16_t EP_TX[32];
     __IO uint16_t EP_RX[48];
     } buffer[3];
+    __IO uint16_t EP_TX2[2][32]; // double buffer
 } USBPMA_TypeDef;
 #define USBPMA ((USBPMA_TypeDef *) USB_PMAADDR)
 
@@ -51,13 +52,13 @@ typedef struct {
 #define  USBD_IDX_CONFIG_STR                            0x04 
 #define  USBD_IDX_INTERFACE_STR                         0x05 
 #define USBD_BULK_SIZE                                  64
-#define DFU_INTERFACE_NUMBER                            0x02
+#define DFU_INTERFACE_NUMBER                            0x01
 
 #define         DEVICE_ID1          (UID_BASE) //(0x1FFF7A10)
 #define         DEVICE_ID2          (UID_BASE + 4) 
 #define         DEVICE_ID3          (UID_BASE + 8) 
 
-#define USBD_VID     1155
+#define USBD_VID     0x3293 // Unhuman VID
 
 static const uint8_t USB_DEVICE_DESCIPTOR[]=
 {
@@ -66,7 +67,7 @@ static const uint8_t USB_DEVICE_DESCIPTOR[]=
   0x00,                       /*bcdUSB */
   0x02,
   0xFF,                       /*bDeviceClass*/
-  0x02,                       /*bDeviceSubClass*/
+  0x00,                       /*bDeviceSubClass*/
   0x00,                       /*bDeviceProtocol*/
   64,           /*bMaxPacketSize*/
   LOBYTE(USBD_VID),           /*idVendor*/
@@ -86,9 +87,9 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   /*Configuration Descriptor*/
   0x09,   /* bLength: Configuration Descriptor size */
   USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
-  9+9+7+7+9+7+7+9+9,                /* wTotalLength:no of returned bytes */
+  9+9+7+7+7+7+9+9,                /* wTotalLength:no of returned bytes */
   0x00,
-  0x03,   /* bNumInterfaces: 3 interface */
+  0x02,   /* bNumInterfaces: 2 interface */
   0x01,   /* bConfigurationValue: Configuration value */
   0x04,   /* iConfiguration: Index of string descriptor describing the configuration */
   0xC0,   /* bmAttributes: self powered */
@@ -102,12 +103,13 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   /* Interface descriptor type */
   0x00,   /* bInterfaceNumber: Number of Interface */
   0x00,   /* bAlternateSetting: Alternate setting */
-  0x02,   /* bNumEndpoints: One endpoints used */
-  0x00,   /* bInterfaceClass: Communication Interface Class */
-  0x00,   /* bInterfaceSubClass: Abstract Control Model */
-  0x00,   /* bInterfaceProtocol: Common AT commands */
+  0x04,   /* bNumEndpoints: 4 endpoints used */
+  0x00,   /* bInterfaceClass: 0 */
+  0x00,   /* bInterfaceSubClass: 0 */
+  0x00,   /* bInterfaceProtocol:0 */
   0x05,   /* iInterface: */
   
+  // realtime interface
   /*Endpoint 2 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
@@ -115,7 +117,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0x02,                           /* bmAttributes: Bulk */
   LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
   HIBYTE(USBD_BULK_SIZE),
-  0x10,                           /* bInterval: */ 
+  0x0,                           /* bInterval: */ 
 
     /*Endpoint 2 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
@@ -124,21 +126,10 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0x02,                           /* bmAttributes: Bulk */
   LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
   HIBYTE(USBD_BULK_SIZE),
-  0x10,                           /* bInterval: */ 
+  0x0,                           /* bInterval: */ 
   /*---------------------------------------------------------------------------*/
-
-    /*Interface Descriptor */
-  0x09,   /* bLength: Interface Descriptor size */
-  USB_DESC_TYPE_INTERFACE,  /* bDescriptorType: Interface */
-  /* Interface descriptor type */
-  0x01,   /* bInterfaceNumber: Number of Interface */
-  0x00,   /* bAlternateSetting: Alternate setting */
-  0x02,   /* bNumEndpoints: One endpoints used */
-  0x00,   /* bInterfaceClass: Communication Interface Class */
-  0x00,   /* bInterfaceSubClass: Abstract Control Model */
-  0x00,   /* bInterfaceProtocol: Common AT commands */
-  0x05,   /* iInterface: */
   
+  // text interface
   /*Endpoint 1 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
@@ -151,7 +142,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
     /*Endpoint 1 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
-  1,                     /* bEndpointAddress */
+  0x01,                     /* bEndpointAddress */
   0x02,                           /* bmAttributes: Bulk */
   LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
   HIBYTE(USBD_BULK_SIZE),
@@ -160,7 +151,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
 
 // DFU taken from the st dfu mode descriptor change interface protocol 2 to 1
   0x09,
-  0x04,
+  USB_DESC_TYPE_INTERFACE,
   DFU_INTERFACE_NUMBER,
   0x00,
   0x00,
@@ -199,7 +190,9 @@ void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool
         if (wait) {
             continue;
         } else {
-            epr_set_toggle(endpoint, USB_EP_TX_NAK, USB_EPTX_STAT);
+            // need to double buffer
+            //epr_set_toggle(endpoint, USB_EP_TX_NAK, USB_EPTX_STAT);
+            break;
         }
     }
     
@@ -214,20 +207,39 @@ void USB1::send_data(uint8_t endpoint, const uint8_t *data, uint8_t length, bool
 void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
     uint8_t length16 = (length+1)>>1;
     __IO uint16_t * pma_address = USBPMA->buffer[endpoint].EP_TX;
+    if (endpoint == 2) {
+        // double buffered DTOG_RX points to software_buffer to load, 0 or 1
+        int swbuf = (USBEPR->EP[3].EPR & USB_EP_DTOG_RX) >> 14;
+        pma_address = USBPMA->EP_TX2[swbuf];
+    }
     for(int i=0; i<length16; i++) {
         pma_address[i] = ((const uint16_t *) data)[i];
     }
-    USBPMA->btable[endpoint].COUNT_TX = length;
-    epr_set_toggle(endpoint, USB_EP_TX_VALID, USB_EPTX_STAT);
+    if (endpoint == 2) {
+        // toggle DTOG_TX to the buffer to the software_buffer that was just loaded
+        while ( ((USBEPR->EP[3].EPR & USB_EP_DTOG_TX) >> 6) != ((USBEPR->EP[3].EPR & USB_EP_DTOG_RX) >> 14) ) {
+            USBEPR->EP[3].EPR  = (USBEPR->EP[3].EPR & USB_EPREG_MASK) | USB_EP_CTR_TX | USB_EP_CTR_RX | USB_EP_DTOG_TX;
+        }
+        // toggle the software_buffer to the now open buffer
+        USBEPR->EP[3].EPR  = (USBEPR->EP[3].EPR & USB_EPREG_MASK) | USB_EP_CTR_TX | USB_EP_CTR_RX | USB_EP_DTOG_RX;
+        // both counts are used, one for each buffer, just load both
+        USBPMA->btable[3].COUNT_TX = length;
+        USBPMA->btable[3].COUNT_RX = length;
+        epr_set_toggle(3, USB_EP_TX_VALID, USB_EPTX_STAT);
+    } else {
+        USBPMA->btable[endpoint].COUNT_TX = length;
+        epr_set_toggle(endpoint, USB_EP_TX_VALID, USB_EPTX_STAT);
+    }
 }
 
 // todo protect
 int USB1::receive_data(uint8_t endpoint, uint8_t * const data, uint8_t length) {
-    if (new_rx_data_) {
-        new_rx_data_ = false;
-        length = std::min(length,count_rx_);
+    if (new_rx_data_[endpoint]) {
+        new_rx_data_[endpoint] = false;
+        asm("nop"); // addresses unknown bug
+        length = std::min(length,count_rx_[endpoint]);
         for (int i=0; i<length; i++) {
-            data[i] = rx_buffer_[i];
+            data[i] = rx_buffer_[endpoint][i];
         }
         return length;
     } else {
@@ -331,9 +343,9 @@ void USB1::interrupt() {
             case 2:
                 if (istr & USB_ISTR_DIR) { // RX
                     USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
-                    count_rx_ = (USBPMA->btable[2].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
-                    read_pma(count_rx_, USBPMA->buffer[2].EP_RX, rx_buffer_);
-                    new_rx_data_ = true;
+                    count_rx_[2] = (USBPMA->btable[2].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                    read_pma(count_rx_[2], USBPMA->buffer[2].EP_RX, rx_buffer_[2]);
+                    new_rx_data_[2] = true;
                     epr_set_toggle(2, USB_EP_RX_VALID, USB_EPRX_STAT);
                 }
                 if (USB->EP2R & USB_EP_CTR_TX) {
@@ -343,13 +355,18 @@ void USB1::interrupt() {
             case 1:
                 if (istr & USB_ISTR_DIR) { // RX
                     USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
-                    count_rx1_ = (USBPMA->btable[1].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
-                    read_pma(count_rx1_, USBPMA->buffer[1].EP_RX, rx_buffer1_);
-                    new_rx_data1_ = true;
+                    count_rx_[1] = (USBPMA->btable[1].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                    read_pma(count_rx_[1], USBPMA->buffer[1].EP_RX, rx_buffer_[1]);
+                    new_rx_data_[1] = true;
                     epr_set_toggle(1, USB_EP_RX_VALID, USB_EPRX_STAT);
                 }
                 if (USB->EP1R & USB_EP_CTR_TX) {
                     USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
+                }
+                break;
+            case 3:
+                if (USB->EP3R & USB_EP_CTR_TX) {
+                    USB->EP3R &= USB_EPREG_MASK & ~USB_EP_CTR_TX;
                 }
                 break;
         }
@@ -434,11 +451,13 @@ void USB1::interrupt() {
                     break;
                 case 0x09: // set configuration
                     // enable endpoint 2 IN (TX)
-                    USB->EP2R = 2; // Bulk on 2
-                    USBPMA->btable[2].ADDR_TX = offsetof(USBPMA_TypeDef, buffer[2].EP_TX);
-                    epr_set_toggle(2, USB_EP_TX_NAK, USB_EPTX_STAT);
+                    USB->EP3R = 0x102; // Bulk on 2 double buf
+                    USBPMA->btable[3].ADDR_TX = offsetof(USBPMA_TypeDef, EP_TX2);
+                    USBPMA->btable[3].ADDR_RX = offsetof(USBPMA_TypeDef, EP_TX2)+64;
+                    epr_set_toggle(3, USB_EP_TX_NAK, USB_EPTX_STAT);
                         // sets the toggle only bits to NAK, hardware better not change EPR during operation
                     
+                    USB->EP2R = 2;
                     // enable endpoint 2 OUT (RX)
                     USBPMA->btable[2].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[2].EP_RX);
                     USBPMA->btable[2].COUNT_RX = (1 << USB_COUNT2_RX_BLSIZE_Pos) | (2 << USB_COUNT2_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation

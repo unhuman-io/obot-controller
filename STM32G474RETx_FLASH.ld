@@ -78,18 +78,19 @@ SECTIONS
     . = ALIGN(4);
   } >SECTOR_7
   /* The startup code goes first into FLASH */
-  .isr_vector :
+/*  .isr_vector :
   {
     . = ALIGN(4);
-    KEEP(*(.isr_vector)) /* Startup code */
-    . = ALIGN(4);
-  } >FLASH
+    KEEP(*(.isr_vector)) */ /* Startup code */
+/*    . = ALIGN(4);
+  } >FLASH */
 
     _siccmram = LOADADDR(.ccmram);
   .ccmram :
   {
     . = ALIGN(4);
     _sccmram = .;
+    KEEP(*(.isr_vector)) /* Startup code */
     *(.ccmram)
     *(.ccmram*)
     *(.text._ZN8FastLoop6updateEv)

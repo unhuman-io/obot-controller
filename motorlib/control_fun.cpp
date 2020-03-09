@@ -41,6 +41,7 @@ float fsat(float a, float sat) {
 
 float fsignf(float a) {
     return a>=0 ? 1 : -1;
+    // possibly this could be better: (sincos.sin > 0) - (sincos.sin < 0)
 }
 
 void Hysteresis::set_hysteresis(float value) {
@@ -81,14 +82,15 @@ void PIDController::set_param(const PIDParam &param) {
 }
 
 float PIDController::step(float desired, float velocity_desired, float measured, float velocity_limit) {
-    // if (desired != last_desired_) {
-    //     last_desired_ = desired;
-    //     hysteresis_.set_value(desired);
-    // }
-
-   // float proxy_desired = desired; //hysteresis_.step(measured);
+    // PID controller with formula
+    // out = (ki/s + kp + kd*s) * error
+    // with s*error given by velocity_desired - velocity measured from measured with internal 1st order filter
+    // with saturation on ki/s * error: ki_limit
+    // saturation on out: command_max
+    // velocity limit: velocity_limit on command - not if not tracking velocity can exceed this
     rate_limit_.set_limit(fabsf(velocity_limit*dt_));
     float proxy_desired = rate_limit_.step(desired);
+    float proxy_dot_desired = fsat(velocity_desired, fabsf(rate_limit_.get_velocity()/dt_));
     float error = proxy_desired - measured;
     float velocity_measured = (measured - measured_last_)/dt_;
     float error_dot = error_dot_filter_.update(velocity_desired - velocity_measured);

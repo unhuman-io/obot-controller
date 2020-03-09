@@ -5,7 +5,7 @@
 #include "encoder.h"
 #include "../st_device.h"
 
-class QEPEncoder : public Encoder {
+class QEPEncoder final : public Encoder {
  public:
    QEPEncoder(TIM_TypeDef &regs) : Encoder(), regs_(regs) { 
       counter_reg_ = reinterpret_cast<volatile int32_t *>(&(regs_.CNT));

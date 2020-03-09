@@ -1,3 +1,5 @@
+#pragma once
+
 struct Sincos {
     float sin, cos;
 };

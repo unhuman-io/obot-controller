@@ -52,13 +52,13 @@ typedef struct {
 #define  USBD_IDX_CONFIG_STR                            0x04 
 #define  USBD_IDX_INTERFACE_STR                         0x05 
 #define USBD_BULK_SIZE                                  64
-#define DFU_INTERFACE_NUMBER                            0x02
+#define DFU_INTERFACE_NUMBER                            0x01
 
 #define         DEVICE_ID1          (UID_BASE) //(0x1FFF7A10)
 #define         DEVICE_ID2          (UID_BASE + 4) 
 #define         DEVICE_ID3          (UID_BASE + 8) 
 
-#define USBD_VID     1155
+#define USBD_VID     0x3293 // Unhuman VID
 
 static const uint8_t USB_DEVICE_DESCIPTOR[]=
 {
@@ -67,7 +67,7 @@ static const uint8_t USB_DEVICE_DESCIPTOR[]=
   0x00,                       /*bcdUSB */
   0x02,
   0xFF,                       /*bDeviceClass*/
-  0x02,                       /*bDeviceSubClass*/
+  0x00,                       /*bDeviceSubClass*/
   0x00,                       /*bDeviceProtocol*/
   64,           /*bMaxPacketSize*/
   LOBYTE(USBD_VID),           /*idVendor*/
@@ -87,9 +87,9 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   /*Configuration Descriptor*/
   0x09,   /* bLength: Configuration Descriptor size */
   USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
-  9+9+7+7+9+7+7+9+9,                /* wTotalLength:no of returned bytes */
+  9+9+7+7+7+7+9+9,                /* wTotalLength:no of returned bytes */
   0x00,
-  0x03,   /* bNumInterfaces: 3 interface */
+  0x02,   /* bNumInterfaces: 2 interface */
   0x01,   /* bConfigurationValue: Configuration value */
   0x04,   /* iConfiguration: Index of string descriptor describing the configuration */
   0xC0,   /* bmAttributes: self powered */
@@ -103,12 +103,13 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   /* Interface descriptor type */
   0x00,   /* bInterfaceNumber: Number of Interface */
   0x00,   /* bAlternateSetting: Alternate setting */
-  0x02,   /* bNumEndpoints: One endpoints used */
-  0x00,   /* bInterfaceClass: Communication Interface Class */
-  0x00,   /* bInterfaceSubClass: Abstract Control Model */
-  0x00,   /* bInterfaceProtocol: Common AT commands */
+  0x04,   /* bNumEndpoints: 4 endpoints used */
+  0x00,   /* bInterfaceClass: 0 */
+  0x00,   /* bInterfaceSubClass: 0 */
+  0x00,   /* bInterfaceProtocol:0 */
   0x05,   /* iInterface: */
   
+  // realtime interface
   /*Endpoint 2 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
@@ -116,7 +117,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0x02,                           /* bmAttributes: Bulk */
   LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
   HIBYTE(USBD_BULK_SIZE),
-  0x10,                           /* bInterval: */ 
+  0x0,                           /* bInterval: */ 
 
     /*Endpoint 2 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
@@ -125,21 +126,10 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
   0x02,                           /* bmAttributes: Bulk */
   LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
   HIBYTE(USBD_BULK_SIZE),
-  0x10,                           /* bInterval: */ 
+  0x0,                           /* bInterval: */ 
   /*---------------------------------------------------------------------------*/
-
-    /*Interface Descriptor */
-  0x09,   /* bLength: Interface Descriptor size */
-  USB_DESC_TYPE_INTERFACE,  /* bDescriptorType: Interface */
-  /* Interface descriptor type */
-  0x01,   /* bInterfaceNumber: Number of Interface */
-  0x00,   /* bAlternateSetting: Alternate setting */
-  0x02,   /* bNumEndpoints: One endpoints used */
-  0x00,   /* bInterfaceClass: Communication Interface Class */
-  0x00,   /* bInterfaceSubClass: Abstract Control Model */
-  0x00,   /* bInterfaceProtocol: Common AT commands */
-  0x05,   /* iInterface: */
   
+  // text interface
   /*Endpoint 1 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
@@ -152,7 +142,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
     /*Endpoint 1 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
   USB_DESC_TYPE_ENDPOINT,   /* bDescriptorType: Endpoint */
-  1,                     /* bEndpointAddress */
+  0x01,                     /* bEndpointAddress */
   0x02,                           /* bmAttributes: Bulk */
   LOBYTE(USBD_BULK_SIZE),     /* wMaxPacketSize: */
   HIBYTE(USBD_BULK_SIZE),
@@ -161,7 +151,7 @@ static const uint8_t USB_CONFIGURATION_DESCRIPTOR[] =
 
 // DFU taken from the st dfu mode descriptor change interface protocol 2 to 1
   0x09,
-  0x04,
+  USB_DESC_TYPE_INTERFACE,
   DFU_INTERFACE_NUMBER,
   0x00,
   0x00,
@@ -244,11 +234,12 @@ void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
 
 // todo protect
 int USB1::receive_data(uint8_t endpoint, uint8_t * const data, uint8_t length) {
-    if (new_rx_data_) {
-        new_rx_data_ = false;
-        length = std::min(length,count_rx_);
+    if (new_rx_data_[endpoint]) {
+        new_rx_data_[endpoint] = false;
+        asm("nop"); // addresses unknown bug
+        length = std::min(length,count_rx_[endpoint]);
         for (int i=0; i<length; i++) {
-            data[i] = rx_buffer_[i];
+            data[i] = rx_buffer_[endpoint][i];
         }
         return length;
     } else {
@@ -352,9 +343,9 @@ void USB1::interrupt() {
             case 2:
                 if (istr & USB_ISTR_DIR) { // RX
                     USB->EP2R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
-                    count_rx_ = (USBPMA->btable[2].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
-                    read_pma(count_rx_, USBPMA->buffer[2].EP_RX, rx_buffer_);
-                    new_rx_data_ = true;
+                    count_rx_[2] = (USBPMA->btable[2].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                    read_pma(count_rx_[2], USBPMA->buffer[2].EP_RX, rx_buffer_[2]);
+                    new_rx_data_[2] = true;
                     epr_set_toggle(2, USB_EP_RX_VALID, USB_EPRX_STAT);
                 }
                 if (USB->EP2R & USB_EP_CTR_TX) {
@@ -364,9 +355,9 @@ void USB1::interrupt() {
             case 1:
                 if (istr & USB_ISTR_DIR) { // RX
                     USB->EP1R &= USB_EPREG_MASK & ~USB_EP_CTR_RX;
-                    count_rx1_ = (USBPMA->btable[1].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
-                    read_pma(count_rx1_, USBPMA->buffer[1].EP_RX, rx_buffer1_);
-                    new_rx_data1_ = true;
+                    count_rx_[1] = (USBPMA->btable[1].COUNT_RX & USB_COUNT2_RX_COUNT2_RX);
+                    read_pma(count_rx_[1], USBPMA->buffer[1].EP_RX, rx_buffer_[1]);
+                    new_rx_data_[1] = true;
                     epr_set_toggle(1, USB_EP_RX_VALID, USB_EPRX_STAT);
                 }
                 if (USB->EP1R & USB_EP_CTR_TX) {

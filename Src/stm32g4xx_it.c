@@ -23,8 +23,7 @@
 #include "stm32g4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../motorlib/foc_i.h"
-#include "../motorlib/config.h"
+#include "../motorlib/system.h"
 void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 /* USER CODE END Includes */
 
@@ -35,7 +34,13 @@ void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+#define INTERRUPT_PROFILE_GLOBALS(loop) uint32_t t_exec_##loop __attribute__((used));\
+                                        uint32_t t_period_##loop __attribute__((used));
+#define INTERRUPT_PROFILE_START static uint32_t last_start = 0; \
+                                      uint32_t t_start = get_clock();
+#define INTERRUPT_PROFILE_END(loop) t_exec_##loop = get_clock()-t_start; \
+                                      t_period_##loop = t_start - last_start; \
+                                      last_start = t_start;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -56,10 +61,8 @@ void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 #include "../motorlib/util.h"
-uint32_t t_exec;
-uint8_t fold_diff, lsu_diff, cpi_diff, cpi_diff1;
-uint16_t inst;
-
+INTERRUPT_PROFILE_GLOBALS(fastloop);
+INTERRUPT_PROFILE_GLOBALS(mainloop);
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -244,26 +247,17 @@ void DMA1_Channel2_IRQHandler(void)
 void ADC1_2_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC1_2_IRQn 0 */
-  static int i = 0;
   GPIOC->BSRR |= GPIO_BSRR_BS12;
-  uint32_t t_start = get_clock();
-  uint8_t cpi_start = get_cpi_count();
-  uint8_t lsu_start = get_lsu_count();
-  uint8_t fold_start = DWT->FOLDCNT;
-  fast_loop_update();
-  cpi_diff1 = get_cpi_count() - cpi_start;
+  INTERRUPT_PROFILE_START;
+  fast_loop_interrupt();
 #if 0
   /* USER CODE END ADC1_2_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   HAL_ADC_IRQHandler(&hadc2);
   /* USER CODE BEGIN ADC1_2_IRQn 1 */
 #endif
-hadc1.Instance->ISR = ADC_ISR_JEOC;
-  t_exec = get_clock()-t_start;
-  cpi_diff = get_cpi_count() - cpi_start;
-  lsu_diff = get_lsu_count() - lsu_start;
-  fold_diff = DWT->FOLDCNT - fold_start;
-  inst = t_exec - cpi_diff - lsu_diff;
+  hadc1.Instance->ISR = ADC_ISR_JEOC;
+  INTERRUPT_PROFILE_END(fastloop);
   GPIOC->BSRR |= GPIO_BSRR_BR12;
   /* USER CODE END ADC1_2_IRQn 1 */
 }
@@ -290,13 +284,14 @@ void USB_HP_IRQHandler(void)
 void USB_LP_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_IRQn 0 */
+  gpio_usb_GPIO_Port->BSRR |= gpio_usb_Pin; 
   usb_interrupt();
 #if 0
   /* USER CODE END USB_LP_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_LP_IRQn 1 */
 #endif
-
+  gpio_usb_GPIO_Port->BSRR |= gpio_usb_Pin << 16; 
   /* USER CODE END USB_LP_IRQn 1 */
 }
 
@@ -306,11 +301,14 @@ void USB_LP_IRQHandler(void)
 void TIM1_UP_TIM16_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
-  main_loop_update();
+  gpio_ml_GPIO_Port->BSRR |= gpio_ml_Pin; 
+  INTERRUPT_PROFILE_START;
+  main_loop_interrupt();
   /* USER CODE END TIM1_UP_TIM16_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 1 */
-
+  INTERRUPT_PROFILE_END(mainloop);
+  gpio_ml_GPIO_Port->BSRR |= gpio_ml_Pin << 16; 
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
 }
 

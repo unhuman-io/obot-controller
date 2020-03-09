@@ -74,7 +74,7 @@ Src/main.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
 ../motorlib/param.c \
-param_g474_boost_u10.c \
+./param_g474_boost_u10.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 
@@ -92,7 +92,7 @@ hrpwm.cpp\
 spi_encoder.cpp\
 ams_encoder.cpp\
 parameter_api.cpp\
-$(CONFIG_FILE)
+./$(CONFIG_FILE)
 
 # ASM sources
 ASM_SOURCES =  \

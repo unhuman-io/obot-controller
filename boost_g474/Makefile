@@ -73,21 +73,21 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_adc.c \
 Src/main.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
-motorlib/param.c \
+../motorlib/param.c \
 param_g474_boost_u10.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 
 
 CPP_SOURCES = \
-motorlib/control_fun.cpp\
+../motorlib/control_fun.cpp\
 foc.cpp\
 gpio.cpp\
 sincos.cpp\
 usb_communication.cpp\
 util.cpp\
 hall.cpp\
-motorlib/peripheral/stm32g4/usb.cpp\
+../motorlib/peripheral/stm32g4/usb.cpp\
 hrpwm.cpp\
 spi_encoder.cpp\
 ams_encoder.cpp\

@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../motorlib/system.h"
+#include "../../motorlib/system.h"
 uint8_t go_to_bootloader = 0;
 /* USER CODE END Includes */
 
@@ -69,7 +69,7 @@ UART_HandleTypeDef huart1;
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
-#include "../motorlib/param.h"
+#include "../../motorlib/param.h"
 //#include "main2.h"
 
 /* USER CODE END PV */

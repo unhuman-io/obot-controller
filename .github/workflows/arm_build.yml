@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@users/ericsciple/m167instead_impl
+    - uses: actions/checkout@master
       with:
         submodules: true
     - name: arm-none-eabi-gcc

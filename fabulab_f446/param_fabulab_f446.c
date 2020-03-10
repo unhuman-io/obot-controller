@@ -2,7 +2,7 @@
 #include "math.h"
 
 // Can be written by external methods, e.g. bootloader
-const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
+const volatile Param initial_param = {
     .fast_loop_param.pwm_frequency = 50000,
     .fast_loop_param.foc_param.pi_d.kp=3,
     .fast_loop_param.foc_param.pi_d.ki=.1,
@@ -38,7 +38,6 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .main_loop_param.controller_param.velocity_filter_frequency_hz = 100,
     .main_loop_param.controller_param.command_max = 5,
     .fast_loop_param.cogging.table = {
-#include "cogprocessed.csv"
     },
     .startup_param.do_phase_lock = 0,
     .startup_param.phase_lock_current = 4,

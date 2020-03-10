@@ -24,7 +24,7 @@ CONFIG_FILE = config_fabulab_f446.cpp
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og -O1
+OPT = -Og -O0
 
 
 #######################################
@@ -60,7 +60,9 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_hcd.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c \
-Src/system_stm32f4xx.c
+Src/system_stm32f4xx.c \
+./param_fabulab_f446.c \
+../motorlib/param.c
 
 CPP_SOURCES = \
 ../motorlib/control_fun.cpp\

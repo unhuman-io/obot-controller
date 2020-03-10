@@ -130,8 +130,8 @@ int main(void)
   HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
 
   // start
-  HAL_TIM_BaseStart(&htim8);
-  HAL_TIM_BaseStart(&htim1);
+  HAL_TIM_Base_Start(&htim8);
+  HAL_TIM_Base_Start(&htim1);
   htim1.Instance->DIER |= TIM_DIER_UIE;
   USB_DevConnect(USB_OTG_FS);
 

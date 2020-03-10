@@ -67,13 +67,10 @@ CPP_SOURCES = \
 foc.cpp\
 gpio.cpp\
 sincos.cpp\
-usb_communication.cpp\
 util.cpp\
 hall.cpp\
-../motorlib/peripheral/stm32g4/usb.cpp\
-hrpwm.cpp\
-spi_encoder.cpp\
-ams_encoder.cpp\
+../motorlib/peripheral/stm32f4/otg_usb.cpp\
+pwm.cpp\
 parameter_api.cpp\
 ./$(CONFIG_FILE)
 

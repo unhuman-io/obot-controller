@@ -38,7 +38,8 @@
 #define INTERRUPT_PROFILE_START static uint32_t last_start = 0; \
                                       uint32_t t_start = get_clock();
 #define INTERRUPT_PROFILE_END(loop) t_exec_##loop = get_clock()-t_start; \
-                                      t_period_##loop = t_start -
+                                      t_period_##loop = t_start - last_start; \
+                                      last_start = t_start;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/

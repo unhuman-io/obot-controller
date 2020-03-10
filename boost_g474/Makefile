@@ -84,7 +84,6 @@ CPP_SOURCES = \
 foc.cpp\
 gpio.cpp\
 sincos.cpp\
-usb_communication.cpp\
 util.cpp\
 hall.cpp\
 ../motorlib/peripheral/stm32g4/usb.cpp\

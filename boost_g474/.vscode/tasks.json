@@ -7,7 +7,7 @@
             "type": "shell",
             "label": "make",
             "command": "make",
-            "args": ["-j8", "-C", "boost_g474"],
+            "args": ["-j8"],
             "group": {
                 "kind": "build",
                 "isDefault": true

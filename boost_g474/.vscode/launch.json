@@ -6,8 +6,8 @@
     "configurations": [
         {
             "name": "Cortex Debug",
-            "cwd": "${workspaceRoot}/boost_g474",
-            "executable": "./build/${workspaceFolderBasename}.elf",
+            "cwd": "${workspaceFolder}",
+            "executable": "./build/bort2.elf",
             "request": "launch",
             "type": "cortex-debug",
             "device": "STM32G474RE",

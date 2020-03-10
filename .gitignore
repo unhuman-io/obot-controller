@@ -1,1 +1,3 @@
 build/
+.cortex-debug.peripherals.state.json
+.cortex-debug.registers.state.json

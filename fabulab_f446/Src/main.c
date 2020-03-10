@@ -118,6 +118,7 @@ int main(void)
   HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 1, 0x20);
   HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 2, 0x20);
   HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 3, 0x20);
+  USB_EnableGlobalInt(hpcd_USB_OTG_FS.Instance);
 
   // interrupt priorities
   HAL_NVIC_SetPriority(SysTick_IRQn, 3, 0);

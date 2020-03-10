@@ -216,6 +216,7 @@ void SysTick_Handler(void)
 void ADC_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC_IRQn 0 */
+  gpio_fl_GPIO_Port->BSRR |= gpio_fl_Pin; 
   INTERRUPT_PROFILE_START;
   fast_loop_interrupt();
 #if 0
@@ -227,6 +228,7 @@ void ADC_IRQHandler(void)
 #endif
   hadc1.Instance->SR &= ~ADC_SR_JEOC;
   INTERRUPT_PROFILE_END(fastloop);
+  gpio_fl_GPIO_Port->BSRR |= gpio_fl_Pin << 16; 
   /* USER CODE END ADC_IRQn 1 */
 }
 
@@ -236,12 +238,14 @@ void ADC_IRQHandler(void)
 void TIM1_UP_TIM10_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
+  gpio_ml_GPIO_Port->BSRR |= gpio_ml_Pin; 
   INTERRUPT_PROFILE_START;
   main_loop_interrupt();
   /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
   INTERRUPT_PROFILE_END(mainloop);
+  gpio_ml_GPIO_Port->BSRR |= gpio_ml_Pin << 16; 
   /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
 }
 

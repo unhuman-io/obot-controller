@@ -23,7 +23,7 @@
 #include "stm32g4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../motorlib/system.h"
+#include "../../motorlib/system.h"
 void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 /* USER CODE END Includes */
 
@@ -60,7 +60,7 @@ void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#include "../motorlib/util.h"
+#include "../../motorlib/util.h"
 INTERRUPT_PROFILE_GLOBALS(fastloop);
 INTERRUPT_PROFILE_GLOBALS(mainloop);
 /* USER CODE END 0 */

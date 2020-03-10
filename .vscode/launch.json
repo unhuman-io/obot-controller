@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Cortex Debug",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceRoot}/boost_g474",
             "executable": "./build/${workspaceFolderBasename}.elf",
             "request": "launch",
             "type": "cortex-debug",

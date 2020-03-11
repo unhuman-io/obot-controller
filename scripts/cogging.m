@@ -27,10 +27,11 @@ i = accumarray(i,iq, [], @mean);
 
 plot(xr(1:end-1), i)
 
+freq = fftfreq(length(f),1/n);
 f = fft(i);
 % get 20 largest values
 [~,ind] = maxk(abs(f), 200); % or should it be limited in frequency?
-%ind = abs(f) < np*20;    % magnitude limit
+ind = abs(freq) < np*20;    % magnitude limit
 % filtered current
 mf = zeros(size(f));
 mf(ind) = f(ind);
@@ -43,7 +44,7 @@ fprintf(fid,'%f,',iq_filt);
 fclose(fid);
 legend('raw values','averaged', 'filtered')
 
-freq = fftfreq(length(f),1/n);
+
 figure(2);
 semilogy(freq,abs(f))
 hold on

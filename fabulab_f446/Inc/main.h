@@ -62,6 +62,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define pwm_period 3600
 #define main_period 18000
+#define gpio_drv_en_Pin GPIO_PIN_14
+#define gpio_drv_en_GPIO_Port GPIOC
 #define i_a_Pin GPIO_PIN_3
 #define i_a_GPIO_Port GPIOA
 #define v_bus_Pin GPIO_PIN_5
@@ -80,6 +82,8 @@ void Error_Handler(void);
 #define pwm_b_GPIO_Port GPIOC
 #define pwm_a_Pin GPIO_PIN_8
 #define pwm_a_GPIO_Port GPIOC
+#define gpio_drv_nsleep_Pin GPIO_PIN_9
+#define gpio_drv_nsleep_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

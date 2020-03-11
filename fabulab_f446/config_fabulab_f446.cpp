@@ -23,8 +23,8 @@ static struct {
     int32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_period);
     GPIO enable = {*GPIOC, 14, GPIO::OUTPUT};
-    QEPEncoder motor_encoder = {*TIM5};
-    QEPEncoder output_encoder = {*TIM5};
+    QEPEncoder motor_encoder = {*TIM2};
+    QEPEncoder output_encoder = {*TIM2};
     PWM_EN motor_pwm = {pwm_frequency, *const_cast<uint32_t*>(&TIM8->CCR3), 
                         *const_cast<uint32_t*>(&TIM8->CCR2), 
                         *const_cast<uint32_t*>(&TIM8->CCR1),

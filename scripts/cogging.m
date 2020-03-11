@@ -29,8 +29,8 @@ plot(xr(1:end-1), i)
 
 f = fft(i);
 % get 20 largest values
-[~,ind] = maxk(abs(f), 20); % or should it be limited in frequency?
-ind = abs(freq) < np*20;    % frequency limit
+[~,ind] = maxk(abs(f), 200); % or should it be limited in frequency?
+%ind = abs(f) < np*20;    % magnitude limit
 % filtered current
 mf = zeros(size(f));
 mf(ind) = f(ind);
@@ -38,7 +38,7 @@ mf(1) = 0; % remove average
 iq_filt = ifft(mf);
 
 plot(xr(1:end-1), iq_filt)
-fid = fopen('motorlib/cogprocessed.csv','w');
+fid = fopen('cogprocessed.csv','w');
 fprintf(fid,'%f,',iq_filt);
 fclose(fid);
 legend('raw values','averaged', 'filtered')

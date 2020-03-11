@@ -60,7 +60,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define pwm_period 1800
+#define pwm_period 3600
 #define main_period 18000
 #define i_a_Pin GPIO_PIN_3
 #define i_a_GPIO_Port GPIOA

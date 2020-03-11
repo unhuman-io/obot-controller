@@ -24,7 +24,8 @@ CONFIG_FILE = config_fabulab_f446.cpp
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og -O0
+OPT = -Og -O3
+LTO = -flto
 
 
 #######################################
@@ -145,7 +146,7 @@ C_INCLUDES =  \
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
-CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2

@@ -34,7 +34,7 @@ static struct {
     //AMSEncoder motor_encoder = {*SPI3, motor_encoder_cs};
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4};
-    FastLoopConfig fast_loop = {(float) (1.0/pwm_frequency), motor_pwm, motor_encoder};
+    FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};

@@ -29,7 +29,7 @@ static struct {
                         *const_cast<uint32_t*>(&TIM8->CCR2), 
                         *const_cast<uint32_t*>(&TIM8->CCR1),
                         *TIM8, enable};
-    FastLoopConfig fast_loop = {(float) (1.0/pwm_frequency), motor_pwm, motor_encoder};
+    FastLoopConfig fast_loop = {pwm_frequency, motor_pwm, motor_encoder};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR4)), true};

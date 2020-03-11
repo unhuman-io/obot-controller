@@ -20,7 +20,7 @@ template<>
 USB_OTG SystemConfig ::usb_ = {};
 
 static struct {
-    uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);
+    int32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_period);
     GPIO enable = {*GPIOC, 14, GPIO::OUTPUT};
     QEPEncoder motor_encoder = {*TIM5};

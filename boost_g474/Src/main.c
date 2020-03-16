@@ -1266,16 +1266,19 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(gpio_spi3_cs_GPIO_Port, gpio_spi3_cs_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, gpio_usb_Pin|gpio_ml_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(gpio_drv_en_GPIO_Port, gpio_drv_en_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(gpio_fl_GPIO_Port, gpio_fl_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(gpio_fl_GPIO_Port, gpio_fl_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(gpio_scope4_GPIO_Port, gpio_scope4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(gpio_ml_GPIO_Port, gpio_ml_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(gpio_usb_GPIO_Port, gpio_usb_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PG10 */
   GPIO_InitStruct.Pin = GPIO_PIN_10;
@@ -1283,39 +1286,39 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : hall1_Pin hall2_Pin hall3_Pin */
-  GPIO_InitStruct.Pin = hall1_Pin|hall2_Pin|hall3_Pin;
+  /*Configure GPIO pins : hall1_Pin hall2_Pin hall3_Pin gpio_drv_fault_Pin */
+  GPIO_InitStruct.Pin = hall1_Pin|hall2_Pin|hall3_Pin|gpio_drv_fault_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  /*Configure GPIO pin : gpio_spi3_cs_Pin */
+  GPIO_InitStruct.Pin = gpio_spi3_cs_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(gpio_spi3_cs_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : gpio_usb_Pin gpio_ml_Pin */
-  GPIO_InitStruct.Pin = gpio_usb_Pin|gpio_ml_Pin;
+  /*Configure GPIO pins : gpio_drv_en_Pin gpio_fl_Pin */
+  GPIO_InitStruct.Pin = gpio_drv_en_Pin|gpio_fl_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : gpio_fl_Pin */
-  GPIO_InitStruct.Pin = gpio_fl_Pin;
+  /*Configure GPIO pin : gpio_ml_Pin */
+  GPIO_InitStruct.Pin = gpio_ml_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(gpio_fl_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(gpio_ml_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : gpio_scope4_Pin */
-  GPIO_InitStruct.Pin = gpio_scope4_Pin;
+  /*Configure GPIO pin : gpio_usb_Pin */
+  GPIO_InitStruct.Pin = gpio_usb_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(gpio_scope4_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(gpio_usb_GPIO_Port, &GPIO_InitStruct);
 
 }
 

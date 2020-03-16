@@ -79,16 +79,20 @@ void Error_Handler(void);
 #define T_SWDIO_GPIO_Port GPIOA
 #define T_SWCLK_Pin GPIO_PIN_14
 #define T_SWCLK_GPIO_Port GPIOA
-#define gpio_usb_Pin GPIO_PIN_10
-#define gpio_usb_GPIO_Port GPIOC
-#define gpio_ml_Pin GPIO_PIN_11
-#define gpio_ml_GPIO_Port GPIOC
+#define gpio_spi3_cs_Pin GPIO_PIN_15
+#define gpio_spi3_cs_GPIO_Port GPIOA
+#define gpio_drv_fault_Pin GPIO_PIN_10
+#define gpio_drv_fault_GPIO_Port GPIOC
+#define gpio_drv_en_Pin GPIO_PIN_11
+#define gpio_drv_en_GPIO_Port GPIOC
 #define gpio_fl_Pin GPIO_PIN_12
 #define gpio_fl_GPIO_Port GPIOC
-#define gpio_scope4_Pin GPIO_PIN_2
-#define gpio_scope4_GPIO_Port GPIOD
+#define gpio_ml_Pin GPIO_PIN_2
+#define gpio_ml_GPIO_Port GPIOD
 #define led_g_Pin GPIO_PIN_7
 #define led_g_GPIO_Port GPIOB
+#define gpio_usb_Pin GPIO_PIN_9
+#define gpio_usb_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

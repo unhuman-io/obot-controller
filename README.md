@@ -1,7 +1,18 @@
-# Bort2
-The bort2 project is motor driver software for an embedded microcontroller. It has two components: a set of generated ST code from the STMCubeMX software and a motorlib folder. The ST generated code is convenient for pin configuration and peripheral initialization but its library functions are a bit heavy to run during the application. So at the end of the ST generated main file is a call into motorlib. And the ST generated interrupts are also replaced by calls to motorlib. Motorlib has both generic motor control functions as well as code specific to the ST peripherals. Special care is taken to allow STMCubeMX to be able to regenerate code in place without affecting the combined program. Rather than supporting configurable peripherals at runtime the goal here is to keep the executable simplier and utilize the STMCubeMX software for that functionality and thus recompile for different hardware configurations. An example is configuring to communicate with a specific SPI encoder. Bit rate, polarity and phase are all set up from STMCubeMX. Then that encoder could be linked to the motor encoder or output encoder used in motorlib either through the SPIEncoder class or be creating a new class derived from Encoder depending on the specifics of communication. 
+# Freebot-controller
+The freebot-controller project is motor driver software for an embedded microcontroller. It has two components: a set of generated ST code from the STMCubeMX software and a motorlib folder. The ST generated code is convenient for pin configuration and peripheral initialization but its library functions are a bit heavy to run during the application. So at the end of the ST generated main file is a call into motorlib. And the ST generated interrupts are also replaced by calls to motorlib. Motorlib has both generic motor control functions as well as code specific to the ST peripherals. Special care is taken to allow STMCubeMX to be able to regenerate code in place without affecting the combined program. Rather than supporting configurable peripherals at runtime the goal here is to keep the executable simpler and utilize the STMCubeMX software for that functionality and thus recompile for different hardware configurations. An example is configuring to communicate with a specific SPI encoder. Bit rate, polarity and phase are all set up from STMCubeMX. Then that encoder could be linked to the motor encoder or output encoder used in motorlib either through the SPIEncoder class or be creating a new class derived from Encoder depending on the specifics of communication. 
 
 Links to all relevant software downloads are provided at the end of this document.
+
+## Submodules
+This repository uses git submodules. Ensure to keep them in sync after clone with
+```console
+> git submodule update --init
+```
+and when pulling or checking out
+```console
+> git pull --recurse-submodules
+> git checkout --recurse-submodules
+```
 
 ## Build
 The current build system is gcc due to it being supported by STMCubeMX. The specific setup I've been using that works is the build of the gcc compiler available on the ARM website. This complier will have a prefix of arm-none-eabi, so for example arm-none-eabi-gcc should be on your path. Run make to build. Then programming can be accomplished either through the built in bootloader or through a debugger connection, both described below.
@@ -35,11 +46,22 @@ With the gcc build system described above I also use Visual Studio Code and the 
 (gdb) load
 (gdb) monitor reset
 (gdb) monitor go
-(gdb) print working_param.main_loop_param
-(gdb) set working_param.main_loop_param.controller_param.kp = 2
+(gdb) print config_items.main_loop.controller_.kp_
+(gdb) set config_items.main_loop.controller_.kp_ = 2
 ```
 One caveat to the debugging through gdb is that it is not available when running with link time optimization (LTO) turned on. LTO should be disabled through the Makefile, in order to do the above debugging. However LTO turned off will adversely effect control loop timing.
 
+#### Text api
+Support for a separate ascii based communication channel is also provided. A small subset of parameters is provided in motorlib/system.h that may be read and tuned at runtime. For example using motor_util from the realtime-tmp repository.
+```console
+> sudo motor_util --api --no-list
+kp
+100.0
+kp=99
+kp set 99
+kp
+99
+```
 
 ## Software downloads
 Software downloads as of 12/2019:

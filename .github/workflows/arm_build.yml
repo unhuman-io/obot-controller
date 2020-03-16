@@ -17,6 +17,8 @@ jobs:
       run: make -C boost_g474
     - name: make2
       run: make -C fabulab_f446
+    - name: make3
+      run: make -C combiner_g474
     - name: Archive production artifacts
       uses: actions/upload-artifact@v1
       with:
@@ -27,3 +29,8 @@ jobs:
       with:
         name: fabulab_f446.elf
         path: fabulab_f446/build/fabulab_f446.elf
+    - name: Archive production artifacts3
+      uses: actions/upload-artifact@v1
+      with:
+        name: combiner_g474.elf
+        path: combiner_g474/build/combiner_g474.elf

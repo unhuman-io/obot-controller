@@ -11,7 +11,7 @@
             "request": "launch",
             "type": "cortex-debug",
             "device": "STM32F446RE",
-            "svdFile": "",
+            "svdFile": "STM32F446x.svd",
             "servertype": "jlink",
             "preLaunchTask": "make"
         }

@@ -74,6 +74,7 @@ sincos.cpp\
 util.cpp\
 hall.cpp\
 ../motorlib/peripheral/stm32f4/otg_usb.cpp\
+bootloader.cpp\
 pwm.cpp\
 parameter_api.cpp\
 ./$(CONFIG_FILE)

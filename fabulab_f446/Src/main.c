@@ -52,8 +52,7 @@ TIM_HandleTypeDef htim8;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-// single to exit
-uint8_t go_to_bootloader = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

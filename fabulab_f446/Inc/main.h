@@ -64,6 +64,14 @@ void Error_Handler(void);
 #define main_period 18000
 #define gpio_drv_en_Pin GPIO_PIN_14
 #define gpio_drv_en_GPIO_Port GPIOC
+#define v_a_Pin GPIO_PIN_0
+#define v_a_GPIO_Port GPIOC
+#define v_b_Pin GPIO_PIN_1
+#define v_b_GPIO_Port GPIOC
+#define v_c_Pin GPIO_PIN_2
+#define v_c_GPIO_Port GPIOC
+#define mps_i_a_Pin GPIO_PIN_3
+#define mps_i_a_GPIO_Port GPIOC
 #define i_a_Pin GPIO_PIN_3
 #define i_a_GPIO_Port GPIOA
 #define v_bus_Pin GPIO_PIN_5
@@ -76,6 +84,10 @@ void Error_Handler(void);
 #define i_b_GPIO_Port GPIOC
 #define i_c_Pin GPIO_PIN_5
 #define i_c_GPIO_Port GPIOC
+#define mps_i_b_Pin GPIO_PIN_0
+#define mps_i_b_GPIO_Port GPIOB
+#define mps_i_c_Pin GPIO_PIN_1
+#define mps_i_c_GPIO_Port GPIOB
 #define pwm_c_Pin GPIO_PIN_6
 #define pwm_c_GPIO_Port GPIOC
 #define pwm_b_Pin GPIO_PIN_7

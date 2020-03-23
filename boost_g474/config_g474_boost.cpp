@@ -11,10 +11,10 @@
 #include "../motorlib/led.h"
 #include "../motorlib/peripheral/usb.h"
 #include "../motorlib/actuator.h"
-#include "../motorlib/phony_encoder.h"
+#include "../motorlib/ma732_encoder.h"
 #include "Inc/main.h"
 
-typedef FastLoop<HRPWM, QEPEncoder> FastLoopConfig;
+typedef FastLoop<HRPWM, MA732Encoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
 typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
 typedef System<ActuatorConfig, USB1> SystemConfig;
@@ -25,9 +25,9 @@ USB1 SystemConfig ::usb_ = {};
 static struct {
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
-    QEPEncoder motor_encoder = {*TIM5};
-    // GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    // SPIEncoder motor_encoder = {*SPI3, motor_encoder_cs};
+    //Encoder motor_encoder = {*TIM5};
+    GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
@@ -48,6 +48,7 @@ template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop};
 
 void system_init() {
+    config_items.motor_encoder.init();
     SystemConfig::init();
 }
 

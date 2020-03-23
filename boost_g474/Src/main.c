@@ -142,7 +142,6 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   DWT->CTRL = 0x400003FF | (1ul<<17) | DWT_CTRL_LSUEVTENA_Msk | DWT_CTRL_FOLDEVTENA_Msk;
-  system_init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -165,6 +164,8 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+  SPI3->CR1 |= SPI_CR1_SPE; // enable spi
+  system_init();
 
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc2);

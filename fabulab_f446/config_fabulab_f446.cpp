@@ -18,6 +18,8 @@ typedef System<ActuatorConfig, USB_OTG> SystemConfig;
 
 template<>
 USB_OTG SystemConfig ::usb_ = {};
+template<>
+std::queue<std::string> SystemConfig ::log_queue_ = {};
 
 static struct {
     int32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);

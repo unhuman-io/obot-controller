@@ -13,20 +13,23 @@
 #include "../motorlib/actuator.h"
 #include "Inc/main.h"
 
-typedef FastLoop<HRPWM, QEPEncoder> FastLoopConfig;
+typedef FastLoop<HRPWM, SPIEncoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
 typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
 typedef System<ActuatorConfig, USB1> SystemConfig;
 
 template<>
 USB1 SystemConfig ::usb_ = {};
+template<>
+std::queue<std::string> SystemConfig ::log_queue_ = {};
 
 static struct {
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
-    QEPEncoder motor_encoder = {*TIM5};
-    // GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    // SPIEncoder motor_encoder = {*SPI3, motor_encoder_cs};
+    //QEPEncoder motor_encoder = {*TIM5};
+    //PhonyEncoder motor_encoder = {1000};
+     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
+     SPIEncoder motor_encoder = {*SPI3, motor_encoder_cs};
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};

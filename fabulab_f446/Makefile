@@ -64,7 +64,8 @@ Src/system_stm32f4xx.c \
 ./param_fabulab_f446.c \
 ../motorlib/param.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c
 
 CPP_SOURCES = \
 ../motorlib/peripheral/spi_encoder.cpp\

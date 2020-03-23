@@ -45,6 +45,8 @@ ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 ADC_HandleTypeDef hadc3;
 
+SPI_HandleTypeDef hspi1;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim8;
@@ -62,9 +64,9 @@ static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_ADC3_Init(void);
 static void MX_TIM1_Init(void);
-static void MX_TIM2_Init(void);
 static void MX_TIM8_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
+static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -87,7 +89,6 @@ int main(void)
   DWT->CYCCNT = 0;
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -112,9 +113,9 @@ int main(void)
   MX_ADC2_Init();
   MX_ADC3_Init();
   MX_TIM1_Init();
-  MX_TIM2_Init();
   MX_TIM8_Init();
   MX_USB_OTG_FS_PCD_Init();
+  MX_SPI1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_FS, 0x40);
@@ -423,6 +424,44 @@ static void MX_ADC3_Init(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief TIM1 Initialization Function
   * @param None
   * @retval None
@@ -676,7 +715,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, gpio_fl_Pin|gpio_ml_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(gpio_drv_nsleep_GPIO_Port, gpio_drv_nsleep_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, gpio_drv_nsleep_Pin|spi1_cs_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : gpio_drv_en_Pin */
   GPIO_InitStruct.Pin = gpio_drv_en_Pin;
@@ -685,8 +724,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(gpio_drv_en_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : gpio_fl_Pin gpio_ml_Pin gpio_drv_nsleep_Pin */
-  GPIO_InitStruct.Pin = gpio_fl_Pin|gpio_ml_Pin|gpio_drv_nsleep_Pin;
+  /*Configure GPIO pins : gpio_fl_Pin gpio_ml_Pin gpio_drv_nsleep_Pin spi1_cs_Pin */
+  GPIO_InitStruct.Pin = gpio_fl_Pin|gpio_ml_Pin|gpio_drv_nsleep_Pin|spi1_cs_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;

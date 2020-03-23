@@ -10,8 +10,9 @@
 #include "../motorlib/peripheral/stm32f4/otg_usb.h"
 #include "../motorlib/actuator.h"
 #include "Inc/main.h"
+#include "../motorlib/ma732_encoder.h"
 
-typedef FastLoop<PWM_EN, QEPEncoder> FastLoopConfig;
+typedef FastLoop<PWM_EN, MA732Encoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
 typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
 typedef System<ActuatorConfig, USB_OTG> SystemConfig;
@@ -23,8 +24,9 @@ static struct {
     int32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_period);
     GPIO enable = {*GPIOC, 14, GPIO::OUTPUT};
-    QEPEncoder motor_encoder = {*TIM2};
+   // PhonyEncoder motor_encoder = {100};
     QEPEncoder output_encoder = {*TIM2};
+    MA732Encoder motor_encoder = {*SPI2,enable};
     PWM_EN motor_pwm = {pwm_frequency, *const_cast<uint32_t*>(&TIM8->CCR3), 
                         *const_cast<uint32_t*>(&TIM8->CCR2), 
                         *const_cast<uint32_t*>(&TIM8->CCR1),
@@ -40,5 +42,10 @@ static struct {
 
 template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop};
+
+void system_init() {
+    SystemConfig::init();
+    config_items.motor_encoder.init();
+}
 
 #include "../motorlib/system.cpp"

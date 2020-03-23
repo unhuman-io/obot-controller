@@ -86,9 +86,9 @@ gpio.cpp\
 sincos.cpp\
 util.cpp\
 hall.cpp\
+../motorlibe/peripheral/spi_encoder.cpp\
 ../motorlib/peripheral/stm32g4/usb.cpp\
 hrpwm.cpp\
-spi_encoder.cpp\
 ams_encoder.cpp\
 parameter_api.cpp\
 ./$(CONFIG_FILE)

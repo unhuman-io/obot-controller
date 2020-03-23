@@ -3,7 +3,7 @@
 #include "../motorlib/system.h"
 #include "../motorlib/qep_encoder.h"
 #include "../motorlib/peripheral/stm32g4/hrpwm.h"
-#include "../motorlib/peripheral/stm32g4/spi_encoder.h"
+#include "../motorlib/peripheral/spi_encoder.h"
 #include "../motorlib/peripheral/stm32g4/ams_encoder.h"
 #include "../motorlib/hall.h"
 #include "../motorlib/fast_loop.h"
@@ -11,6 +11,7 @@
 #include "../motorlib/led.h"
 #include "../motorlib/peripheral/usb.h"
 #include "../motorlib/actuator.h"
+#include "../motorlib/phony_encoder.h"
 #include "Inc/main.h"
 
 typedef FastLoop<HRPWM, QEPEncoder> FastLoopConfig;
@@ -45,5 +46,9 @@ static struct {
 
 template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop};
+
+void system_init() {
+    SystemConfig::init();
+}
 
 #include "../motorlib/system.cpp"

@@ -104,7 +104,6 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   DWT->CTRL = 0x400003FF | (1ul<<17) | DWT_CTRL_LSUEVTENA_Msk | DWT_CTRL_FOLDEVTENA_Msk;
-  system_init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -118,6 +117,9 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  SPI1->CR1 |= SPI_CR1_SPE; // enable spi
+  system_init();
+
   HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_FS, 0x40);
   HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 0, 0x20);
   HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 1, 0x20);

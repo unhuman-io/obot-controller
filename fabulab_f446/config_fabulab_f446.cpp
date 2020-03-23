@@ -46,8 +46,12 @@ template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop};
 
 void system_init() {
+    if (config_items.motor_encoder.init()) {
+        SystemConfig::log("Motor encoder init success");
+    } else {
+        SystemConfig::log("Motor encoder init failure");
+    }
     SystemConfig::init();
-    config_items.motor_encoder.init();
 }
 
 #include "../motorlib/system.cpp"

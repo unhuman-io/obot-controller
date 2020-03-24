@@ -37,7 +37,7 @@ static struct {
     FastLoopConfig fast_loop = {pwm_frequency, motor_pwm, motor_encoder};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR2)),
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR4)), true};
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR4)), .1};
     PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
     USBCommunication<USB_OTG> communication = {SystemConfig::usb_};
     MainLoopConfig main_loop = {fast_loop, controller, communication, led, output_encoder};

@@ -84,6 +84,8 @@ void Error_Handler(void);
 #define pwm_a_GPIO_Port GPIOC
 #define gpio_drv_nsleep_Pin GPIO_PIN_9
 #define gpio_drv_nsleep_GPIO_Port GPIOA
+#define spi1_cs_Pin GPIO_PIN_15
+#define spi1_cs_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

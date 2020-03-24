@@ -43,4 +43,8 @@ static struct {
 template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop};
 
+void system_init() {
+    SystemConfig::init();
+}
+
 #include "../motorlib/system.cpp"

@@ -28,7 +28,8 @@ static struct {
     GPIO enable = {*GPIOC, 14, GPIO::OUTPUT};
    // PhonyEncoder motor_encoder = {100};
     QEPEncoder output_encoder = {*TIM2};
-    MA732Encoder motor_encoder = {*SPI1,enable};
+    GPIO spi1_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    MA732Encoder motor_encoder = {*SPI1, spi1_cs};
     PWM_EN motor_pwm = {pwm_frequency, *const_cast<uint32_t*>(&TIM8->CCR3), 
                         *const_cast<uint32_t*>(&TIM8->CCR2), 
                         *const_cast<uint32_t*>(&TIM8->CCR1),

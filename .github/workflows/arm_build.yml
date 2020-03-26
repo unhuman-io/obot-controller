@@ -10,6 +10,7 @@ jobs:
       with:
         submodules: true
     - name: arm-none-eabi-gcc
+      timeout-minutes: 10
       uses: fiam/arm-none-eabi-gcc@v1
       with:
         release: '9-2019-q4'

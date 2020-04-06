@@ -142,6 +142,7 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   DWT->CTRL = 0x400003FF | (1ul<<17) | DWT_CTRL_LSUEVTENA_Msk | DWT_CTRL_FOLDEVTENA_Msk;
+  MX_DMA_Init(); // Needs to come before it is used (SPI3)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -179,7 +180,8 @@ int main(void)
   HAL_OPAMP_Start(&hopamp6);
   HAL_Delay(100);
 
-    SPI3->CR1 |= SPI_CR1_SPE; 
+  SPI3->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
+  SPI3->CR1 |= SPI_CR1_SPE; 
   
   GPIOC->ODR |= GPIO_ODR_OD11; // drv enable
   HAL_Delay(10);
@@ -961,11 +963,11 @@ static void MX_SPI3_Init(void)
   hspi3.Instance = SPI3;
   hspi3.Init.Mode = SPI_MODE_MASTER;
   hspi3.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi3.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi3.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi3.Init.NSS = SPI_NSS_SOFT;
-  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;

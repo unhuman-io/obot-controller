@@ -45,8 +45,10 @@ static struct {
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
     PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
+    PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
+    PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
     USBCommunication<USB1> communication = {SystemConfig::usb_};
-    MainLoopConfig main_loop = {fast_loop, controller, communication, led, output_encoder, torque_sensor};
+    MainLoopConfig main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, output_encoder, torque_sensor};
 } config_items;
 
 template<>

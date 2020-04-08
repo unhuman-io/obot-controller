@@ -12,7 +12,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.foc_param.pi_q.ki_limit=2.5,
     .fast_loop_param.foc_param.pi_q.command_max=3,
     .fast_loop_param.foc_param.current_filter_frequency_hz=10000,
-    .fast_loop_param.foc_param.num_poles = 20,
+    .fast_loop_param.foc_param.num_poles = 7,
     .fast_loop_param.cogging.gain = 1,
     .main_loop_param.gear_ratio = 50,
     .main_loop_param.kt = .012*sqrt(.5),
@@ -25,7 +25,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.adc3_gain = -3.26/4096/(.007*40), 
     .fast_loop_param.motor_encoder.dir = 1,
     .fast_loop_param.phase_mode = 1,
-    .fast_loop_param.motor_encoder.cpr = 65536,
+    .fast_loop_param.motor_encoder.cpr = 1024,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = -1868,
     .main_loop_param.torque_bias = 0.025,
@@ -51,7 +51,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
 #include "cogprocessed.csv"
     },
     .startup_param.do_phase_lock = 1,
-    .startup_param.phase_lock_current = 4,
+    .startup_param.phase_lock_current = 1,
     .startup_param.phase_lock_duration = 2,
     .name = "J1",
 };

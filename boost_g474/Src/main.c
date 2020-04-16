@@ -104,8 +104,11 @@ uint16_t drv_regs_error = 0;
 
 uint16_t drv_regs[] = {
   (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
-  (3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
-  (4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
+  //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
+  (3<<11) | 0x333, // hs_reg      0x3CC, moderate drive current
+  //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
+                                // moderate drive current (.57,1.14A)
+  (4<<11) | 0x2AA, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
                                 // moderate drive current (.57,1.14A)
   (5<<11) | 0x020,  // ocp_reg     0x20 -> 50 ns dead time, 
                               //latched ocp, 4 us ocp deglitch, 0.06 Vds thresh
@@ -967,7 +970,7 @@ static void MX_SPI3_Init(void)
   hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi3.Init.NSS = SPI_NSS_SOFT;
-  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -1006,7 +1009,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 16999;
+  htim1.Init.Period = main_loop_period-1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;

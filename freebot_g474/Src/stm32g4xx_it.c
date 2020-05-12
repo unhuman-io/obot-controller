@@ -24,7 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
-
+#include "../../motorlib/system.h"
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
 
@@ -32,12 +32,18 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+void ADC5_IRQHandler(void) __attribute__((section (".ccmram")));
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define INTERRUPT_PROFILE_GLOBALS(loop) uint32_t t_exec_##loop __attribute__((used));\
+                                        uint32_t t_period_##loop __attribute__((used));
+#define INTERRUPT_PROFILE_START static uint32_t last_start = 0; \
+                                      uint32_t t_start = get_clock();
+#define INTERRUPT_PROFILE_END(loop) t_exec_##loop = get_clock()-t_start; \
+                                      t_period_##loop = t_start - last_start; \
+                                      last_start = t_start;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -52,7 +58,9 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+#include "../../motorlib/util.h"
+INTERRUPT_PROFILE_GLOBALS(fastloop);
+INTERRUPT_PROFILE_GLOBALS(mainloop);
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -235,11 +243,12 @@ void DMA1_Channel2_IRQHandler(void)
 void USB_LP_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_IRQn 0 */
-
+  usb_interrupt();
+#if 0
   /* USER CODE END USB_LP_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_LP_IRQn 1 */
-
+#endif
   /* USER CODE END USB_LP_IRQn 1 */
 }
 
@@ -249,11 +258,12 @@ void USB_LP_IRQHandler(void)
 void TIM1_UP_TIM16_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
-
+  INTERRUPT_PROFILE_START;
+  main_loop_interrupt();
   /* USER CODE END TIM1_UP_TIM16_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 1 */
-
+  INTERRUPT_PROFILE_END(mainloop);
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
 }
 
@@ -263,11 +273,15 @@ void TIM1_UP_TIM16_IRQHandler(void)
 void ADC5_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC5_IRQn 0 */
-
+  INTERRUPT_PROFILE_START;
+  fast_loop_interrupt();
+#if 0
   /* USER CODE END ADC5_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc5);
   /* USER CODE BEGIN ADC5_IRQn 1 */
-
+#endif
+  hadc5.Instance->ISR = ADC_ISR_JEOC;
+  INTERRUPT_PROFILE_END(fastloop)
   /* USER CODE END ADC5_IRQn 1 */
 }
 

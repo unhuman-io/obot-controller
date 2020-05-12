@@ -1,0 +1,9 @@
+{
+    "C_Cpp.default.defines": [
+        "USE_HAL_DRIVER",
+        "STM32G474xx"
+    ],
+    "files.associations": {
+        "tuple": "cpp"
+    },
+}

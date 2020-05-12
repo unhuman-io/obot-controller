@@ -23,7 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "../../motorlib/system.h"
+#include "../../motorlib/param.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,7 +65,7 @@ TIM_HandleTypeDef htim4;
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
-
+uint8_t go_to_bootloader = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,7 +102,10 @@ static void MX_USB_PCD_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  // DWC CYCCNT used as main counter
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -110,14 +114,15 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  // todo: check if necessary
+  RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;      // Clock recovery circuit, enables syncing HSI48 MHz to USB clock
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  DWT->CTRL = 0x400003FF | (1ul<<17) | DWT_CTRL_LSUEVTENA_Msk | DWT_CTRL_FOLDEVTENA_Msk;
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -138,6 +143,47 @@ int main(void)
   MX_TIM4_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
+  SPI1->CR1 |= SPI_CR1_SPE;
+  SPI3->CR1 |= SPI_CR1_SPE; // enable spi
+  SPI1->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
+  system_init();
+
+  HAL_ADC_Start(&hadc1);
+  HAL_ADC_Start(&hadc3);
+  HAL_ADC_Start(&hadc4);
+  HAL_ADC_Start(&hadc5);
+
+  HAL_OPAMP_Start(&hopamp3);
+  HAL_OPAMP_Start(&hopamp4);
+  OPAMP6->CSR |= OPAMP_CSR_OPAMPINTEN; // bug in cubemx
+  HAL_OPAMP_Start(&hopamp6);
+
+  uint32_t deadtime = 10;
+  uint32_t deadprescale = 0;
+  HRTIM1->sTimerxRegs[3].OUTxR |= HRTIM_OUTR_DTEN;
+  HRTIM1->sTimerxRegs[3].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
+  HRTIM1->sTimerxRegs[3].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
+  HRTIM1->sTimerxRegs[4].OUTxR |= HRTIM_OUTR_DTEN;
+  HRTIM1->sTimerxRegs[4].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
+  HRTIM1->sTimerxRegs[4].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
+  HRTIM1->sTimerxRegs[5].OUTxR |= HRTIM_OUTR_DTEN;
+  HRTIM1->sTimerxRegs[5].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
+  HRTIM1->sTimerxRegs[5].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
+  
+  //HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_TESWU;
+  HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN;
+
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD1);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD2);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TE2);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TF1);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TE1);
+  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF2);
+  hadc5.Instance->CR |= ADC_CR_JADSTART;
+  hadc5.Instance->IER |= ADC_IER_JEOCIE;
+  hadc4.Instance->CR |= ADC_CR_JADSTART;
+  hadc3.Instance->CR |= ADC_CR_JADSTART;
+  hadc1.Instance->CR |= ADC_CR_ADSTART;
 
   /* USER CODE END 2 */
 
@@ -146,7 +192,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+    system_run();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -887,7 +933,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 4.294967295E9;
+  htim2.Init.Period = 0xffffffff;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_IC_Init(&htim2) != HAL_OK)

@@ -56,10 +56,48 @@ defined in linker script */
  * @retval : None
 */
 
+.set RCC_BASE,        0x40021000
+.set RCC_CSR_OFFSET,  0x94
+.set RCC_CSR_SFTRSTF_POS, 28
+.set RCC_CSR_RMVF_POS,    23
+.set RCC_CSR_PINRSTF_POS,    26
+
+.set RCC_APB2SMENR,         0x40021080
+.set RCC_SYSCFGEN_POS,    0
+.set SYSCFG_MEMRMP,	      0x40010000
+
     .section	.text.Reset_Handler
+Reboot_Loader:
+    ldr     r0, =RCC_APB2SMENR 
+    ldr     r1, =#(1<<RCC_SYSCFGEN_POS) 
+    str     r1, [r0]
+	nop		/* found experimentally that this is needed */
+    ldr     r0, =#SYSCFG_MEMRMP /* SYSCFG_MEMRMP */
+    ldr     r1, =0x00000001 /* MAP ROM AT ZERO */
+    str     r1, [r0]
+    ldr     r0, =0x1FFF0000 /* ROM BASE */
+    ldr     SP,[r0]     /* SP @ +0 */
+    ldr     r0,[r0, #4]     /* PC @ +4 */
+    bx      r0
+
+
 	.weak	Reset_Handler
 	.type	Reset_Handler, %function
 Reset_Handler:
+	ldr r0, =RCC_BASE
+	ldr r1, [r0, #RCC_CSR_OFFSET]
+	tst r1, #(1<<RCC_CSR_SFTRSTF_POS)
+	orr r1, #(1<<RCC_CSR_RMVF_POS)
+	str r1, [r0, #RCC_CSR_OFFSET]
+	beq Original_Reset_Handler
+	ldr r0, =go_to_bootloader
+	ldrb r1, [r0]
+	cmp r1, #0xB0
+	mov r1, #0
+	str r1, [r0]
+	beq Reboot_Loader
+
+Original_Reset_Handler:
   ldr   r0, =_estack
   mov   sp, r0          /* set stack pointer */
 
@@ -79,6 +117,21 @@ LoopCopyDataInit:
   adds r4, r0, r3
   cmp r4, r1
   bcc CopyDataInit
+
+  /* CCM RAM init */
+  movs r1, #0
+  b LoopCopyDataInit1
+CopyDataInit1:
+  ldr r3, =_siccmram
+  ldr r3, [r3, r1]
+  str r3, [r0, r1]
+  adds r1, r1, #4
+LoopCopyDataInit1:
+  ldr r0, =_sccmram
+  ldr r3, =_eccmram
+  adds r2, r0, r1
+  cmp r2, r3
+  bcc CopyDataInit1
   
 /* Zero fill the bss segment. */
   ldr r2, =_sbss
@@ -118,6 +171,16 @@ LoopForever:
 Default_Handler:
 Infinite_Loop:
 	b	Infinite_Loop
+Infinite_Loop1:
+	b	Infinite_Loop1
+Infinite_Loop2:
+	b	Infinite_Loop2
+Infinite_Loop3:
+	b	Infinite_Loop3
+Infinite_Loop4:
+	b	Infinite_Loop4
+Infinite_Loop5:
+	b	Infinite_Loop5
 	.size	Default_Handler, .-Default_Handler
 /******************************************************************************
 *
@@ -259,35 +322,35 @@ g_pfnVectors:
 *
 *******************************************************************************/
 
-	.weak	NMI_Handler
-	.thumb_set NMI_Handler,Default_Handler
+//	.weak	NMI_Handler
+//	.thumb_set NMI_Handler,Infinite_Loop1
 
-	.weak	HardFault_Handler
-	.thumb_set HardFault_Handler,Default_Handler
+//	.weak	HardFault_Handler
+//	.thumb_set HardFault_Handler,Infinite_Loop2
 
-	.weak	MemManage_Handler
-	.thumb_set MemManage_Handler,Default_Handler
+//	.weak	MemManage_Handler
+//	.thumb_set MemManage_Handler,Default_Handler
 
-	.weak	BusFault_Handler
-	.thumb_set BusFault_Handler,Default_Handler
+//	.weak	BusFault_Handler
+//	.thumb_set BusFault_Handler,Default_Handler
 
-	.weak	UsageFault_Handler
-	.thumb_set UsageFault_Handler,Default_Handler
+//	.weak	UsageFault_Handler
+//	.thumb_set UsageFault_Handler,Default_Handler
 
-	.weak	SVC_Handler
-	.thumb_set SVC_Handler,Default_Handler
+//	.weak	SVC_Handler
+//	.thumb_set SVC_Handler,Default_Handler
 
-	.weak	DebugMon_Handler
-	.thumb_set DebugMon_Handler,Default_Handler
+//	.weak	DebugMon_Handler
+//	.thumb_set DebugMon_Handler,Default_Handler
 
-	.weak	PendSV_Handler
-	.thumb_set PendSV_Handler,Default_Handler
+//	.weak	PendSV_Handler
+//	.thumb_set PendSV_Handler,Default_Handler
 
-	.weak	SysTick_Handler
-	.thumb_set SysTick_Handler,Default_Handler
+//	.weak	SysTick_Handler
+//	.thumb_set SysTick_Handler,Default_Handler*/
 
 	.weak	WWDG_IRQHandler
-	.thumb_set WWDG_IRQHandler,Default_Handler
+	.thumb_set WWDG_IRQHandler,Infinite_Loop5
 
 	.weak	PVD_PVM_IRQHandler
 	.thumb_set PVD_PVM_IRQHandler,Default_Handler
@@ -319,11 +382,11 @@ g_pfnVectors:
 	.weak	EXTI4_IRQHandler
 	.thumb_set EXTI4_IRQHandler,Default_Handler
 
-	.weak	DMA1_Channel1_IRQHandler
-	.thumb_set DMA1_Channel1_IRQHandler,Default_Handler
+//	.weak	DMA1_Channel1_IRQHandler
+//	.thumb_set DMA1_Channel1_IRQHandler,Default_Handler
 
-	.weak	DMA1_Channel2_IRQHandler
-	.thumb_set DMA1_Channel2_IRQHandler,Default_Handler
+//	.weak	DMA1_Channel2_IRQHandler
+//	.thumb_set DMA1_Channel2_IRQHandler,Default_Handler
 
 	.weak	DMA1_Channel3_IRQHandler
 	.thumb_set DMA1_Channel3_IRQHandler,Default_Handler
@@ -341,14 +404,14 @@ g_pfnVectors:
 	.thumb_set DMA1_Channel7_IRQHandler,Default_Handler
 
 	.weak	ADC1_2_IRQHandler
-	.thumb_set ADC1_2_IRQHandler,Default_Handler
+	.thumb_set ADC1_2_IRQHandler,Infinite_Loop3
 
 	.weak	USB_HP_IRQHandler
 	.thumb_set USB_HP_IRQHandler,Default_Handler
-
-	.weak	USB_LP_IRQHandler
-	.thumb_set USB_LP_IRQHandler,Default_Handler
-
+/*
+//	.weak	USB_LP_IRQHandler
+//	.thumb_set USB_LP_IRQHandler,Default_Handler
+*/
 	.weak	FDCAN1_IT0_IRQHandler
 	.thumb_set FDCAN1_IT0_IRQHandler,Default_Handler
 
@@ -361,8 +424,8 @@ g_pfnVectors:
 	.weak	TIM1_BRK_TIM15_IRQHandler
 	.thumb_set TIM1_BRK_TIM15_IRQHandler,Default_Handler
 
-	.weak	TIM1_UP_TIM16_IRQHandler
-	.thumb_set TIM1_UP_TIM16_IRQHandler,Default_Handler
+//	.weak	TIM1_UP_TIM16_IRQHandler
+//	.thumb_set TIM1_UP_TIM16_IRQHandler,Default_Handler
 
 	.weak	TIM1_TRG_COM_TIM17_IRQHandler
 	.thumb_set TIM1_TRG_COM_TIM17_IRQHandler,Default_Handler
@@ -395,7 +458,7 @@ g_pfnVectors:
 	.thumb_set SPI1_IRQHandler,Default_Handler
 
 	.weak	SPI2_IRQHandler
-	.thumb_set SPI2_IRQHandler,Default_Handler
+	.thumb_set SPI2_IRQHandler,Infinite_Loop4
 
 	.weak	USART1_IRQHandler
 	.thumb_set USART1_IRQHandler,Default_Handler

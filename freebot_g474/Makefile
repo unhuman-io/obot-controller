@@ -27,7 +27,7 @@ $(shell touch version.h)
 DEBUG = 1
 # optimization
 OPT = -Og -fsingle-precision-constant -O3 
-LTO = #-flto
+LTO = -flto
 
 DRIVERS = ../boost_g474/Drivers
 

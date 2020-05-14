@@ -535,8 +535,8 @@ g_pfnVectors:
 	.weak	ADC4_IRQHandler
 	.thumb_set ADC4_IRQHandler,Default_Handler
 
-	.weak	ADC5_IRQHandler
-	.thumb_set ADC5_IRQHandler,Default_Handler
+//	.weak	ADC5_IRQHandler
+//	.thumb_set ADC5_IRQHandler,Default_Handler
 
 	.weak	UCPD1_IRQHandler
 	.thumb_set UCPD1_IRQHandler,Default_Handler

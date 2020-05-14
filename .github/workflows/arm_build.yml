@@ -35,3 +35,5 @@ jobs:
       with:
         name: freebot_g474.elf
         path: freebot_g474/build/freebot_g474.elf
+        name: freebot_g474.bin
+        path: freebot_g474/build/freebot_g474.bin

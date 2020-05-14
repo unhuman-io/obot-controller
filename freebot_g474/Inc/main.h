@@ -65,6 +65,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define hrperiod 27200
 #define main_loop_period 170e6/10000
+#define drv_en_Pin GPIO_PIN_13
+#define drv_en_GPIO_Port GPIOC
+#define drv_fault_Pin GPIO_PIN_14
+#define drv_fault_GPIO_Port GPIOC
 #define v_a_Pin GPIO_PIN_0
 #define v_a_GPIO_Port GPIOC
 #define v_b_Pin GPIO_PIN_1
@@ -77,6 +81,8 @@ void Error_Handler(void);
 #define v_bus_GPIO_Port GPIOA
 #define spi1cs_Pin GPIO_PIN_4
 #define spi1cs_GPIO_Port GPIOA
+#define scope3_Pin GPIO_PIN_5
+#define scope3_GPIO_Port GPIOC
 #define i_a_Pin GPIO_PIN_11
 #define i_a_GPIO_Port GPIOB
 #define i_b_Pin GPIO_PIN_12
@@ -95,6 +101,10 @@ void Error_Handler(void);
 #define pwm_a_GPIO_Port GPIOC
 #define pwm_al_Pin GPIO_PIN_9
 #define pwm_al_GPIO_Port GPIOC
+#define scope1_Pin GPIO_PIN_8
+#define scope1_GPIO_Port GPIOA
+#define scope2_Pin GPIO_PIN_9
+#define scope2_GPIO_Port GPIOA
 #define spi3cs1_Pin GPIO_PIN_2
 #define spi3cs1_GPIO_Port GPIOD
 #define spi3cs2_Pin GPIO_PIN_4

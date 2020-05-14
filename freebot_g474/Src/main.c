@@ -1107,14 +1107,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(spi1cs_GPIO_Port, spi1cs_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(drv_en_GPIO_Port, drv_en_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, spi1cs_Pin|scope1_Pin|scope2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(scope3_GPIO_Port, scope3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(spi3cs1_GPIO_Port, spi3cs1_Pin, GPIO_PIN_RESET);
@@ -1122,12 +1128,32 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, spi3cs2_Pin|spi3cs3_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : spi1cs_Pin */
-  GPIO_InitStruct.Pin = spi1cs_Pin;
+  /*Configure GPIO pin : drv_en_Pin */
+  GPIO_InitStruct.Pin = drv_en_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(drv_en_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : drv_fault_Pin */
+  GPIO_InitStruct.Pin = drv_fault_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(drv_fault_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : spi1cs_Pin scope1_Pin scope2_Pin */
+  GPIO_InitStruct.Pin = spi1cs_Pin|scope1_Pin|scope2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(spi1cs_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : scope3_Pin */
+  GPIO_InitStruct.Pin = scope3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(scope3_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : spi3cs1_Pin */
   GPIO_InitStruct.Pin = spi3cs1_Pin;

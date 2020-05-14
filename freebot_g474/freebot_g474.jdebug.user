@@ -1,0 +1,49 @@
+
+Breakpoint=1817248375: 216: 0, State=BP_STATE_ON
+Breakpoint=1817248375: 230: 0, State=BP_STATE_ON
+Breakpoint=1817248375: 259: 0, State=BP_STATE_ON
+Breakpoint=1817248375: 274: 0, State=BP_STATE_ON
+Breakpoint=3377569020: 190: 0, State=BP_STATE_ON
+Breakpoint=4143358498: 34: 0, State=BP_STATE_ON
+Breakpoint=4143358498: 38: 0, State=BP_STATE_ON
+Breakpoint=0x10000438, State=BP_STATE_ON
+OpenDocument="usb.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/peripheral/stm32g4/usb.cpp", Line=277
+OpenDocument="util.h", FilePath="/home/lee/unhuman/bort2/motorlib/util.h", Line=0
+OpenDocument="fast_loop.h", FilePath="/home/lee/unhuman/bort2/motorlib/fast_loop.h", Line=17
+OpenDocument="startup_stm32g474xx.s", FilePath="/home/lee/unhuman/bort2/freebot_g474/startup_stm32g474xx.s", Line=64
+OpenDocument="spi_encoder.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/peripheral/spi_encoder.cpp", Line=0
+OpenDocument="main.c", FilePath="/home/lee/unhuman/bort2/freebot_g474/Src/main.c", Line=80
+OpenDocument="control_fun.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/control_fun.cpp", Line=0
+OpenDocument="hrpwm.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/peripheral/stm32g4/hrpwm.cpp", Line=0
+OpenDocument="util.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/util.cpp", Line=0
+OpenDocument="control_fun.h", FilePath="/home/lee/unhuman/bort2/motorlib/control_fun.h", Line=0
+OpenDocument="foc.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/foc.cpp", Line=10
+OpenDocument="stm32g4xx_it.c", FilePath="/home/lee/unhuman/bort2/freebot_g474/Src/stm32g4xx_it.c", Line=204
+OpenDocument="gpio.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/gpio.cpp", Line=0
+OpenDocument="new_allocator.h", FilePath="/opt/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/include/c++/9.2.1/ext/new_allocator.h", Line=84
+OpenDocument="main_loop.h", FilePath="/home/lee/unhuman/bort2/motorlib/main_loop.h", Line=0
+OpenDocument="system.h", FilePath="/home/lee/unhuman/bort2/motorlib/system.h", Line=0
+OpenDocument="actuator.h", FilePath="/home/lee/unhuman/bort2/motorlib/actuator.h", Line=0
+OpenDocument="system.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/system.cpp", Line=0
+OpenDocument="ma732_encoder.h", FilePath="/home/lee/unhuman/bort2/motorlib/ma732_encoder.h", Line=0
+OpenDocument="sincos.cpp", FilePath="/home/lee/unhuman/bort2/motorlib/sincos.cpp", Line=0
+OpenToolbar="Debug", Floating=0, x=0, y=0
+OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=3, w=1028, h=455, FilterBarShown=0, ToolBarShown=0
+OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=4, w=1028, h=496, FilterBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
+OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=1028, h=193, FilterBarShown=0, ToolBarShown=0, ExecCountersShown=0, InstEncodingsShown=0
+OpenWindow="Source", x=0, y=0, w=0, h=0, FilterBarShown=0, ToolBarShown=0, ExecCountersShown=0
+OpenWindow="Break & Tracepoints", DockArea=LEFT, x=0, y=0, w=303, h=700, FilterBarShown=0, ToolBarShown=0, VectorCatchIndexMask=254
+OpenWindow="Memory 1", DockArea=BOTTOM, x=0, y=0, w=854, h=318, FilterBarShown=0, ToolBarShown=0, EditorAddress=0x40005C58
+OpenWindow="Local Data", DockArea=RIGHT, x=0, y=2, w=1028, h=107, FilterBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data", DockArea=RIGHT, x=0, y=1, w=1028, h=107, FilterBarShown=0, ToolBarShown=0
+OpenWindow="Functions", DockArea=LEFT, x=0, y=1, w=303, h=676, FilterBarShown=1, ToolBarShown=0
+OpenWindow="Console", DockArea=BOTTOM, x=1, y=0, w=1720, h=318, FilterBarShown=0, ToolBarShown=0
+TableHeader="Watched Data", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[182;146;90;54;556]
+TableHeader="Vector Catches", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Vector Catch";"Description"], ColWidths=[50;300;500]
+TableHeader="Break & Tracepoints", SortCol="None", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[55;60;98;210]
+TableHeader="Local Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[137;79;77;48;126;27;534]
+TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Class";"Source"], ColWidths=[1806;77;49;57;27;133]
+TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[357;119;189;77;182;104]
+TableHeader="Power Sampling", SortCol="Index", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
+TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[189;164;77;583]
+TableHeader="RegisterSelectionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Auto";"Name";"Address";"Description"], ColWidths=[26;26;26;26]

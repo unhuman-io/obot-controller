@@ -143,6 +143,7 @@ int main(void)
   MX_TIM4_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
+  USB->CNTR &= ~(USB_CNTR_SOFM | USB_CNTR_ESOFM); // Don't need these interrupts
   SPI1->CR1 |= SPI_CR1_SPE;
   SPI3->CR1 |= SPI_CR1_SPE; // enable spi
   SPI1->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
@@ -187,7 +188,6 @@ int main(void)
 
   
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
-  USB->CNTR &= ~(USB_CNTR_SOFM | USB_CNTR_ESOFM); // Don't need these interrupts
   USB_DevConnect(USB);
   htim1.Instance->DIER |= TIM_DIER_UIE;
   HAL_TIM_Base_Start(&htim1);
@@ -676,7 +676,7 @@ static void MX_HRTIM1_Init(void)
     Error_Handler();
   }
   if (HAL_HRTIM_RollOverModeConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_TIM_FEROM_BOTH|HRTIM_TIM_BMROM_BOTH
-                              |HRTIM_TIM_ADROM_BOTH|HRTIM_TIM_OUTROM_BOTH
+                              |HRTIM_TIM_ADROM_VALLEY|HRTIM_TIM_OUTROM_BOTH
                               |HRTIM_TIM_ROM_BOTH) != HAL_OK)
   {
     Error_Handler();

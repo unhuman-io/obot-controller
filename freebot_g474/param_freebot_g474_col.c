@@ -1,6 +1,8 @@
 #include "../motorlib/param.h"
 #include "math.h"
 
+#define V_REF 3.3
+
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.foc_param.pi_d.kp=10,
@@ -22,14 +24,14 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .fast_loop_param.adc1_offset = 1980,
     .fast_loop_param.adc2_offset = 1980,
     .fast_loop_param.adc3_offset = 1980,
-    .fast_loop_param.adc1_gain = -3.26/4096/(.007*40),  // V/count * A/Vr / Vo/Vr (3.3/4096 / R / Gain)
-    .fast_loop_param.adc2_gain = -3.26/4096/(.007*40),
-    .fast_loop_param.adc3_gain = -3.26/4096/(.007*40), 
+    .fast_loop_param.adc1_gain = -V_REF/4096*(10000/3900.0),  // A/count
+    .fast_loop_param.adc2_gain = -V_REF/4096*(10000/3900.0),
+    .fast_loop_param.adc3_gain = -V_REF/4096*(10000/3900.0), 
     .fast_loop_param.motor_encoder.dir = 1,
     .fast_loop_param.phase_mode = 1,
-    .fast_loop_param.motor_encoder.cpr = 4096*7,
+    .fast_loop_param.motor_encoder.cpr = 65536*7,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
-    .fast_loop_param.motor_encoder.index_electrical_offset_pos = -1868,
+    .fast_loop_param.motor_encoder.index_electrical_offset_pos = 0,
     .main_loop_param.torque_bias = 0,
     .main_loop_param.torque_gain = 1,
     //.main_loop_param.torque_sensor.gain = -30.7,
@@ -38,7 +40,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .main_loop_param.torque_sensor.bias = .203,
     .main_loop_param.torque_sensor.k_temp = 0,
     .main_loop_param.torque_sensor.filter_frequency_hz = 0,
-    .fast_loop_param.vbus_gain = 3.26/4096*(82.+4.99)/4.99,
+    .fast_loop_param.vbus_gain = V_REF/4096*(18+2)/2.0,
     .main_loop_param.controller_param.kp = 10,
     .main_loop_param.controller_param.kd = .1,
     .main_loop_param.controller_param.velocity_filter_frequency_hz = 0,

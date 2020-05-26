@@ -91,8 +91,9 @@ Reset_Handler:
 	str r1, [r0, #RCC_CSR_OFFSET]
 	beq Original_Reset_Handler
 	ldr r0, =go_to_bootloader
-	ldrb r1, [r0]
-	cmp r1, #0xB0
+	ldr r1, [r0]
+	ldr r2, =0xB007
+	cmp r1, r2
 	mov r1, #0
 	str r1, [r0]
 	beq Reboot_Loader

@@ -65,7 +65,7 @@ TIM_HandleTypeDef htim4;
 PCD_HandleTypeDef hpcd_USB_FS;
 
 /* USER CODE BEGIN PV */
-uint8_t go_to_bootloader = 0;
+uint32_t go_to_bootloader = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

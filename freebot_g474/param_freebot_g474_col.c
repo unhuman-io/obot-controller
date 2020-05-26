@@ -1,7 +1,7 @@
 #include "../motorlib/param.h"
 #include "math.h"
 
-#define V_REF 3.3
+#define V_REF 3.0
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {

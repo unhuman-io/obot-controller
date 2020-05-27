@@ -34,8 +34,8 @@ static struct {
     GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
     SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
-    MA732Encoder output_encoder = {*SPI3, output_encoder_cs}; // need to make sure this doesn't collide with motor encoder
-    //PhonyEncoder output_encoder = {65536};
+    //MA732Encoder output_encoder = {*SPI3, output_encoder_cs}; // need to make sure this doesn't collide with motor encoder
+    PhonyEncoder output_encoder = {65536};
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3};
     FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder};

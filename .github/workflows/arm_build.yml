@@ -28,3 +28,15 @@ jobs:
       with:
         name: fabulab_f446.elf
         path: fabulab_f446/build/fabulab_f446.elf
+    - name: make3
+      run: make -C freebot_g474
+    - name: Archive production artifacts3
+      uses: actions/upload-artifact@v1
+      with:
+        name: freebot_g474.elf
+        path: freebot_g474/build/freebot_g474.elf
+    - name: Archive production artifacts4
+      uses: actions/upload-artifact@v1
+      with:
+        name: freebot_g474.bin
+        path: freebot_g474/build/freebot_g474.bin

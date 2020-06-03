@@ -19,6 +19,10 @@ CONFIG_FILE = config_freebot_g474_col.cpp
 GIT_VERSION := $(shell git describe --dirty --always --tags)
 $(shell touch version.h)
 
+PARAM_DIR = params_freebot_g474_col
+
+export
+
 
 ######################################
 # building variables
@@ -182,7 +186,7 @@ LIBDIR =
 LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
 
 # default action: build all
-all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin $(PARAM_DIR)
 
 #######################################
 # build the application
@@ -218,6 +222,10 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir $@		
 
+$(PARAM_DIR): $(BUILD_DIR)
+	$(MAKE) -C $(PARAM_DIR)
+
+.PHONY: $(PARAM_DIR)
 #######################################
 # clean up
 #######################################

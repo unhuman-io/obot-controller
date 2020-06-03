@@ -61,6 +61,9 @@ const Param __attribute__ ((section ("flash_param"))) param = {
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = 1,
     .startup_param.phase_lock_duration = 2,
-    .name = "J1"
+    .name = "J1",
+#ifdef PARAM_OVERRIDES
+    PARAM_OVERRIDES
+#endif
 };
 const char * const name = param.name;

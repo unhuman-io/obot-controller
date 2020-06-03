@@ -13,6 +13,7 @@
 #include "../motorlib/ma732_encoder.h"
 #include "../motorlib/phony_encoder.h"
 #include "../motorlib/motor_torque_sensor.h"
+#include "param_fabulab_f446.h"
 
 typedef FastLoop<PWM_EN, PhonyEncoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
@@ -37,7 +38,7 @@ static struct {
                         *const_cast<uint32_t*>(&TIM8->CCR2), 
                         *const_cast<uint32_t*>(&TIM8->CCR1),
                         *TIM8, enable};
-    FastLoopConfig fast_loop = {pwm_frequency, motor_pwm, motor_encoder};
+    FastLoopConfig fast_loop = {pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR4)), .1};
@@ -45,11 +46,11 @@ static struct {
     USBCommunication<USB_OTG> communication = {SystemConfig::usb_};
     PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
     PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoopConfig main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, output_encoder, torque_sensor};
+    MainLoopConfig main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, output_encoder, torque_sensor, param->main_loop_param};
 } config_items;
 
 template<>
-ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop};
+ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 void system_init() {
     // if (config_items.motor_encoder.init()) {
@@ -57,7 +58,6 @@ void system_init() {
     // } else {
     //     SystemConfig::log("Motor encoder init failure");
     // }
-    SystemConfig::init();
 }
 
 #include "../motorlib/system.cpp"

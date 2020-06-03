@@ -1,10 +1,10 @@
-#include "../motorlib/param.h"
+#include "param_freebot_g474_col.h"
 #include "math.h"
 
 #define V_REF 3.0
 
 // Can be written by external methods, e.g. bootloader
-const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
+const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.pi_d.kp=10,
     .fast_loop_param.foc_param.pi_d.ki=0.6,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd
@@ -62,4 +62,9 @@ const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
     .startup_param.phase_lock_current = 1,
     .startup_param.phase_lock_duration = 2,
     .name = "J1",
+#ifdef PARAM_OVERRIDES
+    PARAM_OVERRIDES
+#endif
 };
+const volatile char * const name = param_store.name;
+const Param * const param = &param_store; // todo figure out a way to not inline without warning

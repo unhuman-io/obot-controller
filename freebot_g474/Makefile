@@ -74,7 +74,6 @@ $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd_ex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_usb.c \
-../motorlib/param.c \
 ./param_freebot_g474_col.c \
 
 CPP_SOURCES = \

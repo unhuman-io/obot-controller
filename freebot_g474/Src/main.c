@@ -24,7 +24,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "../../motorlib/system.h"
-#include "../../motorlib/param.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

@@ -1,8 +1,8 @@
-#include "../motorlib/param.h"
+#include "param_fabulab_f446.h"
 #include "math.h"
 
 // Can be written by external methods, e.g. bootloader
-const volatile Param initial_param = {
+const volatile Param param_store = {
     .fast_loop_param.foc_param.pi_d.kp=1,
     .fast_loop_param.foc_param.pi_d.ki=.1,
     .fast_loop_param.foc_param.pi_d.ki_limit=19,
@@ -43,3 +43,5 @@ const volatile Param initial_param = {
     .startup_param.phase_lock_duration = 2,
     .name = "J1",
 };
+const volatile char * const name = param_store.name;
+const Param * const param = &param_store; // todo figure out a way to not inline without warning

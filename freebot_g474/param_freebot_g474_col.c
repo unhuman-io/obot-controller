@@ -4,7 +4,7 @@
 #define V_REF 3.0
 
 // Can be written by external methods, e.g. bootloader
-const Param __attribute__ ((section ("flash_param"))) param = {
+const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.pi_d.kp=10,
     .fast_loop_param.foc_param.pi_d.ki=0.6,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd
@@ -66,4 +66,5 @@ const Param __attribute__ ((section ("flash_param"))) param = {
     PARAM_OVERRIDES
 #endif
 };
-const char * const name = param.name;
+const volatile char * const name = param_store.name;
+const Param * const param = &param_store; // todo figure out a way to not inline without warning

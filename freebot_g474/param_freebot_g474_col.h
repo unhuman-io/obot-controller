@@ -8,4 +8,4 @@ typedef struct {
     StartupParam startup_param;
 } Param;
 
-extern const Param param;
+extern const Param * const param;

@@ -2,6 +2,7 @@
 #define ST_DEVICE_H
 
 #include "stm32f446xx.h"
+#include "stm32f4xx_hal.h"
 #define CPU_FREQUENCY_HZ    180e6
 #define I_A_DR  ADC3->JDR1
 #define I_B_DR  ADC2->JDR1

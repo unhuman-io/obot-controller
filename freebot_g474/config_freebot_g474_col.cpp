@@ -31,12 +31,13 @@ template<>
 std::queue<std::string> SystemConfig ::log_queue_ = {};
 
 static struct {
+    SystemInitClass system_init; // first item to enable clocks, etc.
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOB, 4, GPIO::OUTPUT};
     MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
     //PhonyEncoder motor_encoder = {700};
-    GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
     SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs}; // need to make sure this doesn't collide with motor encoder

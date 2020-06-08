@@ -27,6 +27,7 @@ template<>
 std::queue<std::string> SystemConfig ::log_queue_ = {};
 
 static struct {
+    SystemInitClass system_init;
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     QEPEncoder motor_encoder = {*TIM5};

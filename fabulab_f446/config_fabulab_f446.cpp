@@ -26,6 +26,7 @@ template<>
 std::queue<std::string> SystemConfig ::log_queue_ = {};
 
 static struct {
+    SystemInitClass system_init;
     int32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_period);
     GPIO enable = {*GPIOC, 14, GPIO::OUTPUT};

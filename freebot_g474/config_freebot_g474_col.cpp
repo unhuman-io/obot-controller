@@ -35,12 +35,12 @@ static struct {
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOB, 4, GPIO::OUTPUT};
-    MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
+    MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs, 102};
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
     SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
-    MA732Encoder output_encoder = {*SPI3, output_encoder_cs}; // need to make sure this doesn't collide with motor encoder
+    MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3};
@@ -60,16 +60,16 @@ template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 void system_init() {
-    // if (config_items.motor_encoder.init()) {
-    //     SystemConfig::log("Motor encoder init success");
-    // } else {
-    //     SystemConfig::log("Motor encoder init failure");
-    // }
-    // if (config_items.output_encoder.init()) {
-    //     SystemConfig::log("Output encoder init success");
-    // } else {
-    //     SystemConfig::log("Output encoder init failure");
-    // }
+    if (config_items.motor_encoder.init()) {
+        SystemConfig::log("Motor encoder init success");
+    } else {
+        SystemConfig::log("Motor encoder init failure");
+    }
+    if (config_items.output_encoder.init()) {
+        SystemConfig::log("Output encoder init success");
+    } else {
+        SystemConfig::log("Output encoder init failure");
+    }
     config_items.torque_sensor.init();
 }
 

@@ -5,16 +5,16 @@
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
-    .fast_loop_param.foc_param.pi_d.kp=10,
-    .fast_loop_param.foc_param.pi_d.ki=0.6,
+    .fast_loop_param.foc_param.pi_d.kp=5,
+    .fast_loop_param.foc_param.pi_d.ki=0.3,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd
     // .fast_loop_param.foc_param.pi_d.ki=0.4,
-    .fast_loop_param.foc_param.pi_d.ki_limit=20,
-    .fast_loop_param.foc_param.pi_d.command_max=24,
-    .fast_loop_param.foc_param.pi_q.kp=10,
-    .fast_loop_param.foc_param.pi_q.ki=0.6,
-    .fast_loop_param.foc_param.pi_q.ki_limit=20,
-    .fast_loop_param.foc_param.pi_q.command_max=24,
+    .fast_loop_param.foc_param.pi_d.ki_limit=2,
+    .fast_loop_param.foc_param.pi_d.command_max=3,
+    .fast_loop_param.foc_param.pi_q.kp=5,
+    .fast_loop_param.foc_param.pi_q.ki=0.3,
+    .fast_loop_param.foc_param.pi_q.ki_limit=2,
+    .fast_loop_param.foc_param.pi_q.command_max=3,
     .fast_loop_param.foc_param.current_filter_frequency_hz=35000,
     .fast_loop_param.foc_param.num_poles = 7,
     .fast_loop_param.cogging.gain = 0,
@@ -27,7 +27,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc1_gain = V_REF/4096*(10000/3900.0),  // A/count
     .fast_loop_param.adc2_gain = V_REF/4096*(10000/3900.0),
     .fast_loop_param.adc3_gain = V_REF/4096*(10000/3900.0), 
-    .fast_loop_param.motor_encoder.dir = 1,
+    .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 65536*7,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,

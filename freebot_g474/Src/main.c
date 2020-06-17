@@ -681,7 +681,6 @@ static void MX_HRTIM1_Init(void)
   {
     Error_Handler();
   }
-  pSimpleOCChannelCfg.Mode = HRTIM_BASICOCMODE_INACTIVE;
   if (HAL_HRTIM_SimpleOCChannelConfig(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF1, &pSimpleOCChannelCfg) != HAL_OK)
   {
     Error_Handler();

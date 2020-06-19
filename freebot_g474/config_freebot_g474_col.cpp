@@ -17,6 +17,7 @@
 #include "../motorlib/phony_encoder.h"
 #include "Inc/main.h"
 #include "../motorlib/sensor_multiplex.h"
+#include <functional>
 
 //typedef SensorMultiplex<PhonyEncoder, PhonyEncoder> EncoderConfig;
 typedef SensorMultiplex<MA732Encoder, MA732Encoder> EncoderConfig;
@@ -29,6 +30,8 @@ template<>
 USB1 SystemConfig ::usb_ = {};
 template<>
 std::queue<std::string> SystemConfig ::log_queue_ = {};
+template<>
+ParameterAPI SystemConfig ::api = {};
 
 static struct {
     SystemInitClass system_init; // first item to enable clocks, etc.
@@ -70,6 +73,10 @@ void system_init() {
     } else {
         SystemConfig::log("Output encoder init failure");
     }
+    MA732Encoder::MA732reg filt;
+    filt.bits.address = 0xE;
+    std::function<MA732Encoder::MA732reg ()> get = [filt](){ return config_items.motor_encoder.get_register(filt); } ;
+   // // S ystemConfig::api.add_api_variable("menc_filt", new APICallback<MA732Encoder::MA732reg>(get, config_items.motor_encoder.set_register);
     config_items.torque_sensor.init();
 }
 

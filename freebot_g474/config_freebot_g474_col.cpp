@@ -16,8 +16,11 @@
 #include "../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "../motorlib/phony_encoder.h"
 #include "Inc/main.h"
+#include "../motorlib/sensor_multiplex.h"
 
-typedef FastLoop<HRPWM, MA732Encoder> FastLoopConfig;
+//typedef SensorMultiplex<PhonyEncoder, PhonyEncoder> EncoderConfig;
+typedef SensorMultiplex<MA732Encoder, MA732Encoder> EncoderConfig;
+typedef FastLoop<HRPWM, EncoderConfig> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
 typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
 typedef System<ActuatorConfig, USB1> SystemConfig;
@@ -28,26 +31,29 @@ template<>
 std::queue<std::string> SystemConfig ::log_queue_ = {};
 
 static struct {
+    SystemInitClass system_init; // first item to enable clocks, etc.
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOB, 4, GPIO::OUTPUT};
-    MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
-    GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs, 102};
+    //PhonyEncoder motor_encoder = {700};
+    GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
     SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
-    //MA732Encoder output_encoder = {*SPI3, output_encoder_cs}; // need to make sure this doesn't collide with motor encoder
-    PhonyEncoder output_encoder = {65536};
-    GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
+    MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153}; // need to make sure this doesn't collide with motor encoder
+    //PhonyEncoder output_encoder = {100};
+    //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3};
-    FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param};
+    EncoderConfig encoders = {motor_encoder, output_encoder};
+    FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, encoders, param->fast_loop_param};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3)),
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2))};
     PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
     PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
     PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
     USBCommunication<USB1> communication = {SystemConfig::usb_};
-    MainLoopConfig main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, output_encoder, torque_sensor, param->main_loop_param};
+    MainLoopConfig main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, encoders.secondary(), torque_sensor, param->main_loop_param};
 } config_items;
 
 template<>
@@ -58,6 +64,11 @@ void system_init() {
         SystemConfig::log("Motor encoder init success");
     } else {
         SystemConfig::log("Motor encoder init failure");
+    }
+    if (config_items.output_encoder.init()) {
+        SystemConfig::log("Output encoder init success");
+    } else {
+        SystemConfig::log("Output encoder init failure");
     }
     config_items.torque_sensor.init();
 }

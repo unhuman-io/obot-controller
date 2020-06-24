@@ -52,7 +52,7 @@ static struct {
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2))};
-    PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
+    PIDInterpolateController controller = {(float) (1.0/main_loop_frequency), 10};
     PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
     PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
     USBCommunication<USB1> communication = {SystemConfig::usb_};

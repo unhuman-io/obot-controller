@@ -75,8 +75,12 @@ void system_init() {
     }
     MA732Encoder::MA732reg filt;
     filt.bits.address = 0xE;
-    std::function<MA732Encoder::MA732reg ()> get = [filt](){ return config_items.motor_encoder.get_register(filt); } ;
-   // // S ystemConfig::api.add_api_variable("menc_filt", new APICallback<MA732Encoder::MA732reg>(get, config_items.motor_encoder.set_register);
+//     std::function<MA732Encoder::MA732reg ()> get = [filt](){ return config_items.motor_encoder.get_register(filt); } ;
+//    // // S ystemConfig::api.add_api_variable("menc_filt", new APICallback<MA732Encoder::MA732reg>(get, config_items.motor_encoder.set_register);
+    SystemConfig::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
+    SystemConfig::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
+    SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.torque_sensor.result0_;
+    SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.result1_;
     config_items.torque_sensor.init();
 }
 

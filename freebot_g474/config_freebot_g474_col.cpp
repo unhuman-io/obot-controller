@@ -75,9 +75,21 @@ void system_init() {
     }
 
     // TODO I don't know if these std::functions persist after this function, but they seem to work.
-    std::function<void(uint32_t)> setk = std::bind(&MA732Encoder::set_k, &config_items.motor_encoder, std::placeholders::_1);
-    std::function<uint32_t(void)> getk = std::bind(&MA732Encoder::get_k, &config_items.motor_encoder);
-    SystemConfig::api.add_api_variable("k", new APICallbackUint32(getk, setk));
+    std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
+    SystemConfig::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
+
+    std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
+    SystemConfig::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
+
+    std::function<void(uint32_t)> setbctj = std::bind(&MA732Encoder::set_bct, &config_items.output_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> getbctj = std::bind(&MA732Encoder::get_bct, &config_items.output_encoder);
+    SystemConfig::api.add_api_variable("jbct", new APICallbackUint32(getbctj, setbctj));
+
+    std::function<void(uint32_t)> set_etj = std::bind(&MA732Encoder::set_et, &config_items.output_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_etj = std::bind(&MA732Encoder::get_et, &config_items.output_encoder);
+    SystemConfig::api.add_api_variable("jet", new APICallbackUint32(get_etj, set_etj));
 
     SystemConfig::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
     SystemConfig::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));

@@ -73,10 +73,12 @@ void system_init() {
     } else {
         SystemConfig::log("Output encoder init failure");
     }
-    MA732Encoder::MA732reg filt;
-    filt.bits.address = 0xE;
-//     std::function<MA732Encoder::MA732reg ()> get = [filt](){ return config_items.motor_encoder.get_register(filt); } ;
-//    // // S ystemConfig::api.add_api_variable("menc_filt", new APICallback<MA732Encoder::MA732reg>(get, config_items.motor_encoder.set_register);
+
+    // TODO I don't know if these std::functions persist after this function, but they seem to work.
+    std::function<void(uint32_t)> setk = std::bind(&MA732Encoder::set_k, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> getk = std::bind(&MA732Encoder::get_k, &config_items.motor_encoder);
+    SystemConfig::api.add_api_variable("k", new APICallbackUint32(getk, setk));
+
     SystemConfig::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
     SystemConfig::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
     SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.torque_sensor.result0_;

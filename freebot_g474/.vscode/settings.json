@@ -4,6 +4,7 @@
         "STM32G474xx"
     ],
     "files.associations": {
-        "tuple": "cpp"
+        "tuple": "cpp",
+        "new": "cpp"
     },
 }

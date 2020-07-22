@@ -32,8 +32,6 @@ template<>
 std::queue<std::string> SystemConfig ::log_queue_ = {};
 template<>
 ParameterAPI SystemConfig ::api = {};
-template<>
-ParameterAPI SystemConfig ::api = {};
 
 static struct {
     SystemInitClass system_init; // first item to enable clocks, etc.
@@ -85,6 +83,10 @@ void system_init() {
     std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
     SystemConfig::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
 
+    std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
+    SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
+
     std::function<void(uint32_t)> setbctj = std::bind(&MA732Encoder::set_bct, &config_items.output_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> getbctj = std::bind(&MA732Encoder::get_bct, &config_items.output_encoder);
     SystemConfig::api.add_api_variable("jbct", new APICallbackUint32(getbctj, setbctj));
@@ -92,6 +94,10 @@ void system_init() {
     std::function<void(uint32_t)> set_etj = std::bind(&MA732Encoder::set_et, &config_items.output_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> get_etj = std::bind(&MA732Encoder::get_et, &config_items.output_encoder);
     SystemConfig::api.add_api_variable("jet", new APICallbackUint32(get_etj, set_etj));
+
+    std::function<void(uint32_t)> set_mgtj = std::bind(&MA732Encoder::set_mgt, &config_items.output_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_mgtj = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.output_encoder);
+    SystemConfig::api.add_api_variable("jmgt", new APICallbackUint32(get_mgtj, set_mgtj));
 
     SystemConfig::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
     SystemConfig::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));

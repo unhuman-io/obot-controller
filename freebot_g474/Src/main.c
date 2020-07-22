@@ -158,18 +158,6 @@ int main(void)
   OPAMP6->CSR |= OPAMP_CSR_OPAMPINTEN; // bug in cubemx
   HAL_OPAMP_Start(&hopamp6);
 
-  uint32_t deadtime = 68; // 10: 7.3 ns, 68: 50 ns
-  uint32_t deadprescale = 0; // 0: cpuhz/8
-  HRTIM1->sTimerxRegs[3].OUTxR |= HRTIM_OUTR_DTEN;
-  HRTIM1->sTimerxRegs[3].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
-  HRTIM1->sTimerxRegs[3].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
-  HRTIM1->sTimerxRegs[4].OUTxR |= HRTIM_OUTR_DTEN;
-  HRTIM1->sTimerxRegs[4].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
-  HRTIM1->sTimerxRegs[4].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
-  HRTIM1->sTimerxRegs[5].OUTxR |= HRTIM_OUTR_DTEN;
-  HRTIM1->sTimerxRegs[5].DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos) | (deadprescale << HRTIM_DTR_DTPRSC_Pos);
-  HRTIM1->sTimerxRegs[5].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU;
-  
   //HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_TESWU;
   HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN;
 

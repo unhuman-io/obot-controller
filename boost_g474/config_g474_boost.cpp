@@ -63,6 +63,7 @@ void system_init() {
     //     SystemConfig::log("Motor encoder init failure");
     // }
     config_items.torque_sensor.init();
+    config_items.motor_pwm.init();
 }
 
 #include "../motorlib/system.cpp"

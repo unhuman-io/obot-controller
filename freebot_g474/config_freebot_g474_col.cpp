@@ -43,7 +43,7 @@ static struct {
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3};
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false};
     EncoderConfig encoders = {motor_encoder, output_encoder};
     FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, encoders, param->fast_loop_param};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
@@ -71,6 +71,7 @@ void system_init() {
         SystemConfig::log("Output encoder init failure");
     }
     config_items.torque_sensor.init();
+    config_items.motor_pwm.init();
 }
 
 #include "../motorlib/system.cpp"

@@ -27,10 +27,10 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc1_gain = V_REF/4096*(10000/3900.0),  // A/count
     .fast_loop_param.adc2_gain = V_REF/4096*(10000/3900.0),
     .fast_loop_param.adc3_gain = V_REF/4096*(10000/3900.0), 
-    .fast_loop_param.motor_encoder.dir = -1,
+    .fast_loop_param.motor_encoder.dir = 1,
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 65536*7,
-    .fast_loop_param.motor_encoder.rollover = 65536*7*100,
+    .fast_loop_param.motor_encoder.rollover = 0,//65536*7*100,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = -22643,
     .main_loop_param.torque_bias = 0,
@@ -38,7 +38,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     //.main_loop_param.torque_sensor.gain = -30.7,
     //.main_loop_param.torque_sensor.bias = .029,
     .main_loop_param.torque_sensor.gain = 30.7,
-    .main_loop_param.torque_sensor.bias = .203,
+    .main_loop_param.torque_sensor.bias = -.053,
     .main_loop_param.torque_sensor.k_temp = 0,
     .main_loop_param.torque_sensor.filter_frequency_hz = 0,
     .fast_loop_param.vbus_gain = V_REF/4096*(18+2)/2.0,
@@ -55,12 +55,12 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.impedance_controller_param.kd = .01,
     .main_loop_param.impedance_controller_param.velocity_filter_frequency_hz = 500,
     .main_loop_param.impedance_controller_param.command_max = 2,
-    .main_loop_param.output_encoder.cpr = 65536,
+    .main_loop_param.output_encoder.cpr = -65536,
     .fast_loop_param.cogging.table = {
 //#include "cogprocessed.csv"
     },
     .startup_param.do_phase_lock = 1,
-    .startup_param.phase_lock_current = 1,
+    .startup_param.phase_lock_current = -1,
     .startup_param.phase_lock_duration = 1,
     .name = "J1",
 #ifdef PARAM_OVERRIDES

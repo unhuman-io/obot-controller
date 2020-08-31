@@ -56,6 +56,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.impedance_controller_param.velocity_filter_frequency_hz = 500,
     .main_loop_param.impedance_controller_param.command_max = 2,
     .main_loop_param.output_encoder.cpr = -65536,
+    .main_loop_param.host_timeout = 10000,
+    .main_loop_param.safe_mode = OPEN,
     .fast_loop_param.cogging.table = {
 //#include "cogprocessed.csv"
     },

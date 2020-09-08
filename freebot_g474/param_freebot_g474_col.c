@@ -30,6 +30,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 65536*7,
+    .fast_loop_param.motor_encoder.rollover = 65536*7*100,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = -22643,
     .main_loop_param.torque_bias = 0,
@@ -44,9 +45,9 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.controller_param.kp = 3,
     .main_loop_param.controller_param.kd = .01,
     .main_loop_param.controller_param.velocity_filter_frequency_hz = 0,
-    .main_loop_param.controller_param.command_max = 2,
-    .main_loop_param.torque_controller_param.kp = 20,
-    .main_loop_param.torque_controller_param.kd = 0,
+    .main_loop_param.controller_param.command_max = .5,
+    .main_loop_param.torque_controller_param.kp = 50,
+    .main_loop_param.torque_controller_param.kd = .1,
     .main_loop_param.torque_controller_param.velocity_filter_frequency_hz = 0,
     .main_loop_param.torque_controller_param.output_filter_frequency_hz = 0,
     .main_loop_param.torque_controller_param.command_max = 1,
@@ -60,11 +61,14 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     },
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = 1,
-    .startup_param.phase_lock_duration = 2,
+    .startup_param.phase_lock_duration = 1,
     .name = "J1",
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES
 #endif
 };
 const volatile char * const name = param_store.name;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
 const Param * const param = &param_store; // todo figure out a way to not inline without warning
+#pragma GCC diagnostic pop

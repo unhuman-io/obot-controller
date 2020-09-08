@@ -79,6 +79,7 @@ void system_init() {
     std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
     SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
+    config_items.motor_pwm.init();
 }
 
 #include "../motorlib/system.cpp"

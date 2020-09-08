@@ -1,0 +1,35 @@
+   /dev/mtr0        A1   206A3376484E                                 0.1.0  Jul 28 2020 11:05:42  1-7.1.1.2.6.1
+   /dev/mtr1        A6   2069339F484E                                 0.1.0  Jul 28 2020 11:05:42  1-7.1.1.2.6.2
+   /dev/mtr2        A5   206C3394484E                                 0.1.0  Jul 28 2020 11:05:42  1-7.1.1.2.6.3
+   /dev/mtr3        A3   206B3392484E                                 0.1.0  Jul 28 2020 11:05:42  1-7.1.1.2.6.4
+   /dev/mtr4        A4   206A3375484E                                 0.1.0  Jul 28 2020 11:05:42  1-7.1.1.2.6.5
+   /dev/mtr5        A2   206C339D484E                                 0.1.0  Jul 28 2020 11:05:42  1-7.1.1.2.6.6
+
+A1   206A3376484E
+A2   206C339D484E
+A3   206B3392484E
+A4   206A3375484E
+A5   206C3394484E
+A6   2069339F484E
+
+
+lee@lee-x1e:~/unhuman/bort2/freebot_g474$ od -N16 -f -j 0x80f4 param6/A1.bin 
+0100364            26.1        -0.27793               0               0
+0100404
+lee@lee-x1e:~/unhuman/bort2/freebot_g474$ od -N16 -f -j 0x80f4 param6/A2.bin 
+0100364              35          0.4301               0               0
+0100404
+lee@lee-x1e:~/unhuman/bort2/freebot_g474$ od -N16 -f -j 0x80f4 param6/A3.bin 
+0100364            26.8        -0.05452               0               0
+0100404
+lee@lee-x1e:~/unhuman/bort2/freebot_g474$ od -N16 -f -j 0x80f4 param6/A4.bin 
+0100364           19.82         0.13802               0               0
+0100404
+lee@lee-x1e:~/unhuman/bort2/freebot_g474$ od -N16 -f -j 0x80f4 param6/A5.bin 
+0100364            30.7           0.203               0               0
+0100404
+lee@lee-x1e:~/unhuman/bort2/freebot_g474$ od -N16 -f -j 0x80f4 param6/A6.bin 
+0100364            30.7           0.203               0               0
+0100404
+lee@lee-x1e:~/unhuman/bort2/freebot_g474$ od -N16 -f -j 0x80f4 build/param/col2.bin
+0100364            30.7           0.203               0               0

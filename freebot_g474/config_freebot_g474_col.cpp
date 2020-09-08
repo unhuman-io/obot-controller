@@ -47,13 +47,14 @@ static struct {
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3};
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false};
     EncoderConfig encoders = {motor_encoder, output_encoder};
     FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, encoders, param->fast_loop_param};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2))};
-    PIDInterpolateController controller = {(float) (1.0/main_loop_frequency), 10};
+    //PIDInterpolateController controller = {(float) (1.0/main_loop_frequency), 10};
+    PIDController controller = {(float) (1.0/main_loop_frequency)};
     PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
     PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
     USBCommunication<USB1> communication = {SystemConfig::usb_};
@@ -105,6 +106,7 @@ void system_init() {
     SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.torque_sensor.result0_;
     SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.result1_;
     config_items.torque_sensor.init();
+    config_items.motor_pwm.init();
 }
 
 #include "../motorlib/system.cpp"

@@ -15,8 +15,9 @@
 #include "../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "Inc/main.h"
 #include "param_g474_boost.h"
+#include "../motorlib/motor_torque_sensor.h"
 
-typedef FastLoop<HRPWM, QEPEncoder> FastLoopConfig;
+typedef FastLoop<HRPWM, MA732Encoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
 typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
 typedef System<ActuatorConfig, USB1> SystemConfig;
@@ -30,11 +31,12 @@ static struct {
     SystemInitClass system_init;
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
-    QEPEncoder motor_encoder = {*TIM5};
-    // GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    // MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
-    GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    SPITorque torque_sensor = {*SPI3, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
+    //QEPEncoder motor_encoder = {*TIM5};
+    GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
+    //GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    //SPITorque torque_sensor = {*SPI3, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
+    MotorTorqueSensor torque_sensor;
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
@@ -57,12 +59,12 @@ template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 void system_init() {
-    // if (config_items.motor_encoder.init()) {
-    //     SystemConfig::log("Motor encoder init success");
-    // } else {
-    //     SystemConfig::log("Motor encoder init failure");
-    // }
-    config_items.torque_sensor.init();
+    if (config_items.motor_encoder.init()) {
+        SystemConfig::log("Motor encoder init success");
+    } else {
+        SystemConfig::log("Motor encoder init failure");
+    }
+   // config_items.torque_sensor.init();
     config_items.motor_pwm.init();
 }
 

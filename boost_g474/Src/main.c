@@ -183,7 +183,7 @@ int main(void)
   HAL_OPAMP_Start(&hopamp6);
   HAL_Delay(100);
 
-  //SPI3->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
+  SPI3->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
   SPI3->CR1 |= SPI_CR1_SPE; 
   
   GPIOC->ODR |= GPIO_ODR_OD11; // drv enable

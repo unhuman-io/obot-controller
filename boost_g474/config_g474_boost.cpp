@@ -15,8 +15,10 @@
 #include "../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "Inc/main.h"
 #include "param_g474_boost.h"
+#include "../motorlib/motor_torque_sensor.h"
+#include <functional>
 
-typedef FastLoop<HRPWM, QEPEncoder> FastLoopConfig;
+typedef FastLoop<HRPWM, MA732Encoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
 typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
 typedef System<ActuatorConfig, USB1> SystemConfig;
@@ -25,16 +27,19 @@ template<>
 USB1 SystemConfig ::usb_ = {};
 template<>
 std::queue<std::string> SystemConfig ::log_queue_ = {};
+template<>
+ParameterAPI SystemConfig ::api = {};
 
 static struct {
     SystemInitClass system_init;
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
-    QEPEncoder motor_encoder = {*TIM5};
-    // GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    // MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
-    GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    SPITorque torque_sensor = {*SPI3, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
+    //QEPEncoder motor_encoder = {*TIM5};
+    GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
+    //GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    //SPITorque torque_sensor = {*SPI3, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
+    MotorTorqueSensor torque_sensor;
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
@@ -62,7 +67,18 @@ void system_init() {
     // } else {
     //     SystemConfig::log("Motor encoder init failure");
     // }
-    config_items.torque_sensor.init();
+    //config_items.torque_sensor.init();
+    std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
+    SystemConfig::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
+
+    std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
+    SystemConfig::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
+
+    std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
+    SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
     config_items.motor_pwm.init();
 }
 

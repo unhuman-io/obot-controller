@@ -24,6 +24,8 @@ template<>
 USB_OTG SystemConfig ::usb_ = {};
 template<>
 std::queue<std::string> SystemConfig ::log_queue_ = {};
+template<>
+ParameterAPI SystemConfig ::api = {};
 
 static struct {
     SystemInitClass system_init;

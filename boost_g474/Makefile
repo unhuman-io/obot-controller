@@ -73,7 +73,7 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_adc.c \
 Src/main.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
-./param_g474_boost_col.c \
+./param_g474_boost_alms.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 

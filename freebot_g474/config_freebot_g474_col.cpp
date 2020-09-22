@@ -18,6 +18,7 @@
 #include "Inc/main.h"
 #include "../motorlib/sensor_multiplex.h"
 #include <functional>
+#include "../motorlib/peripheral/stm32g4/max31875.h"
 
 //typedef SensorMultiplex<PhonyEncoder, PhonyEncoder> EncoderConfig;
 typedef SensorMultiplex<MA732Encoder, MA732Encoder> EncoderConfig;
@@ -47,6 +48,8 @@ static struct {
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
+    I2C i2c = {*I2C1};
+    MAX31875 temp_sensor = {i2c};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false};
     EncoderConfig encoders = {motor_encoder, output_encoder};
     FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, encoders, param->fast_loop_param};
@@ -103,6 +106,11 @@ void system_init() {
 
     SystemConfig::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
     SystemConfig::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
+
+    std::function<void(uint32_t)> set_temp = nullptr;
+    std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
+    SystemConfig::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
+
     SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.torque_sensor.result0_;
     SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.result1_;
     config_items.torque_sensor.init();

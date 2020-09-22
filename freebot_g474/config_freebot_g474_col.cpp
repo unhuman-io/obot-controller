@@ -111,10 +111,18 @@ void system_init() {
     std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
     SystemConfig::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
 
-    SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.torque_sensor.result0_;
+    SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
     SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.result1_;
     config_items.torque_sensor.init();
     config_items.motor_pwm.init();
+}
+
+FrequencyLimiter temp_rate = {8};
+
+void system_maintenance() {
+    if (temp_rate.run()) {
+        config_items.temp_sensor.read();
+    }
 }
 
 #include "../motorlib/system.cpp"

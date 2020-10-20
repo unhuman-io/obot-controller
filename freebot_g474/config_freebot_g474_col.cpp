@@ -18,6 +18,7 @@
 #include "Inc/main.h"
 #include "../motorlib/sensor_multiplex.h"
 #include <functional>
+#include "../motorlib/peripheral/stm32g4/max31875.h"
 
 //typedef SensorMultiplex<PhonyEncoder, PhonyEncoder> EncoderConfig;
 typedef SensorMultiplex<MA732Encoder, MA732Encoder> EncoderConfig;
@@ -42,11 +43,13 @@ static struct {
     MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs, 102, &spi3_register_operation};
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
-    SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
+    SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2, 4};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
+    I2C i2c = {*I2C1};
+    MAX31875 temp_sensor = {i2c};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false};
     EncoderConfig encoders = {motor_encoder, output_encoder};
     FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, encoders, param->fast_loop_param};
@@ -103,10 +106,23 @@ void system_init() {
 
     SystemConfig::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
     SystemConfig::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
-    SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.torque_sensor.result0_;
+
+    std::function<void(uint32_t)> set_temp = nullptr;
+    std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
+    SystemConfig::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
+
+    SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
     SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.result1_;
     config_items.torque_sensor.init();
     config_items.motor_pwm.init();
+}
+
+FrequencyLimiter temp_rate = {8};
+
+void system_maintenance() {
+    if (temp_rate.run()) {
+        config_items.temp_sensor.read();
+    }
 }
 
 #include "../motorlib/system.cpp"

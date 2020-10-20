@@ -19,7 +19,7 @@ $(shell touch version.h)
 TARGET = bort2
 
 CONFIG_FILE = config_g474_boost.cpp
-
+PARAM_FILE = param_g474_boost_alms.c 
 
 ######################################
 # building variables
@@ -73,7 +73,7 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_adc.c \
 Src/main.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
-./param_g474_boost_alms.c \
+./$(PARAM_FILE)\
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 

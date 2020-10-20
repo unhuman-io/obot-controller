@@ -62,12 +62,12 @@ template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 void system_init() {
-    // if (config_items.motor_encoder.init()) {
-    //     SystemConfig::log("Motor encoder init success");
-    // } else {
-    //     SystemConfig::log("Motor encoder init failure");
-    // }
-    //config_items.torque_sensor.init();
+    if (config_items.motor_encoder.init()) {
+        SystemConfig::log("Motor encoder init success");
+    } else {
+        SystemConfig::log("Motor encoder init failure");
+    }
+   // config_items.torque_sensor.init();
     std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
     SystemConfig::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
@@ -81,5 +81,7 @@ void system_init() {
     SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
     config_items.motor_pwm.init();
 }
+
+void system_maintenance() {}
 
 #include "../motorlib/system.cpp"

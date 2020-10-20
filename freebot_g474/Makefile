@@ -66,6 +66,8 @@ $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma_ex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr_ex.c \
+$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_i2c.c \
+$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_i2c_ex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_cortex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_hrtim.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c \

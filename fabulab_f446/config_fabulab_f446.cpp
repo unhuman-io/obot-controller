@@ -63,4 +63,6 @@ void system_init() {
     // }
 }
 
+void system_maintenance() {}
+
 #include "../motorlib/system.cpp"

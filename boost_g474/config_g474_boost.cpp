@@ -82,4 +82,6 @@ void system_init() {
     config_items.motor_pwm.init();
 }
 
+void system_maintenance() {}
+
 #include "../motorlib/system.cpp"

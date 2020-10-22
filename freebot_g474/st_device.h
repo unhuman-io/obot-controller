@@ -8,5 +8,9 @@
 #define I_B_DR  ADC4->JDR1
 #define I_C_DR  ADC3->JDR1
 #define V_BUS_DR ADC1->DR
+#define V_A_DR  ADC1->JDR1
+#define V_B_DR  ADC1->JDR2
+#define V_C_DR  ADC2->JDR3
+
 
 #endif

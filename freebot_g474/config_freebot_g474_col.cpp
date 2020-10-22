@@ -67,6 +67,23 @@ static struct {
 template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
+float get_va() {
+    ADC1->CR |= ADC_CR_JADSTART;
+    ns_delay(1000);
+    return V_A_DR * 3.0/4096*(18+2)/2.0;
+}
+float get_vb() {
+    ADC1->CR |= ADC_CR_JADSTART;
+    ns_delay(1000);
+    return V_A_DR * 3.0/4096*(18+2)/2.0;
+}
+float get_vc() {
+    ADC1->CR |= ADC_CR_JADSTART;
+    ns_delay(1000);
+    return V_A_DR * 3.0/4096*(18+2)/2.0;
+}
+void set_v(float f) {}
+
 void system_init() {
     if (config_items.motor_encoder.init()) {
         SystemConfig::log("Motor encoder init success");
@@ -111,8 +128,12 @@ void system_init() {
     std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
     SystemConfig::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
 
+    SystemConfig::api.add_api_variable("vam", new APICallback<float>(get_va, set_v));
+    SystemConfig::api.add_api_variable("vbm", new APICallback<float>(get_vb, set_v));
+    SystemConfig::api.add_api_variable("vcm", new APICallback<float>(get_vc, set_v));
+
     SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
-    SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.result1_;
+    SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;
     config_items.torque_sensor.init();
     config_items.motor_pwm.init();
 }

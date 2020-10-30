@@ -18,7 +18,7 @@ $(shell touch version.h)
 ######################################
 TARGET = bort2
 
-CONFIG_FILE = config_g474_boost.cpp
+CONFIG_FILE = config_g474_boost_weight.cpp
 PARAM_FILE = param_g474_boost_alms.c 
 
 ######################################

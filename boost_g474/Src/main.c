@@ -157,7 +157,7 @@ int main(void)
   MX_ADC3_Init();
   MX_TIM5_Init();
   MX_SPI1_Init();
-  MX_SPI3_Init();
+  //MX_SPI3_Init();
   MX_DMA_Init();
   MX_ADC4_Init();
   MX_ADC5_Init();
@@ -168,6 +168,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+  SPI3->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
   SPI3->CR1 |= SPI_CR1_SPE; // enable spi
   system_init();
 
@@ -966,11 +967,11 @@ static void MX_SPI3_Init(void)
   hspi3.Instance = SPI3;
   hspi3.Init.Mode = SPI_MODE_MASTER;
   hspi3.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi3.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi3.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi3.Init.NSS = SPI_NSS_SOFT;
-  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;

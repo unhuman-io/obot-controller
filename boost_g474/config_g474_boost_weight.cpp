@@ -58,7 +58,7 @@ struct InitCode {
         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN;
 
         // GPIO, moder 0xABFFFFFF
-        GPIOA->MODER = 0xABFF00FF | 2 << GPIO_MODER_MODE4_Pos | 2 << GPIO_MODER_MODE5_Pos | 2 << GPIO_MODER_MODE6_Pos | 2 << GPIO_MODER_MODE7_Pos;
+        GPIOA->MODER = 0xABFF00FC | 1 << GPIO_MODER_MODE0_Pos | 2 << GPIO_MODER_MODE4_Pos | 2 << GPIO_MODER_MODE5_Pos | 2 << GPIO_MODER_MODE6_Pos | 2 << GPIO_MODER_MODE7_Pos;
         GPIOA->OSPEEDR = 3 << GPIO_OSPEEDR_OSPEED4_Pos | 3 << GPIO_OSPEEDR_OSPEED5_Pos | 3 << GPIO_OSPEEDR_OSPEED6_Pos | 3 << GPIO_OSPEEDR_OSPEED7_Pos;
         GPIOA->AFR[0] = 5 << GPIO_AFRL_AFSEL4_Pos | 5 << GPIO_AFRL_AFSEL5_Pos | 5 << GPIO_AFRL_AFSEL6_Pos | 5 << GPIO_AFRL_AFSEL7_Pos;
         
@@ -74,6 +74,7 @@ struct InitCode {
         TIM2->CR1 = TIM_CR1_CEN;
 
         // SPI1 DRV8323RS
+        GPIOA->ODR |= GPIO_ODR_OD0;  // disable other spi cs
         GPIOC->ODR |= GPIO_ODR_OD11; // drv enable
         ms_delay(10);
 
@@ -96,6 +97,9 @@ struct InitCode {
             }
         }
         SPI1->CR1 = 0; // clear SPE
+        // SPI1 CS-> gpio
+        GPIOA->MODER = 0xABFF00FC | 1 << GPIO_MODER_MODE0_Pos | 1 << GPIO_MODER_MODE4_Pos | 2 << GPIO_MODER_MODE5_Pos | 2 << GPIO_MODER_MODE6_Pos | 2 << GPIO_MODER_MODE7_Pos;
+        GPIOA->ODR |= GPIO_ODR_OD4;
 
         // SPI1 ADS1235
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;
@@ -122,7 +126,7 @@ static struct {
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     //QEPEncoder motor_encoder = {*TIM5};
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    GPIO torque_sensor_cs = {*GPIOA, 0, GPIO::OUTPUT};
     SPIDMA spi_dma = {*SPI1, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
     ADS1235 torque_sensor = {spi_dma};
     //GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};

@@ -49,9 +49,10 @@ uint16_t drv_regs[] = {
   (6<<11) | 0x280, // csa_reg     0x280 -> bidirectional current, 20V/V
 };     
 
+volatile uint32_t * const cpu_clock = &TIM2->CNT;
 struct InitCode {
     InitCode() {
-        RCC->APB1ENR1 |= RCC_APB1ENR1_SPI3EN;
+        RCC->APB1ENR1 |= RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
         RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN;
@@ -68,6 +69,9 @@ struct InitCode {
 
         // bmoder 0xFFFFFFFF
         GPIOC->MODER = 0xFF3FFFFF | 1 << GPIO_MODER_MODE11_Pos;
+
+        // TIM2 cpu clock
+        TIM2->CR1 = TIM_CR1_CEN;
 
         // SPI1 DRV8323RS
         GPIOC->ODR |= GPIO_ODR_OD11; // drv enable
@@ -146,6 +150,11 @@ template<>
 ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 void system_init() {
+    if (drv_regs_error) {
+        SystemConfig::log("drv configure failure");
+    } else {
+        SystemConfig::log("drv configure success");
+    }
     // if (config_items.motor_encoder.init()) {
     //     SystemConfig::log("Motor encoder init success");
     // } else {

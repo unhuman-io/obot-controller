@@ -1,17 +1,10 @@
 #include "param_freebot_g474_col.h"
+#include "../motorlib/peripheral/usb.h"
 #include "../motorlib/usb_communication.h"
 #include "st_device.h"
-#include "../motorlib/system.h"
-#include "../motorlib/qep_encoder.h"
 #include "../motorlib/peripheral/stm32g4/hrpwm.h"
-#include "../motorlib/peripheral/spi_encoder.h"
-#include "../motorlib/peripheral/stm32g4/ams_encoder.h"
-#include "../motorlib/hall.h"
-#include "../motorlib/fast_loop.h"
-#include "../motorlib/main_loop.h"
+
 #include "../motorlib/led.h"
-#include "../motorlib/peripheral/usb.h"
-#include "../motorlib/actuator.h"
 #include "../motorlib/ma732_encoder.h"
 #include "../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "../motorlib/phony_encoder.h"
@@ -20,19 +13,32 @@
 #include <functional>
 #include "../motorlib/peripheral/stm32g4/max31875.h"
 
-//typedef SensorMultiplex<PhonyEncoder, PhonyEncoder> EncoderConfig;
-typedef SensorMultiplex<MA732Encoder, MA732Encoder> EncoderConfig;
-typedef FastLoop<HRPWM, EncoderConfig> FastLoopConfig;
-typedef MainLoop<FastLoopConfig> MainLoopConfig;
-typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
-typedef System<ActuatorConfig, USB1> SystemConfig;
+typedef SPITorque TorqueSensor;
+typedef HRPWM PWM;
+typedef SensorMultiplex<MA732Encoder, MA732Encoder> MotorEncoder;
+typedef MotorEncoder::SecondarySensor OutputEncoder;
+typedef USBCommunication Communication;
+#include "../motorlib/fast_loop.h"
+#include "../motorlib/main_loop.h"
+#include "../motorlib/actuator.h"
+#include "../motorlib/system.h"
 
-template<>
-USB1 SystemConfig ::usb_ = {};
-template<>
-std::queue<std::string> SystemConfig ::log_queue_ = {};
-template<>
-ParameterAPI SystemConfig ::api = {};
+USB1 usb1;
+Communication System::communication_ = {usb1};
+std::queue<std::string> System::log_queue_ = {};
+ParameterAPI System::api = {};
+
+#define I_A_DR  ADC5->JDR1
+#define I_B_DR  ADC4->JDR1
+#define I_C_DR  ADC3->JDR1
+#define V_BUS_DR ADC1->DR
+#define V_A_DR  ADC1->JDR1
+#define V_B_DR  ADC1->JDR2
+#define V_C_DR  ADC2->JDR3
+
+void usb_interrupt() {
+    usb1.interrupt();
+}
 
 volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 static struct {
@@ -52,8 +58,8 @@ static struct {
     I2C i2c = {*I2C1};
     MAX31875 temp_sensor = {i2c};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false};
-    EncoderConfig encoders = {motor_encoder, output_encoder};
-    FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, encoders, param->fast_loop_param};
+    MotorEncoder encoders = {motor_encoder, output_encoder};
+    FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, encoders, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2))};
@@ -61,12 +67,10 @@ static struct {
     PIDController controller = {(float) (1.0/main_loop_frequency)};
     PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
     PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    USBCommunication<USB1> communication = {SystemConfig::usb_};
-    MainLoopConfig main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, encoders.secondary(), torque_sensor, param->main_loop_param};
+    MainLoop main_loop = {fast_loop, controller, torque_controller, impedance_controller, System::communication_, led, encoders.secondary(), torque_sensor, param->main_loop_param};
 } config_items;
 
-template<>
-ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
+Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 float get_va() {
     ADC1->CR |= ADC_CR_JADSTART;
@@ -87,54 +91,54 @@ void set_v(float f) {}
 
 void system_init() {
     if (config_items.motor_encoder.init()) {
-        SystemConfig::log("Motor encoder init success");
+        System::log("Motor encoder init success");
     } else {
-        SystemConfig::log("Motor encoder init failure");
+        System::log("Motor encoder init failure");
     }
     if (config_items.output_encoder.init()) {
-        SystemConfig::log("Output encoder init success");
+        System::log("Output encoder init success");
     } else {
-        SystemConfig::log("Output encoder init failure");
+        System::log("Output encoder init failure");
     }
 
     // TODO I don't know if these std::functions persist after this function, but they seem to work.
     std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
-    SystemConfig::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
+    System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
 
     std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
-    SystemConfig::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
+    System::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
 
     std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
-    SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
+    System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 
     std::function<void(uint32_t)> setbctj = std::bind(&MA732Encoder::set_bct, &config_items.output_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> getbctj = std::bind(&MA732Encoder::get_bct, &config_items.output_encoder);
-    SystemConfig::api.add_api_variable("jbct", new APICallbackUint32(getbctj, setbctj));
+    System::api.add_api_variable("jbct", new APICallbackUint32(getbctj, setbctj));
 
     std::function<void(uint32_t)> set_etj = std::bind(&MA732Encoder::set_et, &config_items.output_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> get_etj = std::bind(&MA732Encoder::get_et, &config_items.output_encoder);
-    SystemConfig::api.add_api_variable("jet", new APICallbackUint32(get_etj, set_etj));
+    System::api.add_api_variable("jet", new APICallbackUint32(get_etj, set_etj));
 
     std::function<void(uint32_t)> set_mgtj = std::bind(&MA732Encoder::set_mgt, &config_items.output_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> get_mgtj = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.output_encoder);
-    SystemConfig::api.add_api_variable("jmgt", new APICallbackUint32(get_mgtj, set_mgtj));
+    System::api.add_api_variable("jmgt", new APICallbackUint32(get_mgtj, set_mgtj));
 
-    SystemConfig::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
-    SystemConfig::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
+    System::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
+    System::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
 
     std::function<void(uint32_t)> set_temp = nullptr;
     std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
-    SystemConfig::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
+    System::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
 
-    SystemConfig::api.add_api_variable("vam", new APICallbackFloat(get_va, set_v));
-    SystemConfig::api.add_api_variable("vbm", new APICallbackFloat(get_vb, set_v));
-    SystemConfig::api.add_api_variable("vcm", new APICallbackFloat(get_vc, set_v));
+    System::api.add_api_variable("vam", new APICallbackFloat(get_va, set_v));
+    System::api.add_api_variable("vbm", new APICallbackFloat(get_vb, set_v));
+    System::api.add_api_variable("vcm", new APICallbackFloat(get_vc, set_v));
 
-    SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
-    SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;
+    System::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
+    System::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;
     config_items.torque_sensor.init();
     config_items.motor_pwm.init();
 }

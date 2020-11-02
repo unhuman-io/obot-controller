@@ -144,7 +144,7 @@ static struct {
     EncoderBase output_encoder;
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4};
-    FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param};
+    FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &ADC5->JDR1, &ADC4->JDR1, &ADC3->JDR1, &ADC1->DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};

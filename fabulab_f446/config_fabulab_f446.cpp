@@ -27,6 +27,7 @@ std::queue<std::string> SystemConfig ::log_queue_ = {};
 template<>
 ParameterAPI SystemConfig ::api = {};
 
+volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 static struct {
     SystemInitClass system_init;
     int32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);

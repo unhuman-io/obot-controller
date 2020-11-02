@@ -18,7 +18,7 @@ and when pulling or checking out
 The current build system is `gcc` due to it being supported by STMCubeMX. The specific setup I've been using that works is the build of the `gcc` compiler available on the ARM website. This complier will have a prefix of `arm-none-eabi`, so for example `arm-none-eabi-gcc` should be on your path. Run make in a project folder to build. Then programming can be accomplished either through the built in bootloader or through a debugger connection, both described below.
 
 ## Motorlib
-Motorlib the core of the firmware. It is described the [motorlib readme file](motorlib/README.md).
+Motorlib the core of the firmware. It is described the motorlib readme file.
 
 ### Communication
 The assumed usage case for this software is multiple motor drivers that are connected to a central control host. The currently recommended communication system is USB to a linux host and there are custom drivers, utilities, and example code for this in the repositories usb_rt_driver and realtime-tmp. The host pc software is centrally linked in the adjacent `freebot` repository.

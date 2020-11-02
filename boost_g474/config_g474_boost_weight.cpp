@@ -20,7 +20,6 @@
 #include "../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../motorlib/ads1235.h"
-#include "../motorlib/peripheral/stm32g4/stm32g474xx_struct3.h"
 
 typedef FastLoop<HRPWM, MA732Encoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;

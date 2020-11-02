@@ -1,38 +1,33 @@
-#include "../motorlib/usb_communication.h"
-#include "st_device.h"
-#include "../motorlib/system.h"
-#include "../motorlib/qep_encoder.h"
-#include "../motorlib/peripheral/stm32g4/hrpwm.h"
-#include "../motorlib/peripheral/spi_encoder.h"
-#include "../motorlib/peripheral/stm32g4/ams_encoder.h"
-#include "../motorlib/hall.h"
-#include "../motorlib/fast_loop.h"
-#include "../motorlib/main_loop.h"
-#include "../motorlib/led.h"
 #include "../motorlib/peripheral/usb.h"
-#include "../motorlib/actuator.h"
+#include "../motorlib/usb_communication.h"
+typedef USBCommunication Communication;
+#include "st_device.h"
+
+//#include "../motorlib/qep_encoder.h"
+#include "../motorlib/peripheral/stm32g4/hrpwm.h"
+typedef HRPWM PWM;
+#include "../motorlib/led.h"
+
 #include "../motorlib/ma732_encoder.h"
+typedef MA732Encoder MotorEncoder;
 #include "../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "Inc/main.h"
 #include "param_g474_boost.h"
-#include "../motorlib/motor_torque_sensor.h"
-#include <functional>
-#include "../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../motorlib/ads1235.h"
+typedef ADS1235 TorqueSensor;
 
-typedef FastLoop<HRPWM, MA732Encoder> FastLoopConfig;
-typedef MainLoop<FastLoopConfig> MainLoopConfig;
-typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
-typedef System<ActuatorConfig, USB1> SystemConfig;
+typedef EncoderBase OutputEncoder;
+#include "../motorlib/fast_loop.h"
+#include "../motorlib/main_loop.h"
+#include "../motorlib/actuator.h"
+#include "../motorlib/system.h"
 
-template<>
-USB1 SystemConfig ::usb_ = {};
-template<>
-std::queue<std::string> SystemConfig ::log_queue_ = {};
-template<>
-ParameterAPI SystemConfig ::api = {};
+USB1 System::usb_ = {};
+std::queue<std::string> System::log_queue_ = {};
+ParameterAPI System::api = {};
 
+#include <functional>
 uint16_t drv_regs_error = 0;
 
 uint16_t drv_regs[] = {
@@ -147,29 +142,29 @@ static struct {
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
     MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
-    HallEncoder output_encoder = {hall_a, hall_b, hall_c};
+    EncoderBase output_encoder;
+    //HallEncoder output_encoder = {hall_a, hall_b, hall_c};
     //AMSEncoder motor_encoder = {*SPI3, motor_encoder_cs};
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4};
-    FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param};
+    FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
     PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
     PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
     PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    USBCommunication<USB1> communication = {SystemConfig::usb_};
-    MainLoopConfig main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, output_encoder, torque_sensor, param->main_loop_param};
+    USBCommunication communication = {System::usb_};
+    MainLoop main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, output_encoder, torque_sensor, param->main_loop_param};
 } config_items;
 
-template<>
-ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
+Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 void system_init() {
     if (drv_regs_error) {
-        SystemConfig::log("drv configure failure");
+        System::log("drv configure failure");
     } else {
-        SystemConfig::log("drv configure success");
+        System::log("drv configure success");
     }
     // if (config_items.motor_encoder.init()) {
     //     SystemConfig::log("Motor encoder init success");

@@ -20,6 +20,7 @@
 #include "../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../motorlib/ads1235.h"
+#include "../motorlib/peripheral/stm32g4/stm32g474xx_struct3.h"
 
 typedef FastLoop<HRPWM, MA732Encoder> FastLoopConfig;
 typedef MainLoop<FastLoopConfig> MainLoopConfig;
@@ -49,33 +50,45 @@ uint16_t drv_regs[] = {
   (6<<11) | 0x280, // csa_reg     0x280 -> bidirectional current, 20V/V
 };     
 
+#define MASK_SET(var, item, val) var = (var & ~item##_Msk) | (val << item##_Pos)
+#define GPIO_SETL(gpio, pin, mode, speed, af) \
+    MASK_SET(GPIO##gpio->MODER, GPIO_MODER_MODE##pin, mode); \
+    MASK_SET(GPIO##gpio->OSPEEDR, GPIO_OSPEEDR_OSPEED##pin, speed); \
+    MASK_SET(GPIO##gpio->AFR[0], GPIO_AFRL_AFSEL##pin, af)
+
+#define GPIO_SETH(gpio, pin, mode, speed, af) \
+    MASK_SET(GPIO##gpio->MODER, GPIO_MODER_MODE##pin, mode); \
+    MASK_SET(GPIO##gpio->OSPEEDR, GPIO_OSPEEDR_OSPEED##pin, speed); \
+    MASK_SET(GPIO##gpio->AFR[1], GPIO_AFRH_AFSEL##pin, af)
+
 volatile uint32_t * const cpu_clock = &TIM2->CNT;
 struct InitCode {
     InitCode() {
-        RCC->APB1ENR1 |= RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN;
+        // Peripheral clock enable
+        RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
         RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN;
 
-        // GPIO, moder 0xABFFFFFF
-        GPIOA->MODER = 0xABFF00FC | 1 << GPIO_MODER_MODE0_Pos | 2 << GPIO_MODER_MODE4_Pos | 2 << GPIO_MODER_MODE5_Pos | 2 << GPIO_MODER_MODE6_Pos | 2 << GPIO_MODER_MODE7_Pos;
-        GPIOA->OSPEEDR = 3 << GPIO_OSPEEDR_OSPEED4_Pos | 3 << GPIO_OSPEEDR_OSPEED5_Pos | 3 << GPIO_OSPEEDR_OSPEED6_Pos | 3 << GPIO_OSPEEDR_OSPEED7_Pos;
-        GPIOA->AFR[0] = 5 << GPIO_AFRL_AFSEL4_Pos | 5 << GPIO_AFRL_AFSEL5_Pos | 5 << GPIO_AFRL_AFSEL6_Pos | 5 << GPIO_AFRL_AFSEL7_Pos;
-        
-        // bmoder 0xFFFFFEBF
-        GPIOB->MODER = 0xFFFFF03F | 2 << GPIO_MODER_MODE3_Pos | 2 << GPIO_MODER_MODE4_Pos | 2 << GPIO_MODER_MODE5_Pos;
-        GPIOB->OSPEEDR = 3 << GPIO_OSPEEDR_OSPEED3_Pos | 3 << GPIO_OSPEEDR_OSPEED4_Pos | 3 << GPIO_OSPEEDR_OSPEED4_Pos;
-        GPIOB->AFR[0] = 6 << GPIO_AFRL_AFSEL3_Pos | 6 << GPIO_AFRL_AFSEL4_Pos | 6 << GPIO_AFRL_AFSEL5_Pos;
+        // GPIO configure
+        GPIO_SETL(A, 1, 1, 3, 0);   // SPI1 CS on QEPA pin
+        GPIO_SETL(A, 4, 2, 3, 5);   // SPI1 CS on boostxl J4-18
+        GPIO_SETL(A, 5, 2, 3, 5);   // SPI1 CLK on boostxl J3-13
+        GPIO_SETL(A, 6, 2, 3, 5);   // SPI1 DDO (Device Data Out) on boostxl J4-14
+        GPIO_SETL(A, 7, 2, 3, 5);   // SPI1 DDI (Device Data In) on boostxl J4-12
+     
+        GPIO_SETL(B, 3, 2, 3, 6);   // SPI3 CLK
+        GPIO_SETL(B, 4, 2, 3, 6);   // SPI3 DDO
+        GPIO_SETL(B, 5, 2, 3, 6);   // SPI3 DDI 
 
-        // bmoder 0xFFFFFFFF
-        GPIOC->MODER = 0xFF3FFFFF | 1 << GPIO_MODER_MODE11_Pos;
+        GPIO_SETH(C, 11, 1, 0, 0);  // Boostxl enable
 
         // TIM2 cpu clock
         TIM2->CR1 = TIM_CR1_CEN;
 
         // SPI1 DRV8323RS
-        GPIOA->ODR |= GPIO_ODR_OD0;  // disable other spi cs
-        GPIOC->ODR |= GPIO_ODR_OD11; // drv enable
+        GPIOA->BSRR = GPIO_ODR_OD0;  // disable other spi cs
+        GPIOC->BSRR = GPIO_ODR_OD11; // drv enable
         ms_delay(10);
 
         SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
@@ -98,8 +111,8 @@ struct InitCode {
         }
         SPI1->CR1 = 0; // clear SPE
         // SPI1 CS-> gpio
-        GPIOA->MODER = 0xABFF00FC | 1 << GPIO_MODER_MODE0_Pos | 1 << GPIO_MODER_MODE4_Pos | 2 << GPIO_MODER_MODE5_Pos | 2 << GPIO_MODER_MODE6_Pos | 2 << GPIO_MODER_MODE7_Pos;
-        GPIOA->ODR |= GPIO_ODR_OD4;
+        GPIO_SETL(A, 4, 1, 0, 0);
+        GPIOA->BSRR = GPIO_ODR_OD4;
 
         // SPI1 ADS1235
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;

@@ -34,6 +34,7 @@ std::queue<std::string> SystemConfig ::log_queue_ = {};
 template<>
 ParameterAPI SystemConfig ::api = {};
 
+volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 static struct {
     SystemInitClass system_init; // first item to enable clocks, etc.
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
@@ -128,9 +129,9 @@ void system_init() {
     std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
     SystemConfig::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
 
-    SystemConfig::api.add_api_variable("vam", new APICallback<float>(get_va, set_v));
-    SystemConfig::api.add_api_variable("vbm", new APICallback<float>(get_vb, set_v));
-    SystemConfig::api.add_api_variable("vcm", new APICallback<float>(get_vc, set_v));
+    SystemConfig::api.add_api_variable("vam", new APICallbackFloat(get_va, set_v));
+    SystemConfig::api.add_api_variable("vbm", new APICallbackFloat(get_vb, set_v));
+    SystemConfig::api.add_api_variable("vcm", new APICallbackFloat(get_vc, set_v));
 
     SystemConfig::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
     SystemConfig::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;

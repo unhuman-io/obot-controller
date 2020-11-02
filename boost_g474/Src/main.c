@@ -100,21 +100,7 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint16_t drv_regs_error = 0;
-
-uint16_t drv_regs[] = {
-  (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
-  //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
-  (3<<11) | 0x333, // hs_reg      0x3CC, moderate drive current
-  //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
-                                // moderate drive current (.57,1.14A)
-  (4<<11) | 0x2AA, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
-                                // moderate drive current (.57,1.14A)
-  (5<<11) | 0x020,  // ocp_reg     0x20 -> 50 ns dead time, 
-                              //latched ocp, 4 us ocp deglitch, 0.06 Vds thresh
-  //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
-  (6<<11) | 0x280, // csa_reg     0x280 -> bidirectional current, 20V/V
-};         
+    
 
 /* USER CODE END 0 */
 
@@ -155,9 +141,9 @@ int main(void)
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_ADC3_Init();
-  MX_TIM5_Init();
-  MX_SPI1_Init();
-  MX_SPI3_Init();
+  //MX_TIM5_Init();
+  //MX_SPI1_Init();
+  //MX_SPI3_Init();
   MX_DMA_Init();
   MX_ADC4_Init();
   MX_ADC5_Init();
@@ -168,7 +154,8 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-  SPI3->CR1 |= SPI_CR1_SPE; // enable spi
+  //SPI3->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
+  //SPI3->CR1 |= SPI_CR1_SPE; // enable spi
   system_init();
 
   HAL_ADC_Start(&hadc1);
@@ -186,19 +173,7 @@ int main(void)
   //SPI3->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
   SPI3->CR1 |= SPI_CR1_SPE; 
   
-  GPIOC->ODR |= GPIO_ODR_OD11; // drv enable
-  HAL_Delay(10);
 
-  for (uint8_t i=0; i<sizeof(drv_regs)/sizeof(uint16_t); i++) {
-    uint16_t reg_out = drv_regs[i];
-    uint16_t reg_in = 0;
-    HAL_SPI_TransmitReceive(&hspi1, (uint8_t *) &reg_out, (uint8_t *) &reg_in, 1, 10);
-     reg_out |= (1<<15); // switch to read mode
-     HAL_SPI_TransmitReceive(&hspi1, (uint8_t *) &reg_out, (uint8_t *) &reg_in, 1, 10);
-    if ((reg_in & 0x7FF) != (reg_out & 0x7FF)) {
-      drv_regs_error |= 1 << i;
-    }
-  }
   // uint32_t deadtime = 10;
   // uint32_t deadprescale = 0;
   // HRTIM1->sTimerxRegs[3].OUTxR |= HRTIM_OUTR_DTEN;
@@ -966,11 +941,11 @@ static void MX_SPI3_Init(void)
   hspi3.Instance = SPI3;
   hspi3.Init.Mode = SPI_MODE_MASTER;
   hspi3.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi3.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi3.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi3.Init.NSS = SPI_NSS_SOFT;
-  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;

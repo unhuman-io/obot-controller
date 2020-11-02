@@ -67,7 +67,7 @@ struct InitCode {
         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN;
 
         // GPIO configure
-        GPIO_SETL(A, 1, 1, 3, 0);   // SPI1 CS on QEPA pin
+        GPIO_SETL(A, 0, 1, 3, 0);   // SPI1 CS on QEPA pin
         GPIO_SETL(A, 4, 2, 3, 5);   // SPI1 CS on boostxl J4-18
         GPIO_SETL(A, 5, 2, 3, 5);   // SPI1 CLK on boostxl J3-13
         GPIO_SETL(A, 6, 2, 3, 5);   // SPI1 DDO (Device Data Out) on boostxl J4-14

@@ -1,3 +1,4 @@
+#include "../motorlib/system_log.h"
 #include "../motorlib/peripheral/usb.h"
 #include "../motorlib/usb_communication.h"
 #include "st_device.h"

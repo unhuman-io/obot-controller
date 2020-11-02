@@ -1,31 +1,33 @@
 #include "../motorlib/peripheral/usb.h"
 #include "../motorlib/usb_communication.h"
-typedef USBCommunication Communication;
 #include "st_device.h"
-
-//#include "../motorlib/qep_encoder.h"
 #include "../motorlib/peripheral/stm32g4/hrpwm.h"
-typedef HRPWM PWM;
 #include "../motorlib/led.h"
-
 #include "../motorlib/ma732_encoder.h"
-typedef MA732Encoder MotorEncoder;
 #include "../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "Inc/main.h"
 #include "param_g474_boost.h"
 #include "../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../motorlib/ads1235.h"
-typedef ADS1235 TorqueSensor;
 
+typedef ADS1235 TorqueSensor;
+typedef HRPWM PWM;
 typedef EncoderBase OutputEncoder;
+typedef MA732Encoder MotorEncoder;
+typedef USBCommunication Communication;
 #include "../motorlib/fast_loop.h"
 #include "../motorlib/main_loop.h"
 #include "../motorlib/actuator.h"
 #include "../motorlib/system.h"
 
-USB1 System::usb_ = {};
+USB1 usb1;
+Communication System::communication_ = {usb1};
 std::queue<std::string> System::log_queue_ = {};
 ParameterAPI System::api = {};
+
+void usb_interrupt() {
+    usb1.interrupt();
+}
 
 #include <functional>
 uint16_t drv_regs_error = 0;
@@ -131,20 +133,15 @@ static struct {
     InitCode init_code;
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
-    //QEPEncoder motor_encoder = {*TIM5};
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     GPIO torque_sensor_cs = {*GPIOA, 0, GPIO::OUTPUT};
     SPIDMA spi_dma = {*SPI1, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
     ADS1235 torque_sensor = {spi_dma};
-    //GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    //SPITorque torque_sensor = {*SPI3, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
     MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
     EncoderBase output_encoder;
-    //HallEncoder output_encoder = {hall_a, hall_b, hall_c};
-    //AMSEncoder motor_encoder = {*SPI3, motor_encoder_cs};
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4};
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param};
@@ -154,8 +151,7 @@ static struct {
     PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
     PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
     PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    USBCommunication communication = {System::usb_};
-    MainLoop main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, output_encoder, torque_sensor, param->main_loop_param};
+    MainLoop main_loop = {fast_loop, controller, torque_controller, impedance_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
 } config_items;
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};

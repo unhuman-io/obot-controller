@@ -31,10 +31,15 @@ PARAM_FILE = param_g474_boost_$(PARAM).c
 # building variables
 ######################################
 # debug build?
-DEBUG = 1
+#DEBUG = 1
 # optimization
+ifdef DEBUG
+OPT = -Og -O1
+else
 OPT = -Og -O3
 LTO = -flto
+endif
+
 
 
 #######################################
@@ -169,9 +174,9 @@ ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffuncti
 
 CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
 
-ifeq ($(DEBUG), 1)
+#ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
-endif
+#endif
 
 
 # Generate dependency information

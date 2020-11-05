@@ -12,6 +12,10 @@ typedef USB_OTG USB1;
 #include "../motorlib/motor_torque_sensor.h"
 #include "param_fabulab_f446.h"
 
+#include "../motorlib/controller/position_controller.h"
+#include "../motorlib/controller/torque_controller.h"
+#include "../motorlib/controller/impedance_controller.h"
+#include "../motorlib/controller/velocity_controller.h"
 typedef MotorTorqueSensor TorqueSensor;
 typedef PWM_EN PWM;
 typedef EncoderBase OutputEncoder;
@@ -55,10 +59,11 @@ static struct {
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR4)), .1};
-    PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
-    PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
-    PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoop main_loop = {fast_loop, controller, torque_controller, impedance_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
+    PositionController position_controller = {(float) (1.0/main_loop_frequency)};
+    TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
+    ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
+    VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
 } config_items;
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};

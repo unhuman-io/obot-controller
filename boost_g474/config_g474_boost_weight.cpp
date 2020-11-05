@@ -168,23 +168,24 @@ void system_init() {
     } else {
         System::log("drv configure success");
     }
-    // if (config_items.motor_encoder.init()) {
-    //     SystemConfig::log("Motor encoder init success");
-    // } else {
-    //     SystemConfig::log("Motor encoder init failure");
-    // }
+    config_items.motor_pwm.init();
+    if (config_items.motor_encoder.init()) {
+        System::log("Motor encoder init success");
+    } else {
+        System::log("Motor encoder init failure");
+    }
     config_items.torque_sensor.init();
-    // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
+    std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
+    System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
 
-    // std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
+    std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
+    System::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
 
-    // std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
+    std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
+    System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 }
 
 void system_maintenance() {}

@@ -1,0 +1,3 @@
+[submodule "motorlib"]
+	path = motorlib
+	url = ../motorlib.git

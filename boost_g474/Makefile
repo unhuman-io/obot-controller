@@ -16,7 +16,7 @@ $(shell touch version.h)
 ######################################
 # target
 ######################################
-TARGET = bort2
+
 
 CONFIG=weight
 CONFIG_FILE = config_g474_boost_$(CONFIG).cpp
@@ -27,6 +27,7 @@ PARAM=$(CONFIG)
 endif
 PARAM_FILE = param_g474_boost_$(PARAM).c 
 
+TARGET = $(CONFIG)
 ######################################
 # building variables
 ######################################

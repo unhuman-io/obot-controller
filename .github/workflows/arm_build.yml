@@ -22,7 +22,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: boost_g474.elf
-        path: boost_g474/build/bort2.elf
+        path: boost_g474/build/weight.elf
     - name: Archive production artifacts2
       uses: actions/upload-artifact@v1
       with:

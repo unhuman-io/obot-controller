@@ -228,7 +228,8 @@ $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
 	
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
+	$(BIN) $< $@
+	dfu-suffix -p 0x100 -v 0x3293 -a $@	
 	
 $(BUILD_DIR):
 	mkdir $@		

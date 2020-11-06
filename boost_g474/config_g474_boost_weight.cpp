@@ -162,6 +162,45 @@ static struct {
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
+
+uint32_t get_drv_status() {
+        // pause main loop (due to overlap with torque sensor)
+        TIM1->CR1 &= ~TIM_CR1_CEN;
+        GPIO_SETL(A, 4, 2, 3, 5); 
+        SPI1->CR1 = 0; // clear SPE
+        SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
+        // ORDER DEPENDANCE SPE set last
+        SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
+
+        SPI1->DR = 1<<15; // fault status 1
+        while(!(SPI1->SR & SPI_SR_RXNE));
+        uint32_t reg_in = SPI1->DR;
+
+        SPI1->DR = (1<<15) | (1<<11); // vgs status2
+        while(!(SPI1->SR & SPI_SR_RXNE));
+        reg_in |= SPI1->DR << 16;
+
+        SPI1->CR1 = 0; // clear SPE
+        // SPI1 CS-> gpio
+        GPIO_SETL(A, 4, 1, 0, 0);
+        GPIOA->BSRR = GPIO_ODR_OD4;
+
+        // SPI1 ADS1235
+        SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
+        SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH | SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;    // 8 bit   
+
+        // reenable main loop
+        TIM1->CR1 = TIM_CR1_CEN;
+        return reg_in;
+}
+
+void drv_reset(uint32_t blah) {
+    GPIOC->BSRR = GPIO_BSRR_BR11; // drv enable
+    ms_delay(10);
+    GPIOC->BSRR = GPIO_BSRR_BS11; // drv enable
+    ms_delay(10);
+}
+
 void system_init() {
     if (drv_regs_error) {
         System::log("drv configure failure");
@@ -186,6 +225,8 @@ void system_init() {
     std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
     std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
     System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
+
+    System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
 }
 
 void system_maintenance() {}

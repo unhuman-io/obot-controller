@@ -7,7 +7,7 @@
         {
             "name": "Cortex Debug",
             "cwd": "${workspaceFolder}",
-            "executable": "./build/bort2.elf",
+            "executable": "./build/weight.elf",
             "request": "launch",
             "type": "cortex-debug",
             "device": "STM32G474RE",

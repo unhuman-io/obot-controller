@@ -6,6 +6,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: install dfu-suffix
+      run: sudo apt-get install -y dfu-util
     - uses: actions/checkout@master
       with:
         submodules: true

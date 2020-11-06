@@ -16,7 +16,7 @@ $(shell touch version.h)
 ######################################
 # target
 ######################################
-TARGET = bort2
+
 
 CONFIG=weight
 CONFIG_FILE = config_g474_boost_$(CONFIG).cpp
@@ -27,6 +27,7 @@ PARAM=$(CONFIG)
 endif
 PARAM_FILE = param_g474_boost_$(PARAM).c 
 
+TARGET = $(CONFIG)
 ######################################
 # building variables
 ######################################
@@ -227,7 +228,8 @@ $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
 	
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
+	$(BIN) $< $@
+	dfu-suffix -p 0x100 -v 0x3293 -a $@	
 	
 $(BUILD_DIR):
 	mkdir $@		

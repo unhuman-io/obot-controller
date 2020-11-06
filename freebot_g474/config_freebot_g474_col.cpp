@@ -13,6 +13,10 @@
 #include <functional>
 #include "../motorlib/peripheral/stm32g4/max31875.h"
 
+#include "../motorlib/controller/position_controller.h"
+#include "../motorlib/controller/torque_controller.h"
+#include "../motorlib/controller/impedance_controller.h"
+#include "../motorlib/controller/velocity_controller.h"
 typedef SPITorque TorqueSensor;
 typedef HRPWM PWM;
 typedef SensorMultiplex<MA732Encoder, MA732Encoder> MotorEncoder;
@@ -63,11 +67,11 @@ static struct {
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2))};
-    //PIDInterpolateController controller = {(float) (1.0/main_loop_frequency), 10};
-    PIDController controller = {(float) (1.0/main_loop_frequency)};
-    PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
-    PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoop main_loop = {fast_loop, controller, torque_controller, impedance_controller, System::communication_, led, encoders.secondary(), torque_sensor, param->main_loop_param};
+    PositionController position_controller = {(float) (1.0/main_loop_frequency)};
+    TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
+    ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
+    VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, encoders.secondary(), torque_sensor, param->main_loop_param};
 } config_items;
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};

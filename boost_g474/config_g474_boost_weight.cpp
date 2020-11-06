@@ -11,6 +11,10 @@
 #include "../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../motorlib/ads1235.h"
 
+#include "../motorlib/controller/position_controller.h"
+#include "../motorlib/controller/torque_controller.h"
+#include "../motorlib/controller/impedance_controller.h"
+#include "../motorlib/controller/velocity_controller.h"
 typedef ADS1235 TorqueSensor;
 typedef HRPWM PWM;
 typedef EncoderBase OutputEncoder;
@@ -118,7 +122,7 @@ struct InitCode {
         SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
 
         // SPI3 MA732
-        SPI3->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
+        SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
         SPI3->CR2 = (15 << SPI_CR2_DS_Pos);    // 16 bit 
 
         // SPI3 ADS1235
@@ -149,10 +153,11 @@ static struct {
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
-    PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
-    PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
-    PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoop main_loop = {fast_loop, controller, torque_controller, impedance_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
+    PositionController position_controller = {(float) (1.0/main_loop_frequency)};
+    TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
+    ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
+    VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
 } config_items;
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
@@ -163,23 +168,24 @@ void system_init() {
     } else {
         System::log("drv configure success");
     }
-    // if (config_items.motor_encoder.init()) {
-    //     SystemConfig::log("Motor encoder init success");
-    // } else {
-    //     SystemConfig::log("Motor encoder init failure");
-    // }
+    config_items.motor_pwm.init();
+    if (config_items.motor_encoder.init()) {
+        System::log("Motor encoder init success");
+    } else {
+        System::log("Motor encoder init failure");
+    }
     config_items.torque_sensor.init();
-    // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
+    std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
+    System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
 
-    // std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
+    std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
+    System::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
 
-    // std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
+    std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
+    std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
+    System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 }
 
 void system_maintenance() {}

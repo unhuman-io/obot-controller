@@ -13,32 +13,33 @@ jobs:
         submodules: true
     - name: arm-none-eabi-gcc
       timeout-minutes: 10
-      uses: fiam/arm-none-eabi-gcc@v1
+      uses: fiam/arm-none-eabi-gcc@master
       with:
-        release: '9-2019-q4'
-    - name: make
+        release: '9-2020-q2'
+    - name: make boost
       run: make -C boost_g474
-    - name: make2
+    - name: make fabulab
       run: make -C fabulab_f446
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: boost_g474.elf
-        path: boost_g474/build/weight.elf
-    - name: Archive production artifacts2
-      uses: actions/upload-artifact@v1
-      with:
-        name: fabulab_f446.elf
-        path: fabulab_f446/build/fabulab_f446.elf
-    - name: make3
+    - name: make freebot
       run: make -C freebot_g474
-    - name: Archive production artifacts3
+    - name: Archive freebot
       uses: actions/upload-artifact@v1
       with:
-        name: freebot_g474.elf
-        path: freebot_g474/build/freebot_g474.elf
-    - name: Archive production artifacts4
+        name: freebot_g474
+        path: |
+          freebot_g474/build/freebot_g474.elf
+          freebot_g474/build/freebot_g474.bin
+    - name: Archive boost
       uses: actions/upload-artifact@v1
       with:
-        name: freebot_g474.bin
-        path: freebot_g474/build/freebot_g474.bin
+        name: boost_weight
+        path: |
+          boost_g474/build/weight.elf
+          boost_g474/build/weight.tgz
+    - name: Archive fabulab
+      uses: actions/upload-artifact@v1
+      with:
+        name: fabulab_f446
+        path: |
+          fabulab_f446/build/fabulab_f446.elf
+          fabulab_f446/build/fabulab_f446.bin

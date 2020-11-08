@@ -23,21 +23,21 @@ jobs:
     - name: make freebot
       run: make -C freebot_g474
     - name: Archive freebot
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: freebot_g474
         path: |
           freebot_g474/build/freebot_g474.elf
           freebot_g474/build/freebot_g474.bin
     - name: Archive boost
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: boost_weight
         path: |
           boost_g474/build/weight.elf
           boost_g474/build/weight.tgz
     - name: Archive fabulab
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: fabulab_f446
         path: |

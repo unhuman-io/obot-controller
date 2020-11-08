@@ -201,6 +201,16 @@ void drv_reset(uint32_t blah) {
     ms_delay(10);
 }
 
+// float get_vd() {
+//     FOC::Vdq0 vdq0;
+//     FOC::calculate_vdq0(&vdq0, config_items.main_loop.status_.fast_loop.foc_status.measured.cos,
+//         config_items.main_loop.status_.fast_loop.foc_status.measured.sin,
+//         get_vam(),
+//         get_vbm(),
+//         get_vcm());
+//     return vdq0.vd;
+// }
+
 void system_init() {
     if (drv_regs_error) {
         System::log("drv configure failure");
@@ -228,7 +238,7 @@ void system_init() {
 
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
     config_items.main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.measured.i_d);
-    config_items.main_loop.reserved2_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.measured.i_0);
+    config_items.main_loop.reserved2_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_command.measured.i_a);
 }
 
 void system_maintenance() {}

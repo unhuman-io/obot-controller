@@ -44,9 +44,95 @@ void usb_interrupt() {
     usb1.interrupt();
 }
 
+#define MASK_SET(var, item, val) var = (var & ~item##_Msk) | (val << item##_Pos)
+#define GPIO_SETL(gpio, pin, mode, speed, af) \
+    MASK_SET(GPIO##gpio->MODER, GPIO_MODER_MODE##pin, mode); \
+    MASK_SET(GPIO##gpio->OSPEEDR, GPIO_OSPEEDR_OSPEED##pin, speed); \
+    MASK_SET(GPIO##gpio->AFR[0], GPIO_AFRL_AFSEL##pin, af)
+
+#define GPIO_SETH(gpio, pin, mode, speed, af) \
+    MASK_SET(GPIO##gpio->MODER, GPIO_MODER_MODE##pin, mode); \
+    MASK_SET(GPIO##gpio->OSPEEDR, GPIO_OSPEEDR_OSPEED##pin, speed); \
+    MASK_SET(GPIO##gpio->AFR[1], GPIO_AFRH_AFSEL##pin, af)
+
+#define GPIO_MODE_IN    0
+#define GPIO_MODE_OUT   1
+#define GPIO_MODE_AF    2
+#define GPIO_MODE_ANL   3
+#define GPIO_SPEED_SLOW 0
+#define GPIO_SPEED_FAST 3
+
+struct InitCode {
+    InitCode() {
+        // Peripheral clock enable
+        RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_I2C1EN;
+        RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+        RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
+        RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN;
+        
+        // GPIO configure
+        GPIO_SETH(C, 13, GPIO_MODE_OUT, GPIO_SPEED_SLOW, 0); // drv_en, only low speed
+        GPIO_SETH(C, 14, GPIO_MODE_IN, GPIO_SPEED_SLOW, 0);  // drv_fault, only low speed
+
+        GPIO_SETL(C, 0, GPIO_MODE_ANL, GPIO_SPEED_FAST, 0); // v_a
+        GPIO_SETL(C, 1, GPIO_MODE_ANL, GPIO_SPEED_FAST, 0); // v_b
+        GPIO_SETL(C, 2, GPIO_MODE_ANL, GPIO_SPEED_FAST, 0); // v_c
+        GPIO_SETL(C, 3, GPIO_MODE_ANL, GPIO_SPEED_FAST, 0); // i_bus
+
+        GPIO_SETL(A, 0, GPIO_MODE_AF, GPIO_SPEED_FAST, 1);   // QEPA pin TIM2_CH1
+        GPIO_SETL(A, 1, GPIO_MODE_AF, GPIO_SPEED_FAST, 1);   // QEPB pin TIM2_CH2
+        GPIO_SETL(A, 2, GPIO_MODE_AF, GPIO_SPEED_FAST, 1);   // QEPI pin TIM2_CH1
+        GPIO_SETL(A, 3, GPIO_MODE_ANL, GPIO_SPEED_FAST, 0);   // vbus
+        GPIO_SETL(A, 4, GPIO_MODE_AF, GPIO_SPEED_FAST, 5);   // SPI1 CS on boostxl J4-18
+        GPIO_SETL(A, 5, GPIO_MODE_AF, GPIO_SPEED_FAST, 5);   // SPI1 CLK on boostxl J3-13
+        GPIO_SETL(A, 6, GPIO_MODE_AF, GPIO_SPEED_FAST, 5);   // SPI1 DDO (Device Data Out) on boostxl J4-14
+        GPIO_SETL(A, 7, GPIO_MODE_AF, GPIO_SPEED_FAST, 5);   // SPI1 DDI (Device Data In) on boostxl J4-12
+
+        GPIO_SETH(B, 11, GPIO_MODE_ANL, GPIO_SPEED_FAST, 0);    // i_c
+        GPIO_SETH(B, 12, GPIO_MODE_ANL, GPIO_SPEED_FAST, 0);    // i_b
+        GPIO_SETH(B, 13, GPIO_MODE_ANL, GPIO_SPEED_FAST, 0);    // i_a
+        GPIO_SETH(B, 14, GPIO_MODE_AF, GPIO_SPEED_FAST, 13);    // pwm a, hrtim1 chd1
+        GPIO_SETH(B, 15, GPIO_MODE_AF, GPIO_SPEED_FAST, 13);    // pwm al, hrtim1 chd2
+        GPIO_SETL(C, 6, GPIO_MODE_AF, GPIO_SPEED_FAST, 13);    // pwm b, hrtim1 chf1
+        GPIO_SETL(C, 7, GPIO_MODE_AF, GPIO_SPEED_FAST, 13);    // pwm bl, hrtim1 chf2
+        GPIO_SETH(C, 8, GPIO_MODE_AF, GPIO_SPEED_FAST, 3);    // pwm c, hrtim1 che1
+        GPIO_SETH(C, 9, GPIO_MODE_AF, GPIO_SPEED_FAST, 3);    // pwm cl, hrtim1 che2
+
+        GPIO_SETH(A, 10, GPIO_MODE_IN, GPIO_SPEED_FAST, 0);   // usb dm exti input
+        //GPIO_SETH(A, 11)    // usb dm
+        //GPIO_SETH(A, 12)    // usb dp
+
+        GPIO_SETH(A, 15, GPIO_MODE_AF, GPIO_SPEED_FAST, 4);     // i2c1 scl
+        GPIO_SETH(C, 10, GPIO_MODE_AF, GPIO_SPEED_FAST, 6);     // spi3 clk
+        GPIO_SETH(C, 11, GPIO_MODE_AF, GPIO_SPEED_FAST, 6);     // spi3 hodi    host out device in
+        GPIO_SETH(C, 12, GPIO_MODE_AF, GPIO_SPEED_FAST, 6);     // spi3 hido
+        GPIO_SETL(D, 2, GPIO_MODE_OUT, GPIO_SPEED_FAST, 0);     // spi3 cs1
+        GPIO_SETL(B, 4, GPIO_MODE_OUT, GPIO_SPEED_FAST, 0);     // spi3 cs2
+        GPIO_SETL(B, 5, GPIO_MODE_OUT, GPIO_SPEED_FAST, 0);     // spi3 cs3
+        GPIO_SETL(B, 6, GPIO_MODE_AF, GPIO_SPEED_FAST, 2);      // led_r tim4_ch1
+        GPIO_SETL(B, 7, GPIO_MODE_AF, GPIO_SPEED_FAST, 2);      // led_g tim4_ch2
+        GPIO_SETH(B, 8, GPIO_MODE_AF, GPIO_SPEED_FAST, 2);      // led_b tim4_ch3
+        GPIO_SETH(B, 9, GPIO_MODE_AF, GPIO_SPEED_FAST, 4);      // i2c1 sda
+
+        // drv enable
+        GPIOC->BSRR = GPIO_BSRR_BS13;
+
+        // SPI1 torque sensor
+        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;
+        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI1_RX;
+        SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
+        SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH | SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;    // 8 bit   
+
+        // SPI3 MA732
+        SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
+        SPI3->CR2 = (15 << SPI_CR2_DS_Pos);    // 16 bit 
+    }
+};
+
 volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 static struct {
     SystemInitClass system_init; // first item to enable clocks, etc.
+    InitCode init_code;
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOB, 4, GPIO::OUTPUT};

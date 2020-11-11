@@ -138,8 +138,8 @@ int main(void)
   MX_OPAMP3_Init();
   MX_OPAMP4_Init();
   MX_OPAMP6_Init();
-  MX_SPI1_Init();
-  MX_SPI3_Init();
+  //MX_SPI1_Init();
+  //MX_SPI3_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();

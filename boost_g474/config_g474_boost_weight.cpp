@@ -47,8 +47,9 @@ uint16_t drv_regs[] = {
                                 // moderate drive current (.57,1.14A)
   (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
                               //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
-  (6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
-  //(6<<11) | 0x280, // csa_reg     0x280 -> bidirectional current, 20V/V
+  //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
+  //(6<<11) | 0x280,
+  (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
 };     
 
 #define MASK_SET(var, item, val) var = (var & ~item##_Msk) | (val << item##_Pos)

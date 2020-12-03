@@ -261,14 +261,14 @@ void USB_LP_IRQHandler(void)
 void TIM1_UP_TIM16_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
-  scope2_GPIO_Port->BSRR |= scope2_Pin; 
+  //scope2_GPIO_Port->BSRR |= scope2_Pin; 
   INTERRUPT_PROFILE_START;
   main_loop_interrupt();
   /* USER CODE END TIM1_UP_TIM16_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 1 */
   INTERRUPT_PROFILE_END(mainloop);
-  scope2_GPIO_Port->BSRR |= scope2_Pin << 16; 
+  //scope2_GPIO_Port->BSRR |= scope2_Pin << 16; 
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
 }
 
@@ -278,7 +278,7 @@ void TIM1_UP_TIM16_IRQHandler(void)
 void ADC5_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC5_IRQn 0 */
-  scope1_GPIO_Port->BSRR |= scope1_Pin; 
+  //scope1_GPIO_Port->BSRR |= scope1_Pin; 
   INTERRUPT_PROFILE_START;
   fast_loop_interrupt();
 #if 0
@@ -288,7 +288,7 @@ void ADC5_IRQHandler(void)
 #endif
   hadc5.Instance->ISR = ADC_ISR_JEOC;
   INTERRUPT_PROFILE_END(fastloop)
-  scope1_GPIO_Port->BSRR |= scope1_Pin << 16; 
+  //scope1_GPIO_Port->BSRR |= scope1_Pin << 16; 
   /* USER CODE END ADC5_IRQn 1 */
 }
 

@@ -60,7 +60,11 @@ static struct {
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     I2C i2c = {*I2C1};
-    MAX31875 temp_sensor = {i2c};
+    I2C i2c2 = {*I2C2};
+    MAX31875 temp_sensor = {i2c, 0x48};        // R0
+    MAX31875 temp_sensor1 = {i2c2, 0x48};      // R0
+    MAX31875 temp_sensor2 = {i2c2, 0x49};      // R1
+    MAX31875 temp_sensor3 = {i2c2, 0x4A};      // R2
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false};
     MotorEncoder encoders = {motor_encoder, output_encoder};
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, encoders, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
@@ -92,6 +96,8 @@ float get_vc() {
     return V_A_DR * 3.0/4096*(18+2)/2.0;
 }
 void set_v(float f) {}
+
+volatile float T1=0, T2=0, T3=0;
 
 void system_init() {
     if (config_items.motor_encoder.init()) {
@@ -137,6 +143,10 @@ void system_init() {
     std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
     System::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
 
+    System::api.add_api_variable("T1", new APIFloat((float*) &T1));
+    System::api.add_api_variable("T2", new APIFloat((float*) &T2));
+    System::api.add_api_variable("T3", new APIFloat((float*) &T3));
+
     System::api.add_api_variable("vam", new APICallbackFloat(get_va, set_v));
     System::api.add_api_variable("vbm", new APICallbackFloat(get_vb, set_v));
     System::api.add_api_variable("vcm", new APICallbackFloat(get_vc, set_v));
@@ -152,6 +162,9 @@ FrequencyLimiter temp_rate = {8};
 void system_maintenance() {
     if (temp_rate.run()) {
         config_items.temp_sensor.read();
+        T1 = config_items.temp_sensor1.read();
+        T2 = config_items.temp_sensor2.read();
+        T3 = config_items.temp_sensor3.read();
     }
 }
 

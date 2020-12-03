@@ -196,7 +196,7 @@ LIBDIR =
 LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections $(LTO) -u _printf_float
 
 # default action: build all
-all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).tgz
 
 
 #######################################
@@ -230,6 +230,13 @@ $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(BIN) $< $@
 	dfu-suffix -p 0x100 -v 0x3293 -a $@	
+	$(BIN) $< --remove-section flash_param $(@:.bin=_noparam.bin)
+	dfu-suffix -p 0x100 -v 0x3293 -a $(@:.bin=_noparam.bin)
+	$(BIN) $< --only-section flash_param $(@:.bin=_param_only.bin)
+	dfu-suffix -p 0x100 -v 0x3293 -a $(@:.bin=_param_only.bin)
+
+include ../motorlib/scripts/firmware_installer.mk
+
 	
 $(BUILD_DIR):
 	mkdir $@		

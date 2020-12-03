@@ -40,15 +40,16 @@ uint16_t drv_regs_error = 0;
 uint16_t drv_regs[] = {
   (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
   //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
-  (3<<11) | 0x333, // hs_reg      0x3CC, moderate drive current
+  (3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
   //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
                                 // moderate drive current (.57,1.14A)
-  (4<<11) | 0x2AA, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
+  (4<<11) | 0x3AA, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
                                 // moderate drive current (.57,1.14A)
-  (5<<11) | 0x020,  // ocp_reg     0x20 -> 50 ns dead time, 
-                              //latched ocp, 4 us ocp deglitch, 0.06 Vds thresh
+  (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
+                              //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
   //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
-  (6<<11) | 0x280, // csa_reg     0x280 -> bidirectional current, 20V/V
+  //(6<<11) | 0x280,
+  (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
 };     
 
 #define MASK_SET(var, item, val) var = (var & ~item##_Msk) | (val << item##_Pos)
@@ -148,7 +149,7 @@ static struct {
     MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
     EncoderBase output_encoder;
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4};
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200};
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &ADC5->JDR1, &ADC4->JDR1, &ADC3->JDR1, &ADC1->DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
@@ -201,6 +202,16 @@ void drv_reset(uint32_t blah) {
     ms_delay(10);
 }
 
+// float get_vd() {
+//     FOC::Vdq0 vdq0;
+//     FOC::calculate_vdq0(&vdq0, config_items.main_loop.status_.fast_loop.foc_status.measured.cos,
+//         config_items.main_loop.status_.fast_loop.foc_status.measured.sin,
+//         get_vam(),
+//         get_vbm(),
+//         get_vcm());
+//     return vdq0.vd;
+// }
+
 void system_init() {
     if (drv_regs_error) {
         System::log("drv configure failure");
@@ -227,6 +238,8 @@ void system_init() {
     System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
+    config_items.main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.measured.i_d);
+    config_items.main_loop.reserved2_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_command.measured.i_a);
 }
 
 void system_maintenance() {}

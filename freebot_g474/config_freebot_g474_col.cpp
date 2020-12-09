@@ -139,6 +139,10 @@ void system_init() {
     System::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
     System::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
 
+    std::function<void(uint32_t)> set_t_reset = std::bind(&SPITorque::reset, &config_items.torque_sensor, std::placeholders::_1);
+    std::function<uint32_t(void)> get_t_reset = std::bind(&SPITorque::reset2, &config_items.torque_sensor);
+    System::api.add_api_variable("t_reset", new APICallbackUint32(get_t_reset, set_t_reset));
+
     std::function<void(uint32_t)> set_temp = nullptr;
     std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
     System::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));

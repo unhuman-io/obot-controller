@@ -207,6 +207,7 @@ void system_init() {
  
 
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
+    System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
 }
 
 void system_maintenance() {}

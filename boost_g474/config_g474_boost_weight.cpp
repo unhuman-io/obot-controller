@@ -132,7 +132,7 @@ struct InitCode {
         //SPI3 ADS1235
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
-        SPI3->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/32
+        SPI3->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
         SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
     }
 };
@@ -143,7 +143,7 @@ static struct {
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    GPIO torque_sensor_cs = {*GPIOA, 0, GPIO::OUTPUT};
+    GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
     SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
     ADS1235 torque_sensor = {spi_dma};
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
@@ -228,7 +228,7 @@ void system_init() {
     // } else {
     //     System::log("Motor encoder init failure");
     // }
-    // config_items.torque_sensor.init();
+    config_items.torque_sensor.init();
     // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
     // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
     // System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));

@@ -27,7 +27,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc3_gain = -3.26/4096/(.007*10), 
     .fast_loop_param.motor_encoder.dir = 1,
     .fast_loop_param.phase_mode = 1,
-    .fast_loop_param.motor_encoder.cpr = 65536*7,//4096*7,
+    .fast_loop_param.motor_encoder.cpr = 40000,//65536*7,//4096*7,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = 49546,
     .main_loop_param.output_encoder.cpr = 1,
@@ -68,7 +68,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = 5,
     .startup_param.phase_lock_duration = 2,
-    .name = "J1",
+    .name = "weight1",
 };
 const volatile char * const name = param_store.name;
 const Param * const param = &param_store; // todo figure out a way to not inline without warning

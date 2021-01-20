@@ -168,6 +168,7 @@ static struct {
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 
+// return (fault status register 2 << 16) | (fault status register 1) 
 uint32_t get_drv_status() {
         // pause main loop (due to overlap with torque sensor)
         TIM1->CR1 &= ~TIM_CR1_CEN;
@@ -243,8 +244,8 @@ void system_init() {
 
     System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
-    config_items.main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.measured.i_d);
-    config_items.main_loop.reserved2_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_command.measured.i_a);
+    config_items.main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.command.v_d);
+    config_items.main_loop.reserved2_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.command.v_q);
 }
 
 void system_maintenance() {}

@@ -12,6 +12,8 @@
 #include "../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../motorlib/motor_torque_sensor.h"
 
+#include "../motorlib/qep_encoder.h"
+
 #include "../motorlib/controller/position_controller.h"
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
@@ -20,6 +22,7 @@ typedef MotorTorqueSensor TorqueSensor;
 typedef HRPWM PWM;
 typedef EncoderBase OutputEncoder;
 typedef ICPZ MotorEncoder;
+//typedef QEPEncoder MotorEncoder;
 typedef USBCommunication Communication;
 #include "../motorlib/fast_loop.h"
 #include "../motorlib/main_loop.h"
@@ -147,7 +150,7 @@ static struct {
     GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
     SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
     //ADS1235 torque_sensor = {spi_dma};
-    //SPIDebug spi_debug = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
+    SPIDebug spi_debug = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
     ICPZ motor_encoder = {spi_dma};
     MotorTorqueSensor torque_sensor;
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
@@ -221,13 +224,15 @@ void drv_reset(uint32_t blah) {
 //     return vdq0.vd;
 // 
 
-// std::string val;
-// void set_spi_debug(std::string s) {
-//     val = config_items.spi_debug.read(s);
-// }
-// std::string get_spi_debug() {
-//     return val;
-// }
+std::string val;
+void set_spi_debug(std::string s) {
+    config_items.motor_encoder.set_register_operation();
+    val = config_items.spi_debug.read(s);
+    config_items.motor_encoder.clear_register_operation();
+}
+std::string get_spi_debug() {
+    return val;
+}
 
 void system_init() {
     if (drv_regs_error) {
@@ -242,8 +247,13 @@ void system_init() {
     //     System::log("Motor encoder init failure");
     // }
     config_items.torque_sensor.init();
-    //config_items.spi_debug.init();
-    config_items.motor_encoder.init();
+    config_items.spi_debug.init();
+
+    // if (config_items.motor_encoder.init()) {
+    //     System::log("icpz configure success");
+    // } else {
+    //     System::log("icpz configure failure");
+    // }
     // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
     // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
     // System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
@@ -257,7 +267,7 @@ void system_init() {
     // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 
 
-    //System::api.add_api_variable("spi", new APICallback<std::string>(get_spi_debug, set_spi_debug));
+    System::api.add_api_variable("spi", new APICallback<std::string>(get_spi_debug, set_spi_debug));
 
     System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));

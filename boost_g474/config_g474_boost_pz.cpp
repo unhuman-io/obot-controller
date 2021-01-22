@@ -249,11 +249,11 @@ void system_init() {
     config_items.torque_sensor.init();
     config_items.spi_debug.init();
 
-    // if (config_items.motor_encoder.init()) {
-    //     System::log("icpz configure success");
-    // } else {
-    //     System::log("icpz configure failure");
-    // }
+    if (config_items.motor_encoder.init()) {
+        System::log("icpz configure success");
+    } else {
+        System::log("icpz configure failure");
+    }
     // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
     // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
     // System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));

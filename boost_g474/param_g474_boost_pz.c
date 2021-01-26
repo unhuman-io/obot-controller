@@ -3,17 +3,17 @@
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
-    .fast_loop_param.foc_param.pi_d.kp=.8,
-    .fast_loop_param.foc_param.pi_d.ki=0.1,
+    .fast_loop_param.foc_param.pi_d.kp=5,
+    .fast_loop_param.foc_param.pi_d.ki=0.2,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd
     // .fast_loop_param.foc_param.pi_d.ki=0.4,
     .fast_loop_param.foc_param.pi_d.ki_limit=8,
     .fast_loop_param.foc_param.pi_d.command_max=10,
-    .fast_loop_param.foc_param.pi_q.kp=.8,
-    .fast_loop_param.foc_param.pi_q.ki=0.1,
+    .fast_loop_param.foc_param.pi_q.kp=5,
+    .fast_loop_param.foc_param.pi_q.ki=0.2,
     .fast_loop_param.foc_param.pi_q.ki_limit=8,
     .fast_loop_param.foc_param.pi_q.command_max=10,
-    .fast_loop_param.foc_param.current_filter_frequency_hz=0,
+    .fast_loop_param.foc_param.current_filter_frequency_hz=20000,
     .fast_loop_param.foc_param.num_poles = 15,
     .fast_loop_param.cogging.gain = 0,
     .main_loop_param.gear_ratio = 50,
@@ -42,8 +42,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.torque_sensor.filter_frequency_hz = 1000,
     .fast_loop_param.vbus_gain = 3.26/4096*(82.+4.99)/4.99,
     .main_loop_param.position_controller_param.position.kp = 200,
-    .main_loop_param.position_controller_param.position.kd = 2,
-    .main_loop_param.position_controller_param.position.velocity_filter_frequency_hz = 10000,
+    .main_loop_param.position_controller_param.position.kd = 4,
+    .main_loop_param.position_controller_param.position.velocity_filter_frequency_hz = 400,
     .main_loop_param.position_controller_param.position.command_max = 5,
     .main_loop_param.torque_controller_param.torque.kp = 10,
     .main_loop_param.torque_controller_param.torque.kd = 0,
@@ -60,8 +60,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.impedance_controller_param.torque.output_filter_frequency_hz = 0,
     .main_loop_param.impedance_controller_param.torque.command_max = 3,
     .main_loop_param.velocity_controller_param.position.kp = 200,
-    .main_loop_param.velocity_controller_param.position.kd = 2,
-    .main_loop_param.velocity_controller_param.position.velocity_filter_frequency_hz = 10000,
+    .main_loop_param.velocity_controller_param.position.kd = 4,
+    .main_loop_param.velocity_controller_param.position.velocity_filter_frequency_hz = 400,
     .main_loop_param.velocity_controller_param.position.command_max = 5,
     .fast_loop_param.cogging.table = {
 #include "cogprocessed.csv"

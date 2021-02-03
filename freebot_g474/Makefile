@@ -21,8 +21,12 @@ $(shell touch version.h)
 
 PARAM_DIR = params_freebot_g474_col
 
-export
+CONFIG=col
+CONFIG_FILE = config_freebot_g474_$(CONFIG).cpp
+PARAM=$(CONFIG)
+PARAM_FILE = param_freebot_g474_$(PARAM).c 
 
+TARGET = $(CONFIG)
 
 ######################################
 # building variables
@@ -80,7 +84,7 @@ $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd_ex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_usb.c \
-./param_freebot_g474_col.c \
+./$(PARAM_FILE) \
 
 CPP_SOURCES = \
 ../motorlib/control_fun.cpp\
@@ -188,7 +192,7 @@ LIBDIR =
 LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
 
 # default action: build all
-all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin $(PARAM_DIR)
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).tgz $(PARAM_DIR)
 
 #######################################
 # build the application
@@ -218,8 +222,7 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
 	
-$(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
+include ../motorlib/scripts/firmware_installer.mk
 	
 $(BUILD_DIR):
 	mkdir $@		

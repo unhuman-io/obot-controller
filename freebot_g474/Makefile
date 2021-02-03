@@ -28,6 +28,9 @@ PARAM_FILE = param_freebot_g474_$(PARAM).c
 
 TARGET = $(CONFIG)
 
+# for submake
+export
+
 ######################################
 # building variables
 ######################################

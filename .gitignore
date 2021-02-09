@@ -4,3 +4,5 @@ build/
 
 .vscode/settings.json
 *.pyc
+
+boost_g474/.vscode/

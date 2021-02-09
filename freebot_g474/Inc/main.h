@@ -101,10 +101,6 @@ void Error_Handler(void);
 #define pwm_a_GPIO_Port GPIOC
 #define pwm_al_Pin GPIO_PIN_9
 #define pwm_al_GPIO_Port GPIOC
-#define scope2_Pin GPIO_PIN_8
-#define scope2_GPIO_Port GPIOA
-#define scope1_Pin GPIO_PIN_9
-#define scope1_GPIO_Port GPIOA
 #define spi3cs1_Pin GPIO_PIN_2
 #define spi3cs1_GPIO_Port GPIOD
 #define spi3cs2_Pin GPIO_PIN_4

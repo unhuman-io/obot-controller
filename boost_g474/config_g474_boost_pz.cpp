@@ -4,21 +4,25 @@
 #include "st_device.h"
 #include "../motorlib/peripheral/stm32g4/hrpwm.h"
 #include "../motorlib/led.h"
-#include "../motorlib/qep_encoder.h"
+#include "../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../motorlib/icpz.h"
 #include "../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "Inc/main.h"
 #include "param_g474_boost.h"
-#include "../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../motorlib/ads1235.h"
+#include "../motorlib/peripheral/stm32g4/spi_debug.h"
+#include "../motorlib/motor_torque_sensor.h"
+
+#include "../motorlib/qep_encoder.h"
 
 #include "../motorlib/controller/position_controller.h"
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
-typedef ADS1235 TorqueSensor;
+typedef MotorTorqueSensor TorqueSensor;
 typedef HRPWM PWM;
 typedef EncoderBase OutputEncoder;
-typedef QEPEncoder MotorEncoder;
+typedef ICPZ MotorEncoder;
+//typedef QEPEncoder MotorEncoder;
 typedef USBCommunication Communication;
 #include "../motorlib/fast_loop.h"
 #include "../motorlib/main_loop.h"
@@ -129,10 +133,10 @@ struct InitCode {
         // SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
         // SPI3->CR2 = (15 << SPI_CR2_DS_Pos);    // 16 bit 
 
-        //SPI3 ADS1235
+        //SPI3 PZ
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
-        SPI3->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
+        SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16 spi mode 0
         SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
     }
 };
@@ -145,12 +149,15 @@ static struct {
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
     SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
-    ADS1235 torque_sensor = {spi_dma};
+    //ADS1235 torque_sensor = {spi_dma};
+    SPIDebug spi_debug = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
+    ICPZ motor_encoder = {spi_dma};
+    MotorTorqueSensor torque_sensor;
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
     //MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
-    QEPEncoder motor_encoder = {*TIM5};
+    //QEPEncoder motor_encoder = {*TIM5};
     EncoderBase output_encoder;
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200};
@@ -215,7 +222,17 @@ void drv_reset(uint32_t blah) {
 //         get_vbm(),
 //         get_vcm());
 //     return vdq0.vd;
-// }
+// 
+
+std::string val;
+void set_spi_debug(std::string s) {
+    config_items.motor_encoder.set_register_operation();
+    val = config_items.spi_debug.read(s);
+    config_items.motor_encoder.clear_register_operation();
+}
+std::string get_spi_debug() {
+    return val;
+}
 
 void system_init() {
     if (drv_regs_error) {
@@ -230,6 +247,13 @@ void system_init() {
     //     System::log("Motor encoder init failure");
     // }
     config_items.torque_sensor.init();
+    config_items.spi_debug.init();
+
+    if (config_items.motor_encoder.init()) {
+        System::log("icpz configure success");
+    } else {
+        System::log("icpz configure failure");
+    }
     // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
     // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
     // System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
@@ -241,6 +265,9 @@ void system_init() {
     // std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
     // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
     // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
+
+
+    System::api.add_api_variable("spi", new APICallback<std::string>(get_spi_debug, set_spi_debug));
 
     System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));

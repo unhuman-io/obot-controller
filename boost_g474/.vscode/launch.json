@@ -7,7 +7,7 @@
         {
             "name": "Cortex Debug",
             "cwd": "${workspaceFolder}",
-            "executable": "./build/encoder.elf",
+            "executable": "./build/${config:boost.build.build}.elf",
             "request": "launch",
             "type": "cortex-debug",
             "device": "STM32G474RE",

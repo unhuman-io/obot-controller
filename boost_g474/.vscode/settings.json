@@ -10,4 +10,7 @@
         "util.h": "c",
         "cmath": "cpp"
     },
+    "boost.build": {
+        "build": "pz",
+    }
 }

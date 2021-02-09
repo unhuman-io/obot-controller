@@ -7,7 +7,7 @@
             "type": "shell",
             "label": "make",
             "command": "make",
-            "args": ["-j8"],
+            "args": ["-j8", "CONFIG=${config:boost.build.build}"],
             "group": {
                 "kind": "build",
                 "isDefault": true

@@ -18,16 +18,14 @@ $(shell touch version.h)
 ######################################
 
 
-CONFIG=weight
+CONFIG=pz
 CONFIG_FILE = config_g474_boost_$(CONFIG).cpp
-ifeq ($(CONFIG), weight)
-PARAM=alms
-else
-PARAM=$(CONFIG)
-endif
+PARAM ?= $(CONFIG)
 PARAM_FILE = param_g474_boost_$(PARAM).c 
 
-TARGET = $(CONFIG)
+TARGET = $(CONFIG)$(if $(PARAM_OVERRIDE),_$(PARAM_OVERRIDE))
+PARAM_OVERRIDE_FILE = $(PARAM_FILE:.c=_$(PARAM_OVERRIDE).h)
+
 ######################################
 # building variables
 ######################################
@@ -212,7 +210,7 @@ OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CC) $(if $(PARAM_OVERRIDE),--include $(PARAM_OVERRIDE_FILE)) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
 	$(CXX) -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@

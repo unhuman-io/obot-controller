@@ -69,7 +69,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = 5,
     .startup_param.phase_lock_duration = 2,
-    .name = "w1",
+    .name = "wl",
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES
 #endif

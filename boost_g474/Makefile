@@ -21,7 +21,8 @@ $(shell touch version.h)
 CONFIG=pz
 CONFIG_FILE = config_g474_boost_$(CONFIG).cpp
 PARAM ?= $(CONFIG)
-PARAM_FILE = param_g474_boost_$(PARAM).c 
+PARAM_FILE = param_g474_boost_$(PARAM).c
+$(shell touch $(PARAM_FILE)) 
 
 TARGET = $(CONFIG)$(if $(PARAM_OVERRIDE),_$(PARAM_OVERRIDE))
 PARAM_OVERRIDE_FILE = $(PARAM_FILE:.c=_$(PARAM_OVERRIDE).h)

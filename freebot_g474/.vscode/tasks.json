@@ -7,7 +7,7 @@
             "type": "shell",
             "label": "make",
             "command": "make",
-            "args": ["-j8"],
+            "args": ["-j8", "CONFIG=${config:build.build}", "PARAM=${config:build.param}", "PARAM_OVERRIDE=${config:build.param_override}"],
             "group": {
                 "kind": "build",
                 "isDefault": true

@@ -7,4 +7,9 @@
         "tuple": "cpp",
         "new": "cpp"
     },
+    "build": {
+        "build": "motor",
+        "param": "motor",
+        "param_override": ""
+    }
 }

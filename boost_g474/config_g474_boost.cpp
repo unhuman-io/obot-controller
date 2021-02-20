@@ -106,7 +106,7 @@ void system_init() {
     // SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 
     config_items.spi_debug.init();
-    SystemConfig::api.add_api_variable("spi", new APICallback<std::string>(get_spi_debug, set_spi_debug) );
+    SystemConfig::api.add_api_variable("spi", new APICallback(get_spi_debug, set_spi_debug) );
     config_items.motor_pwm.init();
 }
 

@@ -267,7 +267,7 @@ void system_init() {
     // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 
 
-    System::api.add_api_variable("spi", new APICallback<std::string>(get_spi_debug, set_spi_debug));
+    System::api.add_api_variable("spi", new APICallback(get_spi_debug, set_spi_debug));
 
     System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));

@@ -141,7 +141,7 @@ int main(void)
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_ADC3_Init();
-  //MX_TIM5_Init();
+  MX_TIM5_Init();
   //MX_SPI1_Init();
   //MX_SPI3_Init();
   MX_DMA_Init();

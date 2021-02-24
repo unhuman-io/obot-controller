@@ -16,25 +16,30 @@ $(shell touch version.h)
 ######################################
 # target
 ######################################
-TARGET = bort2
 
-CONFIG=weight
+
+CONFIG=pz
 CONFIG_FILE = config_g474_boost_$(CONFIG).cpp
-ifeq ($(CONFIG), weight)
-PARAM=alms
-else
-PARAM=$(CONFIG)
-endif
-PARAM_FILE = param_g474_boost_$(PARAM).c 
+PARAM ?= $(CONFIG)
+PARAM_FILE = param_g474_boost_$(PARAM).c
+$(shell touch $(PARAM_FILE)) 
+
+TARGET = $(CONFIG)$(if $(PARAM_OVERRIDE),_$(PARAM_OVERRIDE))
+PARAM_OVERRIDE_FILE = $(PARAM_FILE:.c=_$(PARAM_OVERRIDE).h)
 
 ######################################
 # building variables
 ######################################
 # debug build?
-DEBUG = 1
+#DEBUG = 1
 # optimization
+ifdef DEBUG
+OPT = -Og -O1
+else
 OPT = -Og -O3
 LTO = -flto
+endif
+
 
 
 #######################################
@@ -169,9 +174,9 @@ ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffuncti
 
 CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections $(LTO)
 
-ifeq ($(DEBUG), 1)
+#ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
-endif
+#endif
 
 
 # Generate dependency information
@@ -190,7 +195,7 @@ LIBDIR =
 LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections $(LTO) -u _printf_float
 
 # default action: build all
-all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).tgz
 
 
 #######################################
@@ -206,7 +211,7 @@ OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CC) $(if $(PARAM_OVERRIDE),--include $(PARAM_OVERRIDE_FILE)) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
 	$(CXX) -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
@@ -220,9 +225,9 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
-	
-$(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
+
+include ../motorlib/scripts/firmware_installer.mk
+
 	
 $(BUILD_DIR):
 	mkdir $@		

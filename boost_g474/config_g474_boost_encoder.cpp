@@ -5,7 +5,7 @@
 #include "../motorlib/peripheral/stm32g4/hrpwm.h"
 #include "../motorlib/led.h"
 #include "../motorlib/qep_encoder.h"
-#include "../motorlib/peripheral/stm32g4/spi_torque.h"
+#include "../motorlib/motor_torque_sensor.h"
 #include "Inc/main.h"
 #include "param_g474_boost.h"
 #include "../motorlib/peripheral/stm32g4/spi_dma.h"
@@ -15,7 +15,7 @@
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
-typedef ADS1235 TorqueSensor;
+typedef MotorTorqueSensor TorqueSensor;
 typedef HRPWM PWM;
 typedef EncoderBase OutputEncoder;
 typedef QEPEncoder MotorEncoder;
@@ -40,16 +40,15 @@ uint16_t drv_regs_error = 0;
 uint16_t drv_regs[] = {
   (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
   //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
-  (3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
+  (3<<11) | 0x333, // hs_reg      0x3CC, moderate drive current
   //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
                                 // moderate drive current (.57,1.14A)
-  (4<<11) | 0x3AA, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
+  (4<<11) | 0x2AA, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
                                 // moderate drive current (.57,1.14A)
-  (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
-                              //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
+  (5<<11) | 0x020,  // ocp_reg     0x20 -> 50 ns dead time, 
+                              //latched ocp, 4 us ocp deglitch, 0.06 Vds thresh
   //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
-  //(6<<11) | 0x280,
-  (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
+  (6<<11) | 0x280, // csa_reg     0x280 -> bidirectional current, 20V/V
 };     
 
 #define MASK_SET(var, item, val) var = (var & ~item##_Msk) | (val << item##_Pos)
@@ -76,7 +75,6 @@ struct InitCode {
         GPIO_SETL(A, 0, 2, 3, 2);   // QEPA TIM5
         GPIO_SETL(A, 1, 2, 3, 2);   // QEPB TIM5
         GPIO_SETL(A, 2, 2, 3, 2);   // QEPI TIM5
-        GPIO_SETL(A, 0, 1, 3, 0);   // SPI1 CS on QEPA pin
         GPIO_SETL(A, 4, 2, 3, 5);   // SPI1 CS on boostxl J4-18
         GPIO_SETL(A, 5, 2, 3, 5);   // SPI1 CLK on boostxl J3-13
         GPIO_SETL(A, 6, 2, 3, 5);   // SPI1 DDO (Device Data Out) on boostxl J4-14
@@ -91,8 +89,9 @@ struct InitCode {
         // TIM2 cpu clock
         TIM2->CR1 = TIM_CR1_CEN;
 
+        // TIM5 configure
+
         // SPI1 DRV8323RS
-        GPIOA->BSRR = GPIO_ODR_OD0;  // disable other spi cs
         GPIOC->BSRR = GPIO_ODR_OD11; // drv enable
         ms_delay(10);
 
@@ -117,23 +116,16 @@ struct InitCode {
         SPI1->CR1 = 0; // clear SPE
         // SPI1 CS-> gpio
         GPIO_SETL(A, 4, 1, 0, 0);
-        GPIOA->BSRR = GPIO_ODR_OD4;
 
-        // // SPI3 ADS1235
-        // DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;
-        // DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI1_RX;
-        // SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
-        // SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
+        // SPI3 MA732
+        SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
+        SPI3->CR2 = (15 << SPI_CR2_DS_Pos);    // 16 bit 
 
-        // // SPI3 MA732
-        // SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
-        // SPI3->CR2 = (15 << SPI_CR2_DS_Pos);    // 16 bit 
-
-        //SPI3 ADS1235
-        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
-        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
-        SPI3->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
-        SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
+        // SPI3 ADS1235
+        // DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
+        // DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
+        // SPI3->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/32
+        // SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
     }
 };
 
@@ -143,17 +135,16 @@ static struct {
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
-    ADS1235 torque_sensor = {spi_dma};
+    GPIO torque_sensor_cs = {*GPIOA, 0, GPIO::OUTPUT};
+    SPIDMA spi_dma = {*SPI1, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
+    MotorTorqueSensor torque_sensor;
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
-    //MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs};
     QEPEncoder motor_encoder = {*TIM5};
     EncoderBase output_encoder;
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200};
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4};
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &ADC5->JDR1, &ADC4->JDR1, &ADC3->JDR1, &ADC1->DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
@@ -168,7 +159,6 @@ static struct {
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
 
-// return (fault status register 2 << 16) | (fault status register 1) 
 uint32_t get_drv_status() {
         // pause main loop (due to overlap with torque sensor)
         TIM1->CR1 &= ~TIM_CR1_CEN;
@@ -207,16 +197,6 @@ void drv_reset(uint32_t blah) {
     ms_delay(10);
 }
 
-// float get_vd() {
-//     FOC::Vdq0 vdq0;
-//     FOC::calculate_vdq0(&vdq0, config_items.main_loop.status_.fast_loop.foc_status.measured.cos,
-//         config_items.main_loop.status_.fast_loop.foc_status.measured.sin,
-//         get_vam(),
-//         get_vbm(),
-//         get_vcm());
-//     return vdq0.vd;
-// }
-
 void system_init() {
     if (drv_regs_error) {
         System::log("drv configure failure");
@@ -224,28 +204,10 @@ void system_init() {
         System::log("drv configure success");
     }
     config_items.motor_pwm.init();
-    // if (config_items.motor_encoder.init()) {
-    //     System::log("Motor encoder init success");
-    // } else {
-    //     System::log("Motor encoder init failure");
-    // }
-    config_items.torque_sensor.init();
-    // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
-    // System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
+ 
 
-    // std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
-    // System::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
-
-    // std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
-    // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
-
-    System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
-    config_items.main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.command.v_d);
-    config_items.main_loop.reserved2_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.command.v_q);
+    System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
 }
 
 void system_maintenance() {}

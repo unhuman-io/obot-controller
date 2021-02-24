@@ -1,0 +1,4 @@
+freebot-controller: [required, Unlicense, https://github.com/unhuman-io/freebot-controller/raw/main/UNLICENSE.txt]
+    motorlib: [required, Unlicense, https://github.com/unhuman-io/motorlib/raw/main/UNLICENSE.txt]
+    stm32_hal: [required, , https://www.st.com/content/ccc/resource/legal/legal_agreement/license_agreement/group0/eb/8e/f9/c1/9e/64/49/95/SLA0048/files/SLA0048.txt/jcr:content/translations/en.SLA0048.txt]
+    arm-cmsis: [required, Apache 2.0, https://github.com/ARM-software/CMSIS_5/raw/develop/LICENSE.txt]

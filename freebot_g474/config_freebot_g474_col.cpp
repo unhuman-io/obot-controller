@@ -164,12 +164,12 @@ void system_init() {
 FrequencyLimiter temp_rate = {8};
 
 void system_maintenance() {
-    if (temp_rate.run()) {
-        config_items.temp_sensor.read();
-        T1 = config_items.temp_sensor1.read();
-        T2 = config_items.temp_sensor2.read();
-        T3 = config_items.temp_sensor3.read();
-    }
+    // if (temp_rate.run()) {
+    //     config_items.temp_sensor.read();
+    //     T1 = config_items.temp_sensor1.read();
+    //     T2 = config_items.temp_sensor2.read();
+    //     T3 = config_items.temp_sensor3.read();
+    // }
 }
 
 #include "../motorlib/system.cpp"

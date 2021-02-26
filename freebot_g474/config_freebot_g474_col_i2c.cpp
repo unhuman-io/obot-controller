@@ -58,6 +58,7 @@ void usb_interrupt() {
 
 enum GPIO_MODE {INPUT, OUTPUT, ALT_FUN, ANALOG};
 enum GPIO_SPEED {LOW, MEDIUM, HIGH, VERY_HIGH};
+enum GPIO_PULL {NONE, UP, DOWN};
 
 struct InitCode {
     InitCode() {
@@ -73,6 +74,8 @@ struct InitCode {
         //GPIO configure
         GPIO_SETH(A, 13, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 scl
         GPIO_SETH(A, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 sda
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD13, GPIO_PULL::UP);
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
 
         // i2c1 dma
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_I2C1_TX;

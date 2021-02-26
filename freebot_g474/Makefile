@@ -13,8 +13,6 @@
 ######################################
 # target
 ######################################
-TARGET = freebot_g474
-CONFIG_FILE = config_freebot_g474_col.cpp
 
 GIT_VERSION := $(shell git describe --dirty --always --tags)
 $(shell touch version.h)
@@ -27,6 +25,10 @@ PARAM=$(CONFIG)
 PARAM_FILE = param_freebot_g474_$(PARAM).c 
 
 TARGET = $(CONFIG)
+
+ifeq ($(CONFIG), col)
+DFU_START_LINE="motor_util set --mode phase_lock --current -1"
+endif
 
 # for submake
 export

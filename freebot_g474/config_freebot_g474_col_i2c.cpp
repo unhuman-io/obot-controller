@@ -77,6 +77,13 @@ struct InitCode {
         MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD13, GPIO_PULL::UP);
         MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
 
+        // test i2c on led pins
+        // RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+        // GPIO_SETL(B, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 scl
+        // GPIO_SETH(B, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 sda
+        // MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD7, GPIO_PULL::UP);
+        // MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD8, GPIO_PULL::UP);
+
         // i2c1 dma
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_I2C1_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_I2C1_RX;
@@ -96,7 +103,7 @@ static struct {
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
     I2C_DMA i2c1 = {*I2C1, *DMA1_Channel1, *DMA1_Channel2};
-    I2CTorque torque_sensor = {i2c1, 20};
+    I2CTorque torque_sensor = {i2c1, 0, 20};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};

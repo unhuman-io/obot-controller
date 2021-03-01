@@ -147,7 +147,7 @@ int main(void)
   MX_TIM4_Init();
   MX_USB_PCD_Init();
   //MX_I2C1_Init();
-  //MX_I2C2_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   USB->CNTR &= ~(USB_CNTR_SOFM | USB_CNTR_ESOFM); // Don't need these interrupts
   //SPI1->CR1 |= SPI_CR1_SPE;

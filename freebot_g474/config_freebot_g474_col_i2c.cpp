@@ -71,11 +71,13 @@ struct InitCode {
         DWT->CYCCNT = 0;
         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
-        //GPIO configure
+        // //GPIO configure
         // GPIO_SETH(A, 13, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 scl
         // GPIO_SETH(A, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 sda
         // MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD13, GPIO_PULL::UP);
         // MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
+        // MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT13, 1);
+        // MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT14, 1);
 
         GPIO_SETH(A, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 scl
         GPIO_SETH(A, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 sda
@@ -114,7 +116,7 @@ static struct {
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
     I2C_DMA i2c1 = {*I2C2, *DMA1_Channel1, *DMA1_Channel2};
-    I2CTorque torque_sensor = {i2c1, 0, 20};
+    I2CTorque torque_sensor = {i2c1, 0, 100};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};

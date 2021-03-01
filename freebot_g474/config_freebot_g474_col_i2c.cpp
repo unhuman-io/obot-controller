@@ -71,16 +71,16 @@ struct InitCode {
         DWT->CYCCNT = 0;
         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
-        // //GPIO configure
-        // GPIO_SETH(A, 13, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 scl
-        // GPIO_SETH(A, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 sda
-        // MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD13, GPIO_PULL::UP);
-        // MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
-        // MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT13, 1);
-        // MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT14, 1);
+        //GPIO configure
+        GPIO_SETH(A, 13, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 scl
+        GPIO_SETH(A, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 sda
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD13, GPIO_PULL::UP);
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
+        MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT13, 1);
+        MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT14, 1);
 
-        GPIO_SETH(A, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 scl
-        GPIO_SETH(A, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 sda
+        GPIO_SETH(A, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c2 scl
+        GPIO_SETH(A, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c2 sda
         MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD8, GPIO_PULL::UP);
         MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD9, GPIO_PULL::UP);
         MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT8, 1);
@@ -93,13 +93,13 @@ struct InitCode {
         // MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD7, GPIO_PULL::UP);
         // MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD8, GPIO_PULL::UP);
 
-        // // i2c1 dma
-        // DMAMUX1_Channel0->CCR =  DMA_REQUEST_I2C1_TX;
-        // DMAMUX1_Channel1->CCR =  DMA_REQUEST_I2C1_RX;
+        // i2c1 dma
+        DMAMUX1_Channel0->CCR =  DMA_REQUEST_I2C1_TX;
+        DMAMUX1_Channel1->CCR =  DMA_REQUEST_I2C1_RX;
 
-        // i2c2 dma
-        DMAMUX1_Channel0->CCR =  DMA_REQUEST_I2C2_TX;
-        DMAMUX1_Channel1->CCR =  DMA_REQUEST_I2C2_RX;
+        // // i2c2 dma
+        // DMAMUX1_Channel0->CCR =  DMA_REQUEST_I2C2_TX;
+        // DMAMUX1_Channel1->CCR =  DMA_REQUEST_I2C2_RX;
     }
 };
 
@@ -115,14 +115,14 @@ static struct {
     MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs, 102, &spi3_register_operation};
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
-    I2C_DMA i2c1 = {*I2C2, *DMA1_Channel1, *DMA1_Channel2};
+    I2C_DMA i2c1 = {*I2C1, *DMA1_Channel1, *DMA1_Channel2};
     I2CTorque torque_sensor = {i2c1, 0, 100};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
 
-    I2C i2c2 = {*I2C1};
+    I2C i2c2 = {*I2C2};
     //MAX31875 temp_sensor = {i2c, 0x48};        // R0
     MAX31875 temp_sensor1 = {i2c2, 0x48};      // R0
     MAX31875 temp_sensor2 = {i2c2, 0x49};      // R1

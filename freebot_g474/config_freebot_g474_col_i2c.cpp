@@ -116,7 +116,7 @@ static struct {
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
     I2C_DMA i2c1 = {*I2C2, *DMA1_Channel1, *DMA1_Channel2};
-    I2CTorque torque_sensor = {i2c1, 0, 100};
+    I2CTorque torque_sensor = {i2c1, 0, 20};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};

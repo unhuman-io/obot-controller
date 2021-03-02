@@ -10,7 +10,7 @@
 #include "Inc/main.h"
 #include "param_g474_boost.h"
 #include "../motorlib/peripheral/stm32g4/spi_debug.h"
-#include "../motorlib/motor_torque_sensor.h"
+#include "../motorlib/torque_sensor.h"
 
 #include "../motorlib/qep_encoder.h"
 
@@ -18,7 +18,7 @@
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
-typedef MotorTorqueSensor TorqueSensor;
+typedef TorqueSensorBase TorqueSensor;
 typedef HRPWM PWM;
 typedef EncoderBase OutputEncoder;
 typedef ICPZ MotorEncoder;
@@ -152,7 +152,7 @@ static struct {
     //ADS1235 torque_sensor = {spi_dma};
     SPIDebug spi_debug = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
     ICPZ motor_encoder = {spi_dma};
-    MotorTorqueSensor torque_sensor;
+    TorqueSensor torque_sensor;
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};

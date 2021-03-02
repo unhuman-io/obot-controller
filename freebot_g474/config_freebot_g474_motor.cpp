@@ -6,7 +6,7 @@
 
 #include "../motorlib/led.h"
 #include "../motorlib/ma732_encoder.h"
-#include "../motorlib/motor_torque_sensor.h"
+#include "../motorlib/torque_sensor.h"
 #include "../motorlib/phony_encoder.h"
 #include "Inc/main.h"
 #include "../motorlib/sensor_multiplex.h"
@@ -18,7 +18,7 @@
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
-typedef MotorTorqueSensor TorqueSensor;
+typedef TorqueSensorBase TorqueSensor;
 typedef HRPWM PWM;
 typedef SensorMultiplex<MA732Encoder, MA732Encoder> MotorEncoder;
 typedef MotorEncoder::SecondarySensor OutputEncoder;
@@ -147,7 +147,7 @@ static struct {
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
   //  SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2, 4};
-    MotorTorqueSensor torque_sensor;
+    TorqueSensor torque_sensor;
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};

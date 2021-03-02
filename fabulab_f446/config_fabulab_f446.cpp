@@ -9,14 +9,14 @@ typedef USB_OTG USB1;
 #include "Inc/main.h"
 #include "../motorlib/ma732_encoder.h"
 #include "../motorlib/phony_encoder.h"
-#include "../motorlib/motor_torque_sensor.h"
+#include "../motorlib/torque_sensor.h"
 #include "param_fabulab_f446.h"
 
 #include "../motorlib/controller/position_controller.h"
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
-typedef MotorTorqueSensor TorqueSensor;
+typedef TorqueSensorBase TorqueSensor;
 typedef PWM_EN PWM;
 typedef EncoderBase OutputEncoder;
 typedef PhonyEncoder MotorEncoder;
@@ -50,7 +50,7 @@ static struct {
     QEPEncoder output_encoder = {*TIM2};
     GPIO spi1_cs = {*GPIOA, 15, GPIO::OUTPUT};
     //MA732Encoder motor_encoder = {*SPI1, spi1_cs};
-    MotorTorqueSensor torque_sensor;    // TODO implement for F446
+    TorqueSensor torque_sensor;    // TODO implement for F446
     PWM_EN motor_pwm = {pwm_frequency, *const_cast<uint32_t*>(&TIM8->CCR3), 
                         *const_cast<uint32_t*>(&TIM8->CCR2), 
                         *const_cast<uint32_t*>(&TIM8->CCR1),

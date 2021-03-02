@@ -123,7 +123,7 @@ static struct {
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
 
     I2C i2c2 = {*I2C2};
-    //MAX31875 temp_sensor = {i2c, 0x48};        // R0
+ //   MAX31875 temp_sensor = {i2c1, 0x48};        // R0
     MAX31875 temp_sensor1 = {i2c2, 0x48};      // R0
     MAX31875 temp_sensor2 = {i2c2, 0x49};      // R1
     MAX31875 temp_sensor3 = {i2c2, 0x4A};      // R2
@@ -226,12 +226,12 @@ void system_init() {
 FrequencyLimiter temp_rate = {8};
 
 void system_maintenance() {
-    // if (temp_rate.run()) {
-    //     config_items.temp_sensor.read();
-    //     T1 = config_items.temp_sensor1.read();
-    //     T2 = config_items.temp_sensor2.read();
-    //     T3 = config_items.temp_sensor3.read();
-    // }
+    if (temp_rate.run()) {
+        //config_items.temp_sensor.read();
+        T1 = config_items.temp_sensor1.read();
+        T2 = config_items.temp_sensor2.read();
+        T3 = config_items.temp_sensor3.read();
+    }
 }
 
 #include "../motorlib/system.cpp"

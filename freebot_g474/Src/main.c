@@ -190,7 +190,6 @@ int main(void)
   HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_1);
   HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_2);
   HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_3);
-  I2C2->CR1 |= I2C_CR1_RXDMAEN | I2C_CR1_TXDMAEN;
 
   /* USER CODE END 2 */
 

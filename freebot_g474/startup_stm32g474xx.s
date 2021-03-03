@@ -70,20 +70,6 @@ defined in linker script */
 .set IWDG_KR,		0x40003000
 
     .section	.text.Reset_Handler
-Reboot_Loader:
-    ldr     r0, =RCC_APB2SMENR 
-    ldr     r1, =#(1<<RCC_SYSCFGEN_POS) 
-    str     r1, [r0]
-	nop		/* found experimentally that this is needed */
-    ldr     r0, =#SYSCFG_MEMRMP /* SYSCFG_MEMRMP */
-    ldr     r1, =0x00000001 /* MAP ROM AT ZERO */
-    str     r1, [r0]
-    ldr     r0, =0x1FFF0000 /* ROM BASE */
-    ldr     SP,[r0]     /* SP @ +0 */
-    ldr     r0,[r0, #4]     /* PC @ +4 */
-    bx      r0
-
-
 	.weak	Reset_Handler
 	.type	Reset_Handler, %function
 Reset_Handler:
@@ -103,6 +89,19 @@ Reset_Handler:
 	mov r1, #0
 	str r1, [r0]
 	beq Reboot_Loader
+
+Reboot_Loader:
+    ldr     r0, =RCC_APB2SMENR 
+    ldr     r1, =#(1<<RCC_SYSCFGEN_POS) 
+    str     r1, [r0]
+	nop		/* found experimentally that this is needed */
+    ldr     r0, =#SYSCFG_MEMRMP /* SYSCFG_MEMRMP */
+    ldr     r1, =0x00000001 /* MAP ROM AT ZERO */
+    str     r1, [r0]
+    ldr     r0, =0x1FFF0000 /* ROM BASE */
+    ldr     SP,[r0]     /* SP @ +0 */
+    ldr     r0,[r0, #4]     /* PC @ +4 */
+    bx      r0
 
 Original_Reset_Handler:
   // start watchdog IWDG->KR = 0xCCCC;

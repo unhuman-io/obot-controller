@@ -29,6 +29,8 @@ typedef USBCommunication Communication;
 #include "../motorlib/actuator.h"
 #include "../motorlib/system.h"
 
+#include "../motorlib/peripheral/stm32g4/spi_debug.h"
+
 #include "../motorlib/peripheral/stm32g4/pin_config.h"
 
 USB1 usb1;
@@ -145,6 +147,7 @@ static struct {
     volatile int spi3_register_operation = 0;
     SPIDMA spi_dma = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
     ICPZ motor_encoder = {spi_dma};
+    SPIDebug spi_debug = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
   //  SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2, 4};
@@ -233,6 +236,15 @@ void drv_reset(uint32_t blah) {
     ms_delay(10);
 }
 
+std::string val;
+void set_spi_debug(std::string s) {
+    config_items.motor_encoder.set_register_operation();
+    val = config_items.spi_debug.read(s);
+    config_items.motor_encoder.clear_register_operation();
+}
+std::string get_spi_debug() {
+    return val;
+}
 
 void system_init() {
     if (config_items.motor_encoder.init()) {
@@ -296,6 +308,7 @@ void system_init() {
     System::api.add_api_variable("vcm", new APICallbackFloat(get_vc, set_v));
 
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
+    System::api.add_api_variable("spi", new APICallback(get_spi_debug, set_spi_debug));
 
     System::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
     // System::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;

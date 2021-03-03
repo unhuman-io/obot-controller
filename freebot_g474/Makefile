@@ -27,7 +27,7 @@ PARAM_FILE = param_freebot_g474_$(PARAM).c
 TARGET = $(CONFIG)
 
 ifneq (,$(findstring col,$(CONFIG)))
-	DFU_START_LINE="motor_util set --mode phase_lock --current -1"
+	DFU_START_LINE="motor_util set --mode phase_lock --current -1\\nsleep 1"
 endif
 
 # for submake

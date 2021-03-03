@@ -60,11 +60,14 @@ defined in linker script */
 .set RCC_CSR_OFFSET,  0x94
 .set RCC_CSR_SFTRSTF_POS, 28
 .set RCC_CSR_RMVF_POS,    23
+.set RCC_CSR_IWDGRSTF_POS, 29
 .set RCC_CSR_PINRSTF_POS,    26
 
 .set RCC_APB2SMENR,         0x40021080
 .set RCC_SYSCFGEN_POS,    0
 .set SYSCFG_MEMRMP,	      0x40010000
+
+.set IWDG_KR,		0x40003000
 
     .section	.text.Reset_Handler
 Reboot_Loader:
@@ -86,9 +89,12 @@ Reboot_Loader:
 Reset_Handler:
 	ldr r0, =RCC_BASE
 	ldr r1, [r0, #RCC_CSR_OFFSET]
-	tst r1, #(1<<RCC_CSR_SFTRSTF_POS)
 	orr r1, #(1<<RCC_CSR_RMVF_POS)
-	str r1, [r0, #RCC_CSR_OFFSET]
+	str r1, [r0, #RCC_CSR_OFFSET]			// clear reset flags
+
+	tst r1, #(1<<RCC_CSR_IWDGRSTF_POS)		// watchdog reset
+	bne Reboot_Loader
+	tst r1, #(1<<RCC_CSR_SFTRSTF_POS)		// software reset
 	beq Original_Reset_Handler
 	ldr r0, =go_to_bootloader
 	ldr r1, [r0]
@@ -99,6 +105,10 @@ Reset_Handler:
 	beq Reboot_Loader
 
 Original_Reset_Handler:
+  // start watchdog IWDG->KR = 0xCCCC;
+  ldr	r0, =0xCCCC
+  ldr	r1, =IWDG_KR
+  str	r0, [r1]
   ldr   r0, =_estack
   mov   sp, r0          /* set stack pointer */
 

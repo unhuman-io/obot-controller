@@ -66,6 +66,10 @@ defined in linker script */
 .set RCC_APB2SMENR,         0x40021080
 .set RCC_SYSCFGEN_POS,    0
 .set SYSCFG_MEMRMP,	      0x40010000
+.set GPIOB_MODER, 0x48000400
+.set GPIOB_BSRR, 0x48000418
+.set RCC_AHB2ENR, 0x4002104c
+.set GPIOB_LCKR, 0x4800041c
 
 .set IWDG_KR,		0x40003000
 
@@ -91,6 +95,29 @@ Reset_Handler:
 	bne Original_Reset_Handler
 
 Reboot_Loader:
+	ldr		r0, =RCC_AHB2ENR
+	ldr		r1, [r0]
+	orr		r1, #(1<<1)
+	str		r1, [r0]
+	ldr		r0, =GPIOB_MODER
+	ldr		r1, [r0]
+	and		r1, #~(1<<17)
+	orr 	r1, #(1<<16)
+	str		r1, [r0]
+	ldr		r0, =GPIOB_BSRR
+	ldr		r1, [r0]
+	orr		r1, #(1<<8)
+	str		r1, [r0]
+
+	ldr		r0, =GPIOB_LCKR
+	mov     r1, #(0x0100)
+	movt	r1, #(0x01)
+	mov		r2, #(0x00100)
+	str		r1, [r0]
+	str		r2, [r0]
+	str		r1, [r0]
+	ldr		r1, [r0]
+
     ldr     r0, =RCC_APB2SMENR 
     ldr     r1, =#(1<<RCC_SYSCFGEN_POS) 
     str     r1, [r0]

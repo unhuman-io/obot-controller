@@ -140,19 +140,19 @@ int main(void)
   MX_OPAMP3_Init();
   MX_OPAMP4_Init();
   MX_OPAMP6_Init();
-  MX_SPI1_Init();
+  //MX_SPI1_Init();
   MX_SPI3_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();
   MX_USB_PCD_Init();
-  MX_I2C1_Init();
-  MX_I2C2_Init();
+  //MX_I2C1_Init();
+  //MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   USB->CNTR &= ~(USB_CNTR_SOFM | USB_CNTR_ESOFM); // Don't need these interrupts
-  SPI1->CR1 |= SPI_CR1_SPE;
+  //SPI1->CR1 |= SPI_CR1_SPE;
   SPI3->CR1 |= SPI_CR1_SPE; // enable spi
-  SPI1->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
+  //SPI1->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
   system_init();
 
   HAL_ADC_Start(&hadc1);

@@ -84,26 +84,6 @@ SECTIONS
     KEEP(*(.isr_vector)) */ /* Startup code */
 /*    . = ALIGN(4);
   } >FLASH */
-
-  /* The program code and other data goes into FLASH */
-  .text :
-  {
-    . = ALIGN(4);
-    *(.text.Reset_Handler)    /* reset handler early to help if later program corrupted */
-
-    *(.text)           /* .text sections (code) */
-    *(.text*)          /* .text* sections (code) */
-    *(.glue_7)         /* glue arm to thumb code */
-    *(.glue_7t)        /* glue thumb to arm code */
-    *(.eh_frame)
-
-    KEEP (*(.init))
-    KEEP (*(.fini))
-
-    . = ALIGN(4);
-    _etext = .;        /* define a global symbols at end of code */
-  } >FLASH
-
   _siccmram = LOADADDR(.ccmram);
   .ccmram :
   {
@@ -116,6 +96,25 @@ SECTIONS
     . = ALIGN(4);
     _eccmram = .;
   } >CCMRAM AT> FLASH
+
+
+  /* The program code and other data goes into FLASH */
+  .text :
+  {
+    . = ALIGN(4);
+    *(.text.Reset_Handler)    /* reset handler early to help if later program corrupted */
+    *(.text)           /* .text sections (code) */
+    *(.text*)          /* .text* sections (code) */
+    *(.glue_7)         /* glue arm to thumb code */
+    *(.glue_7t)        /* glue thumb to arm code */
+    *(.eh_frame)
+
+    KEEP (*(.init))
+    KEEP (*(.fini))
+
+    . = ALIGN(4);
+    _etext = .;        /* define a global symbols at end of code */
+  } >FLASH
 
 
   /* Constant data goes into FLASH */

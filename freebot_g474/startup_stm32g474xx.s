@@ -88,7 +88,7 @@ Reset_Handler:
 	cmp r1, r2
 	mov r1, #0
 	str r1, [r0]
-	beq Reboot_Loader
+	bne Original_Reset_Handler
 
 Reboot_Loader:
     ldr     r0, =RCC_APB2SMENR 

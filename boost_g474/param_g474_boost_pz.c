@@ -52,10 +52,13 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.impedance_controller_param.torque.velocity_filter_frequency_hz = 0,
     .main_loop_param.impedance_controller_param.torque.output_filter_frequency_hz = 0,
     .main_loop_param.impedance_controller_param.torque.command_max = 3,
-    .main_loop_param.velocity_controller_param.position.kp = 200,
-    .main_loop_param.velocity_controller_param.position.kd = 4,
-    .main_loop_param.velocity_controller_param.position.velocity_filter_frequency_hz = 400,
-    .main_loop_param.velocity_controller_param.position.command_max = 5,
+    .main_loop_param.velocity_controller_param.velocity.ki = 200,
+    .main_loop_param.velocity_controller_param.velocity.kp = 4,
+    .main_loop_param.velocity_controller_param.velocity.ki_limit = 4,
+    .main_loop_param.velocity_controller_param.velocity.velocity_filter_frequency_hz = 400,
+    .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 400,
+    .main_loop_param.velocity_controller_param.velocity.command_max = 5,
+    .main_loop_param.velocity_controller_param.acceleration_limit = 4,
     .fast_loop_param.cogging.table = {
 #include "cogprocessed.csv"
     },

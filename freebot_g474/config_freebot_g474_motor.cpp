@@ -57,7 +57,7 @@ uint16_t drv_regs[] = {
   (3<<11) | 0x3FF, // hs_reg      0x3CC, moderate drive current
   //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
                                 // moderate drive current (.57,1.14A)
-  (4<<11) | 0x3FF, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
+  (4<<11) | 0x37F, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
                                 // moderate drive current (.57,1.14A)
   (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
                               //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh

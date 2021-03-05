@@ -4,6 +4,8 @@ on: [push]
 
 jobs:
   build:
+    stategy:
+      fail-fast: false
     runs-on: ubuntu-latest
     steps:
     - name: install dfu-suffix

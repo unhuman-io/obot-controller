@@ -80,9 +80,9 @@ struct InitCode {
         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
         // GPIO configure
-        // GPIO_SETL(A, 0, 2, 3, 2);   // QEPA TIM5
-        // GPIO_SETL(A, 1, 2, 3, 2);   // QEPB TIM5
-        // GPIO_SETL(A, 2, 2, 3, 2);   // QEPI TIM5
+        GPIO_SETL(A, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPA TIM2
+        GPIO_SETL(A, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPB TIM2
+        GPIO_SETL(A, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPI TIM2
         //GPIO_SETL(A, 0, 1, 3, 0);   // SPI1 CS on QEPA pin
         GPIO_SETL(A, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CS drv8323s
         GPIO_SETL(A, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CLK drv8323s
@@ -97,9 +97,6 @@ struct InitCode {
         GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // spi3 cs
 
         GPIO_SETH(C, 13, 1, 0, 0);  // Boostxl enable
-
-        // TIM2 cpu clock
-        TIM2->CR1 = TIM_CR1_CEN;
 
         // SPI1 DRV8323RS
         //GPIOA->BSRR = GPIO_ODR_OD0;  // disable other spi cs

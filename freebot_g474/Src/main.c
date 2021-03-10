@@ -143,7 +143,7 @@ int main(void)
   //MX_SPI1_Init();
   MX_SPI3_Init();
   MX_TIM1_Init();
-  MX_TIM2_Init();
+  //MX_TIM2_Init();
   MX_TIM4_Init();
   MX_USB_PCD_Init();
   //MX_I2C1_Init();
@@ -181,12 +181,12 @@ int main(void)
   hadc1.Instance->CR |= ADC_CR_ADSTART;
 
   
-  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
+  //HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
   USB_DevConnect(USB);
   htim1.Instance->DIER |= TIM_DIER_UIE;
   HAL_TIM_Base_Start(&htim1);
   HAL_TIM_Base_Start(&htim4);
-  HAL_TIM_IC_Start(&htim2, TIM_CHANNEL_3); // encoder index
+  //HAL_TIM_IC_Start(&htim2, TIM_CHANNEL_3); // encoder index
   HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_1);
   HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_2);
   HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_3);

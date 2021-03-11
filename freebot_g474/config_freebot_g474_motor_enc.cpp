@@ -32,6 +32,7 @@ typedef USBCommunication Communication;
 #include "../motorlib/peripheral/stm32g4/spi_debug.h"
 
 #include "../motorlib/peripheral/stm32g4/pin_config.h"
+#include "pin_config_freebot_g474_motor_r0.h"
 
 USB1 usb1;
 Communication System::communication_ = {usb1};
@@ -69,34 +70,7 @@ uint16_t drv_regs[] = {
 
 struct InitCode {
     InitCode() {
-        // Peripheral clock enable
-        RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM5EN;
-        RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
-        RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
-        RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN;
-
-        CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-        DWT->CYCCNT = 0;
-        DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-
-        // GPIO configure
-        GPIO_SETL(A, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPA TIM2
-        GPIO_SETL(A, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPB TIM2
-        GPIO_SETL(A, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPI TIM2
-        //GPIO_SETL(A, 0, 1, 3, 0);   // SPI1 CS on QEPA pin
-        GPIO_SETL(A, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CS drv8323s
-        GPIO_SETL(A, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CLK drv8323s
-        GPIO_SETL(A, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 HIDO (host in device out) drv8323s
-        GPIO_SETL(A, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 HODI drv8323s
-        GPIOA->PUPDR |= GPIO_PUPDR_PUPD6_0;  // HIDO pull up
-     
-        GPIO_SETH(C, 10, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 CLK
-        GPIO_SETH(C, 11, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 HIDO
-        GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 HODI 
-
-        GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // spi3 cs
-
-        GPIO_SETH(C, 13, 1, 0, 0);  // Boostxl enable
+        pin_config_freebot_g474_motor_r0();
 
         // SPI1 DRV8323RS
         //GPIOA->BSRR = GPIO_ODR_OD0;  // disable other spi cs

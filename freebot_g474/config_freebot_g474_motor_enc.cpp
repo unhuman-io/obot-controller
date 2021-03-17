@@ -112,7 +112,8 @@ struct InitCode {
 
 volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 static struct {    
-    uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
+    uint32_t pwm_frequency = 50000;
+    static_assert(((double) CPU_FREQUENCY_HZ * 32 / 2) / 50000 < 65535);    // check pwm frequency
     SystemInitClass system_init; // first item to enable clocks, etc.
     InitCode init_code;
     GPIO motor_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
@@ -285,7 +286,7 @@ void system_init() {
     System::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
     // System::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;
     config_items.torque_sensor.init();
-    config_items.motor_pwm.init();
+    //config_items.motor_pwm.init();
     TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
 }
 

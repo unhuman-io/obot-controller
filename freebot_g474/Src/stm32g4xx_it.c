@@ -264,9 +264,12 @@ void TIM1_UP_TIM16_IRQHandler(void)
   //scope2_GPIO_Port->BSRR |= scope2_Pin; 
   INTERRUPT_PROFILE_START;
   main_loop_interrupt();
+#if 0
   /* USER CODE END TIM1_UP_TIM16_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 1 */
+#endif
+  TIM1->SR = 0;
   INTERRUPT_PROFILE_END(mainloop);
   //scope2_GPIO_Port->BSRR |= scope2_Pin << 16; 
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */

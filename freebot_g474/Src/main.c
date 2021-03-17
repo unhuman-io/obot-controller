@@ -142,7 +142,7 @@ int main(void)
   MX_OPAMP6_Init();
   //MX_SPI1_Init();
   MX_SPI3_Init();
-  MX_TIM1_Init();
+  //MX_TIM1_Init();
   //MX_TIM2_Init();
   //MX_TIM4_Init();
   MX_USB_PCD_Init();
@@ -183,8 +183,8 @@ int main(void)
   
   //HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
   USB_DevConnect(USB);
-  htim1.Instance->DIER |= TIM_DIER_UIE;
-  HAL_TIM_Base_Start(&htim1);
+  //htim1.Instance->DIER |= TIM_DIER_UIE;
+  //HAL_TIM_Base_Start(&htim1);
 //  HAL_TIM_Base_Start(&htim4);
   //HAL_TIM_IC_Start(&htim2, TIM_CHANNEL_3); // encoder index
   // HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_1);

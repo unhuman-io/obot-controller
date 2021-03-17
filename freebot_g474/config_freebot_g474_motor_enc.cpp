@@ -31,6 +31,8 @@ typedef USBCommunication Communication;
 
 #include "../motorlib/peripheral/stm32g4/spi_debug.h"
 
+const uint32_t main_loop_frequency = 10000;
+
 #include "../motorlib/peripheral/stm32g4/pin_config.h"
 #include "pin_config_freebot_g474_motor_r0.h"
 
@@ -109,11 +111,10 @@ struct InitCode {
 };
 
 volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
-static struct {
+static struct {    
+    uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     SystemInitClass system_init; // first item to enable clocks, etc.
     InitCode init_code;
-    uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
-    uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     volatile int spi3_register_operation = 0;
     SPIDMA spi_dma = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
@@ -285,6 +286,7 @@ void system_init() {
     // System::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;
     config_items.torque_sensor.init();
     config_items.motor_pwm.init();
+    TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
 }
 
 FrequencyLimiter temp_rate = {8};

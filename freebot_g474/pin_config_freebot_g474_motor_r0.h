@@ -6,7 +6,7 @@
 void pin_config_freebot_g474_motor_r0() {
      // Peripheral clock enable
         RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN |  RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN;
-        RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+        RCC->APB2ENR |= RCC_APB2ENR_SPI1EN | RCC_APB2ENR_TIM1EN ;
         RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN;
 
@@ -44,5 +44,9 @@ void pin_config_freebot_g474_motor_r0() {
 
         GPIO_SETH(C, 13, 1, 0, 0);  // Boostxl enable
 
-
+        // TIM1 main loop interrupt        
+        static_assert(CPU_FREQUENCY_HZ / main_loop_frequency < 65536, "Main loop frequency too low");
+        TIM1->ARR = CPU_FREQUENCY_HZ / main_loop_frequency - 1;
+        TIM1->DIER = TIM_DIER_UIE;
+        NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
 }

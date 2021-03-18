@@ -191,15 +191,29 @@ void system_init() {
     std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config_items.temp_sensor, std::placeholders::_1);
     System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t));
 
-    System::actuator_.main_loop_.reserved1_ = (uint32_t *) &config_items.temp_sensor.value_;
+    System::actuator_.main_loop_.reserved1_ = (uint32_t *) &ADC1->JDR2;
+    System::actuator_.main_loop_.reserved2_ = (uint32_t *) &ADC1->GCOMP;
     config_items.torque_sensor.init();
 
     ADC1->CR = ADC_CR_ADVREGEN; 
     ns_delay(20000);
-    ADC1->CR |= ADC_CR_ADEN | ADC_CR_ADCAL;
-    ns_delay(1930);
-    ADC1->GCOMP = 3.3*4096;
-    ADC1->CFGR2 =  ADC_CFGR2_GCOMP | ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos);
+    ADC1->CR |= ADC_CR_ADCAL;
+    while(ADC1->CR & ADC_CR_ADCAL);
+    ns_delay(100);
+    ADC1->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos);
+    ADC1->ISR = ADC_ISR_ADRDY;
+    ADC1->CR |= ADC_CR_ADEN;
+    while(!(ADC1->ISR & ADC_ISR_ADRDY));
+    ADC1->CR |= ADC_CR_JADSTART;
+    while(ADC1->CR & ADC_CR_JADSTART);
+
+
+    v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 / ADC1->JDR2;
+    System::log("3v3: " + std::to_string(v3v3));
+
+    ADC1->GCOMP = v3v3*4096;
+    ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
+
    
     TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
     usb1.connect();
@@ -209,13 +223,13 @@ void system_init() {
 FrequencyLimiter temp_rate = {10};
 
 void system_maintenance() {
+    static float v3v3_filt = v3v3;
     if (temp_rate.run()) {
-        ADC1->GCOMP = v3v3*4096;
+        v3v3_filt = .01*v3v3 + .99*v3v3_filt;
+//        ADC1->GCOMP = v3v3_filt*4096;
 
         config_items.temp_sensor.read();
-        if (ADC1->JDR2) {
-            v3v3 =  .1 * (*((uint16_t *) (0x1FFF75AA)) * 3.0 * v3v3 / ADC1->JDR2) + .9*v3v3;
-        }
+        v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
     }
 }
 

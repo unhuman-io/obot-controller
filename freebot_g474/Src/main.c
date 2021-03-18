@@ -107,9 +107,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   // DWC CYCCNT used as main counter
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  DWT->CYCCNT = 0;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  // CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  // DWT->CYCCNT = 0;
+  // DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -130,30 +130,32 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_DMA_Init();
+  //MX_GPIO_Init();
+  //MX_DMA_Init();
   MX_ADC1_Init();
   MX_ADC3_Init();
   MX_ADC4_Init();
   MX_ADC5_Init();
-  MX_HRTIM1_Init();
+  //MX_HRTIM1_Init();
   MX_OPAMP3_Init();
   MX_OPAMP4_Init();
   MX_OPAMP6_Init();
   //MX_SPI1_Init();
-  MX_SPI3_Init();
+  //MX_SPI3_Init();
   //MX_TIM1_Init();
   //MX_TIM2_Init();
   //MX_TIM4_Init();
-  MX_USB_PCD_Init();
+  //MX_USB_PCD_Init();
   //MX_I2C1_Init();
   //MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-  USB->CNTR &= ~(USB_CNTR_SOFM | USB_CNTR_ESOFM); // Don't need these interrupts
+  //USB->CNTR &= ~(USB_CNTR_SOFM | USB_CNTR_ESOFM); // Don't need these interrupts
   //SPI1->CR1 |= SPI_CR1_SPE;
-  SPI3->CR1 |= SPI_CR1_SPE; // enable spi
+  //SPI3->CR1 |= SPI_CR1_SPE; // enable spi
   //SPI1->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
   system_init();
+
+  //HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
 
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc3);
@@ -166,14 +168,14 @@ int main(void)
   HAL_OPAMP_Start(&hopamp6);
 
   //HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_TESWU;
-  HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN;
+  //HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN;
 
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD1);
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD2);
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TE2);
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TF1);
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TE1);
-  HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF2);
+  // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD1);
+  // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_D, HRTIM_OUTPUT_TD2);
+  // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TE2);
+  // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TF1);
+  // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TE1);
+  // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF2);
   hadc5.Instance->CR |= ADC_CR_JADSTART;
   hadc5.Instance->IER |= ADC_IER_JEOCIE;
   hadc4.Instance->CR |= ADC_CR_JADSTART;
@@ -182,7 +184,7 @@ int main(void)
 
   
   //HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
-  USB_DevConnect(USB);
+  //USB_DevConnect(USB);
   //htim1.Instance->DIER |= TIM_DIER_UIE;
   //HAL_TIM_Base_Start(&htim1);
 //  HAL_TIM_Base_Start(&htim4);
@@ -326,7 +328,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_24CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_247CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
@@ -336,9 +338,9 @@ static void MX_ADC1_Init(void)
   }
   /** Configure Injected Channel 
   */
-  sConfigInjected.InjectedChannel = ADC_CHANNEL_6;
+  sConfigInjected.InjectedChannel = ADC_CHANNEL_16;
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_1;
-  sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_12CYCLES_5;
+  sConfigInjected.InjectedSamplingTime = ADC_SAMPLETIME_640CYCLES_5;
   sConfigInjected.InjectedSingleDiff = ADC_SINGLE_ENDED;
   sConfigInjected.InjectedOffsetNumber = ADC_OFFSET_NONE;
   sConfigInjected.InjectedOffset = 0;
@@ -355,7 +357,7 @@ static void MX_ADC1_Init(void)
   }
   /** Configure Injected Channel 
   */
-  sConfigInjected.InjectedChannel = ADC_CHANNEL_7;
+  sConfigInjected.InjectedChannel = ADC_CHANNEL_18;
   sConfigInjected.InjectedRank = ADC_INJECTED_RANK_2;
   if (HAL_ADCEx_InjectedConfigChannel(&hadc1, &sConfigInjected) != HAL_OK)
   {

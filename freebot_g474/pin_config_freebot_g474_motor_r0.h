@@ -8,7 +8,7 @@ void pin_config_freebot_g474_motor_r0() {
         RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN |  RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_USBEN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN | RCC_APB2ENR_TIM1EN | RCC_APB2ENR_HRTIM1EN;
         RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
-        RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN;
+        RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN | RCC_AHB2ENR_ADC12EN;
 
         CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
         DWT->CYCCNT = 0;
@@ -61,7 +61,44 @@ void pin_config_freebot_g474_motor_r0() {
         NVIC_SetPriority(TIM1_UP_TIM16_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 1, 0));
         NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
 
+        // ADC
+        ADC12_COMMON->CCR = ADC_CCR_VSENSESEL | ADC_CCR_VREFEN | (3 << ADC_CCR_CKMODE_Pos);
+        MASK_SET(ADC1->JSQR, ADC_JSQR_JSQ1, 16);
+        // ADC1->CR = ADC_CR_ADVREGEN; 
+        // ns_delay(20000);
+        // ADC1->CR |= ADC_CR_ADEN | ADC_CR_ADCAL;
+        // ns_delay(1930);
+
         // USB
         NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));
         NVIC_EnableIRQ(USB_LP_IRQn);
+
+        // SPI1 DRV8323RS
+        //GPIOA->BSRR = GPIO_ODR_OD0;  // disable other spi cs
+        GPIOC->BSRR = GPIO_ODR_OD13; // drv enable
+        ms_delay(10);
+
+        SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
+        // ORDER DEPENDANCE SPE set last
+        SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
+        for (uint8_t i=0; i<sizeof(drv_regs)/sizeof(uint16_t); i++) {
+            uint16_t reg_out = drv_regs[i];
+            uint16_t reg_in = 0;
+            SPI1->DR = reg_out;
+            while(!(SPI1->SR & SPI_SR_RXNE));
+            reg_in = SPI1->DR;
+
+            reg_out |= (1<<15); // switch to read mode
+            SPI1->DR = reg_out;
+            while(!(SPI1->SR & SPI_SR_RXNE));
+            reg_in = SPI1->DR;
+            if ((reg_in & 0x7FF) != (reg_out & 0x7FF)) {
+            drv_regs_error |= 1 << i;
+            }
+        }
+        SPI1->CR1 = 0; // clear SPE
+        // SPI1 CS-> gpio
+        GPIO_SETL(A, 4, 1, 0, 0);
+        GPIOA->BSRR = GPIO_ODR_OD4;
+
 }

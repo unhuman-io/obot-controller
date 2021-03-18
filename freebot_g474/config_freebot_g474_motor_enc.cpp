@@ -32,27 +32,6 @@ typedef USBCommunication Communication;
 #include "../motorlib/peripheral/stm32g4/spi_debug.h"
 
 const uint32_t main_loop_frequency = 10000;
-
-#include "../motorlib/peripheral/stm32g4/pin_config.h"
-#include "pin_config_freebot_g474_motor_r0.h"
-
-USB1 usb1;
-Communication System::communication_ = {usb1};
-std::queue<std::string> System::log_queue_ = {};
-ParameterAPI System::api = {};
-
-#define I_A_DR  ADC5->JDR1
-#define I_B_DR  ADC4->JDR1
-#define I_C_DR  ADC3->JDR1
-#define V_BUS_DR ADC1->DR
-#define V_A_DR  ADC1->JDR1
-#define V_B_DR  ADC1->JDR2
-#define V_C_DR  ADC2->JDR3
-
-void usb_interrupt() {
-    usb1.interrupt();
-}
-
 uint16_t drv_regs_error = 0;
 uint16_t drv_regs[] = {
   (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
@@ -67,46 +46,26 @@ uint16_t drv_regs[] = {
   //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
   //(6<<11) | 0x280,
   (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
-};     
+};    
+#include "../motorlib/peripheral/stm32g4/pin_config.h"
+#include "pin_config_freebot_g474_motor_r0.h"
+
+
+
+#define I_A_DR  ADC5->JDR1
+#define I_B_DR  ADC4->JDR1
+#define I_C_DR  ADC3->JDR1
+#define V_BUS_DR ADC1->DR
+#define V_A_DR  ADC1->JDR1
+#define V_B_DR  ADC1->JDR2
+#define V_C_DR  ADC2->JDR3
+
 
 
 struct InitCode {
     InitCode() {
         pin_config_freebot_g474_motor_r0();
-
-        // SPI1 DRV8323RS
-        //GPIOA->BSRR = GPIO_ODR_OD0;  // disable other spi cs
-        GPIOC->BSRR = GPIO_ODR_OD13; // drv enable
-        ms_delay(10);
-
-        SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
-        // ORDER DEPENDANCE SPE set last
-        SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
-        for (uint8_t i=0; i<sizeof(drv_regs)/sizeof(uint16_t); i++) {
-            uint16_t reg_out = drv_regs[i];
-            uint16_t reg_in = 0;
-            SPI1->DR = reg_out;
-            while(!(SPI1->SR & SPI_SR_RXNE));
-            reg_in = SPI1->DR;
-
-            reg_out |= (1<<15); // switch to read mode
-            SPI1->DR = reg_out;
-            while(!(SPI1->SR & SPI_SR_RXNE));
-            reg_in = SPI1->DR;
-            if ((reg_in & 0x7FF) != (reg_out & 0x7FF)) {
-            drv_regs_error |= 1 << i;
-            }
-        }
-        SPI1->CR1 = 0; // clear SPE
-        // SPI1 CS-> gpio
-        GPIO_SETL(A, 4, 1, 0, 0);
-        GPIOA->BSRR = GPIO_ODR_OD4;
-
-        //SPI3 PZ
-        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
-        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
-        SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16 spi mode 0
-        SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
+ 
     }
 };
 
@@ -118,10 +77,10 @@ static struct {
     InitCode init_code;
     GPIO motor_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     volatile int spi3_register_operation = 0;
-    SPIDMA spi_dma = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
+    //SPIDMA spi_dma = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
     //ICPZ motor_encoder = {spi_dma};
     QEPEncoder motor_encoder = {*TIM2};
-    SPIDebug spi_debug = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
+    //SPIDebug spi_debug = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
   //  SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2, 4};
@@ -148,6 +107,15 @@ static struct {
     VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
     MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
 } config_items;
+
+USB1 usb1;
+Communication System::communication_ = {usb1};
+std::queue<std::string> System::log_queue_ = {};
+ParameterAPI System::api = {};
+void usb_interrupt() {
+    usb1.interrupt();
+}
+
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
@@ -207,16 +175,6 @@ void drv_reset(uint32_t blah) {
     ms_delay(10);
     GPIOC->BSRR = GPIO_BSRR_BS13; // drv enable
     ms_delay(10);
-}
-
-std::string val;
-void set_spi_debug(std::string s) {
-    //config_items.motor_encoder.set_register_operation();
-    val = config_items.spi_debug.read(s);
-    //config_items.motor_encoder.clear_register_operation();
-}
-std::string get_spi_debug() {
-    return val;
 }
 
 void system_init() {
@@ -281,13 +239,14 @@ void system_init() {
     System::api.add_api_variable("vcm", new APICallbackFloat(get_vc, set_v));
 
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
-    System::api.add_api_variable("spi", new APICallback(get_spi_debug, set_spi_debug));
 
     System::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
     // System::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;
     config_items.torque_sensor.init();
     //config_items.motor_pwm.init();
     TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
+    usb1.connect();
+    HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN; // start high res timer
 }
 
 FrequencyLimiter temp_rate = {8};

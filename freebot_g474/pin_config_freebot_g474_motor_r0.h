@@ -64,10 +64,8 @@ void pin_config_freebot_g474_motor_r0() {
         // ADC
         ADC12_COMMON->CCR = ADC_CCR_VSENSESEL | ADC_CCR_VREFEN | (3 << ADC_CCR_CKMODE_Pos);
         MASK_SET(ADC1->JSQR, ADC_JSQR_JSQ1, 16);
-        // ADC1->CR = ADC_CR_ADVREGEN; 
-        // ns_delay(20000);
-        // ADC1->CR |= ADC_CR_ADEN | ADC_CR_ADCAL;
-        // ns_delay(1930);
+        
+        ADC1->CFGR = ADC_CFGR_JQDIS | 1 << ADC_CFGR_EXTEN_Pos | 10 << ADC_CFGR_EXTSEL_Pos;
 
         // OPAMP
         GPIO_SETL(A, 3, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);
@@ -105,4 +103,43 @@ void pin_config_freebot_g474_motor_r0() {
         GPIO_SETL(A, 4, 1, 0, 0);
         GPIOA->BSRR = GPIO_ODR_OD4;
 
+}
+
+// return (fault status register 2 << 16) | (fault status register 1) 
+uint32_t get_drv_status() {
+        // pause main loop (due to overlap with torque sensor)
+        TIM1->CR1 &= ~TIM_CR1_CEN;
+        GPIO_SETL(A, 4, 2, 3, 5); 
+        SPI1->CR1 = 0; // clear SPE
+        SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
+        // ORDER DEPENDANCE SPE set last
+        SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
+
+        SPI1->DR = 1<<15; // fault status 1
+        while(!(SPI1->SR & SPI_SR_RXNE));
+        uint32_t reg_in = SPI1->DR;
+
+        SPI1->DR = (1<<15) | (1<<11); // vgs status2
+        while(!(SPI1->SR & SPI_SR_RXNE));
+        reg_in |= SPI1->DR << 16;
+
+        SPI1->CR1 = 0; // clear SPE
+        // SPI1 CS-> gpio
+        GPIO_SETL(A, 4, 1, 0, 0);
+        GPIOA->BSRR = GPIO_ODR_OD4;
+
+        // SPI1 ADS1235
+        SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
+        SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH | SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;    // 8 bit   
+
+        // reenable main loop
+        TIM1->CR1 = TIM_CR1_CEN;
+        return reg_in;
+}
+
+void drv_reset(uint32_t blah) {
+    GPIOC->BSRR = GPIO_BSRR_BR13; // drv enable
+    ms_delay(10);
+    GPIOC->BSRR = GPIO_BSRR_BS13; // drv enable
+    ms_delay(10);
 }

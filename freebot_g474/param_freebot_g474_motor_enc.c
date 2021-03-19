@@ -1,7 +1,6 @@
 #include "param_freebot_g474_col.h"
 #include "math.h"
 
-#define V_REF 3.3
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
@@ -22,9 +21,9 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc1_offset = 1980,
     .fast_loop_param.adc2_offset = 1980,
     .fast_loop_param.adc3_offset = 1980,
-    .fast_loop_param.adc1_gain = -3.3/4096/(.005*10),  // A/count
-    .fast_loop_param.adc2_gain = -3.3/4096/(.005*10),
-    .fast_loop_param.adc3_gain = -3.3/4096/(.005*10), 
+    .fast_loop_param.adc1_gain = -1.0/4096/(.005*10),  // A/count
+    .fast_loop_param.adc2_gain = -1.0/4096/(.005*10),
+    .fast_loop_param.adc3_gain = -1.0/4096/(.005*10), 
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 8192,
@@ -34,7 +33,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.torque_sensor.gain = -30.7,
     .main_loop_param.torque_sensor.bias = 0,
     .main_loop_param.torque_sensor.k_temp = 0,
-    .fast_loop_param.vbus_gain = V_REF/4096*(215+13.7)/13.7,
+    .fast_loop_param.vbus_gain = 1.0/4096*(215+13.7)/13.7,
     .main_loop_param.position_controller_param.position.kp = 50,
     .main_loop_param.position_controller_param.position.kd = .1,
     .main_loop_param.position_controller_param.position.velocity_filter_frequency_hz = 400,

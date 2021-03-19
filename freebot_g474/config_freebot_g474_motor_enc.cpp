@@ -56,10 +56,8 @@ uint16_t drv_regs[] = {
 #define I_B_DR  ADC4->JDR1
 #define I_C_DR  ADC3->JDR1
 #define V_BUS_DR ADC1->DR
-#define V_A_DR  ADC1->JDR1
-#define V_B_DR  ADC1->JDR2
-#define V_C_DR  ADC2->JDR3
 
+#include "../motorlib/peripheral/stm32g4/temp_sensor.h"
 
 
 struct InitCode {
@@ -89,12 +87,7 @@ static struct {
     OutputEncoder output_encoder;// = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    I2C i2c = {*I2C1};
-    I2C i2c2 = {*I2C2};
-    MAX31875 temp_sensor = {i2c, 0x48};        // R0
-    MAX31875 temp_sensor1 = {i2c2, 0x48};      // R0
-    MAX31875 temp_sensor2 = {i2c2, 0x49};      // R1
-    MAX31875 temp_sensor3 = {i2c2, 0x4A};      // R2
+    TempSensor temp_sensor;
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false, 200};
 
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
@@ -119,63 +112,7 @@ void usb_interrupt() {
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
-float get_va() {
-    ADC1->CR |= ADC_CR_JADSTART;
-    ns_delay(1000);
-    return V_A_DR * 3.0/4096*(18+2)/2.0;
-}
-float get_vb() {
-    ADC1->CR |= ADC_CR_JADSTART;
-    ns_delay(1000);
-    return V_A_DR * 3.0/4096*(18+2)/2.0;
-}
-float get_vc() {
-    ADC1->CR |= ADC_CR_JADSTART;
-    ns_delay(1000);
-    return V_A_DR * 3.0/4096*(18+2)/2.0;
-}
-void set_v(float f) {}
-
-volatile float T1=0, T2=0, T3=0;
-
-// return (fault status register 2 << 16) | (fault status register 1) 
-uint32_t get_drv_status() {
-        // pause main loop (due to overlap with torque sensor)
-        TIM1->CR1 &= ~TIM_CR1_CEN;
-        GPIO_SETL(A, 4, 2, 3, 5); 
-        SPI1->CR1 = 0; // clear SPE
-        SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
-        // ORDER DEPENDANCE SPE set last
-        SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
-
-        SPI1->DR = 1<<15; // fault status 1
-        while(!(SPI1->SR & SPI_SR_RXNE));
-        uint32_t reg_in = SPI1->DR;
-
-        SPI1->DR = (1<<15) | (1<<11); // vgs status2
-        while(!(SPI1->SR & SPI_SR_RXNE));
-        reg_in |= SPI1->DR << 16;
-
-        SPI1->CR1 = 0; // clear SPE
-        // SPI1 CS-> gpio
-        GPIO_SETL(A, 4, 1, 0, 0);
-        GPIOA->BSRR = GPIO_ODR_OD4;
-
-        // SPI1 ADS1235
-        SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
-        SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH | SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;    // 8 bit   
-
-        // reenable main loop
-        TIM1->CR1 = TIM_CR1_CEN;
-        return reg_in;
-}
-
-void drv_reset(uint32_t blah) {
-    GPIOC->BSRR = GPIO_BSRR_BR13; // drv enable
-    ms_delay(10);
-    GPIOC->BSRR = GPIO_BSRR_BS13; // drv enable
-    ms_delay(10);
-}
+float v3v3 = 3.3;
 
 void system_init() {
     if (config_items.motor_encoder.init()) {
@@ -194,70 +131,50 @@ void system_init() {
         System::log("drv configure success");
     }
 
-    // // TODO I don't know if these std::functions persist after this function, but they seem to work.
-    // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
-    // System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
-
-    // std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
-    // System::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
-
-    // std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
-    // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
-
-    // std::function<void(uint32_t)> setbctj = std::bind(&MA732Encoder::set_bct, &config_items.output_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> getbctj = std::bind(&MA732Encoder::get_bct, &config_items.output_encoder);
-    // System::api.add_api_variable("jbct", new APICallbackUint32(getbctj, setbctj));
-
-    // std::function<void(uint32_t)> set_etj = std::bind(&MA732Encoder::set_et, &config_items.output_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_etj = std::bind(&MA732Encoder::get_et, &config_items.output_encoder);
-    // System::api.add_api_variable("jet", new APICallbackUint32(get_etj, set_etj));
-
-    // std::function<void(uint32_t)> set_mgtj = std::bind(&MA732Encoder::set_mgt, &config_items.output_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_mgtj = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.output_encoder);
-    // System::api.add_api_variable("jmgt", new APICallbackUint32(get_mgtj, set_mgtj));
-
-    // System::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
-    // System::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
-
-    // std::function<void(uint32_t)> set_t_reset = std::bind(&SPITorque::reset, &config_items.torque_sensor, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_t_reset = std::bind(&SPITorque::reset2, &config_items.torque_sensor);
-    // System::api.add_api_variable("t_reset", new APICallbackUint32(get_t_reset, set_t_reset));
-
-    std::function<void(uint32_t)> set_temp = nullptr;
-    std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
-    System::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
-
-    System::api.add_api_variable("T1", new APIFloat((float*) &T1));
-    System::api.add_api_variable("T2", new APIFloat((float*) &T2));
-    System::api.add_api_variable("T3", new APIFloat((float*) &T3));
-
-    System::api.add_api_variable("vam", new APICallbackFloat(get_va, set_v));
-    System::api.add_api_variable("vbm", new APICallbackFloat(get_vb, set_v));
-    System::api.add_api_variable("vcm", new APICallbackFloat(get_vc, set_v));
+    System::api.add_api_variable("3v3", new APIFloat(&v3v3));
+    std::function<float()> get_t = std::bind(&TempSensor::get_value, &config_items.temp_sensor);
+    std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config_items.temp_sensor, std::placeholders::_1);
+    System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t));
 
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
 
-    System::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
-    // System::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;
     config_items.torque_sensor.init();
-    //config_items.motor_pwm.init();
+
+
+    ADC1->CR = ADC_CR_ADVREGEN; 
+    ns_delay(20000);
+    ADC1->CR |= ADC_CR_ADCAL;
+    while(ADC1->CR & ADC_CR_ADCAL);
+    ns_delay(100);
+    ADC1->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos);
+    ADC1->ISR = ADC_ISR_ADRDY;
+    ADC1->CR |= ADC_CR_ADEN;
+    while(!(ADC1->ISR & ADC_ISR_ADRDY));
+    ADC1->CR |= ADC_CR_JADSTART;
+    while(ADC1->CR & ADC_CR_JADSTART);
+
+
+    v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 / ADC1->JDR2;
+    System::log("3v3: " + std::to_string(v3v3));
+
+    ADC1->GCOMP = v3v3*4096;
+    ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
+    ADC1->CR |= ADC_CR_ADSTART;
+
+   
     TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
     usb1.connect();
     HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN; // start high res timer
 }
 
-FrequencyLimiter temp_rate = {8};
+FrequencyLimiter temp_rate = {10};
 
 void system_maintenance() {
-    // if (temp_rate.run()) {
-    //     config_items.temp_sensor.read();
-    //     T1 = config_items.temp_sensor1.read();
-    //     T2 = config_items.temp_sensor2.read();
-    //     T3 = config_items.temp_sensor3.read();
-    // }
+    if (temp_rate.run()) {
+        config_items.temp_sensor.read();
+        v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
+    }
 }
+
 
 #include "../motorlib/system.cpp"

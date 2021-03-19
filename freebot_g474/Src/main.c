@@ -157,7 +157,7 @@ int main(void)
 
   //HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
 
-  HAL_ADC_Start(&hadc1);
+  //HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc3);
   HAL_ADC_Start(&hadc4);
   HAL_ADC_Start(&hadc5);

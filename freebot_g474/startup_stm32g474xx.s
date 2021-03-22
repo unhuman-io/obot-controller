@@ -105,6 +105,9 @@ Reboot_Loader:
 
 Original_Reset_Handler:
   // start watchdog IWDG->KR = 0xCCCC;
+  ldr	r0, =(1<<12)
+  ldr	r1, =0xE0042008
+  str   r0, [r1]		// IWDG stop on debug
   ldr	r0, =0xCCCC
   ldr	r1, =IWDG_KR
   str	r0, [r1]

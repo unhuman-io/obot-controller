@@ -16,10 +16,14 @@ class Table:
         parser.add_argument('-s,--table-size', dest="table_size", default=512)
         parser.add_argument('-i,--index-pos',dest="index_pos", default=0)
         parser.add_argument('-c,--cpr',dest="cpr",default=8192)
+        parser.add_argument('-e,--encoder',dest="encoder_table", type=bool, default=False)
         self.args = parser.parse_args(args_in)
 
         self.data = genfromtxt(self.args.infile, delimiter=',', names=True)
-        self.table = self.parse_encoder_table(nbins=self.args.table_size,index_pos=self.args.index_pos,cpr=self.args.cpr)
+        if (self.args.encoder_table):
+            self.table = self.parse_encoder_table(nbins=self.args.table_size,index_pos=self.args.index_pos,cpr=self.args.cpr)
+        else:
+            self.table = self.parse_cogging_table(nbins=self.args.table_size,index_pos=self.args.index_pos,cpr=self.args.cpr)
         self.save()
 
     def parse_encoder_table(self, nbins=32, index_pos=0, cpr=8192):
@@ -30,11 +34,24 @@ class Table:
         i = where(abs(vpos) > .9*max(vpos))
         x = delete(x, i) 
         y = delete(y, i)
-        # plot(mod(x,2*pi), y)
-        # show()
+
+        return self.create_table(x, y, nbins)
+
+    def parse_cogging_table(self, nbins=32, index_pos=0, cpr=8192):
+        e = self.data["motor_encoder0"]-float(index_pos)
+        iq = self.data["iq0"] 
+        y = iq
+        x = e*2*pi/cpr
+        xavg = x-mean(x)     
+        i = where(abs(xavg) > .9*max(xavg))
+        x = delete(x, i) 
+        y = delete(y, i)
+
+        return self.create_table(x, y, nbins)
+
+    def create_table(self, x, y, nbins):
         yfilt = circular_filt(x, y-mean(y), nbins=nbins)
         xfilt = linspace(0, 2*pi, nbins+1)[:-1]
-
 
         yfiltd = fft_derivative(xfilt,yfilt)
 

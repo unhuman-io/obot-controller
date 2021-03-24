@@ -4,7 +4,7 @@ from scipy.fftpack import *
 from matplotlib.pyplot import *
 import numpy as np
 
-def circular_filt(x, y, nbins=1000, modx=2*pi, ffilt=.005, magfilt=0):
+def circular_filt(x, y, nbins=1000, modx=2*pi, ffilt=.05, magfilt=0):
     xm = mod(x,modx)
     xi = linspace(0,modx, nbins+1)
     ibins = digitize(xm, xi)

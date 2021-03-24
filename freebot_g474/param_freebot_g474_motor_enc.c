@@ -16,7 +16,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.pi_q.command_max=10,
     .fast_loop_param.foc_param.current_filter_frequency_hz=20000,//35000,
     .fast_loop_param.foc_param.num_poles = 7,
-    .fast_loop_param.cogging.gain = 0,
+    .fast_loop_param.cogging.gain = 1,
     .startup_param.startup_mode = OPEN,
     .fast_loop_param.adc1_offset = 1980,
     .fast_loop_param.adc2_offset = 1980,
@@ -64,7 +64,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = OPEN,
     .fast_loop_param.cogging.table = {
-//#include "cogprocessed.csv"
+#include "cog.csv"
     },
     .fast_loop_param.motor_encoder.table = {
 #include "tab.csv"

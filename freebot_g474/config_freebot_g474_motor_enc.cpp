@@ -114,6 +114,8 @@ Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, pa
 
 float v3v3 = 3.3;
 
+int32_t index_mod = 0;
+
 void system_init() {
     if (config_items.motor_encoder.init()) {
         System::log("Motor encoder init success");
@@ -135,7 +137,7 @@ void system_init() {
     std::function<float()> get_t = std::bind(&TempSensor::get_value, &config_items.temp_sensor);
     std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config_items.temp_sensor, std::placeholders::_1);
     System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t));
-
+    System::api.add_api_variable("index_mod", new APIInt32(&index_mod));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
 
     config_items.torque_sensor.init();
@@ -174,6 +176,7 @@ void system_maintenance() {
         config_items.temp_sensor.read();
         v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
     }
+    index_mod = config_items.motor_encoder.get_index_pos() % param->fast_loop_param.motor_encoder.cpr;
 }
 
 

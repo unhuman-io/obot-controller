@@ -19,11 +19,11 @@
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
-typedef TorqueSensorBase TorqueSensor;
-typedef HRPWM PWM;
-typedef QEPEncoder MotorEncoder;
-typedef EncoderBase OutputEncoder;
-typedef USBCommunication Communication;
+using TorqueSensor = TorqueSensorBase;
+using PWM = HRPWM;
+using MotorEncoder = QEPEncoder;
+using OutputEncoder = EncoderBase;
+using Communication = USBCommunication;
 #include "../motorlib/fast_loop.h"
 #include "../motorlib/main_loop.h"
 #include "../motorlib/actuator.h"
@@ -176,7 +176,7 @@ void system_maintenance() {
         config_items.temp_sensor.read();
         v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
     }
-    index_mod = config_items.motor_encoder.get_index_pos() % param->fast_loop_param.motor_encoder.cpr;
+    index_mod = config_items.motor_encoder.index_error(param->fast_loop_param.motor_encoder.cpr);
 }
 
 

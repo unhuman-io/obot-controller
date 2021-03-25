@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    stategy:
+    strategy:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:

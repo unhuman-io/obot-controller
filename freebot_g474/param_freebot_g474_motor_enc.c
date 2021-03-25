@@ -62,7 +62,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.acceleration_limit = 4,
     .main_loop_param.output_encoder.cpr = 65536,
     .main_loop_param.host_timeout = 0,
-    .main_loop_param.safe_mode = OPEN,
+    .main_loop_param.safe_mode = DAMPED,
     .fast_loop_param.cogging.table = {
 #include "cog.csv"
     },

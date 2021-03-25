@@ -137,9 +137,9 @@ int main(void)
   MX_ADC4_Init();
   MX_ADC5_Init();
   //MX_HRTIM1_Init();
-  MX_OPAMP3_Init();
-  MX_OPAMP4_Init();
-  MX_OPAMP6_Init();
+  // MX_OPAMP3_Init();
+  // MX_OPAMP4_Init();
+  // MX_OPAMP6_Init();
   //MX_SPI1_Init();
   //MX_SPI3_Init();
   //MX_TIM1_Init();
@@ -162,10 +162,10 @@ int main(void)
   HAL_ADC_Start(&hadc4);
   HAL_ADC_Start(&hadc5);
 
-  HAL_OPAMP_Start(&hopamp3);
-  HAL_OPAMP_Start(&hopamp4);
-  OPAMP6->CSR |= OPAMP_CSR_OPAMPINTEN; // bug in cubemx
-  HAL_OPAMP_Start(&hopamp6);
+  // HAL_OPAMP_Start(&hopamp3);
+  // HAL_OPAMP_Start(&hopamp4);
+  // OPAMP6->CSR |= OPAMP_CSR_OPAMPINTEN; // bug in cubemx
+  // HAL_OPAMP_Start(&hopamp6);
 
   //HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_TESWU;
   //HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN;

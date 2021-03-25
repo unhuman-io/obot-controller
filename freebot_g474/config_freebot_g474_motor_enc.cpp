@@ -59,6 +59,17 @@ uint16_t drv_regs[] = {
 
 #include "../motorlib/peripheral/stm32g4/temp_sensor.h"
 
+#define TIM_R TIM4->CCR1
+#define TIM_G TIM4->CCR3
+#define TIM_B TIM4->CCR2
+#ifdef R1
+    #undef TIM_R
+    #undef TIM_G
+    #undef TIM_B
+    #define TIM_R TIM4->CCR1
+    #define TIM_G TIM4->CCR2
+    #define TIM_B TIM4->CCR3
+#endif
 
 struct InitCode {
     InitCode() {
@@ -92,8 +103,8 @@ static struct {
 
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3)),
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2))};
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_G)),
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_B))};
     PositionController position_controller = {(float) (1.0/main_loop_frequency)};
     TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
     ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};

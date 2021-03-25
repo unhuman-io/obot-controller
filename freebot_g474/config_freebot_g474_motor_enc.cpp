@@ -152,6 +152,8 @@ void system_init() {
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
 
     config_items.torque_sensor.init();
+    FLASH->ACR |= FLASH_ACR_PRFTEN;
+    MASK_SET(FLASH->ACR, FLASH_ACR_LATENCY, 4);
 
     for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC3, ADC4, ADC5}) {
         regs->CR = ADC_CR_ADVREGEN;

@@ -65,11 +65,11 @@ INTERRUPT_PROFILE_GLOBALS(mainloop);
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern ADC_HandleTypeDef hadc5;
-extern DMA_HandleTypeDef hdma_spi1_tx;
-extern DMA_HandleTypeDef hdma_spi1_rx;
-extern TIM_HandleTypeDef htim1;
-extern PCD_HandleTypeDef hpcd_USB_FS;
+// extern ADC_HandleTypeDef hadc5;
+// extern DMA_HandleTypeDef hdma_spi1_tx;
+// extern DMA_HandleTypeDef hdma_spi1_rx;
+// extern TIM_HandleTypeDef htim1;
+// extern PCD_HandleTypeDef hpcd_USB_FS;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -213,30 +213,30 @@ void SysTick_Handler(void)
 /**
   * @brief This function handles DMA1 channel1 global interrupt.
   */
-void DMA1_Channel1_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
+// void DMA1_Channel1_IRQHandler(void)
+// {
+//   /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
 
-  /* USER CODE END DMA1_Channel1_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_spi1_tx);
-  /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
+//   /* USER CODE END DMA1_Channel1_IRQn 0 */
+//   HAL_DMA_IRQHandler(&hdma_spi1_tx);
+//   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
 
-  /* USER CODE END DMA1_Channel1_IRQn 1 */
-}
+//   /* USER CODE END DMA1_Channel1_IRQn 1 */
+// }
 
-/**
-  * @brief This function handles DMA1 channel2 global interrupt.
-  */
-void DMA1_Channel2_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Channel2_IRQn 0 */
+// /**
+//   * @brief This function handles DMA1 channel2 global interrupt.
+//   */
+// void DMA1_Channel2_IRQHandler(void)
+// {
+//   /* USER CODE BEGIN DMA1_Channel2_IRQn 0 */
 
-  /* USER CODE END DMA1_Channel2_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_spi1_rx);
-  /* USER CODE BEGIN DMA1_Channel2_IRQn 1 */
+//   /* USER CODE END DMA1_Channel2_IRQn 0 */
+//   HAL_DMA_IRQHandler(&hdma_spi1_rx);
+//   /* USER CODE BEGIN DMA1_Channel2_IRQn 1 */
 
-  /* USER CODE END DMA1_Channel2_IRQn 1 */
-}
+//   /* USER CODE END DMA1_Channel2_IRQn 1 */
+// }
 
 /**
   * @brief This function handles USB low priority interrupt remap.
@@ -289,7 +289,7 @@ void ADC5_IRQHandler(void)
   HAL_ADC_IRQHandler(&hadc5);
   /* USER CODE BEGIN ADC5_IRQn 1 */
 #endif
-  hadc5.Instance->ISR = ADC_ISR_JEOC;
+  ADC5->ISR = ADC_ISR_JEOC;
   INTERRUPT_PROFILE_END(fastloop)
   //scope1_GPIO_Port->BSRR |= scope1_Pin << 16; 
   /* USER CODE END ADC5_IRQn 1 */

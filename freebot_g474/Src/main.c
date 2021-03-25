@@ -132,11 +132,11 @@ int main(void)
   /* Initialize all configured peripherals */
   //MX_GPIO_Init();
   //MX_DMA_Init();
-  MX_ADC1_Init();
-  MX_ADC3_Init();
-  MX_ADC4_Init();
-  MX_ADC5_Init();
-  //MX_HRTIM1_Init();
+  //MX_ADC1_Init();
+  // MX_ADC3_Init();
+  // MX_ADC4_Init();
+  //MX_ADC5_Init();
+  // //MX_HRTIM1_Init();
   // MX_OPAMP3_Init();
   // MX_OPAMP4_Init();
   // MX_OPAMP6_Init();
@@ -158,9 +158,9 @@ int main(void)
   //HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
 
   //HAL_ADC_Start(&hadc1);
-  HAL_ADC_Start(&hadc3);
-  HAL_ADC_Start(&hadc4);
-  HAL_ADC_Start(&hadc5);
+  // HAL_ADC_Start(&hadc3);
+  // HAL_ADC_Start(&hadc4);
+  // HAL_ADC_Start(&hadc5);
 
   // HAL_OPAMP_Start(&hopamp3);
   // HAL_OPAMP_Start(&hopamp4);
@@ -176,11 +176,11 @@ int main(void)
   // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_E, HRTIM_OUTPUT_TF1);
   // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TE1);
   // HAL_HRTIM_SimplePWMStart(&hhrtim1, HRTIM_TIMERINDEX_TIMER_F, HRTIM_OUTPUT_TF2);
-  hadc5.Instance->CR |= ADC_CR_JADSTART;
-  hadc5.Instance->IER |= ADC_IER_JEOCIE;
-  hadc4.Instance->CR |= ADC_CR_JADSTART;
-  hadc3.Instance->CR |= ADC_CR_JADSTART;
-  hadc1.Instance->CR |= ADC_CR_ADSTART;
+  // hadc5.Instance->CR |= ADC_CR_JADSTART;
+  // hadc5.Instance->IER |= ADC_IER_JEOCIE;
+  // hadc4.Instance->CR |= ADC_CR_JADSTART;
+  // hadc3.Instance->CR |= ADC_CR_JADSTART;
+  //hadc1.Instance->CR |= ADC_CR_ADSTART;
 
   
   //HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);

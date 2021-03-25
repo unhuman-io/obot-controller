@@ -152,7 +152,7 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 AS_DEFS = 
 
 # C defines
-C_DEFS =  \
+override C_DEFS +=  \
 -DGIT_VERSION=\"$(GIT_VERSION)\" \
 -DUSE_HAL_DRIVER \
 -DSTM32G474xx

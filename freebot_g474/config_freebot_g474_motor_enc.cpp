@@ -153,19 +153,19 @@ void system_init() {
 
     config_items.torque_sensor.init();
 
+    for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC3, ADC4, ADC5}) {
+        regs->CR = ADC_CR_ADVREGEN;
+        ns_delay(20000);
+        regs->CR |= ADC_CR_ADCAL;
+        while(regs->CR & ADC_CR_ADCAL);
+        ns_delay(100);
 
-    ADC1->CR = ADC_CR_ADVREGEN; 
-    ns_delay(20000);
-    ADC1->CR |= ADC_CR_ADCAL;
-    while(ADC1->CR & ADC_CR_ADCAL);
-    ns_delay(100);
-    ADC1->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos);
-    ADC1->ISR = ADC_ISR_ADRDY;
-    ADC1->CR |= ADC_CR_ADEN;
+        regs->ISR = ADC_ISR_ADRDY;
+        regs->CR |= ADC_CR_ADEN;
+    }
     while(!(ADC1->ISR & ADC_ISR_ADRDY));
     ADC1->CR |= ADC_CR_JADSTART;
     while(ADC1->CR & ADC_CR_JADSTART);
-
 
     v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 / ADC1->JDR2;
     System::log("3v3: " + std::to_string(v3v3));
@@ -173,7 +173,10 @@ void system_init() {
     ADC1->GCOMP = v3v3*4096;
     ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
     ADC1->CR |= ADC_CR_ADSTART;
-
+    ADC5->CR |= ADC_CR_JADSTART;
+    ADC5->IER |= ADC_IER_JEOCIE;
+    ADC4->CR |= ADC_CR_JADSTART;
+    ADC3->CR |= ADC_CR_JADSTART;
    
     TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
     usb1.connect();

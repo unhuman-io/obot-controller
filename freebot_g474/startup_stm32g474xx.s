@@ -395,11 +395,11 @@ g_pfnVectors:
 	.weak	EXTI4_IRQHandler
 	.thumb_set EXTI4_IRQHandler,Default_Handler
 
-//	.weak	DMA1_Channel1_IRQHandler
-//	.thumb_set DMA1_Channel1_IRQHandler,Default_Handler
+	.weak	DMA1_Channel1_IRQHandler
+	.thumb_set DMA1_Channel1_IRQHandler,Default_Handler
 
-//	.weak	DMA1_Channel2_IRQHandler
-//	.thumb_set DMA1_Channel2_IRQHandler,Default_Handler
+	.weak	DMA1_Channel2_IRQHandler
+	.thumb_set DMA1_Channel2_IRQHandler,Default_Handler
 
 	.weak	DMA1_Channel3_IRQHandler
 	.thumb_set DMA1_Channel3_IRQHandler,Default_Handler

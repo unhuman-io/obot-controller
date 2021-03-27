@@ -65,7 +65,7 @@ class Table:
         plot(xfilt,yfilt)
         plot(xfilt, pchip[:,0], '*')
         plot(xcalc, ycalc,'.')
-        plot(mod(x,2*pi), y-mean(y))
+        plot(mod(x,2*pi), y-mean(y),'.')
         show()
         return pchip
 

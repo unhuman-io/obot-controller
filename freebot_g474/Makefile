@@ -58,37 +58,13 @@ BUILD_DIR = build
 C_SOURCES =  \
 Src/main.c \
 Src/stm32g4xx_it.c \
-Src/stm32g4xx_hal_msp.c \
 Src/system_stm32g4xx.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_gpio.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_adc.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_adc_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_adc.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_rcc.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_rcc_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash_ramfunc.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_exti.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma_ex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_i2c.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_i2c_ex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_cortex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_hrtim.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_usb.c \
 ./$(PARAM_FILE) \
 
 CPP_SOURCES = \

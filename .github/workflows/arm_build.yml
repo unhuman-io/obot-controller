@@ -37,7 +37,7 @@ jobs:
         path: |
           ${{ matrix.project }}/build/${{ matrix.config }}.elf
           ${{ matrix.project }}/build/${{ matrix.config }}.tgz
-      if: !matrix.config
+      if: ${{ !matrix.config }}
     - name: make ${{ matrix.project }}
       run: make -C ${{ matrix.project }}$ -j2
     - name: Archive ${{ matrix.project }}

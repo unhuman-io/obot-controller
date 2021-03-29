@@ -10,7 +10,9 @@ jobs:
         include:
           - project: boost_g474
           - project: fabulab_f446
+            config: motor_enc
           - project: freebot_g474
+            config: pz
     runs-on: ubuntu-latest
     steps:
     - name: install dfu-suffix
@@ -23,12 +25,12 @@ jobs:
       uses: fiam/arm-none-eabi-gcc@master
       with:
         release: '9-2020-q2'
-    - name: make ${{ matrix.project }}
-      run: make -C ${{ matrix.project }} -j2
-    - name: Archive ${{ matrix.project }}
+    - name: make ${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}
+      run: make -C ${{ matrix.project }}${{ matrix.config && ' CONFIG='}}${{ matrix.config }} -j2
+    - name: Archive ${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.project }}
+        name: ${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}
         path: |
-          ${{ matrix.project }}/build/${{ matrix.project }}.elf
-          ${{ matrix.project }}/build/${{ matrix.project }}.bin
+          ${{ matrix.project }}/build/${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}.elf
+          ${{ matrix.project }}/build/${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}.bin

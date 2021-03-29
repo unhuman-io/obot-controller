@@ -19,7 +19,7 @@ $(shell touch version.h)
 
 PARAM_DIR = params_freebot_g474_col
 
-CONFIG=col_spi
+CONFIG=motor_wheel
 CONFIG_FILE = config/config_freebot_g474_$(CONFIG).cpp
 PARAM=$(CONFIG)
 PARAM_FILE = param/param_freebot_g474_$(PARAM).c 

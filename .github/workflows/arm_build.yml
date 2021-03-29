@@ -27,12 +27,23 @@ jobs:
       uses: fiam/arm-none-eabi-gcc@master
       with:
         release: '9-2020-q2'
-    - name: make ${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}
-      run: make -C ${{ matrix.project }}${{ matrix.config && ' CONFIG='}}${{ matrix.config }} -j2
-    - name: Archive ${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}
+      if: ${{ matrix.config }}
+    - name: make ${{ matrix.project }} ${{ matrix.config }}
+      run: make -C ${{ matrix.project }}$ CONFIG=${{ matrix.config }} -j2
+    - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}
+        name: ${{ matrix.project }} ${{ matrix.config }}
         path: |
-          ${{ matrix.project }}/build/${{ matrix.project }}${{ matrix.config && '_'}}${{ matrix.config }}.elf
-          ${{ matrix.project }}/build/${{ matrix.project }}${{ matrix.config && '_'}}${{ matrix.config }}.bin
+          ${{ matrix.project }}/build/${{ matrix.config }}.elf
+          ${{ matrix.project }}/build/${{ matrix.config }}.tgz
+      if: ${{ !matrix.config }}
+    - name: make ${{ matrix.project }}
+      run: make -C ${{ matrix.project }}$ -j2
+    - name: Archive ${{ matrix.project }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.project }}
+        path: |
+          ${{ matrix.project }}/build/${{ matrix.project }}.elf
+          ${{ matrix.project }}/build/${{ matrix.project }}.tgz

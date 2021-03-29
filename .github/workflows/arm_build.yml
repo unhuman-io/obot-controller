@@ -9,10 +9,10 @@ jobs:
       matrix:
         include:
           - project: boost_g474
-          - project: fabulab_f446
-            config: motor_enc
-          - project: freebot_g474
             config: pz
+          - project: fabulab_f446
+          - project: freebot_g474
+            config: [motor_enc, motor_wheel]
     runs-on: ubuntu-latest
     steps:
     - name: install dfu-suffix
@@ -32,5 +32,5 @@ jobs:
       with:
         name: ${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}
         path: |
-          ${{ matrix.project }}/build/${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}.elf
-          ${{ matrix.project }}/build/${{ matrix.project }}${{ matrix.config && ' '}}${{ matrix.config }}.bin
+          ${{ matrix.project }}/build/${{ matrix.project }}${{ matrix.config && '_'}}${{ matrix.config }}.elf
+          ${{ matrix.project }}/build/${{ matrix.project }}${{ matrix.config && '_'}}${{ matrix.config }}.bin

@@ -28,8 +28,6 @@ typedef USBCommunication Communication;
 
 USB_OTG usb;
 Communication System::communication_ = {usb};
-std::queue<std::string> System::log_queue_ = {};
-ParameterAPI System::api = {};
 
 #define I_A_DR  ADC3->JDR1
 #define I_B_DR  ADC2->JDR1

@@ -60,7 +60,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.velocity.command_max = 5,
     .main_loop_param.velocity_controller_param.acceleration_limit = 4,
     .fast_loop_param.cogging.table = {
-#include "cogprocessed.csv"
+//#include "cogprocessed.csv"
     },
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = 5,

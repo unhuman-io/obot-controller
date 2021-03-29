@@ -20,9 +20,9 @@ $(shell touch version.h)
 PARAM_DIR = params_freebot_g474_col
 
 CONFIG=col
-CONFIG_FILE = config_freebot_g474_$(CONFIG).cpp
+CONFIG_FILE = config/config_freebot_g474_$(CONFIG).cpp
 PARAM=$(CONFIG)
-PARAM_FILE = param_freebot_g474_$(PARAM).c 
+PARAM_FILE = param/param_freebot_g474_$(PARAM).c 
 
 TARGET = $(CONFIG)
 

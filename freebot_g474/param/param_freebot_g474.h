@@ -1,5 +1,5 @@
 #pragma once
-#include "../motorlib/messages.h"
+#include "../../motorlib/messages.h"
 
 typedef struct {
     char name[64];    // name available through usb string

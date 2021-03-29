@@ -2,6 +2,25 @@
 
 #include "stm32g474xx.h"
 
+#define I_A_DR  ADC5->JDR1
+#define I_B_DR  ADC4->JDR1
+#define I_C_DR  ADC3->JDR1
+#define V_BUS_DR ADC1->DR
+#define V_REF_DR ADC1->JDR2
+#define V_TEMP_DR ADC1->JDR1
+
+#define TIM_R TIM4->CCR1
+#define TIM_G TIM4->CCR3
+#define TIM_B TIM4->CCR2
+#ifdef R1
+    #undef TIM_R
+    #undef TIM_G
+    #undef TIM_B
+    #define TIM_R TIM4->CCR1
+    #define TIM_G TIM4->CCR2
+    #define TIM_B TIM4->CCR3
+#endif
+
 
 void pin_config_freebot_g474_motor_r0() {
      // Peripheral clock enable
@@ -13,6 +32,9 @@ void pin_config_freebot_g474_motor_r0() {
         CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
         DWT->CYCCNT = 0;
         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
+        FLASH->ACR |= FLASH_ACR_PRFTEN;
+        MASK_SET(FLASH->ACR, FLASH_ACR_LATENCY, 4);
 
         // GPIO configure
         GPIO_SETL(A, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPA TIM2

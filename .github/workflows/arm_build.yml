@@ -11,6 +11,7 @@ jobs:
           - project: boost_g474
             config: pz
           - project: fabulab_f446
+            config: motor
           - project: freebot_g474
             config: motor_enc
           - project: freebot_g474
@@ -27,7 +28,6 @@ jobs:
       uses: fiam/arm-none-eabi-gcc@master
       with:
         release: '9-2020-q2'
-      if: matrix.config
     - name: make ${{ matrix.project }} ${{ matrix.config }}
       run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
@@ -37,13 +37,3 @@ jobs:
         path: |
           ${{ matrix.project }}/build/${{ matrix.config }}.elf
           ${{ matrix.project }}/build/${{ matrix.config }}.tgz
-      if: ${{ !matrix.config }}
-    - name: make ${{ matrix.project }}
-      run: make -C ${{ matrix.project }}$ -j2
-    - name: Archive ${{ matrix.project }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.project }}
-        path: |
-          ${{ matrix.project }}/build/${{ matrix.project }}.elf
-          ${{ matrix.project }}/build/${{ matrix.project }}.tgz

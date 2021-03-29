@@ -15,7 +15,8 @@ $(shell touch version.h)
 ######################################
 # target
 ######################################
-TARGET = fabulab_f446
+CONFIG = motor
+TARGET = ${CONFIG}
 CONFIG_FILE = config_fabulab_f446.cpp
 
 ######################################
@@ -171,7 +172,7 @@ LIBDIR =
 LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections $(LTO) -u _printf_float
 
 # default action: build all
-all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).tgz
 
 
 #######################################
@@ -204,7 +205,10 @@ $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(BIN) $< $@	
-	
+
+$(BUILD_DIR)/%.tgz: $(BUILD_DIR)/%.bin | $(BUILD_DIR)
+	tar czvf $@ $<
+
 $(BUILD_DIR):
 	mkdir $@		
 

@@ -1,4 +1,4 @@
-#include "param_freebot_g474_col.h"
+#include "param_freebot_g474.h"
 #include "math.h"
 
 
@@ -64,10 +64,10 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = DAMPED,
     .fast_loop_param.cogging.table = {
-#include "cog.csv"
+//#include "cog.csv"
     },
     .fast_loop_param.motor_encoder.table = {
-#include "tab.csv"
+//#include "tab.csv"
     },
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = 5,

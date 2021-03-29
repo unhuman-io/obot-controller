@@ -12,7 +12,9 @@ jobs:
             config: pz
           - project: fabulab_f446
           - project: freebot_g474
-            config: [motor_enc, motor_wheel]
+            config: motor_enc
+          - project: freebot_g474
+            config: motor_wheel
     runs-on: ubuntu-latest
     steps:
     - name: install dfu-suffix

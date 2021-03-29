@@ -45,7 +45,7 @@ uint16_t drv_regs[] = {
   (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
 };
 
-#include "../../motorlib/peripheral/stm32g4/pin_config.h"
+
 #include "pin_config_freebot_g474_motor.h"
 
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
@@ -83,7 +83,7 @@ namespace config {
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     TempSensor temp_sensor;
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false, 200};
-    USB1 usb1;
+    USB1 usb;
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3)),

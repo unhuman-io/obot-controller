@@ -1,6 +1,6 @@
-Communication System::communication_ = {config::usb1};
+Communication System::communication_ = {config::usb};
 void usb_interrupt() {
-    config::usb1.interrupt();
+    config::usb.interrupt();
 }
 Actuator System::actuator_ = {config::fast_loop, config::main_loop, param->startup_param};
 
@@ -61,7 +61,7 @@ void system_init() {
     ADC3->CR |= ADC_CR_JADSTART;
    
     TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
-    config::usb1.connect();
+    config::usb.connect();
     HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN; // start high res timer
 }
 

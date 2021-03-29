@@ -51,12 +51,9 @@ void system_init() {
 
         regs->ISR = ADC_ISR_ADRDY;
         regs->CR |= ADC_CR_ADEN;
+        while(!(regs->ISR & ADC_ISR_ADRDY));
     }
-    while(!(ADC1->ISR & ADC_ISR_ADRDY));
-    ADC1->CR |= ADC_CR_JADSTART;
-    while(ADC1->CR & ADC_CR_JADSTART);
-
-
+    
     config_init();
 
     ADC1->CR |= ADC_CR_ADSTART;

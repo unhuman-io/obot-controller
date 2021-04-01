@@ -19,15 +19,15 @@ $(shell touch version.h)
 
 PARAM_DIR = params_freebot_g474_col
 
-CONFIG=col
-CONFIG_FILE = config_freebot_g474_$(CONFIG).cpp
+CONFIG=motor_wheel
+CONFIG_FILE = config/config_freebot_g474_$(CONFIG).cpp
 PARAM=$(CONFIG)
-PARAM_FILE = param_freebot_g474_$(PARAM).c 
+PARAM_FILE = param/param_freebot_g474_$(PARAM).c 
 
 TARGET = $(CONFIG)
 
-ifeq ($(CONFIG), col)
-DFU_START_LINE="motor_util set --mode phase_lock --current -1"
+ifneq (,$(findstring col,$(CONFIG)))
+	DFU_START_LINE="motor_util set --mode phase_lock --current -1"
 endif
 
 # for submake
@@ -58,37 +58,13 @@ BUILD_DIR = build
 C_SOURCES =  \
 Src/main.c \
 Src/stm32g4xx_it.c \
-Src/stm32g4xx_hal_msp.c \
 Src/system_stm32g4xx.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_gpio.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_adc.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_adc_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_adc.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_rcc.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_rcc_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_flash_ramfunc.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_exti.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_dma_ex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pwr_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_i2c.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_i2c_ex.c \
 $(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_cortex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_hrtim.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_spi_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_tim_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd_ex.c \
-$(DRIVERS)/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_usb.c \
 ./$(PARAM_FILE) \
 
 CPP_SOURCES = \
@@ -152,7 +128,7 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 AS_DEFS = 
 
 # C defines
-C_DEFS =  \
+override C_DEFS +=  \
 -DGIT_VERSION=\"$(GIT_VERSION)\" \
 -DUSE_HAL_DRIVER \
 -DSTM32G474xx
@@ -215,7 +191,7 @@ $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
-	$(CXX) -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+	$(CXX) -include ../motorlib/system_log.h -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@

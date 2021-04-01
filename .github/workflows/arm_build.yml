@@ -4,42 +4,64 @@ on: [push]
 
 jobs:
   build:
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: boost_g474
+            config: pz
+          - project: fabulab_f446
+            config: motor
+          - project: freebot_g474
+            config: motor_enc
+          - project: freebot_g474
+            config: motor_wheel
     runs-on: ubuntu-latest
     steps:
     - name: install dfu-suffix
       run: sudo apt-get install -y dfu-util
     - uses: actions/checkout@master
       with:
+        fetch-depth: 0
         submodules: recursive
     - name: arm-none-eabi-gcc
-      timeout-minutes: 10
+      timeout-minutes: 5
       uses: fiam/arm-none-eabi-gcc@master
       with:
-        release: '9-2020-q2'
-    - name: make boost
-      run: make -C boost_g474
-    - name: make fabulab
-      run: make -C fabulab_f446
-    - name: make freebot
-      run: make -C freebot_g474
-    - name: Archive freebot
+        release: '10-2020-q4'
+    - name: make ${{ matrix.project }} ${{ matrix.config }}
+      run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2
+    - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@v2
       with:
-        name: freebot_g474
+        name: ${{ matrix.project }} ${{ matrix.config }}
         path: |
-          freebot_g474/build/freebot_g474.elf
-          freebot_g474/build/freebot_g474.bin
-    - name: Archive boost
-      uses: actions/upload-artifact@v2
+          ${{ matrix.project }}/build/${{ matrix.config }}.elf
+          ${{ matrix.project }}/build/${{ matrix.config }}.tgz
+  test:
+    timeout-minutes: 10
+    needs: [build]
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/download-artifact@v2
       with:
-        name: boost_weight
-        path: |
-          boost_g474/build/weight.elf
-          boost_g474/build/weight.tgz
-    - name: Archive fabulab
-      uses: actions/upload-artifact@v2
+        name: freebot_g474 motor_enc
+    - name: test
+      run: |
+        tar xzf motor_enc.tgz
+        ./motor_enc/load_motor_enc.sh || true
+        sleep 2
+        motor_util --run-stats
+        motor_util --run-stats 1000 --no-list | awk -F", " \
+          'NR==1 { for (i = 1; i < 5; i++) { headers[i]=$(i+5) } } \
+          NR>1 { for (i in headers) { print "Benchmark" headers[i] \ 
+          "\t" $(i+1) "\t" $(i+5) " cycles"} }' | tee output.txt
+    - name: Store benchmark result
+      uses: rhysd/github-action-benchmark@v1
       with:
-        name: fabulab_f446
-        path: |
-          fabulab_f446/build/fabulab_f446.elf
-          fabulab_f446/build/fabulab_f446.bin
+        tool: 'go'
+        output-file-path: output.txt
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true        

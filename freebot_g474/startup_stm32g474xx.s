@@ -60,13 +60,36 @@ defined in linker script */
 .set RCC_CSR_OFFSET,  0x94
 .set RCC_CSR_SFTRSTF_POS, 28
 .set RCC_CSR_RMVF_POS,    23
+.set RCC_CSR_IWDGRSTF_POS, 29
 .set RCC_CSR_PINRSTF_POS,    26
 
 .set RCC_APB2SMENR,         0x40021080
 .set RCC_SYSCFGEN_POS,    0
 .set SYSCFG_MEMRMP,	      0x40010000
 
+.set IWDG_KR,		0x40003000
+
     .section	.text.Reset_Handler
+	.weak	Reset_Handler
+	.type	Reset_Handler, %function
+Reset_Handler:
+	ldr r0, =RCC_BASE
+	ldr r1, [r0, #RCC_CSR_OFFSET]
+	orr r1, #(1<<RCC_CSR_RMVF_POS)
+	str r1, [r0, #RCC_CSR_OFFSET]			// clear reset flags
+
+	tst r1, #(1<<RCC_CSR_IWDGRSTF_POS)		// watchdog reset
+	bne Reboot_Loader
+	tst r1, #(1<<RCC_CSR_SFTRSTF_POS)		// software reset
+	beq Original_Reset_Handler
+	ldr r0, =go_to_bootloader
+	ldr r1, [r0]
+	ldr r2, =0xB007
+	cmp r1, r2
+	mov r1, #0
+	str r1, [r0]
+	bne Original_Reset_Handler
+
 Reboot_Loader:
     ldr     r0, =RCC_APB2SMENR 
     ldr     r1, =#(1<<RCC_SYSCFGEN_POS) 
@@ -80,25 +103,16 @@ Reboot_Loader:
     ldr     r0,[r0, #4]     /* PC @ +4 */
     bx      r0
 
-
-	.weak	Reset_Handler
-	.type	Reset_Handler, %function
-Reset_Handler:
-	ldr r0, =RCC_BASE
-	ldr r1, [r0, #RCC_CSR_OFFSET]
-	tst r1, #(1<<RCC_CSR_SFTRSTF_POS)
-	orr r1, #(1<<RCC_CSR_RMVF_POS)
-	str r1, [r0, #RCC_CSR_OFFSET]
-	beq Original_Reset_Handler
-	ldr r0, =go_to_bootloader
-	ldr r1, [r0]
-	ldr r2, =0xB007
-	cmp r1, r2
-	mov r1, #0
-	str r1, [r0]
-	beq Reboot_Loader
-
 Original_Reset_Handler:
+  // start watchdog IWDG->KR = 0xCCCC;
+#ifndef NO_WATCHDOG
+  ldr	r0, =(1<<12)
+  ldr	r1, =0xE0042008
+  str   r0, [r1]		// IWDG stop on debug
+  ldr	r0, =0xCCCC
+#endif
+  ldr	r1, =IWDG_KR
+  str	r0, [r1]
   ldr   r0, =_estack
   mov   sp, r0          /* set stack pointer */
 
@@ -383,11 +397,11 @@ g_pfnVectors:
 	.weak	EXTI4_IRQHandler
 	.thumb_set EXTI4_IRQHandler,Default_Handler
 
-//	.weak	DMA1_Channel1_IRQHandler
-//	.thumb_set DMA1_Channel1_IRQHandler,Default_Handler
+	.weak	DMA1_Channel1_IRQHandler
+	.thumb_set DMA1_Channel1_IRQHandler,Default_Handler
 
-//	.weak	DMA1_Channel2_IRQHandler
-//	.thumb_set DMA1_Channel2_IRQHandler,Default_Handler
+	.weak	DMA1_Channel2_IRQHandler
+	.thumb_set DMA1_Channel2_IRQHandler,Default_Handler
 
 	.weak	DMA1_Channel3_IRQHandler
 	.thumb_set DMA1_Channel3_IRQHandler,Default_Handler

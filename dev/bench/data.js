@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1617285331405,
+  "lastUpdate": 1617285443771,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -276,6 +276,52 @@ window.BENCHMARK_DATA = {
             "value": 16999.4,
             "unit": "cycles",
             "extra": "17042 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "4d03e3d925b6e56f24146786e05ba7c8d2769eec",
+          "message": "Merge remote-tracking branch 'origin/main' into develop",
+          "timestamp": "2021-04-01T06:53:37-07:00",
+          "tree_id": "1fc92154bc6da37b2bb6bc479c830050e2be5e25",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/4d03e3d925b6e56f24146786e05ba7c8d2769eec"
+        },
+        "date": 1617285442344,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 577,
+            "unit": "cycles",
+            "extra": "577 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.22,
+            "unit": "cycles",
+            "extra": "3409 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2639.25,
+            "unit": "cycles",
+            "extra": "5372 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.1,
+            "unit": "cycles",
+            "extra": "17032 times"
           }
         ]
       }

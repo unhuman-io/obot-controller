@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1617284468429,
+  "lastUpdate": 1617284613170,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -184,6 +184,52 @@ window.BENCHMARK_DATA = {
             "value": 16999.4,
             "unit": "cycles",
             "extra": "17048 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "d13e3a2057f99906e2aa4e4eb409107f5bbd2b91",
+          "message": "benchmark\n\n\ntest9\n\n\ntest10\n\n\ntest11\n\n\ntest12\n\n\ntest13\n\n\ntest 14\n\n\ntest 15\n\n\ntest 16\n\n\nbtest1\n\n\nbtest2\n\n\nbtest3\n\n\nbtest4\n\n\nbtest5\n\n\nbtest6\n\n\nbtest7\n\n\nbtest8\n\n\nbtest9\n\n\nbtest13\n\n\nbtest14\n\n\nbtest15\n\n\nbtest16\n\n\nbtest 17\n\n\nbtest 18\n\n\nbtest 19\n\n\nbtest 20\n\n\nbtest 21\n\n\nbtest 22\n\n\nbtest 23",
+          "timestamp": "2021-04-01T06:36:39-07:00",
+          "tree_id": "1fc92154bc6da37b2bb6bc479c830050e2be5e25",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/d13e3a2057f99906e2aa4e4eb409107f5bbd2b91"
+        },
+        "date": 1617284611633,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 577,
+            "unit": "cycles",
+            "extra": "577 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.72,
+            "unit": "cycles",
+            "extra": "3410 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2430.45,
+            "unit": "cycles",
+            "extra": "5373 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.6,
+            "unit": "cycles",
+            "extra": "17025 times"
           }
         ]
       }

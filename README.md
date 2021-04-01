@@ -1,7 +1,5 @@
 # Freebot-controller
-The freebot-controller project is motor driver software for an embedded microcontroller. It has two components: a set of generated ST code from the STMCubeMX software and a motorlib folder. The ST generated code is convenient for pin configuration and peripheral initialization but its library functions are a bit heavy to run during the application. So at the end of the ST generated main file is a call into motorlib. And the ST generated interrupts are also replaced by calls to motorlib. Motorlib has both generic motor control functions as well as code specific to the ST peripherals. Special care is taken to allow STMCubeMX to be able to regenerate code in place without affecting the combined program. Rather than supporting configurable peripherals at runtime the goal here is to keep the executable simpler and utilize the STMCubeMX software for that functionality and thus recompile for different hardware configurations. An example is configuring to communicate with a specific SPI encoder. Bit rate, polarity and phase are all set up from STMCubeMX. Then that encoder could be linked to the motor encoder or output encoder used in motorlib either through the SPIEncoder class or be creating a new class derived from Encoder depending on the specifics of communication. 
-
-Links to all relevant software downloads are provided at the end of this document.
+The freebot-controller project is motor driver software for an embedded microcontroller. It has two components: project specific software and a motorlib folder. The project specific folders were generated with STMCubeMX software with generic makefile output but effort has been made to remove most of the ST code on the freebot project. Projects can have multiple configurations to support different hardware and sensors. The configuration is selected at compile time. A configuration of a project can have muliple parameter files to support the same hardware but with different sensor calibrations and control parameters. Parameters are stored in a struct in a specific location in flash memory and can be loaded independently from the main firmware.
 
 ## Submodules
 This repository uses git submodules. Ensure to keep them in sync after clone with
@@ -12,6 +10,11 @@ and when pulling or checking out
 ```console
 > git pull --recurse-submodules
 > git checkout --recurse-submodules
+```
+or for automatic support plus recommended pull ff-only global option
+```console
+git config --global submodule.recurse true
+git pull --global pull.ff only
 ```
 
 ## Build
@@ -26,7 +29,7 @@ The assumed usage case for this software is multiple motor drivers that are conn
 ### Programming
 The firmware can be upgraded through USB in Device Firmware Upgrade (DFU) mode. DFU mode is built into the ST bootloader. For an unprogrammed or board with corrupted firmware the ST bootloader can be accessed with a combination of external pin settings. For an already programmed board you can switch to DFU mode at runtime by sending a DFU_DETACH packet over USB. This and DFU programming are available through the dfu-util software package. The output of the make process described in build is a bin file. This can be programmed with the command:
 ```console
-> dfu-util -a0 -s 0x8000000 -D build/bort2.bin
+> dfu-util -a0 -s 0x8000000 -D build/freebot_g474.bin
 ```
 
 ### Parameters

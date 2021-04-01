@@ -84,8 +84,7 @@ SECTIONS
     KEEP(*(.isr_vector)) */ /* Startup code */
 /*    . = ALIGN(4);
   } >FLASH */
-
-    _siccmram = LOADADDR(.ccmram);
+  _siccmram = LOADADDR(.ccmram);
   .ccmram :
   {
     . = ALIGN(4);
@@ -103,6 +102,7 @@ SECTIONS
   .text :
   {
     . = ALIGN(4);
+    *(.text.Reset_Handler)    /* reset handler early to help if later program corrupted */
     *(.text)           /* .text sections (code) */
     *(.text*)          /* .text* sections (code) */
     *(.glue_7)         /* glue arm to thumb code */
@@ -115,6 +115,7 @@ SECTIONS
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
   } >FLASH
+
 
   /* Constant data goes into FLASH */
   .rodata :

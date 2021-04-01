@@ -6,7 +6,7 @@
 
 #include "../motorlib/led.h"
 #include "../motorlib/ma732_encoder.h"
-#include "../motorlib/peripheral/stm32g4/spi_torque.h"
+#include "../motorlib/peripheral/stm32g4/i2c_torque.h"
 #include "../motorlib/phony_encoder.h"
 #include "Inc/main.h"
 #include "../motorlib/sensor_multiplex.h"
@@ -17,7 +17,7 @@
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
-typedef SPITorque TorqueSensor;
+typedef I2CTorque TorqueSensor;
 typedef HRPWM PWM;
 typedef SensorMultiplex<MA732Encoder, MA732Encoder> MotorEncoder;
 typedef MotorEncoder::SecondarySensor OutputEncoder;
@@ -44,9 +44,70 @@ void usb_interrupt() {
     usb1.interrupt();
 }
 
+
+#define MASK_SET(var, item, val) var = (var & ~item##_Msk) | (val << item##_Pos)
+#define GPIO_SETL(gpio, pin, mode, speed, af) \
+    MASK_SET(GPIO##gpio->MODER, GPIO_MODER_MODE##pin, mode); \
+    MASK_SET(GPIO##gpio->OSPEEDR, GPIO_OSPEEDR_OSPEED##pin, speed); \
+    MASK_SET(GPIO##gpio->AFR[0], GPIO_AFRL_AFSEL##pin, af)
+
+#define GPIO_SETH(gpio, pin, mode, speed, af) \
+    MASK_SET(GPIO##gpio->MODER, GPIO_MODER_MODE##pin, mode); \
+    MASK_SET(GPIO##gpio->OSPEEDR, GPIO_OSPEEDR_OSPEED##pin, speed); \
+    MASK_SET(GPIO##gpio->AFR[1], GPIO_AFRH_AFSEL##pin, af)
+
+enum GPIO_MODE {INPUT, OUTPUT, ALT_FUN, ANALOG};
+enum GPIO_SPEED {LOW, MEDIUM, HIGH, VERY_HIGH};
+enum GPIO_PULL {NONE, UP, DOWN};
+
+struct InitCode {
+    InitCode() {
+        // Peripheral clock enable
+        RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN | RCC_APB1ENR1_I2C2EN;
+        RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
+        RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+
+        CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+        DWT->CYCCNT = 0;
+        DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
+        //GPIO configure
+        GPIO_SETH(A, 13, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 scl
+        GPIO_SETH(A, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 sda
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD13, GPIO_PULL::UP);
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
+        MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT13, 1);
+        MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT14, 1);
+
+        GPIO_SETH(A, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c2 scl
+        GPIO_SETH(A, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c2 sda
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD8, GPIO_PULL::UP);
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD9, GPIO_PULL::UP);
+        MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT8, 1);
+        MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT9, 1);
+
+        // //test i2c on led pins
+        // RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+        // GPIO_SETL(B, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 scl
+        // GPIO_SETH(B, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 4);   // i2c1 sda
+        // MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD7, GPIO_PULL::UP);
+        // MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD8, GPIO_PULL::UP);
+
+        // i2c1 dma
+        DMAMUX1_Channel0->CCR =  DMA_REQUEST_I2C1_TX;
+        DMAMUX1_Channel1->CCR =  DMA_REQUEST_I2C1_RX;
+
+        // // i2c2 dma
+        // DMAMUX1_Channel0->CCR =  DMA_REQUEST_I2C2_TX;
+        // DMAMUX1_Channel1->CCR =  DMA_REQUEST_I2C2_RX;
+    }
+};
+
+
 volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 static struct {
     SystemInitClass system_init; // first item to enable clocks, etc.
+    InitCode init_code;
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOB, 4, GPIO::OUTPUT};
@@ -54,14 +115,15 @@ static struct {
     MA732Encoder motor_encoder = {*SPI3, motor_encoder_cs, 102, &spi3_register_operation};
     //PhonyEncoder motor_encoder = {700};
     GPIO torque_cs = {*GPIOA, 4, GPIO::OUTPUT};
-    SPITorque torque_sensor = {*SPI1, torque_cs, *DMA1_Channel1, *DMA1_Channel2, 4};
+    I2C_DMA i2c1 = {*I2C1, *DMA1_Channel1, *DMA1_Channel2, 400};
+    I2CTorque torque_sensor = {i2c1, 0, 50};
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     MA732Encoder output_encoder = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    I2C i2c = {*I2C1};
+
     I2C i2c2 = {*I2C2};
-    MAX31875 temp_sensor = {i2c, 0x48};        // R0
+ //   MAX31875 temp_sensor = {i2c1, 0x48};        // R0
     MAX31875 temp_sensor1 = {i2c2, 0x48};      // R0
     MAX31875 temp_sensor2 = {i2c2, 0x49};      // R1
     MAX31875 temp_sensor3 = {i2c2, 0x4A};      // R2
@@ -139,13 +201,13 @@ void system_init() {
     System::api.add_api_variable("c1",new APIUint32(&config_items.torque_sensor.result0_));
     System::api.add_api_variable("c2",new APIUint32(&config_items.torque_sensor.result1_));
 
-    std::function<void(uint32_t)> set_t_reset = std::bind(&SPITorque::reset, &config_items.torque_sensor, std::placeholders::_1);
-    std::function<uint32_t(void)> get_t_reset = std::bind(&SPITorque::reset2, &config_items.torque_sensor);
-    System::api.add_api_variable("t_reset", new APICallbackUint32(get_t_reset, set_t_reset));
+    // std::function<void(uint32_t)> set_t_reset = std::bind(&SPITorque::reset, &config_items.torque_sensor, std::placeholders::_1);
+    // std::function<uint32_t(void)> get_t_reset = std::bind(&SPITorque::reset2, &config_items.torque_sensor);
+    // System::api.add_api_variable("t_reset", new APICallbackUint32(get_t_reset, set_t_reset));
 
-    std::function<void(uint32_t)> set_temp = nullptr;
-    std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
-    System::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
+    // std::function<void(uint32_t)> set_temp = nullptr;
+    // std::function<uint32_t(void)> get_temp = std::bind(&MAX31875::read, &config_items.temp_sensor);
+    // System::api.add_api_variable("T", new APICallbackUint32(get_temp, set_temp));
 
     System::api.add_api_variable("T1", new APIFloat((float*) &T1));
     System::api.add_api_variable("T2", new APIFloat((float*) &T2));
@@ -155,8 +217,8 @@ void system_init() {
     System::api.add_api_variable("vbm", new APICallbackFloat(get_vb, set_v));
     System::api.add_api_variable("vcm", new APICallbackFloat(get_vc, set_v));
 
-    System::actuator_.main_loop_.reserved1_ = &config_items.temp_sensor.value_;// &config_items.torque_sensor.result0_;
-    System::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.sum_;
+    System::actuator_.main_loop_.reserved1_ = &config_items.torque_sensor.result0_;// &config_items.torque_sensor.result0_;
+    System::actuator_.main_loop_.reserved2_ = &config_items.torque_sensor.result1_;
     config_items.torque_sensor.init();
     config_items.motor_pwm.init();
 }
@@ -165,7 +227,7 @@ FrequencyLimiter temp_rate = {8};
 
 void system_maintenance() {
     if (temp_rate.run()) {
-        config_items.temp_sensor.read();
+        //config_items.temp_sensor.read();
         T1 = config_items.temp_sensor1.read();
         T2 = config_items.temp_sensor2.read();
         T3 = config_items.temp_sensor3.read();

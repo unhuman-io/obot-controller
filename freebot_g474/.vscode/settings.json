@@ -8,8 +8,8 @@
         "new": "cpp"
     },
     "build": {
-        "build": "motor",
-        "param": "motor",
+        "build": "motor_enc",
+        "param": "motor_enc",
         "param_override": ""
     }
 }

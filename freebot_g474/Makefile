@@ -17,7 +17,7 @@
 GIT_VERSION := $(shell git describe --dirty --always --tags)
 $(shell touch version.h)
 
-PARAM_DIR = params_freebot_g474_col
+PARAM_DIR = params_freebot_g474
 
 CONFIG=motor_wheel
 CONFIG_FILE = config/config_freebot_g474_$(CONFIG).cpp
@@ -25,10 +25,6 @@ PARAM=$(CONFIG)
 PARAM_FILE = param/param_freebot_g474_$(PARAM).c 
 
 TARGET = $(CONFIG)
-
-ifneq (,$(findstring col,$(CONFIG)))
-	DFU_START_LINE="motor_util set --mode phase_lock --current -1"
-endif
 
 # for submake
 export

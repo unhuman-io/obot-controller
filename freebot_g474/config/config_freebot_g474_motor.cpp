@@ -1,3 +1,16 @@
+namespace config {
+    USB1 usb;
+    FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
+    LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_R)), 
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_G)),
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_B))};
+    PositionController position_controller = {(float) (1.0/main_loop_frequency)};
+    TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
+    ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
+    VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
+};
+
 Communication System::communication_ = {config::usb};
 void usb_interrupt() {
     config::usb.interrupt();
@@ -32,6 +45,8 @@ void system_init() {
     System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t));
     System::api.add_api_variable("index_mod", new APIInt32(&index_mod));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
+    System::api.add_api_variable("A1", new const APICallbackFloat([](){ return A1_DR; }));
+    System::api.add_api_variable("A2", new const APICallbackFloat([](){ return A2_DR; }));
 
     for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC3, ADC4, ADC5}) {
         regs->CR = ADC_CR_ADVREGEN;

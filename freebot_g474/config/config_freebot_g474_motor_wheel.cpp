@@ -83,16 +83,6 @@ namespace config {
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     TempSensor temp_sensor;
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false, 200};
-    USB1 usb;
-    FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
-    LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3)),
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2))};
-    PositionController position_controller = {(float) (1.0/main_loop_frequency)};
-    TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
-    ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
 };
 
 std::string val;

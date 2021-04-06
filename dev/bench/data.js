@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1617285443771,
+  "lastUpdate": 1617732081527,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -322,6 +322,52 @@ window.BENCHMARK_DATA = {
             "value": 16999.1,
             "unit": "cycles",
             "extra": "17032 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "fb062ae2824083508abeba44bb71276c1cc807e1",
+          "message": "add A1 & A2 sensing",
+          "timestamp": "2021-04-06T10:58:23-07:00",
+          "tree_id": "3ffd19221bbda6de915e9db2fd991b7b774f0cd0",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/fb062ae2824083508abeba44bb71276c1cc807e1"
+        },
+        "date": 1617732080031,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 577,
+            "unit": "cycles",
+            "extra": "577 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.56,
+            "unit": "cycles",
+            "extra": "3407 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2678.62,
+            "unit": "cycles",
+            "extra": "5335 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.7,
+            "unit": "cycles",
+            "extra": "17041 times"
           }
         ]
       }

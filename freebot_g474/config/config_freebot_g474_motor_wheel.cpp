@@ -81,8 +81,6 @@ namespace config {
     OutputEncoder output_encoder;// = {*SPI3, output_encoder_cs, 153, &spi3_register_operation}; // need to make sure this doesn't collide with motor encoder
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    TempSensor temp_sensor;
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false, 200, 1000};
 };
 
 std::string val;

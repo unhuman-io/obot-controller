@@ -3,9 +3,9 @@
 #include "stm32g474xx.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 
-#define I_A_DR  ADC5->JDR1
+#define I_A_DR  ADC3->JDR1
 #define I_B_DR  ADC4->JDR1
-#define I_C_DR  ADC3->JDR1
+#define I_C_DR  ADC5->JDR1
 #define V_BUS_DR ADC1->DR
 #define V_REF_DR ADC1->JDR2
 #define V_TEMP_DR ADC1->JDR1

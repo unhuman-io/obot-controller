@@ -82,7 +82,7 @@ namespace config {
     //PhonyEncoder output_encoder = {100};
     //GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
     TempSensor temp_sensor;
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false, 200};
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false, 200, 1000};
 };
 
 std::string val;

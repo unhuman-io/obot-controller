@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1617798604285,
+  "lastUpdate": 1617800488405,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -414,6 +414,52 @@ window.BENCHMARK_DATA = {
             "value": 16999.8,
             "unit": "cycles",
             "extra": "17043 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "6daf53201d9bd914a1456c677b923079d0dbaf92",
+          "message": "set pwm limits",
+          "timestamp": "2021-04-07T05:58:31-07:00",
+          "tree_id": "6a9c8af8d7f96a4f48de3144362633b654fe4be6",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/6daf53201d9bd914a1456c677b923079d0dbaf92"
+        },
+        "date": 1617800486899,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 603,
+            "unit": "cycles",
+            "extra": "603 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.59,
+            "unit": "cycles",
+            "extra": "3406 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2688.93,
+            "unit": "cycles",
+            "extra": "5429 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.6,
+            "unit": "cycles",
+            "extra": "17014 times"
           }
         ]
       }

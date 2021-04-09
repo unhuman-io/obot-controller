@@ -13,15 +13,15 @@
 #define A2_DR ADC1->JDR4
 
 #define TIM_R TIM4->CCR1
-#define TIM_G TIM4->CCR3
-#define TIM_B TIM4->CCR2
-#ifdef R1
+#define TIM_G TIM4->CCR2
+#define TIM_B TIM4->CCR3
+#ifdef R0
     #undef TIM_R
     #undef TIM_G
     #undef TIM_B
     #define TIM_R TIM4->CCR1
-    #define TIM_G TIM4->CCR2
-    #define TIM_B TIM4->CCR3
+    #define TIM_G TIM4->CCR3
+    #define TIM_B TIM4->CCR2
 #endif
 
 

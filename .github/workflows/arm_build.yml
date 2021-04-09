@@ -58,6 +58,7 @@ jobs:
           'NR==1 { for (i = 1; i < 5; i++) { headers[i]=$(i+5) } } \
           NR>1 { for (i in headers) { print "Benchmark" headers[i] \ 
           "\t" $(i+1) "\t" $(i+5) " cycles"} }' | tee output.txt
+        PYTHONPATH=/usr/share/motor-realtime python3 /usr/share/motor-realtime/test_motor.py -p 1-2.1 -v
     - name: Store benchmark result
       uses: rhysd/github-action-benchmark@v1
       with:

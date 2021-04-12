@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1618235899463,
+  "lastUpdate": 1618268862810,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -1080,6 +1080,58 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 842.193729124,
+            "unit": "Hz",
+            "extra": "300 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "20529d4103cca67aa85c6b806323492f87fe181e",
+          "message": "add output encoder to motor_enc",
+          "timestamp": "2021-04-12T12:14:10-07:00",
+          "tree_id": "aa7466040c2f1a88d44ae24698ab13bc45145c71",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/20529d4103cca67aa85c6b806323492f87fe181e"
+        },
+        "date": 1618268861094,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 598,
+            "unit": "cycles",
+            "extra": "598 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.82,
+            "unit": "cycles",
+            "extra": "3406 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2730.04,
+            "unit": "cycles",
+            "extra": "5514 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.8,
+            "unit": "cycles",
+            "extra": "17021 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 784.045089963,
             "unit": "Hz",
             "extra": "300 times"
           }

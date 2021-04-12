@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1618268862810,
+  "lastUpdate": 1618270874012,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -1132,6 +1132,58 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 784.045089963,
+            "unit": "Hz",
+            "extra": "300 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "1c32f6437086cc901605c697cd739b120a363361",
+          "message": "param update motor enc",
+          "timestamp": "2021-04-12T16:37:45-07:00",
+          "tree_id": "003e2d9116ee35e6f47b10f4174a75a5bdf42cd5",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/1c32f6437086cc901605c697cd739b120a363361"
+        },
+        "date": 1618270872377,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 598,
+            "unit": "cycles",
+            "extra": "598 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.18,
+            "unit": "cycles",
+            "extra": "3408 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2659.87,
+            "unit": "cycles",
+            "extra": "5519 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.2,
+            "unit": "cycles",
+            "extra": "17042 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 775.945346156,
             "unit": "Hz",
             "extra": "300 times"
           }

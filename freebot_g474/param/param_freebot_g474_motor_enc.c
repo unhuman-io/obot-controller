@@ -72,6 +72,20 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = .7,
     .startup_param.phase_lock_duration = 2,
+    .drv_regs = {
+        (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
+        //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
+        (3<<11) | 0x3FF, // hs_reg      0x3CC, moderate drive current
+        //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
+                                        // moderate drive current (.57,1.14A)
+        (4<<11) | 0x37F, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
+                                        // moderate drive current (.57,1.14A)
+        (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
+                                    //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
+        //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
+        //(6<<11) | 0x280,
+        (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
+    },
     .name = "J1",
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES

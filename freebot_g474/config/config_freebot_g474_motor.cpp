@@ -1,4 +1,27 @@
+#include "../../motorlib/peripheral/usb.h"
+#include "../../motorlib/usb_communication.h"
+#include "../../motorlib/peripheral/stm32g4/hrpwm.h"
+#include "../../motorlib/util.h"
+
+using PWM = HRPWM;
+using Communication = USBCommunication;
+volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
+uint16_t drv_regs_error = 0;  
+
+#include "../../motorlib/led.h"
+#include "../../motorlib/controller/position_controller.h"
+#include "../../motorlib/controller/torque_controller.h"
+#include "../../motorlib/controller/impedance_controller.h"
+#include "../../motorlib/controller/velocity_controller.h"
+#include "../../motorlib/fast_loop.h"
+#include "../../motorlib/main_loop.h"
+#include "../../motorlib/actuator.h"
+#include "../../motorlib/system.h"
+#include "pin_config_freebot_g474_motor.h"
+#include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
+
 namespace config {
+    static_assert(((double) CPU_FREQUENCY_HZ * 32 / 2) / pwm_frequency < 65535);    // check pwm frequency
     TempSensor temp_sensor;
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200, 1000, 0};
     USB1 usb;
@@ -22,6 +45,8 @@ Actuator System::actuator_ = {config::fast_loop, config::main_loop, param->start
 float v3v3 = 3.3;
 
 int32_t index_mod = 0;
+
+void config_init();
 
 void system_init() {
     if (config::motor_encoder.init()) {
@@ -85,6 +110,7 @@ void system_init() {
 
 FrequencyLimiter temp_rate = {10};
 
+void config_maintenance();
 void system_maintenance() {
     if (temp_rate.run()) {
         ADC1->CR |= ADC_CR_JADSTART;

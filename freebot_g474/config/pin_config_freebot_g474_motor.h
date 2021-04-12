@@ -85,8 +85,8 @@ void pin_config_freebot_g474_motor_r0() {
         GPIO_SETH(C, 13, 1, 0, 0);  // Boostxl enable
 
         // TIM1 main loop interrupt        
-        static_assert(CPU_FREQUENCY_HZ / main_loop_frequency < 65536, "Main loop frequency too low");
-        TIM1->ARR = CPU_FREQUENCY_HZ / main_loop_frequency - 1;
+        static_assert(CPU_FREQUENCY_HZ / config::main_loop_frequency < 65536, "Main loop frequency too low");
+        TIM1->ARR = CPU_FREQUENCY_HZ / config::main_loop_frequency - 1;
         TIM1->DIER = TIM_DIER_UIE;
         NVIC_SetPriority(TIM1_UP_TIM16_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 1, 0));
         NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
@@ -144,8 +144,8 @@ void pin_config_freebot_g474_motor_r0() {
         SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
         // ORDER DEPENDANCE SPE set last
         SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
-        for (uint8_t i=0; i<sizeof(drv_regs)/sizeof(uint16_t); i++) {
-            uint16_t reg_out = drv_regs[i];
+        for (uint8_t i=0; i<sizeof(param->drv_regs)/sizeof(uint16_t); i++) {
+            uint16_t reg_out = param->drv_regs[i];
             uint16_t reg_in = 0;
             SPI1->DR = reg_out;
             while(!(SPI1->SR & SPI_SR_RXNE));

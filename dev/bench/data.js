@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1618405757228,
+  "lastUpdate": 1618407498822,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -1238,6 +1238,76 @@ window.BENCHMARK_DATA = {
             "value": 802.357426111,
             "unit": "Hz",
             "extra": "300 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "c47bca25cd2e5b5bf58780755d99dac9001dff95",
+          "message": "program benchmarks",
+          "timestamp": "2021-04-14T06:26:30-07:00",
+          "tree_id": "b7bc3e36cb73b755fdac203830d5eaf17aeaada2",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/c47bca25cd2e5b5bf58780755d99dac9001dff95"
+        },
+        "date": 1618407497214,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 598,
+            "unit": "cycles",
+            "extra": "598 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.6,
+            "unit": "cycles",
+            "extra": "3406 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2684.35,
+            "unit": "cycles",
+            "extra": "5688 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.7,
+            "unit": "cycles",
+            "extra": "17018 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 812.754231728,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 81684,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 23392,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 45320,
+            "unit": "bytes",
+            "extra": "0 times"
           }
         ]
       }

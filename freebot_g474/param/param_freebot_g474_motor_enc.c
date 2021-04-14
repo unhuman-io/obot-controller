@@ -63,6 +63,9 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.output_encoder.cpr = -65536,
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = DAMPED,
+    .main_loop_param.output_encoder.table = {
+#include "../calibration/freebot_g474/motor_enc/jtab.dat"
+    },
     .fast_loop_param.cogging.table = {
 //#include "cog.csv"
     },

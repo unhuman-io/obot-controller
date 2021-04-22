@@ -22,7 +22,11 @@ PARAM_DIR = params_freebot_g474
 CONFIG=motor_wheel
 CONFIG_FILE = config/config_freebot_g474_$(CONFIG).cpp
 PARAM=$(CONFIG)
-PARAM_FILE = param/param_freebot_g474_$(PARAM).c 
+PARAM_FILE = param/param_freebot_g474_$(PARAM).c
+
+ifdef PARAM_OVERRIDE
+PARAM_INCLUDE=-include $(PARAM_OVERRIDE)
+endif
 
 TARGET = $(CONFIG)
 
@@ -184,7 +188,7 @@ OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CC) $(PARAM_INCLUDE) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
 	$(CXX) -include ../motorlib/system_log.h -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@

@@ -159,22 +159,22 @@ void pin_config_freebot_g474_motor_r0() {
             drv_regs_error |= 1 << i;
             }
         }
-        SPI1->CR1 = 0; // clear SPE
-        // SPI1 CS-> gpio
-        GPIO_SETL(A, 4, 1, 0, 0);
-        GPIOA->BSRR = GPIO_ODR_OD4;
+        // SPI1->CR1 = 0; // clear SPE
+        // // SPI1 CS-> gpio
+        // GPIO_SETL(A, 4, 1, 0, 0);
+        // GPIOA->BSRR = GPIO_ODR_OD4;
 
 }
 
 // return (fault status register 2 << 16) | (fault status register 1) 
 uint32_t get_drv_status() {
         // pause main loop (due to overlap with torque sensor)
-        TIM1->CR1 &= ~TIM_CR1_CEN;
-        GPIO_SETL(A, 4, 2, 3, 5); 
-        SPI1->CR1 = 0; // clear SPE
-        SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
-        // ORDER DEPENDANCE SPE set last
-        SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
+        //TIM1->CR1 &= ~TIM_CR1_CEN;
+        // GPIO_SETL(A, 4, 2, 3, 5); 
+        // SPI1->CR1 = 0; // clear SPE
+        // SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
+        // // ORDER DEPENDANCE SPE set last
+        // SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
 
         SPI1->DR = 1<<15; // fault status 1
         while(!(SPI1->SR & SPI_SR_RXNE));
@@ -184,17 +184,17 @@ uint32_t get_drv_status() {
         while(!(SPI1->SR & SPI_SR_RXNE));
         reg_in |= SPI1->DR << 16;
 
-        SPI1->CR1 = 0; // clear SPE
-        // SPI1 CS-> gpio
-        GPIO_SETL(A, 4, 1, 0, 0);
-        GPIOA->BSRR = GPIO_ODR_OD4;
+        // SPI1->CR1 = 0; // clear SPE
+        // // SPI1 CS-> gpio
+        // GPIO_SETL(A, 4, 1, 0, 0);
+        // GPIOA->BSRR = GPIO_ODR_OD4;
 
-        // SPI1 ADS1235
-        SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
-        SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH | SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;    // 8 bit   
+        // // SPI1 ADS1235
+        // SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
+        // SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH | SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;    // 8 bit   
 
         // reenable main loop
-        TIM1->CR1 = TIM_CR1_CEN;
+        //TIM1->CR1 = TIM_CR1_CEN;
         return reg_in;
 }
 

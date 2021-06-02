@@ -1,115 +1,69 @@
-#include "../motorlib/usb_communication.h"
-#include "st_device.h"
-#include "../motorlib/system.h"
-#include "../motorlib/qep_encoder.h"
-#include "../motorlib/peripheral/stm32g4/hrpwm.h"
-#include "../motorlib/peripheral/spi_encoder.h"
-#include "../motorlib/peripheral/stm32g4/ams_encoder.h"
-#include "../motorlib/hall.h"
-#include "../motorlib/fast_loop.h"
-#include "../motorlib/main_loop.h"
-#include "../motorlib/led.h"
-#include "../motorlib/peripheral/usb.h"
-#include "../motorlib/actuator.h"
-#include "../motorlib/ma732_encoder.h"
-#include "../motorlib/peripheral/stm32g4/spi_torque.h"
-#include "Inc/main.h"
-#include "param_g474_boost.h"
-#include "../motorlib/motor_torque_sensor.h"
-#include <functional>
-#include "../motorlib/peripheral/stm32g4/spi_debug.h"
+#include "../../motorlib/peripheral/usb.h"
+#include "../../motorlib/usb_communication.h"
+#include "../../motorlib/peripheral/stm32g4/hrpwm.h"
+#include "../../motorlib/util.h"
 
-typedef FastLoop<HRPWM, QEPEncoder> FastLoopConfig;
-typedef MainLoop<FastLoopConfig> MainLoopConfig;
-typedef Actuator<FastLoopConfig, MainLoopConfig> ActuatorConfig;
-typedef System<ActuatorConfig, USB1> SystemConfig;
+using PWM = HRPWM;
+using Communication = USBCommunication;
+volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
+uint16_t drv_regs_error = 0;  
 
-template<>
-USB1 SystemConfig ::usb_ = {};
-template<>
-std::queue<std::string> SystemConfig ::log_queue_ = {};
-template<>
-ParameterAPI SystemConfig ::api = {};
+#include "../../motorlib/led.h"
+#include "../../motorlib/controller/position_controller.h"
+#include "../../motorlib/controller/torque_controller.h"
+#include "../../motorlib/controller/impedance_controller.h"
+#include "../../motorlib/controller/velocity_controller.h"
+#include "../../motorlib/fast_loop.h"
+#include "../../motorlib/main_loop.h"
+#include "../../motorlib/actuator.h"
+#include "../../motorlib/system.h"
+#include "pin_config_freebot_g474_motor.h"
+#include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
 
-struct InitCode {
-    InitCode() {
-        RCC->APB1ENR1 |= RCC_APB1ENR1_SPI3EN;
-        RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
-        RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
-        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
-        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
-        GPIOB->MODER = 2 << GPIO_MODER_MODE3_Pos | 2 << GPIO_MODER_MODE4_Pos | 2 << GPIO_MODER_MODE5_Pos;
-        GPIOB->OSPEEDR = 3 << GPIO_OSPEEDR_OSPEED3_Pos | 3 << GPIO_OSPEEDR_OSPEED4_Pos | 3 << GPIO_OSPEEDR_OSPEED4_Pos;
-        GPIOB->AFR[0] = 6 << GPIO_AFRL_AFSEL3_Pos | 6 << GPIO_AFRL_AFSEL4_Pos | 6 << GPIO_AFRL_AFSEL5_Pos;
-        SPI3->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/32
-        SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit
-    }
+namespace config {
+    static_assert(((double) CPU_FREQUENCY_HZ * 32 / 2) / pwm_frequency < 65535);    // check pwm frequency
+    TempSensor temp_sensor;
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200, 1000, 0};
+    USB1 usb;
+    FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
+    LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_R)), 
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_G)),
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_B))};
+    PositionController position_controller = {(float) (1.0/main_loop_frequency)};
+    TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
+    ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
+    VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
 };
 
-static struct {
-    SystemInitClass system_init;
-    InitCode init_code;
-    SystemInitClass system_init;
-    uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
-    uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
-    QEPEncoder motor_encoder = {*TIM5};
-    GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    
-    //GPIO torque_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    //SPITorque torque_sensor = {*SPI3, torque_cs, *DMA1_Channel1, *DMA1_Channel2};
-    MotorTorqueSensor torque_sensor;
-    GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
-    GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
-    GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
-   // MA732Encoder motor_encoder = {*SPI1, hall_a};
-    HallEncoder output_encoder = {hall_a, hall_b, hall_c};
-    //AMSEncoder motor_encoder = {*SPI3, motor_encoder_cs};
-    GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4};
-    SPIDebug spi_debug = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
-    FastLoopConfig fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param};
-    LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR3))};
-    PIDDeadbandController controller = {(float) (1.0/main_loop_frequency)};
-    PIDController torque_controller = {(float) (1.0/main_loop_frequency)};
-    PIDDeadbandController impedance_controller = {(float) (1.0/main_loop_frequency)};
-    USBCommunication<USB1> communication = {SystemConfig::usb_};
-    MainLoopConfig main_loop = {fast_loop, controller, torque_controller, impedance_controller, communication, led, output_encoder, torque_sensor, param->main_loop_param};
-} config_items;
+Communication System::communication_ = {config::usb};
+void usb_interrupt() {
+    config::usb.interrupt();
+}
+Actuator System::actuator_ = {config::fast_loop, config::main_loop, param->startup_param};
 
-template<>
-ActuatorConfig SystemConfig::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
+float v3v3 = 3.3;
 
-std::string spi_reg_val;
-void set_spi_debug(std::string val) { spi_reg_val = val; }
-//std::string get_spi_debug() { return spi_reg_val; }
-std::string get_spi_debug() { return config_items.spi_debug.read(spi_reg_val); }
+int32_t index_mod = 0;
+
+void config_init();
 
 void system_init() {
-    // if (config_items.motor_encoder.init()) {
-    //     SystemConfig::log("Motor encoder init success");
-    // } else {
-    //     SystemConfig::log("Motor encoder init failure");
-    // }
-   // config_items.torque_sensor.init();
-    // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
-
-    // std::function<void(uint32_t)> set_et = std::bind(&MA732Encoder::set_et, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_et = std::bind(&MA732Encoder::get_et, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("met", new APICallbackUint32(get_et, set_et));
-
-    // std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
-    // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
-    // SystemConfig::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
-
-    config_items.spi_debug.init();
-    SystemConfig::api.add_api_variable("spi", new APICallback(get_spi_debug, set_spi_debug) );
-    config_items.motor_pwm.init();
+    if (config::motor_encoder.init()) {
+        System::log("Motor encoder init success");
+    } else {
+        System::log("Motor encoder init failure");
+    }
+    if (config::output_encoder.init()) {
+        System::log("Output encoder init success");
+    } else {
+        System::log("Output encoder init failure");
+    }
+    if (drv_regs_error) {
+        System::log("drv configure failure");
+    } else {
+        System::log("drv configure success");
+    }
+    config::torque_sensor.init();
 }
 
-void system_maintenance() {}
-
-#include "../motorlib/system.cpp"

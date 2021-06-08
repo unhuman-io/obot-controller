@@ -31,22 +31,6 @@ void usb_interrupt() {
     usb1.interrupt();
 }
 
-#include <functional>
-uint16_t drv_regs_error = 0;
-
-uint16_t drv_regs[] = {
-  (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
-  //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
-  (3<<11) | 0x333, // hs_reg      0x3CC, moderate drive current
-  //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
-                                // moderate drive current (.57,1.14A)
-  (4<<11) | 0x2AA, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
-                                // moderate drive current (.57,1.14A)
-  (5<<11) | 0x020,  // ocp_reg     0x20 -> 50 ns dead time, 
-                              //latched ocp, 4 us ocp deglitch, 0.06 Vds thresh
-  //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
-  (6<<11) | 0x280, // csa_reg     0x280 -> bidirectional current, 20V/V
-};     
 
 #define MASK_SET(var, item, val) var = (var & ~item##_Msk) | (val << item##_Pos)
 #define GPIO_SETL(gpio, pin, mode, speed, af) \
@@ -75,10 +59,6 @@ struct InitCode {
         GPIO_SETL(A, 0, 2, 3, 2);   // QEPA TIM5
         GPIO_SETL(A, 1, 2, 3, 2);   // QEPB TIM5
         GPIO_SETL(A, 2, 2, 3, 2);   // QEPI TIM5
-        GPIO_SETL(A, 4, 2, 3, 5);   // SPI1 CS on boostxl J4-18
-        GPIO_SETL(A, 5, 2, 3, 5);   // SPI1 CLK on boostxl J3-13
-        GPIO_SETL(A, 6, 2, 3, 5);   // SPI1 DDO (Device Data Out) on boostxl J4-14
-        GPIO_SETL(A, 7, 2, 3, 5);   // SPI1 DDI (Device Data In) on boostxl J4-12
      
         GPIO_SETL(B, 3, 2, 3, 6);   // SPI3 CLK
         GPIO_SETL(B, 4, 2, 3, 6);   // SPI3 DDO
@@ -93,29 +73,6 @@ struct InitCode {
 
         // SPI1 DRV8323RS
         GPIOC->BSRR = GPIO_ODR_OD11; // drv enable
-        ms_delay(10);
-
-        SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
-        // ORDER DEPENDANCE SPE set last
-        SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
-        for (uint8_t i=0; i<sizeof(drv_regs)/sizeof(uint16_t); i++) {
-            uint16_t reg_out = drv_regs[i];
-            uint16_t reg_in = 0;
-            SPI1->DR = reg_out;
-            while(!(SPI1->SR & SPI_SR_RXNE));
-            reg_in = SPI1->DR;
-
-            reg_out |= (1<<15); // switch to read mode
-            SPI1->DR = reg_out;
-            while(!(SPI1->SR & SPI_SR_RXNE));
-            reg_in = SPI1->DR;
-            if ((reg_in & 0x7FF) != (reg_out & 0x7FF)) {
-            drv_regs_error |= 1 << i;
-            }
-        }
-        SPI1->CR1 = 0; // clear SPE
-        // SPI1 CS-> gpio
-        GPIO_SETL(A, 4, 1, 0, 0);
 
         // SPI3 MA732
         SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
@@ -143,7 +100,7 @@ static struct {
     QEPEncoder motor_encoder = {*TIM5};
     EncoderBase output_encoder;
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4};
+    HRPWM motor_pwm{pwm_frequency, *HRTIM1, 3, 5, 4, false, 50};
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &ADC5->JDR1, &ADC4->JDR1, &ADC3->JDR1, &ADC1->DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
@@ -157,55 +114,11 @@ static struct {
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};
 
-
-uint32_t get_drv_status() {
-        // pause main loop (due to overlap with torque sensor)
-        TIM1->CR1 &= ~TIM_CR1_CEN;
-        GPIO_SETL(A, 4, 2, 3, 5); 
-        SPI1->CR1 = 0; // clear SPE
-        SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
-        // ORDER DEPENDANCE SPE set last
-        SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
-
-        SPI1->DR = 1<<15; // fault status 1
-        while(!(SPI1->SR & SPI_SR_RXNE));
-        uint32_t reg_in = SPI1->DR;
-
-        SPI1->DR = (1<<15) | (1<<11); // vgs status2
-        while(!(SPI1->SR & SPI_SR_RXNE));
-        reg_in |= SPI1->DR << 16;
-
-        SPI1->CR1 = 0; // clear SPE
-        // SPI1 CS-> gpio
-        GPIO_SETL(A, 4, 1, 0, 0);
-        GPIOA->BSRR = GPIO_ODR_OD4;
-
-        // SPI1 ADS1235
-        SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
-        SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH | SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;    // 8 bit   
-
-        // reenable main loop
-        TIM1->CR1 = TIM_CR1_CEN;
-        return reg_in;
-}
-
-void drv_reset(uint32_t blah) {
-    GPIOC->BSRR = GPIO_BSRR_BR11; // drv enable
-    ms_delay(10);
-    GPIOC->BSRR = GPIO_BSRR_BS11; // drv enable
-    ms_delay(10);
-}
-
 void system_init() {
-    if (drv_regs_error) {
-        System::log("drv configure failure");
-    } else {
-        System::log("drv configure success");
-    }
+
     config_items.motor_pwm.init();
  
 
-    System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
     System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
 }
 

@@ -27,8 +27,6 @@ typedef USBCommunication Communication;
 
 USB1 usb1;
 Communication System::communication_ = {usb1};
-std::queue<std::string> System::log_queue_ = {};
-ParameterAPI System::api = {};
 
 void usb_interrupt() {
     usb1.interrupt();

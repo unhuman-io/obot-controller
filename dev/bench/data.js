@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1625075955986,
+  "lastUpdate": 1625080258407,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -2562,6 +2562,88 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarktext_size",
             "value": 83204,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 23392,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 57624,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "20ac90ec14ed39711954b98a20e259e55e095077",
+          "message": "const api callback",
+          "timestamp": "2021-06-30T12:07:01-07:00",
+          "tree_id": "efbad93c957d56bb3f630a15755f4aed08a62f5d",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/20ac90ec14ed39711954b98a20e259e55e095077"
+        },
+        "date": 1625080256867,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 598,
+            "unit": "cycles",
+            "extra": "598 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.17,
+            "unit": "cycles",
+            "extra": "3410 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2892.21,
+            "unit": "cycles",
+            "extra": "5518 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.2,
+            "unit": "cycles",
+            "extra": "17019 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 792.029017174,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 88356,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 18804,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 83732,
             "unit": "bytes",
             "extra": "0 times"
           },

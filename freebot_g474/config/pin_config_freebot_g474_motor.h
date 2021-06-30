@@ -49,10 +49,11 @@ void drv_enable() {
     }
 }
 
-void drv_reset(uint32_t blah) {
+std::string drv_reset() {
     drv_disable();
     ms_delay(10);
     drv_enable();
+    return "ok";
 }
 
 void pin_config_freebot_g474_motor_r0() {
@@ -251,10 +252,12 @@ void setup_sleep() {
     drv_disable();
     NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 1));
     NVIC_EnableIRQ(RTC_WKUP_IRQn);
+    MASK_SET(RCC->CFGR, RCC_CFGR_SW, 2); // HSE is system clock source
     RTC->SCR = RTC_SCR_CWUTF;
 }
 
 void finish_sleep() {
+    MASK_SET(RCC->CFGR, RCC_CFGR_SW, 3); // PLL is system clock source
     drv_enable();
     NVIC_DisableIRQ(RTC_WKUP_IRQn);
     NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));

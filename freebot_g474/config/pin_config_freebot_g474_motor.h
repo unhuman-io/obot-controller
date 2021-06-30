@@ -27,10 +27,18 @@
 
 void pin_config_freebot_g474_motor_r0() {
      // Peripheral clock enable
-        RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN |  RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_USBEN;
+        RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN |  RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_USBEN | RCC_APB1ENR1_RTCAPBEN | RCC_APB1ENR1_PWREN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN | RCC_APB2ENR_TIM1EN | RCC_APB2ENR_HRTIM1EN | RCC_APB2ENR_SYSCFGEN;
         RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN | RCC_AHB2ENR_ADC12EN | RCC_AHB2ENR_ADC345EN;
+        PWR->CR1 |= PWR_CR1_DBP;
+        RCC->BDCR |= 2 << RCC_BDCR_RTCSEL_Pos | RCC_BDCR_RTCEN;
+
+    // Sleep mode enable
+        RCC->APB1SMENR1 = RCC_APB1SMENR1_TIM2SMEN |  RCC_APB1SMENR1_TIM4SMEN | RCC_APB1SMENR1_TIM5SMEN | RCC_APB1SMENR1_USBSMEN |  RCC_APB1SMENR1_RTCAPBSMEN;
+        RCC->APB2SMENR = RCC_APB2SMENR_SYSCFGSMEN;
+        RCC->AHB1SMENR = 0;
+        RCC->AHB2SMENR = RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN | RCC_AHB2SMENR_GPIOCSMEN | RCC_AHB2SMENR_GPIODSMEN;
 
         CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
         DWT->CYCCNT = 0;
@@ -90,6 +98,22 @@ void pin_config_freebot_g474_motor_r0() {
         TIM1->DIER = TIM_DIER_UIE;
         NVIC_SetPriority(TIM1_UP_TIM16_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 1, 0));
         NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
+
+        // RTC
+        RTC->WPR = 0xCA;
+        RTC->WPR = 0x53;
+        RTC->ICSR = RTC_ICSR_INIT;
+        // while(!(RTC->ICSR & RTC_ICSR_INITF));
+        // RTC->PRER = 128 << RTC_PRER_PREDIV_A_Pos | 256 << RTC_PRER_PREDIV_S_Pos;
+        while(!(RTC->ICSR & RTC_ICSR_WUTWF));
+        RTC->WUTR = 205; // 0.1 seconds wakeup
+        RTC->CR = RTC_CR_WUTE | RTC_CR_WUTIE;
+        RTC->ICSR &= ~RTC_ICSR_INIT;
+        EXTI->IMR1 |= EXTI_IMR1_IM20;
+        EXTI->RTSR1 |= EXTI_RTSR1_RT20;
+        NVIC_SetPriority(RTC_WKUP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+        //NVIC_EnableIRQ(RTC_WKUP_IRQn);
+        RTC->SCR = RTC_SCR_CWUTF;
 
         // ADC
         // ADC1
@@ -203,4 +227,12 @@ void drv_reset(uint32_t blah) {
     ms_delay(10);
     GPIOC->BSRR = GPIO_BSRR_BS13; // drv enable
     ms_delay(10);
+}
+
+extern "C" void RTC_WKUP_IRQHandler() {
+    IWDG->KR = 0xAAAA;
+    static int count = 0;
+    count++;
+    EXTI->PR1 = EXTI_PR1_PIF20;
+    RTC->SCR = RTC_SCR_CWUTF;
 }

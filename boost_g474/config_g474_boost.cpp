@@ -67,3 +67,8 @@ void system_init() {
     config::torque_sensor.init();
 }
 
+
+#include "../motorlib/system.cpp"
+
+void setup_sleep() {} //todo
+void finish_sleep() {}

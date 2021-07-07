@@ -257,3 +257,6 @@ void system_init() {
 void system_maintenance() {}
 
 #include "../motorlib/system.cpp"
+
+void setup_sleep() {} //todo
+void finish_sleep() {}

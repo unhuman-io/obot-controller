@@ -24,13 +24,52 @@
     #define TIM_B TIM4->CCR2
 #endif
 
+void drv_disable() {
+    GPIOC->BSRR = GPIO_BSRR_BR13; // drv disable
+}
+
+void drv_enable() {
+    GPIOC->BSRR = GPIO_BSRR_BS13; // drv enable
+    ms_delay(10);
+    
+    for (uint8_t i=0; i<sizeof(param->drv_regs)/sizeof(uint16_t); i++) {
+        uint16_t reg_out = param->drv_regs[i];
+        uint16_t reg_in = 0;
+        SPI1->DR = reg_out;
+        while(!(SPI1->SR & SPI_SR_RXNE));
+        reg_in = SPI1->DR;
+
+        reg_out |= (1<<15); // switch to read mode
+        SPI1->DR = reg_out;
+        while(!(SPI1->SR & SPI_SR_RXNE));
+        reg_in = SPI1->DR;
+        if ((reg_in & 0x7FF) != (reg_out & 0x7FF)) {
+        drv_regs_error |= 1 << i;
+        }
+    }
+}
+
+std::string drv_reset() {
+    drv_disable();
+    ms_delay(10);
+    drv_enable();
+    return "ok";
+}
 
 void pin_config_freebot_g474_motor_r0() {
      // Peripheral clock enable
-        RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN |  RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_USBEN;
+        RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN |  RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_USBEN | RCC_APB1ENR1_RTCAPBEN | RCC_APB1ENR1_PWREN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN | RCC_APB2ENR_TIM1EN | RCC_APB2ENR_HRTIM1EN | RCC_APB2ENR_SYSCFGEN;
         RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
         RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN | RCC_AHB2ENR_ADC12EN | RCC_AHB2ENR_ADC345EN;
+        PWR->CR1 |= PWR_CR1_DBP;
+        RCC->BDCR |= 2 << RCC_BDCR_RTCSEL_Pos | RCC_BDCR_RTCEN;
+
+    // Sleep mode enable
+        RCC->APB1SMENR1 = RCC_APB1SMENR1_TIM2SMEN |  RCC_APB1SMENR1_TIM4SMEN | RCC_APB1SMENR1_TIM5SMEN | RCC_APB1SMENR1_USBSMEN |  RCC_APB1SMENR1_RTCAPBSMEN;
+        RCC->APB2SMENR = RCC_APB2SMENR_SYSCFGSMEN;
+        RCC->AHB1SMENR = 0;
+        RCC->AHB2SMENR = RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN | RCC_AHB2SMENR_GPIOCSMEN | RCC_AHB2SMENR_GPIODSMEN;
 
         CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
         DWT->CYCCNT = 0;
@@ -91,6 +130,22 @@ void pin_config_freebot_g474_motor_r0() {
         NVIC_SetPriority(TIM1_UP_TIM16_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 1, 0));
         NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
 
+        // RTC
+        RTC->WPR = 0xCA;
+        RTC->WPR = 0x53;
+        RTC->ICSR = RTC_ICSR_INIT;
+        // while(!(RTC->ICSR & RTC_ICSR_INITF));
+        // RTC->PRER = 128 << RTC_PRER_PREDIV_A_Pos | 256 << RTC_PRER_PREDIV_S_Pos;
+        while(!(RTC->ICSR & RTC_ICSR_WUTWF));
+        RTC->WUTR = 205; // 0.1 seconds wakeup
+        RTC->CR = RTC_CR_WUTE | RTC_CR_WUTIE;
+        RTC->ICSR &= ~RTC_ICSR_INIT;
+        EXTI->IMR1 |= EXTI_IMR1_IM20;
+        EXTI->RTSR1 |= EXTI_RTSR1_RT20;
+        NVIC_SetPriority(RTC_WKUP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+        //NVIC_EnableIRQ(RTC_WKUP_IRQn);
+        RTC->SCR = RTC_SCR_CWUTF;
+
         // ADC
         // ADC1
         GPIO_SETL(C, 0, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A1
@@ -136,29 +191,14 @@ void pin_config_freebot_g474_motor_r0() {
         NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));
         NVIC_EnableIRQ(USB_LP_IRQn);
 
-        // SPI1 DRV8323RS
-        //GPIOA->BSRR = GPIO_ODR_OD0;  // disable other spi cs
-        GPIOC->BSRR = GPIO_ODR_OD13; // drv enable
-        ms_delay(10);
-
+        // SPI1 DRV8323RS        
         SPI1->CR2 = (15 << SPI_CR2_DS_Pos) | SPI_CR2_FRF;   // 16 bit TI mode
         // ORDER DEPENDANCE SPE set last
         SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SPE;    // baud = clock/64
-        for (uint8_t i=0; i<sizeof(param->drv_regs)/sizeof(uint16_t); i++) {
-            uint16_t reg_out = param->drv_regs[i];
-            uint16_t reg_in = 0;
-            SPI1->DR = reg_out;
-            while(!(SPI1->SR & SPI_SR_RXNE));
-            reg_in = SPI1->DR;
+        drv_enable();
 
-            reg_out |= (1<<15); // switch to read mode
-            SPI1->DR = reg_out;
-            while(!(SPI1->SR & SPI_SR_RXNE));
-            reg_in = SPI1->DR;
-            if ((reg_in & 0x7FF) != (reg_out & 0x7FF)) {
-            drv_regs_error |= 1 << i;
-            }
-        }
+
+
         // SPI1->CR1 = 0; // clear SPE
         // // SPI1 CS-> gpio
         // GPIO_SETL(A, 4, 1, 0, 0);
@@ -198,9 +238,29 @@ uint32_t get_drv_status() {
         return reg_in;
 }
 
-void drv_reset(uint32_t blah) {
-    GPIOC->BSRR = GPIO_BSRR_BR13; // drv enable
-    ms_delay(10);
-    GPIOC->BSRR = GPIO_BSRR_BS13; // drv enable
-    ms_delay(10);
+extern "C" void RTC_WKUP_IRQHandler() {
+    IWDG->KR = 0xAAAA;
+    static int count = 0;
+    count++;
+    EXTI->PR1 = EXTI_PR1_PIF20;
+    RTC->SCR = RTC_SCR_CWUTF;
+}
+
+void setup_sleep() {
+    NVIC_DisableIRQ(TIM1_UP_TIM16_IRQn);
+    NVIC_DisableIRQ(ADC5_IRQn);
+    drv_disable();
+    NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 1));
+    NVIC_EnableIRQ(RTC_WKUP_IRQn);
+    MASK_SET(RCC->CFGR, RCC_CFGR_SW, 2); // HSE is system clock source
+    RTC->SCR = RTC_SCR_CWUTF;
+}
+
+void finish_sleep() {
+    MASK_SET(RCC->CFGR, RCC_CFGR_SW, 3); // PLL is system clock source
+    drv_enable();
+    NVIC_DisableIRQ(RTC_WKUP_IRQn);
+    NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));
+    NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
+    NVIC_EnableIRQ(ADC5_IRQn);
 }

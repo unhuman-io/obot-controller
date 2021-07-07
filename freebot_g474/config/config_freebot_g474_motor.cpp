@@ -71,9 +71,18 @@ void system_init() {
     std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config::temp_sensor, std::placeholders::_1);
     System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t));
     System::api.add_api_variable("index_mod", new APIInt32(&index_mod));
-    System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
+    System::api.add_api_variable("drv_err", new const APICallbackUint32(get_drv_status));
+    System::api.add_api_variable("drv_reset", new const APICallback(drv_reset));
     System::api.add_api_variable("A1", new const APICallbackFloat([](){ return A1_DR; }));
     System::api.add_api_variable("A2", new const APICallbackFloat([](){ return A2_DR; }));
+    System::api.add_api_variable("shutdown", new const APICallback([](){
+        // requires power cycle to return 
+        setup_sleep();
+        SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+        PWR->CR1 |= 0b100 << PWR_CR1_LPMS_Pos;
+        __WFI();
+        return "";
+    }));
 
     for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC3, ADC4, ADC5}) {
         regs->CR = ADC_CR_ADVREGEN;

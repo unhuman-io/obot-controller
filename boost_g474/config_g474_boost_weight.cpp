@@ -10,6 +10,7 @@
 #include "param_g474_boost.h"
 #include "../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../motorlib/ads1235.h"
+#include "../motorlib/peripheral/stm32g4/spi_debug.h"
 
 #include "../motorlib/controller/position_controller.h"
 #include "../motorlib/controller/torque_controller.h"
@@ -27,8 +28,6 @@ typedef USBCommunication Communication;
 
 USB1 usb1;
 Communication System::communication_ = {usb1};
-std::queue<std::string> System::log_queue_ = {};
-ParameterAPI System::api = {};
 
 void usb_interrupt() {
     usb1.interrupt();
@@ -40,16 +39,16 @@ uint16_t drv_regs_error = 0;
 uint16_t drv_regs[] = {
   (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
   //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
-  (3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
+  (3<<11) | 0x355, // hs_reg      0x3CC, moderate drive current
   //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
                                 // moderate drive current (.57,1.14A)
-  (4<<11) | 0x3AA, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
+  (4<<11) | 0x355, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
                                 // moderate drive current (.57,1.14A)
-  (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
-                              //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
+  (5<<11) | 0x001,  // ocp_reg     0x00 -> 50 ns dead time, 
+                              //latched ocp, 2 us ocp deglitch, 0.13 Vds thresh
   //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
   //(6<<11) | 0x280,
-  (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
+  (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V sense level .25V .25/.007 35A
 };     
 
 #define MASK_SET(var, item, val) var = (var & ~item##_Msk) | (val << item##_Pos)
@@ -133,6 +132,7 @@ struct InitCode {
         // SPI3->CR2 = (15 << SPI_CR2_DS_Pos);    // 16 bit 
 
         //SPI3 ADS1235
+        GPIO_SETH(A, 15, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
         SPI3->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
@@ -146,8 +146,9 @@ static struct {
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
+    SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2, 1000, 1000};
     ADS1235 torque_sensor = {spi_dma};
+    SPIDebug spi_debug {spi_dma, torque_sensor.register_operation_};
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};
@@ -155,7 +156,7 @@ static struct {
     QEPEncoder motor_encoder = {*TIM5};
     EncoderBase output_encoder;
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200};
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200, 2000, 1000};
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &ADC5->JDR1, &ADC4->JDR1, &ADC3->JDR1, &ADC1->DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
@@ -171,7 +172,7 @@ Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, pa
 
 
 // return (fault status register 2 << 16) | (fault status register 1) 
-uint32_t get_drv_status() {
+std::string get_drv_status() {
         // pause main loop (due to overlap with torque sensor)
         TIM1->CR1 &= ~TIM_CR1_CEN;
         GPIO_SETL(A, 4, 2, 3, 5); 
@@ -182,11 +183,11 @@ uint32_t get_drv_status() {
 
         SPI1->DR = 1<<15; // fault status 1
         while(!(SPI1->SR & SPI_SR_RXNE));
-        uint32_t reg_in = SPI1->DR;
+        uint16_t fault_in = SPI1->DR;
 
         SPI1->DR = (1<<15) | (1<<11); // vgs status2
         while(!(SPI1->SR & SPI_SR_RXNE));
-        reg_in |= SPI1->DR << 16;
+        uint16_t vgs_in = SPI1->DR << 16;
 
         SPI1->CR1 = 0; // clear SPE
         // SPI1 CS-> gpio
@@ -199,10 +200,10 @@ uint32_t get_drv_status() {
 
         // reenable main loop
         TIM1->CR1 = TIM_CR1_CEN;
-        return reg_in;
+        return "fault: " + u16_to_hex(fault_in) + " fault2: " + u16_to_hex(vgs_in);
 }
 
-void drv_reset(uint32_t blah) {
+void drv_reset(std::string blah) {
     GPIOC->BSRR = GPIO_BSRR_BR11; // drv enable
     ms_delay(10);
     GPIOC->BSRR = GPIO_BSRR_BS11; // drv enable
@@ -231,7 +232,7 @@ void system_init() {
     // } else {
     //     System::log("Motor encoder init failure");
     // }
-    config_items.torque_sensor.init();
+    System::log("torque_sensor_init: " + std::to_string(config_items.torque_sensor.init()));
     // std::function<void(uint32_t)> setbct = std::bind(&MA732Encoder::set_bct, &config_items.motor_encoder, std::placeholders::_1);
     // std::function<uint32_t(void)> getbct = std::bind(&MA732Encoder::get_bct, &config_items.motor_encoder);
     // System::api.add_api_variable("mbct", new APICallbackUint32(getbct, setbct));
@@ -245,7 +246,10 @@ void system_init() {
     // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 
     System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
-    System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
+    System::api.add_api_variable("drv_err", new APICallback(get_drv_status, drv_reset));
+
+    System::api.add_api_variable("ads", new APICallback([](){ return config_items.spi_debug.read(); }, 
+        [](std::string s){ config_items.spi_debug.write(s); }));
     config_items.main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.command.v_d);
     config_items.main_loop.reserved2_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.command.v_q);
 }

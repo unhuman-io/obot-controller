@@ -149,10 +149,10 @@ static struct {
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
+    SPIDMA spi_dma{*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
     //ADS1235 torque_sensor = {spi_dma};
-    SPIDebug spi_debug = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
-    ICPZ motor_encoder = {spi_dma};
+    ICPZ motor_encoder{spi_dma};
+    SPIDebug spi_debug{spi_dma};
     TorqueSensor torque_sensor;
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
@@ -225,14 +225,9 @@ void drv_reset(uint32_t blah) {
 //     return vdq0.vd;
 // 
 
-std::string val;
-void set_spi_debug(std::string s) {
-    config_items.motor_encoder.set_register_operation();
-    val = config_items.spi_debug.read(s);
-    config_items.motor_encoder.clear_register_operation();
-}
-std::string get_spi_debug() {
-    return val;
+void config_init() {
+    System::api.add_api_variable("spi", new APICallback([](){ return config_items.spi_debug.read(); }, 
+        [](std::string s) { config_items.spi_debug.write(s); }));
 }
 
 void system_init() {
@@ -248,7 +243,7 @@ void system_init() {
     //     System::log("Motor encoder init failure");
     // }
     config_items.torque_sensor.init();
-    config_items.spi_debug.init();
+    config_init();
 
     if (config_items.motor_encoder.init()) {
         System::log("icpz configure success");
@@ -266,9 +261,6 @@ void system_init() {
     // std::function<void(uint32_t)> set_mgt = std::bind(&MA732Encoder::set_mgt, &config_items.motor_encoder, std::placeholders::_1);
     // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
     // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
-
-
-    System::api.add_api_variable("spi", new APICallback(get_spi_debug, set_spi_debug));
 
     System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));

@@ -32,8 +32,8 @@ namespace config {
     GPIO motor_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     volatile int spi3_register_operation = 0;
     SPIDMA spi_dma = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
-    ICPZ motor_encoder = {spi_dma};
-    SPIDebug spi_debug = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
+    ICPZ motor_encoder(spi_dma);
+    SPIDebug spi_debug(spi_dma);
     TorqueSensor torque_sensor;
     GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
     OutputEncoder output_encoder;
@@ -41,18 +41,9 @@ namespace config {
 
 #include "config_freebot_g474_motor.cpp"
 
-std::string val;
-void set_spi_debug(std::string s) {
-    config::motor_encoder.set_register_operation();
-    val = config::spi_debug.read(s);
-    config::motor_encoder.clear_register_operation();
-}
-std::string get_spi_debug() {
-    return val;
-}
-
 void config_init() {
-    System::api.add_api_variable("spi", new APICallback(get_spi_debug, set_spi_debug));
+    System::api.add_api_variable("spi", new APICallback([](){ return config::spi_debug.read(); }, 
+        [](std::string s) { config::spi_debug.write(s); }));
 }
 
 void config_maintenance() {}

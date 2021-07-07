@@ -75,6 +75,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = .7,
     .startup_param.phase_lock_duration = 2,
+    .startup_param.gear_ratio = 5.4,
+    .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
     .drv_regs = {
         (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
         //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current

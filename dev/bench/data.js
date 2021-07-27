@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1627381244906,
+  "lastUpdate": 1627385684983,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -3480,6 +3480,90 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbss_size",
             "value": 57696,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bb17043635f36b4692e5899b50a4078b5ec08e6f",
+          "message": "Merge pull request #41 from unhuman-io/feature/encoder_bias\n\nFeature/encoder bias",
+          "timestamp": "2021-07-27T04:30:02-07:00",
+          "tree_id": "4c916e6f88739ae4c34f56599fe32baa7b21af5d",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/bb17043635f36b4692e5899b50a4078b5ec08e6f"
+        },
+        "date": 1627385683533,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 598,
+            "unit": "cycles",
+            "extra": "598 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.89,
+            "unit": "cycles",
+            "extra": "3409 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2849.69,
+            "unit": "cycles",
+            "extra": "5751 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.7,
+            "unit": "cycles",
+            "extra": "17047 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 791.924454575,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 89168,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 18844,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 84544,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 23432,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 57664,
             "unit": "bytes",
             "extra": "0 times"
           }

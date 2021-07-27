@@ -83,7 +83,7 @@ parameter_api.cpp\
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32g474xx.s
+../motorlib/peripheral/stm32g4/startup_stm32g474xx.s
 
 
 #######################################
@@ -165,7 +165,7 @@ CPPFLAGS = $(CFLAGS)
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32G474RETx_FLASH.ld
+LDSCRIPT = ../motorlib/peripheral/stm32g4/STM32G474RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

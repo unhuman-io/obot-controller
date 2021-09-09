@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1631207834765,
+  "lastUpdate": 1631210970903,
   "repoUrl": "https://github.com/unhuman-io/freebot-controller",
   "entries": {
     "Benchmark": [
@@ -4234,6 +4234,100 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarktext_size",
             "value": 84608,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 23432,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 57696,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 1071,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 10047,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "fd4bd943fedb997b52ac50b7c1b922f96f89ad5e",
+          "message": "usb zero length packet fix",
+          "timestamp": "2021-09-09T11:05:32-07:00",
+          "tree_id": "a5c469ad066fcc20306b12baef0794bfc7968f00",
+          "url": "https://github.com/unhuman-io/freebot-controller/commit/fd4bd943fedb997b52ac50b7c1b922f96f89ad5e"
+        },
+        "date": 1631210968938,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 597.96,
+            "unit": "cycles",
+            "extra": "598 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.58,
+            "unit": "cycles",
+            "extra": "3408 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2933.81,
+            "unit": "cycles",
+            "extra": "5798 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.9,
+            "unit": "cycles",
+            "extra": "17031 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 794.178342565,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 89368,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 18844,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 84744,
             "unit": "bytes",
             "extra": "0 times"
           },

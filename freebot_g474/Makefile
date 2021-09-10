@@ -24,11 +24,14 @@ CONFIG_FILE = config/config_freebot_g474_$(CONFIG).cpp
 PARAM=$(CONFIG)
 PARAM_FILE = param/param_freebot_g474_$(PARAM).c
 
+$(shell touch config/pin_config_freebot_g474_motor.h)
+$(shell touch $(PARAM_FILE))
 ifdef PARAM_OVERRIDE
 PARAM_INCLUDE=-include $(PARAM_OVERRIDE)
+PARAM_SUFFIX=_$(notdir $(basename $(PARAM_OVERRIDE)))
 endif
 
-TARGET = $(CONFIG)
+TARGET = $(CONFIG)$(PARAM_SUFFIX)
 
 # for submake
 export

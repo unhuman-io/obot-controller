@@ -52,8 +52,8 @@ namespace config {
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     MA732Encoder output_encoder(*SPI3, motor_encoder_cs);
 
-    GPIO gpio1(*GPIOC, 0);
-    GPIO gpio2(*GPIOC, 1);
+    GPIODebounce gpio1(*GPIOC, 0);
+    GPIODebounce gpio2(*GPIOC, 1);
 };
 
 #include "config_freebot_g474_motor.cpp"

@@ -25,7 +25,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc2_gain = -3.3/4096/(.005*10),
     .fast_loop_param.adc3_gain = -3.3/4096/(.005*10), 
     .fast_loop_param.motor_encoder.dir = -1,
-    .fast_loop_param.phase_mode = 0,
+    .fast_loop_param.phase_mode = 1,
     .fast_loop_param.motor_encoder.cpr = 8192,
     .fast_loop_param.motor_encoder.rollover = pow(2,24),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
@@ -79,7 +79,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
         (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
     },
     .startup_param.do_phase_lock = 1,
-    .startup_param.phase_lock_current = 5,
+    .startup_param.phase_lock_current = -5,
     .startup_param.phase_lock_duration = 2,
     .name = "J2",
 #ifdef PARAM_OVERRIDES

@@ -16,6 +16,7 @@
 
 GIT_VERSION := $(shell git describe --dirty --always --tags)
 $(shell touch version.h)
+$(shell > tuneable.txt)
 
 PARAM_DIR = params_freebot_g474
 
@@ -173,7 +174,12 @@ LIBDIR =
 LDFLAGS = $(MCU) -specs=nosys.specs -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections -u _printf_float
 
 # default action: build all
-all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).tgz $(PARAM_DIR)
+all: 
+	$(MAKE) clean
+	$(MAKE) $(BUILD_DIR)/tuneable-plugin.so
+	$(MAKE) build_all
+	
+build_all: $(BUILD_DIR)/tuneable.cpp $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).tgz $(PARAM_DIR)
 
 #######################################
 # build the application
@@ -191,10 +197,13 @@ $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 	$(CC) $(PARAM_INCLUDE) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
-	$(CXX) -include ../motorlib/system_log.h -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+	$(CXX) -fplugin=$(BUILD_DIR)/tuneable-plugin.so -include ../motorlib/system_log.h -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@ >> tuneable.txt
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/tuneable.cpp: $(OBJECTS)
+	sed -nE 's/(\S*)\s(\S+)\s(\S+)/api.add_variable("\3", new \1 API\2(\&config::\3));/p' tuneable.txt > tuneable.cpp
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
@@ -202,6 +211,9 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
+
+$(BUILD_DIR)/tuneable-plugin.so: tuneable_attribute_plugin.c | $(BUILD_DIR)
+	g++ -I`g++ -print-file-name=plugin`/include -fPIC -x c++ -shared tuneable_attribute_plugin.c -o $(BUILD_DIR)/tuneable-plugin.so
 	
 include ../motorlib/scripts/firmware_installer.mk
 	

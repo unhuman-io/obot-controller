@@ -21,6 +21,8 @@ jobs:
     steps:
     - name: install dfu-suffix
       run: sudo apt-get install -y dfu-util
+    - name: install gcc plugin dev
+      run: sudo apt-get install -y gcc-$(gcc -dumpversion)-plugin-dev
     - uses: actions/checkout@master
       with:
         fetch-depth: 0

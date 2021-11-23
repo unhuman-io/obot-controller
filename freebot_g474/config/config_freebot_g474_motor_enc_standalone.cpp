@@ -5,10 +5,13 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/ma732_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../../motorlib/ads1235_2.h"
 
-using TorqueSensor = TorqueSensorBase;
+
+using TorqueSensor = ADS1235_2;
 using MotorEncoder = QEPEncoder;
-using OutputEncoder = MA732Encoder;
+using OutputEncoder = EncoderBase;
 
 extern "C" void SystemClock_Config();
 void pin_config_freebot_g474_motor_r0();
@@ -19,9 +22,12 @@ struct InitCode {
     InitCode() {
       SystemClock_Config();
       pin_config_freebot_g474_motor_r0();
-      SPI3->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
-      // ORDER DEPENDANCE SPE set last
-      SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
+
+        //SPI3 ADS1235
+        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
+        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
+        SPI3->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32
+        SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
 
         // set up ~1 kHz interrupt on TIM3
         // priority 3 is lower than all others
@@ -48,9 +54,11 @@ namespace config {
     InitCode init_code;
 
     QEPEncoder motor_encoder(*TIM2);
-    TorqueSensor torque_sensor;
-    GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
-    MA732Encoder output_encoder(*SPI3, motor_encoder_cs);
+
+    GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT);
+    SPIDMA spi_dma(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2, 1000, 1000);
+    ADS1235_2 torque_sensor(spi_dma);
+    OutputEncoder output_encoder;
 
     GPIODebounce gpio1(*GPIOC, 0);
     GPIODebounce gpio2(*GPIOC, 1);
@@ -59,14 +67,11 @@ namespace config {
 #include "config_freebot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder.get_bct(); },
-                    [](uint32_t u){ config::output_encoder.set_bct(u); }));
-    System::api.add_api_variable("jet", new APICallbackUint32([](){ return config::output_encoder.get_et(); },
-                    [](uint32_t u){ config::output_encoder.set_et(u); }));
-    System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::output_encoder.set_mgt(u); }));
-    System::api.add_api_variable("jfilt", new APICallbackUint32([](){ return config::output_encoder.get_filt(); }, 
-                [](uint32_t u){ config::output_encoder.set_filt(u); }));
+    System::log("torque_sensor_init: " + std::to_string(config::torque_sensor.init()));
+
+    System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));
+    System::api.add_api_variable("torque2", new const APIFloat(&config::torque_sensor.torque2_));
+    System::api.add_api_variable("decimation", new APIUint16(&config::torque_sensor.decimation_));
     TIM3->CR1 = TIM_CR1_CEN; // start TIM3 program           
 }
 

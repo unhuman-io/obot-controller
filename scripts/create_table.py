@@ -13,12 +13,12 @@ class Table:
         parser = argparse.ArgumentParser(description='Process motor data for a table')
         parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
         parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
-        parser.add_argument('-s,--table-size', dest="table_size", type=int, default=512)
-        parser.add_argument('-i,--index-pos',dest="index_pos", default=0)
-        parser.add_argument('-c,--cpr',dest="cpr",default=8192)
-        parser.add_argument('-n,--gear-ratio',dest="gear_ratio",type=float,default=1.)
-        parser.add_argument('-e,--encoder',dest="encoder_table", action="store_true", default=False)
-        parser.add_argument('-j,--joint',dest="joint_table", action="store_true", default=False)
+        parser.add_argument('-s', '--table-size', dest="table_size", type=int, default=512)
+        parser.add_argument('-i', '--index-pos',dest="index_pos", default=0)
+        parser.add_argument('-c', '--cpr',dest="cpr",default=8192)
+        parser.add_argument('-n', '--gear-ratio',dest="gear_ratio",type=float,default=1.)
+        parser.add_argument('-e', '--encoder',dest="encoder_table", action="store_true", default=False)
+        parser.add_argument('-j', '--joint',dest="joint_table", action="store_true", default=False)
         self.args = parser.parse_args(args_in)
 
         self.data = genfromtxt(self.args.infile, delimiter=',', names=True)
@@ -74,14 +74,23 @@ class Table:
         pchip = pchip_coeff(xfilt, yfilt, yfiltd)
         xcalc = linspace(0,2*pi,1000)
         ycalc = pchip_calc(pchip, xcalc)
+
         # figure()
-        # plot(xfilt,yfiltd)
-        
+        # plot(x, y)
+        # xlabel('raw x')
+        # ylabel('raw y')
+
         figure()
+        plot(mod(x,2*pi), y-mean(y),'.')
         plot(xfilt,yfilt)
         plot(xfilt, pchip[:,0], '*')
         plot(xcalc, ycalc,'.')
-        plot(mod(x,2*pi), y-mean(y),'.')
+        
+        xlabel('xfilt % 2*pi')
+        ylabel('yfilt')
+        title('table value y vs input x')
+        legend(['raw','filtered','cubic points','cubic spline'])
+        grid()
         show()
         return pchip
 

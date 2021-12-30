@@ -72,6 +72,9 @@ void config_init() {
     System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));
     System::api.add_api_variable("torque2", new const APIFloat(&config::torque_sensor.torque2_));
     System::api.add_api_variable("decimation", new APIUint16(&config::torque_sensor.decimation_));
+    System::api.add_api_variable("gpio", new const APICallback([]() { 
+        return "gpio 1: " + std::to_string(config::gpio1.is_set()) + "\tgpio 2: " + std::to_string(config::gpio2.is_set());
+    }));
     TIM3->CR1 = TIM_CR1_CEN; // start TIM3 program           
 }
 
@@ -80,6 +83,15 @@ void config_maintenance() {}
 #include "../tension_program.h"
 namespace config {
     TensionProgram tension_program;
+};
+
+struct InitCode2 {
+    InitCode2() {    System::api.add_api_variable("state", new const APICallback([](){ return config::tension_program.get_state(); }));
+     }
+};
+
+namespace config {
+    InitCode2 init_code2;
 };
 
 extern "C" { void TIM3_IRQHandler(); }

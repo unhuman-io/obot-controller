@@ -1,9 +1,12 @@
 #pragma once
 #include "../motorlib/control_fun.h"
+#include <string>
 
 class TensionProgram {
  public:
     enum State {OFF, LOW_VELOCITY, START_VELOCITY, TORQUE, ERROR};
+    const std::string state_string[5] = {"OFF", "LOW_VELOCITY", "START_VELOCITY", "TORQUE", "ERROR"};
+    std::string get_state() const { return state_string[state_]; }
     void loop() {
         if (config::main_loop.first_command_received()) {
             // exit this program
@@ -42,7 +45,7 @@ class TensionProgram {
             case START_VELOCITY:
                 command.mode_desired = VELOCITY;
                 command.velocity_desired = 200;
-                if (status_.torque > 5) {
+                if (status_.torque > 1) {
                     config::fast_loop.beep_on(1);
                     state_ = TORQUE;
                 }
@@ -54,18 +57,26 @@ class TensionProgram {
             case TORQUE:
                 command.mode_desired = MotorMode::TORQUE;
                 if (velocity_filtered > 0) {
-                    command.torque_desired = 5;
+                    command.torque_desired = 1;
                 } else {
-                    command.torque_desired = 3;
+                    command.torque_desired = 1;
                 }
                 if (config::gpio1.is_set() || config::gpio2.is_set()) {
                     // done
+                    command.mode_desired = CURRENT; // necessary to get beep
+                    config::main_loop.set_command(command);
+                    asm("NOP");
+                    config::fast_loop.beep_on(.3);
+                    asm("NOP");
+                    ms_delay(500);
+                    asm("NOP");
+                    config::fast_loop.beep_on(.3);
+                    asm("NOP");
+                    ms_delay(500);
+                    asm("NOP");
+                    config::fast_loop.beep_on(.3);
+                    asm("NOP");
                     state_ = OFF;
-                    config::fast_loop.beep_on(.1);
-                    ms_delay(150);
-                    config::fast_loop.beep_on(.1);
-                    ms_delay(150);
-                    config::fast_loop.beep_on(.1);
                 }
                 break;
             case ERROR:

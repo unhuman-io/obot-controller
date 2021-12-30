@@ -104,8 +104,6 @@ void system_init() {
     v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 / V_REF_DR;
     System::log("3v3: " + std::to_string(v3v3));
 
-    config_init();
-
     ADC1->GCOMP = v3v3*4096;
     ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
     ADC1->CR |= ADC_CR_ADSTART;
@@ -113,7 +111,9 @@ void system_init() {
     ADC5->IER |= ADC_IER_JEOCIE;
     ADC4->CR |= ADC_CR_JADSTART;
     ADC3->CR |= ADC_CR_JADSTART;
-   
+
+    config_init();
+
     TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
     config::usb.connect();
     HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN; // start high res timer

@@ -83,6 +83,8 @@ void system_init() {
         __WFI();
         return "";
     }));
+    System::api.add_api_variable("deadtime", new APICallbackUint16([](){ 
+        return config::motor_pwm.deadtime_ns_; }, [](uint16_t u) {config::motor_pwm.set_deadtime(u); }));
 
     for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC3, ADC4, ADC5}) {
         regs->CR = ADC_CR_ADVREGEN;

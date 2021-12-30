@@ -44,6 +44,7 @@ void config_init() {
                     [](uint32_t u){ config::output_encoder.set_mgt(u); }));
     System::api.add_api_variable("jfilt", new APICallbackUint32([](){ return config::output_encoder.get_filt(); }, 
                 [](uint32_t u){ config::output_encoder.set_filt(u); }));
+    System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
 }
 
 void config_maintenance() {}

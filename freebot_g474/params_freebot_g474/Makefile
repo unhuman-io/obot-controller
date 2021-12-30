@@ -1,10 +1,9 @@
-BUILD_PARAM_DIR = ../$(BUILD_DIR)/param
 
-all: $(patsubst %.h, $(BUILD_PARAM_DIR)/%.bin, $(wildcard *.h)) | $(BUILD_PARAM_DIR)
+PARAM_FILE = ../param/param_freebot_g474_motor_enc.c
+PARAM_OVERRIDE = A1.h A2.h A3.h A4.h A5.h A6.h
+PARAM_BUILD_DIR := ../build/param
 
-$(BUILD_PARAM_DIR)/%.bin: %.h ../param/param_freebot_g474_motor_enc.c | $(BUILD_PARAM_DIR)
-	$(CC) --include $< -c ../param/param_freebot_g474_motor_enc.c -o $(BUILD_PARAM_DIR)/$(<:h=o)
-	$(CP) -O binary -S -j flash_param $(BUILD_PARAM_DIR)/$(<:h=o) $@
+export
 
-$(BUILD_PARAM_DIR): 
-	mkdir $@
+include ../../motorlib/scripts/configure_gcc.mk
+include ../../motorlib/scripts/make_param.mk

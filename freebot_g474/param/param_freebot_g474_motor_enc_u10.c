@@ -60,7 +60,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 100,
     .main_loop_param.velocity_controller_param.velocity.command_max = 5,
     .main_loop_param.velocity_controller_param.acceleration_limit = 1000,
-    .main_loop_param.output_encoder.cpr = -65536,
+    .main_loop_param.output_encoder.cpr = 20000,
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = DAMPED,
     .main_loop_param.encoder_limits.motor_controlled_max = 5,
@@ -93,7 +93,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
         //(6<<11) | 0x280,
         (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
     },
-    .name = "J1",
+    .name = "J10",
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES
 #endif

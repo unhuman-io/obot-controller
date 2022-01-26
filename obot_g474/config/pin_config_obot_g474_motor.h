@@ -56,7 +56,7 @@ std::string drv_reset() {
     return "ok";
 }
 
-void pin_config_freebot_g474_motor_r0() {
+void pin_config_obot_g474_motor_r0() {
      // Peripheral clock enable
         RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN |  RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_USBEN | RCC_APB1ENR1_RTCAPBEN | RCC_APB1ENR1_PWREN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN | RCC_APB2ENR_TIM1EN | RCC_APB2ENR_HRTIM1EN | RCC_APB2ENR_SYSCFGEN;

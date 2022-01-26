@@ -1,4 +1,4 @@
-#include "../param/param_freebot_g474.h"
+#include "../param/param_obot_g474.h"
 #include "../st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/icpz.h"
@@ -11,12 +11,12 @@ typedef ICPZ MotorEncoder;
 typedef EncoderBase OutputEncoder;
 
 extern "C" void SystemClock_Config();
-void pin_config_freebot_g474_motor_r0();
+void pin_config_obot_g474_motor_r0();
 
 struct InitCode {
     InitCode() {
         SystemClock_Config();
-        pin_config_freebot_g474_motor_r0();
+        pin_config_obot_g474_motor_r0();
         //SPI3 PZ
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
@@ -39,7 +39,7 @@ namespace config {
     OutputEncoder output_encoder;
 };
 
-#include "config_freebot_g474_motor.cpp"
+#include "config_obot_g474_motor.cpp"
 
 void config_init() {
     System::api.add_api_variable("spi", new APICallback([](){ return config::spi_debug.read(); }, 

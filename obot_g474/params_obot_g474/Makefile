@@ -1,5 +1,5 @@
 
-PARAM_FILE = ../param/param_freebot_g474_motor_enc.c
+PARAM_FILE = ../param/param_obot_g474_motor_enc.c
 PARAM_OVERRIDE = A1.h A2.h A3.h A4.h A5.h A6.h
 PARAM_BUILD_DIR := ../build/param
 

@@ -2,7 +2,7 @@
 
 touch tmp.bin
 #assume 100k is enough, will make upload faster
-dd bs=100k count=1 if=../build/freebot_g474.bin of=tmp.bin
+dd bs=100k count=1 if=../build/obot_g474.bin of=tmp.bin
 motor_util set --mode open
 motor_util set --mode phase_lock --current -1
 sleep 1

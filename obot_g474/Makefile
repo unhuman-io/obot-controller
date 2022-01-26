@@ -5,12 +5,12 @@
 
 $(shell touch version.h)
 
-#PARAM_DIR = params_freebot_g474
+#PARAM_DIR = params_obot_g474
 
 CONFIG=motor_wheel
-CONFIG_FILE = config/config_freebot_g474_$(CONFIG).cpp
+CONFIG_FILE = config/config_obot_g474_$(CONFIG).cpp
 PARAM=$(CONFIG)
-PARAM_FILE = param/param_freebot_g474_$(PARAM).c
+PARAM_FILE = param/param_obot_g474_$(PARAM).c
 
 TARGET = $(CONFIG)
 

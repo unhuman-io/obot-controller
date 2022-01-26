@@ -1,4 +1,4 @@
-#include "../param/param_freebot_g474.h"
+#include "../param/param_obot_g474.h"
 #include "../st_device.h"
 #include "../../motorlib/qep_encoder.h"
 #include "../../motorlib/torque_sensor.h"
@@ -14,14 +14,14 @@ using MotorEncoder = QEPEncoder;
 using OutputEncoder = EncoderBase;
 
 extern "C" void SystemClock_Config();
-void pin_config_freebot_g474_motor_r0();
+void pin_config_obot_g474_motor_r0();
 
 const uint16_t program_frequency = 1000;
 
 struct InitCode {
     InitCode() {
       SystemClock_Config();
-      pin_config_freebot_g474_motor_r0();
+      pin_config_obot_g474_motor_r0();
 
         //SPI3 ADS1235
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
@@ -64,7 +64,7 @@ namespace config {
     GPIODebounce gpio2(*GPIOC, 1);
 };
 
-#include "config_freebot_g474_motor.cpp"
+#include "config_obot_g474_motor.cpp"
 
 void config_init() {
     System::log("torque_sensor_init: " + std::to_string(config::torque_sensor.init()));

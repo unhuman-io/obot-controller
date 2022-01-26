@@ -17,7 +17,7 @@ uint16_t drv_regs_error = 0;
 #include "../../motorlib/main_loop.h"
 #include "../../motorlib/actuator.h"
 #include "../../motorlib/system.h"
-#include "pin_config_freebot_g474_motor.h"
+#include "pin_config_obot_g474_motor.h"
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
 
 namespace config {

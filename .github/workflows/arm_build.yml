@@ -13,9 +13,9 @@ jobs:
             config: pz
           - project: fabulab_f446
             config: motor
-          - project: freebot_g474
+          - project: obot_g474
             config: motor_enc
-          - project: freebot_g474
+          - project: obot_g474
             config: motor_wheel
     runs-on: ubuntu-latest
     steps:
@@ -47,7 +47,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/download-artifact@v2
       with:
-        name: freebot_g474 motor_enc
+        name: obot_g474 motor_enc
     - name: test
       run: |
         tar xzf motor_enc.tgz

@@ -26,14 +26,14 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc1_gain = -3.3/4096/(.005*10),  // A/count
     .fast_loop_param.adc2_gain = -3.3/4096/(.005*10),
     .fast_loop_param.adc3_gain = -3.3/4096/(.005*10), 
-    .fast_loop_param.motor_encoder.dir = -1,
+    .fast_loop_param.motor_encoder.dir = 1,
     .fast_loop_param.phase_mode = 1,
     .fast_loop_param.motor_encoder.cpr = 8192,
     .fast_loop_param.motor_encoder.rollover = pow(2,24),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = -22643,
-    .main_loop_param.torque_sensor.gain = 0.45/100000.,
-    .main_loop_param.torque_sensor.bias = -.5,
+    .main_loop_param.torque_sensor.gain = -0.45/100000.,
+    .main_loop_param.torque_sensor.bias = .5,
     .main_loop_param.torque_sensor.k_temp = 0,
     .fast_loop_param.vbus_gain = 1.0/4096*(215+13.7)/13.7,
     .main_loop_param.position_controller_param.position.kp = 20,
@@ -81,7 +81,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
         (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
     },
     .startup_param.do_phase_lock = 1,
-    .startup_param.phase_lock_current = -5,
+    .startup_param.phase_lock_current = 5,
     .startup_param.phase_lock_duration = 2,
     .name = "J1",
 #ifdef PARAM_OVERRIDES

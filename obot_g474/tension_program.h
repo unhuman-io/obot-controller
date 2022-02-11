@@ -45,7 +45,7 @@ class TensionProgram {
             case START_VELOCITY:
                 command.mode_desired = VELOCITY;
                 command.velocity_desired = 200;
-                if (status_.torque > 1) {
+                if (status_.torque > 4) {
                     config::fast_loop.beep_on(1);
                     state_ = TORQUE;
                 }
@@ -57,9 +57,9 @@ class TensionProgram {
             case TORQUE:
                 command.mode_desired = MotorMode::TORQUE;
                 if (velocity_filtered > 0) {
-                    command.torque_desired = 1;
+                    command.torque_desired = 5;
                 } else {
-                    command.torque_desired = 1;
+                    command.torque_desired = 5;
                 }
                 if (config::gpio1.is_set() || config::gpio2.is_set()) {
                     // done

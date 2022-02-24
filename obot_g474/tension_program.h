@@ -4,7 +4,7 @@
 
 class TensionProgram {
  public:
-    enum State {OFF, LOW_VELOCITY, START_VELOCITY, TORQUE, ERROR};
+    enum State {OFF, LOW_VELOCITY, START_VELOCITY, TORQUE, END, ERROR};
     const std::string state_string[5] = {"OFF", "LOW_VELOCITY", "START_VELOCITY", "TORQUE", "ERROR"};
     std::string get_state() const { return state_string[state_]; }
     void loop() {
@@ -18,6 +18,7 @@ class TensionProgram {
         }
 
         t_ms_++;
+        t_ms_state_++;
         status_ = config::main_loop.get_status();
         config::gpio1.update();     // for deboucing
         config::gpio2.update();
@@ -29,27 +30,39 @@ class TensionProgram {
         float torque_filtered = torque_filter_.update(status_.torque);
 
         MotorCommand command = {};
+        if (state_ != last_state_) {
+            t_ms_state_ = 0;
+            last_state_ = state_;
+        }
         switch (state_) {
+            case OFF:
+                // todo sleep to save power
+                command.mode_desired = OPEN;
+                if (config::gpio1.is_clear()) { // button pushed
+                    config::fast_loop.beep_on(0.25);
+                    state_ = LOW_VELOCITY;
+                }
+                break;
             case LOW_VELOCITY:
                 command.mode_desired = VELOCITY;
-                command.velocity_desired = 10;
-                if (config::gpio1.is_clear()) { // button pushed
+                command.velocity_desired = low_velocity;
+                if (config::gpio2.is_clear()) { // button pushed
                     config::fast_loop.beep_on(0.5);
                     state_ = START_VELOCITY;
                 }
-                if (torque_filtered > 5) {
+                if (torque_filtered > start_torque || config::gpio1.is_set()) {
                     state_ = ERROR;
                     config::fast_loop.beep_on(2);
                 }
                 break;
             case START_VELOCITY:
                 command.mode_desired = VELOCITY;
-                command.velocity_desired = 200;
-                if (status_.torque > 4) {
+                command.velocity_desired = start_velocity;
+                if (status_.torque > start_torque) {
                     config::fast_loop.beep_on(1);
                     state_ = TORQUE;
                 }
-                if (config::gpio1.is_set()) {
+                if (config::gpio1.is_set() || config::gpio2.is_set()) {
                     state_ = ERROR;
                     config::fast_loop.beep_on(2);
                 }
@@ -57,9 +70,9 @@ class TensionProgram {
             case TORQUE:
                 command.mode_desired = MotorMode::TORQUE;
                 if (velocity_filtered > 0) {
-                    command.torque_desired = 5;
+                    command.torque_desired = torque_desired;
                 } else {
-                    command.torque_desired = 5;
+                    command.torque_desired = torque_desired;
                 }
                 if (config::gpio1.is_set() || config::gpio2.is_set()) {
                     // done
@@ -76,13 +89,18 @@ class TensionProgram {
                     asm("NOP");
                     config::fast_loop.beep_on(.3);
                     asm("NOP");
+                    state_ = END;
+                }
+                break;
+            case END:
+            case ERROR:
+                command.mode_desired = CURRENT; // necessary to get beep
+                if (t_ms_state_ > 2000) {
                     state_ = OFF;
                 }
                 break;
-            case ERROR:
-            case OFF:
             default:
-                command.mode_desired = CURRENT; // necessary to get beep
+                command.mode_desired = OPEN;
                 break;
         }
 
@@ -90,11 +108,17 @@ class TensionProgram {
     }
  private:
     uint64_t t_ms_ = 0;
+    uint64_t t_ms_state_ = 0;
     MainLoopStatus status_;
     bool command_received_ = false;
     float last_motor_position_ = 0;
     float last_timestamp_ = 0;
     FirstOrderLowPassFilter velocity_filter_ = {.001, 100};
     FirstOrderLowPassFilter torque_filter_ = {.001, 100};
-    State state_ = LOW_VELOCITY;
+    State state_ = OFF;
+    State last_state_ = OFF;
+    float low_velocity = 10;
+    float start_velocity = 200;
+    float torque_desired = 5;
+    float start_torque = 4;
 };

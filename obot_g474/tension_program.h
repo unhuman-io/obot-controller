@@ -1,6 +1,7 @@
 #pragma once
 #include "../motorlib/control_fun.h"
 #include <string>
+#include "../motorlib/logger.h"
 
 class TensionProgram {
  public:
@@ -36,38 +37,47 @@ class TensionProgram {
         }
         switch (state_) {
             case OFF:
+                logger.log_once("off");
                 // todo sleep to save power
                 command.mode_desired = OPEN;
                 if (config::gpio1.is_clear()) { // button pushed
                     config::fast_loop.beep_on(0.25);
                     state_ = LOW_VELOCITY;
+                    logger.log("button 1");
                 }
                 break;
             case LOW_VELOCITY:
+                logger.log_once("low velocity");
                 command.mode_desired = VELOCITY;
                 command.velocity_desired = low_velocity;
                 if (config::gpio2.is_clear()) { // button pushed
-                    config::fast_loop.beep_on(0.5);
+                    config::fast_loop.beep_on(0.25);
                     state_ = START_VELOCITY;
+                    logger.log("button 2");
                 }
                 if (torque_filtered > start_torque || config::gpio1.is_set()) {
                     state_ = ERROR;
                     config::fast_loop.beep_on(2);
+                    logger.log("error");
                 }
                 break;
             case START_VELOCITY:
+                logger.log_once("start velocity");
                 command.mode_desired = VELOCITY;
                 command.velocity_desired = start_velocity;
                 if (status_.torque > start_torque) {
-                    config::fast_loop.beep_on(1);
+                    config::fast_loop.beep_on(.5);
                     state_ = TORQUE;
+                    logger.log("torque mode");
                 }
                 if (config::gpio1.is_set() || config::gpio2.is_set()) {
                     state_ = ERROR;
                     config::fast_loop.beep_on(2);
+                    logger.log("error2");
                 }
                 break;
             case TORQUE:
+                logger.log_once("torque");
                 command.mode_desired = MotorMode::TORQUE;
                 if (velocity_filtered > 0) {
                     command.torque_desired = torque_desired;
@@ -76,6 +86,7 @@ class TensionProgram {
                 }
                 if (config::gpio1.is_set() || config::gpio2.is_set()) {
                     // done
+                    logger.log("done");
                     command.mode_desired = CURRENT; // necessary to get beep
                     config::main_loop.set_command(command);
                     asm("NOP");
@@ -93,14 +104,17 @@ class TensionProgram {
                 }
                 break;
             case END:
+                logger.log_once("end");
             case ERROR:
                 command.mode_desired = CURRENT; // necessary to get beep
                 if (t_ms_state_ > 2000) {
                     state_ = OFF;
+                    logger.log("exit done or error");
                 }
                 break;
             default:
                 command.mode_desired = OPEN;
+                logger.log_once("open");
                 break;
         }
 
@@ -117,8 +131,8 @@ class TensionProgram {
     FirstOrderLowPassFilter torque_filter_ = {.001, 100};
     State state_ = OFF;
     State last_state_ = OFF;
-    float low_velocity = 10;
-    float start_velocity = 200;
+    float low_velocity = 20;
+    float start_velocity = 30;
     float torque_desired = 5;
     float start_torque = 4;
 };

@@ -3,6 +3,7 @@ build/
 .cortex-debug.registers.state.json
 
 .vscode/settings.json
+.vscode-ctags
 *.pyc
 
 boost_g474/.vscode/

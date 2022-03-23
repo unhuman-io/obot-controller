@@ -86,7 +86,14 @@ namespace config {
 };
 
 struct InitCode2 {
-    InitCode2() {    System::api.add_api_variable("state", new const APICallback([](){ return config::tension_program.get_state(); }));
+    InitCode2() {    
+        System::api.add_api_variable("state", new const APICallback([](){ return config::tension_program.get_state(); }));
+        System::api.add_api_variable("start_velocity", new APIFloat(&config::tension_program.start_velocity));
+        System::api.add_api_variable("low_velocity", new APIFloat(&config::tension_program.low_velocity));
+        System::api.add_api_variable("torque_desired", new APIFloat(&config::tension_program.torque_desired));
+        System::api.add_api_variable("start_torque", new APIFloat(&config::tension_program.start_torque));
+        System::api.add_api_variable("dithering_torque", new APIFloat(&config::tension_program.dithering_torque));
+        System::api.add_api_variable("dithering_frequency_hz", new APIFloat(&config::tension_program.dithering_frequency_hz));
      }
 };
 

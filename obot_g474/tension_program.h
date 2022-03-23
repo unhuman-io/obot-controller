@@ -84,6 +84,9 @@ class TensionProgram {
                 } else {
                     command.torque_desired = torque_desired;
                 }
+                torque_dither_trajectory_.set_amplitude(dithering_torque);
+                torque_dither_trajectory_.set_frequency(dithering_frequency_hz);
+                command.torque_desired += torque_dither_trajectory_.step(.001).value;
                 if (config::gpio1.is_set() || config::gpio2.is_set()) {
                     // done
                     logger.log("done");
@@ -129,10 +132,14 @@ class TensionProgram {
     float last_timestamp_ = 0;
     FirstOrderLowPassFilter velocity_filter_ = {.001, 100};
     FirstOrderLowPassFilter torque_filter_ = {.001, 100};
+    TrajectoryGenerator torque_dither_trajectory_;
     State state_ = OFF;
     State last_state_ = OFF;
-    float low_velocity = 20;
-    float start_velocity = 30;
-    float torque_desired = 5;
-    float start_torque = 4;
+    volatile float low_velocity = 20;
+    volatile float start_velocity = 30;
+    volatile float torque_desired = 5;
+    volatile float start_torque = 4;
+    volatile float dithering_torque = .2;
+    volatile float dithering_frequency_hz = 10;
+    friend class InitCode2;
 };

@@ -69,9 +69,9 @@ void system_init() {
     System::api.add_api_variable("Tdsp", new APICallbackFloat(get_t, set_t));
     System::api.add_api_variable("T", new const APIFloat(&t_i2c));
     System::api.add_api_variable("drv_err", new const APICallbackUint32([](){return is_mps_driver_faulted();}));
-    System::api.add_api_variable("va", new const APIUint32(&V_A_DR));
-    System::api.add_api_variable("vb", new const APIUint32(&V_B_DR));
-    System::api.add_api_variable("vc", new const APIUint32(&V_C_DR));
+    System::api.add_api_variable("vam", new const APIUint32(&V_A_DR));
+    System::api.add_api_variable("vbm", new const APIUint32(&V_B_DR));
+    System::api.add_api_variable("vcm", new const APIUint32(&V_C_DR));
     System::api.add_api_variable("ibus", new const APIUint32(&I_BUS_DR));
     System::api.add_api_variable("shutdown", new const APICallback([](){
         // requires power cycle to return 

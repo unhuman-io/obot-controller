@@ -68,6 +68,7 @@ class TensionProgram {
                 if (status_.torque > start_torque) {
                     config::fast_loop.beep_on(.5);
                     state_ = TORQUE;
+                    torque_desired_current_ = start_torque;
                     logger.log("torque mode");
                 }
                 if (config::gpio1.is_set() || config::gpio2.is_set()) {
@@ -79,11 +80,10 @@ class TensionProgram {
             case TORQUE:
                 logger.log_once("torque");
                 command.mode_desired = MotorMode::TORQUE;
-                if (velocity_filtered > 0) {
-                    command.torque_desired = torque_desired;
-                } else {
-                    command.torque_desired = torque_desired;
-                }
+                // A slope to try to cancel friction
+                torque_desired_current_ += torque_vs_position_ramp*velocity*dt;
+                torque_desired_current_ = fsat2(torque_desired_current_, min_torque_desired, torque_desired);
+                command.torque_desired = torque_desired_current_;
                 torque_dither_trajectory_.set_amplitude(dithering_torque);
                 torque_dither_trajectory_.set_frequency(dithering_frequency_hz);
                 command.torque_desired += torque_dither_trajectory_.step(.001).value;
@@ -141,5 +141,8 @@ class TensionProgram {
     volatile float start_torque = 4;
     volatile float dithering_torque = .2;
     volatile float dithering_frequency_hz = 10;
+    volatile float torque_vs_position_ramp = .1;
+    volatile float min_torque_desired = 2;
+    float torque_desired_current_ = start_torque;
     friend class InitCode2;
 };

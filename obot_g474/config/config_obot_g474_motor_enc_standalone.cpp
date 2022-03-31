@@ -94,6 +94,8 @@ struct InitCode2 {
         System::api.add_api_variable("start_torque", new APIFloat(&config::tension_program.start_torque));
         System::api.add_api_variable("dithering_torque", new APIFloat(&config::tension_program.dithering_torque));
         System::api.add_api_variable("dithering_frequency_hz", new APIFloat(&config::tension_program.dithering_frequency_hz));
+        System::api.add_api_variable("torque_vs_position_ramp", new APIFloat(&config::tension_program.torque_vs_position_ramp));
+        System::api.add_api_variable("min_torque_desired", new APIFloat(&config::tension_program.min_torque_desired));
      }
 };
 

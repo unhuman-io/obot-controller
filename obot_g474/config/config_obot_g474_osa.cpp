@@ -19,10 +19,13 @@ uint16_t drv_regs_error = 0;
 #include "../../motorlib/system.h"
 #include "pin_config_obot_g474_osa.h"
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
+#include "../../motorlib/peripheral/stm32g4/max31875.h"
 
 namespace config {
     static_assert(((double) CPU_FREQUENCY_HZ * 32 / 2) / pwm_frequency < 65535);    // check pwm frequency
     TempSensor temp_sensor;
+    I2C i2c1(*I2C1);
+    MAX31875 i2c_temp_sensor(i2c1);
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200, 1000, 0};
     USB1 usb;
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
@@ -43,7 +46,7 @@ void usb_interrupt() {
 Actuator System::actuator_ = {config::fast_loop, config::main_loop, param->startup_param};
 
 float v3v3 = 3.3;
-
+float t_i2c = 0;
 
 void config_init();
 
@@ -63,9 +66,13 @@ void system_init() {
     System::api.add_api_variable("3v3", new APIFloat(&v3v3));
     std::function<float()> get_t = std::bind(&TempSensor::get_value, &config::temp_sensor);
     std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config::temp_sensor, std::placeholders::_1);
-    System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t));
-    System::api.add_api_variable("drv_err", new const APICallbackUint32(get_drv_status));
-
+    System::api.add_api_variable("Tdsp", new APICallbackFloat(get_t, set_t));
+    System::api.add_api_variable("T", new const APIFloat(&t_i2c));
+    System::api.add_api_variable("drv_err", new const APICallbackUint32([](){return is_mps_driver_faulted();}));
+    System::api.add_api_variable("va", new const APIUint32(&V_A_DR));
+    System::api.add_api_variable("vb", new const APIUint32(&V_B_DR));
+    System::api.add_api_variable("vc", new const APIUint32(&V_C_DR));
+    System::api.add_api_variable("ibus", new const APIUint32(&I_BUS_DR));
     System::api.add_api_variable("shutdown", new const APICallback([](){
         // requires power cycle to return 
         setup_sleep();
@@ -77,7 +84,7 @@ void system_init() {
     System::api.add_api_variable("deadtime", new APICallbackUint16([](){ 
         return config::motor_pwm.deadtime_ns_; }, [](uint16_t u) {config::motor_pwm.set_deadtime(u); }));
 
-    for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC3, ADC4, ADC5}) {
+    for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC2, ADC3, ADC4, ADC5}) {
         regs->CR = ADC_CR_ADVREGEN;
         ns_delay(20000);
         regs->CR |= ADC_CR_ADCAL;
@@ -118,6 +125,7 @@ void system_maintenance() {
         ADC1->CR |= ADC_CR_JADSTART;
         while(ADC1->CR & ADC_CR_JADSTART);
         config::temp_sensor.read();
+        t_i2c = config::i2c_temp_sensor.read();
         v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
     }
     config_maintenance();

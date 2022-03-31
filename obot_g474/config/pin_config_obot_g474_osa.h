@@ -51,15 +51,12 @@ void pin_config_obot_g474_osa() {
         MASK_SET(FLASH->ACR, FLASH_ACR_LATENCY, 4);
 
         // GPIO configure
-        GPIO_SETL(A, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPA TIM2
-        GPIO_SETL(A, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPB TIM2
-        GPIO_SETL(A, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPI TIM2
-        //GPIO_SETL(A, 0, 1, 3, 0);   // SPI1 CS on QEPA pin
-        GPIO_SETL(A, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CS drv8323s
-        GPIO_SETL(A, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CLK drv8323s
-        GPIO_SETL(A, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 HIDO (host in device out) drv8323s
-        GPIO_SETL(A, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 HODI drv8323s
-        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD6, 1); // HIDO pull up
+
+        // spi 1
+        GPIO_SETL(A, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CS
+        GPIO_SETL(A, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CLK
+        GPIO_SETL(A, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 HIDO (host in device out)
+        GPIO_SETL(A, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 HODI
 
         GPIO_SETH(B, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13); // hrtim1 chd1
         GPIO_SETH(B, 15, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13); // hrtim1 chd2 
@@ -90,10 +87,10 @@ void pin_config_obot_g474_osa() {
         GPIO_SETH(C, 10, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 CLK
         GPIO_SETH(C, 11, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 HIDO
         GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 HODI 
+        GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // spi3 cs1
+        GPIO_SETL(B, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // spi3 cs2
+        
 
-        GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // spi3 cs
-
-        GPIO_SETH(C, 13, 1, 0, 0);  // Boostxl enable
 
         // TIM1 main loop interrupt        
         static_assert(CPU_FREQUENCY_HZ / config::main_loop_frequency < 65536, "Main loop frequency too low");
@@ -120,26 +117,30 @@ void pin_config_obot_g474_osa() {
 
         // ADC
         // ADC1
-        GPIO_SETL(C, 0, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A1
-        GPIO_SETL(C, 1, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A2
-        GPIO_SETL(C, 2, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A3
+        GPIO_SETL(C, 3, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // ibus
         ADC12_COMMON->CCR = ADC_CCR_VSENSESEL | ADC_CCR_VREFEN | 3 << ADC_CCR_CKMODE_Pos; // hclk/4 (42.5 MHz)
         ADC1->SQR1 = 13 << ADC_SQR1_SQ1_Pos;    // vbus on opamp
-        ADC1->JSQR = 3 << ADC_JSQR_JL_Pos | 16 << ADC_JSQR_JSQ1_Pos | 18 << ADC_JSQR_JSQ2_Pos | 6 << ADC_JSQR_JSQ3_Pos 
-            | 7 << ADC_JSQR_JSQ4_Pos; // internal temperature, vrefint, A1, A2
-    
+        ADC1->JSQR = 2 << ADC_JSQR_JL_Pos | 16 << ADC_JSQR_JSQ1_Pos | 18 << ADC_JSQR_JSQ2_Pos | 9 << ADC_JSQR_JSQ3_Pos; // internal temperature, vrefint, ibus
         
         ADC1->CFGR = ADC_CFGR_JQDIS | ADC_CFGR_OVRMOD |1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos; // trigger 21 -> hrtim trig1
         ADC1->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos); // 256x oversample
-        ADC1->SMPR1 = 6 << ADC_SMPR1_SMP6_Pos | // 247.5 cycles A1, 5.8us
-                      6 << ADC_SMPR1_SMP7_Pos;  // 247.5 cycles A2, 5.8us
+        ADC1->SMPR1 = 6 << ADC_SMPR1_SMP9_Pos;  // 247.5 cycles ibus, 5.8us
         ADC1->SMPR2 = 2 << ADC_SMPR2_SMP13_Pos | // 12.5 cycles vbus, 294 ns, 200 ns min for opamp1
                       6 << ADC_SMPR2_SMP16_Pos | // 247.5 cycles interal temperature, 5.8us, 5us min
                       6 << ADC_SMPR2_SMP18_Pos;  // 247.5 cycles vrefint (~1.21V), 5.8us, 4us min
+
+        // ADC2 VA,VB,VC -> JDR1,2,3
+        GPIO_SETL(C, 0, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VA
+        GPIO_SETL(C, 1, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VB
+        GPIO_SETL(C, 2, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VC
+        ADC2->JSQR = 2 << ADC_JSQR_JL_Pos | 6 << ADC_JSQR_JSQ1_Pos | 7 << ADC_JSQR_JSQ2_Pos | 8 << ADC_JSQR_JSQ3_Pos;
+        ADC2->CFGR = ADC_CFGR_JQDIS | ADC_CFGR_OVRMOD |1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos; // trigger 21 -> hrtim trig1
+        ADC2->SMPR1 = 6 << ADC_SMPR1_SMP6_Pos | // 247.5 cycles VA, 5.8us
+                      6 << ADC_SMPR1_SMP7_Pos | // 247.5 cycles VB, 5.8us
+                      6 << ADC_SMPR1_SMP8_Pos;  // 247.5 cycles VC, 5.8us
         
         //ADC3,4,5
         ADC345_COMMON->CCR = ADC_CCR_VREFEN | 3 << ADC_CCR_CKMODE_Pos; // hclk/4 (42.5 MHz)
-
         ADC3->SMPR2 = 2 << ADC_SMPR2_SMP13_Pos; // 12.5 cycles current_sense, 294 ns, 200 ns min for opamp3
         ADC4->SMPR2 = 2 << ADC_SMPR2_SMP17_Pos; // 12.5 cycles current_sense, 294 ns, 200 ns min for opamp6
         ADC5->SMPR1 = 2 << ADC_SMPR1_SMP5_Pos; // 12.5 cycles current_sense, 294 ns, 200 ns min for opamp4
@@ -163,6 +164,14 @@ void pin_config_obot_g474_osa() {
         NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));
         NVIC_EnableIRQ(USB_LP_IRQn);
 
+        // I2C1
+        GPIO_SETH(A, 15, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 scl
+        GPIO_SETH(B, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 sda
+        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD15, GPIO_PULL::UP);
+        MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD9, GPIO_PULL::UP);
+        MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT15, 1);       // open drain
+        MASK_SET(GPIOB->OTYPER, GPIO_OTYPER_OT9, 1);
+
         // mps driver gpio    
         // fault pin input with pull up
         GPIO_SETH(C, 14, GPIO_MODE::INPUT, GPIO_SPEED::LOW, 0);
@@ -184,7 +193,7 @@ extern "C" void RTC_WKUP_IRQHandler() {
 void setup_sleep() {
     NVIC_DisableIRQ(TIM1_UP_TIM16_IRQn);
     NVIC_DisableIRQ(ADC5_IRQn);
-    drv_disable();
+    mps_driver_enable(0);
     NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 1));
     NVIC_EnableIRQ(RTC_WKUP_IRQn);
     MASK_SET(RCC->CFGR, RCC_CFGR_SW, 2); // HSE is system clock source
@@ -193,7 +202,7 @@ void setup_sleep() {
 
 void finish_sleep() {
     MASK_SET(RCC->CFGR, RCC_CFGR_SW, 3); // PLL is system clock source
-    drv_enable();
+    mps_driver_enable(3);
     NVIC_DisableIRQ(RTC_WKUP_IRQn);
     NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));
     NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);

@@ -26,6 +26,8 @@ struct InitCode {
       SPI3->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
       // ORDER DEPENDANCE SPE set last
       SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
+      DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
+      DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
     }
 };
 
@@ -37,7 +39,7 @@ namespace config {
     GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
     MA732Encoder motor_encoder(*SPI1, motor_encoder_cs);
     GPIO torque_sensor_cs(*GPIOB, 4, GPIO::OUTPUT);
-    TorqueSensor torque_sensor(*SPI3, torque_sensor_cs);
+    TorqueSensor torque_sensor(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2);
     GPIO output_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     MA732Encoder output_encoder(*SPI3, output_encoder_cs);
 };

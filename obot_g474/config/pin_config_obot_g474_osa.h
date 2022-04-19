@@ -53,7 +53,7 @@ void pin_config_obot_g474_osa() {
         // GPIO configure
 
         // spi 1
-        GPIO_SETL(A, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CS
+        GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // SPI1 CS
         GPIO_SETL(A, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 CLK
         GPIO_SETL(A, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 HIDO (host in device out)
         GPIO_SETL(A, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 5);   // SPI1 HODI

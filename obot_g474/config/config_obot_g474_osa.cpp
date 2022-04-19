@@ -26,7 +26,7 @@ namespace config {
     TempSensor temp_sensor;
     I2C i2c1(*I2C1);
     MAX31875 i2c_temp_sensor(i2c1);
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200, 1000, 0};
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false, 200, 1000, 0};
     USB1 usb;
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_R)), 
@@ -69,10 +69,10 @@ void system_init() {
     System::api.add_api_variable("Tdsp", new APICallbackFloat(get_t, set_t));
     System::api.add_api_variable("T", new const APIFloat(&t_i2c));
     System::api.add_api_variable("drv_err", new const APICallbackUint32([](){return is_mps_driver_faulted();}));
-    System::api.add_api_variable("vam", new const APIUint32(&V_A_DR));
-    System::api.add_api_variable("vbm", new const APIUint32(&V_B_DR));
-    System::api.add_api_variable("vcm", new const APIUint32(&V_C_DR));
-    System::api.add_api_variable("ibus", new const APIUint32(&I_BUS_DR));
+    System::api.add_api_variable("vam", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_A_DR; }));
+    System::api.add_api_variable("vbm", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_B_DR; }));
+    System::api.add_api_variable("vcm", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_C_DR; }));
+    System::api.add_api_variable("ibus", new const APICallbackFloat([]() { return (1.0/400) * (1000.0/4096 * I_BUS_DR - 1500); }));
     System::api.add_api_variable("shutdown", new const APICallback([](){
         // requires power cycle to return 
         setup_sleep();
@@ -105,6 +105,7 @@ void system_init() {
     ADC1->GCOMP = v3v3*4096;
     ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
     ADC1->CR |= ADC_CR_ADSTART;
+    ADC2->CR |= ADC_CR_JADSTART;
     ADC5->CR |= ADC_CR_JADSTART;
     ADC5->IER |= ADC_IER_JEOCIE;
     ADC4->CR |= ADC_CR_JADSTART;

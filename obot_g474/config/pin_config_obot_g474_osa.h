@@ -20,12 +20,17 @@
 
 // two drivers, 0x1 and 0x2, 0x3 to enable both
 void mps_driver_enable(uint8_t drivers) {
-    GPIOC->BSRR = ((drivers & 0x01) ? GPIO_BSRR_BS13 : 0) |
-                  ((drivers & 0x02) ? GPIO_BSRR_BS15 : 0);
+    GPIOC->ODR = ((drivers & 0x01) ? GPIO_ODR_OD13 : 0) |
+                  ((drivers & 0x02) ? GPIO_ODR_OD15 : 0);
+}
+
+uint8_t mps_driver_enable_status() {
+    return (GPIOC->ODR & GPIO_ODR_OD13 ? 1 : 0) |
+            (GPIOC->ODR & GPIO_ODR_OD15 ? 2 : 0);
 }
 
 bool is_mps_driver_faulted() {
-    return GPIOC->IDR & GPIO_IDR_ID14;
+    return !(GPIOC->IDR & GPIO_IDR_ID14);
 }
 
 void pin_config_obot_g474_osa() {

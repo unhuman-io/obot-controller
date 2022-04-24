@@ -69,6 +69,7 @@ void system_init() {
     System::api.add_api_variable("Tdsp", new APICallbackFloat(get_t, set_t));
     System::api.add_api_variable("T", new const APIFloat(&t_i2c));
     System::api.add_api_variable("drv_err", new const APICallbackUint32([](){return is_mps_driver_faulted();}));
+    System::api.add_api_variable("drv_enable", new APICallbackUint8(mps_driver_enable_status, mps_driver_enable));
     System::api.add_api_variable("vam", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_A_DR; }));
     System::api.add_api_variable("vbm", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_B_DR; }));
     System::api.add_api_variable("vcm", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_C_DR; }));

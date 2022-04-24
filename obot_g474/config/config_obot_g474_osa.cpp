@@ -45,7 +45,7 @@ void usb_interrupt() {
 }
 Actuator System::actuator_ = {config::fast_loop, config::main_loop, param->startup_param};
 
-float v3v3 = 3.3;
+float v_ref = 3.0;
 float t_i2c = 0;
 
 void config_init();
@@ -63,7 +63,7 @@ void system_init() {
     }
     config::torque_sensor.init();
 
-    System::api.add_api_variable("3v3", new APIFloat(&v3v3));
+    System::api.add_api_variable("vref", new APIFloat(&v_ref));
     std::function<float()> get_t = std::bind(&TempSensor::get_value, &config::temp_sensor);
     std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config::temp_sensor, std::placeholders::_1);
     System::api.add_api_variable("Tdsp", new APICallbackFloat(get_t, set_t));
@@ -100,10 +100,10 @@ void system_init() {
     ADC1->CR |= ADC_CR_JADSTART;
     while(ADC1->CR & ADC_CR_JADSTART);
 
-    v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 / V_REF_DR;
-    System::log("3v3: " + std::to_string(v3v3));
+    v_ref =  *((uint16_t *) (0x1FFF75AA)) * 3.0 / V_REF_DR;
+    System::log("v_ref: " + std::to_string(v_ref));
 
-    ADC1->GCOMP = v3v3*4096;
+    ADC1->GCOMP = v_ref*4096;
     ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
     ADC1->CR |= ADC_CR_ADSTART;
     ADC2->CR |= ADC_CR_JADSTART;
@@ -128,7 +128,7 @@ void system_maintenance() {
         while(ADC1->CR & ADC_CR_JADSTART);
         config::temp_sensor.read();
         t_i2c = config::i2c_temp_sensor.read();
-        v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
+        v_ref =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
     }
     config_maintenance();
 }

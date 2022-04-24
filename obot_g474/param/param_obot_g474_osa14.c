@@ -1,7 +1,6 @@
 #include "param_obot_g474_osa.h"
 #include "math.h"
 
-
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.pi_d.kp=.5,
@@ -26,7 +25,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc3_gain = 3.0/4096/(10000/2000.0), 
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 1,
-    .fast_loop_param.motor_encoder.cpr = 65536,
+    .fast_loop_param.motor_encoder.cpr = 10*65536,
     .fast_loop_param.motor_encoder.rollover = pow(2,24),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = -22643,

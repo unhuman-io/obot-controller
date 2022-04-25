@@ -26,7 +26,7 @@ namespace config {
     TempSensor temp_sensor;
     I2C i2c1(*I2C1);
     MAX31875 i2c_temp_sensor(i2c1);
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, false, 200, 1000, 0};
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, true, 200, 1000, 0};
     USB1 usb;
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM_R)), 

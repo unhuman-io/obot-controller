@@ -15,8 +15,8 @@
 #define I_BUS_DR ADC1->JDR3
 
 #define TIM_R TIM4->CCR1
-#define TIM_G TIM4->CCR2
-#define TIM_B TIM4->CCR3
+#define TIM_G TIM4->CCR3
+#define TIM_B TIM4->CCR2
 
 // two drivers, 0x1 and 0x2, 0x3 to enable both
 void mps_driver_enable(uint8_t drivers) {
@@ -56,6 +56,19 @@ void pin_config_obot_g474_osa() {
         MASK_SET(FLASH->ACR, FLASH_ACR_LATENCY, 4);
 
         // GPIO configure
+        // general purpose/scope/qep
+        // GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // gpio2
+        // GPIO_SETL(A, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // gpio3
+        // GPIO_SETL(A, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // gpio4
+        // as qep
+        // GPIO_SETL(A, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPA TIM2
+        // GPIO_SETL(A, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPB TIM2
+        // GPIO_SETL(A, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPI TIM2
+
+        // i2c/scope
+        GPIO_SETH(A, 8, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // i2c2_sda as gpio
+        GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // i2c2_scl as gpio
+        GPIO_SETL(C, 5, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // scope_3 as gpio
 
         // spi 1
         GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // SPI1 CS
@@ -138,11 +151,11 @@ void pin_config_obot_g474_osa() {
         GPIO_SETL(C, 0, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VA
         GPIO_SETL(C, 1, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VB
         GPIO_SETL(C, 2, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VC
-        ADC2->JSQR = 2 << ADC_JSQR_JL_Pos | 6 << ADC_JSQR_JSQ1_Pos | 7 << ADC_JSQR_JSQ2_Pos | 8 << ADC_JSQR_JSQ3_Pos;
+        ADC2->JSQR = 2 << ADC_JSQR_JL_Pos | 6 << ADC_JSQR_JSQ1_Pos | 7 << ADC_JSQR_JSQ2_Pos | 8 << ADC_JSQR_JSQ3_Pos | 1 << ADC_JSQR_JEXTEN_Pos | 19 << ADC_JSQR_JEXTSEL_Pos; // trig 19 hrtim_adc_trg2 (injected)
         ADC2->CFGR = ADC_CFGR_JQDIS | ADC_CFGR_OVRMOD |1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos; // trigger 21 -> hrtim trig1
-        ADC2->SMPR1 = 6 << ADC_SMPR1_SMP6_Pos | // 247.5 cycles VA, 5.8us
-                      6 << ADC_SMPR1_SMP7_Pos | // 247.5 cycles VB, 5.8us
-                      6 << ADC_SMPR1_SMP8_Pos;  // 247.5 cycles VC, 5.8us
+        ADC2->SMPR1 = 2 << ADC_SMPR1_SMP6_Pos | // 12.5 cycles VA, 5.8us
+                      2 << ADC_SMPR1_SMP7_Pos | // 12.5 cycles VB, 5.8us
+                      2 << ADC_SMPR1_SMP8_Pos;  // 12.5 cycles VC, 5.8us
         
         //ADC3,4,5
         ADC345_COMMON->CCR = ADC_CCR_VREFEN | 3 << ADC_CCR_CKMODE_Pos; // hclk/4 (42.5 MHz)

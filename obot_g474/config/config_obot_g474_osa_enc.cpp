@@ -4,9 +4,11 @@
 #include "../../motorlib/ma732_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "../../motorlib/gpio.h"
+#include "../../motorlib/qep_encoder.h"
+#include "../../motorlib/peripheral/stm32g4/pin_config.h"
 
 using TorqueSensor = SPITorque;
-using MotorEncoder = MA732Encoder;
+using MotorEncoder = QEPEncoder;
 using OutputEncoder = MA732Encoder;
 
 extern "C" void SystemClock_Config();
@@ -17,10 +19,10 @@ struct InitCode {
       SystemClock_Config();
       pin_config_obot_g474_osa();
 
-      // ma732 motor encoder spi settings        
-      SPI1->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
-      // ORDER DEPENDANCE SPE set last
-      SPI1->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
+      // qep encoder
+      GPIO_SETL(A, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPA TIM2
+      GPIO_SETL(A, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPB TIM2
+      GPIO_SETL(A, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPI TIM2
 
       // ma732 output encoder and torque sensor spi settings        
       SPI3->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
@@ -36,8 +38,7 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
-    MA732Encoder motor_encoder(*SPI1, motor_encoder_cs);
+    QEPEncoder motor_encoder(*TIM2);
     GPIO torque_sensor_cs(*GPIOB, 4, GPIO::OUTPUT);
     TorqueSensor torque_sensor(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2);
     GPIO output_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
@@ -47,12 +48,6 @@ namespace config {
 #include "config_obot_g474_osa.cpp"
 
 void config_init() {
-    System::api.add_api_variable("mbct", new APICallbackUint32([](){ return config::motor_encoder.get_bct(); },
-                    [](uint32_t u){ config::motor_encoder.set_bct(u); }));
-    System::api.add_api_variable("met", new APICallbackUint32([](){ return config::motor_encoder.get_et(); },
-                    [](uint32_t u){ config::motor_encoder.set_et(u); }));
-    System::api.add_api_variable("mmgt", new APICallbackUint32([](){ return config::motor_encoder.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::motor_encoder.set_mgt(u); }));
     System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder.get_bct(); },
                     [](uint32_t u){ config::output_encoder.set_bct(u); }));
     System::api.add_api_variable("jet", new APICallbackUint32([](){ return config::output_encoder.get_et(); },

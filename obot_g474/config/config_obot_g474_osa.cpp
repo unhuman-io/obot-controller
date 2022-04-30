@@ -70,9 +70,9 @@ void system_init() {
     System::api.add_api_variable("Tdrv", new const APIFloat(&t_i2c));
     System::api.add_api_variable("drv_err", new const APICallbackUint32([](){return is_mps_driver_faulted();}));
     System::api.add_api_variable("drv_enable", new APICallbackUint8(mps_driver_enable_status, mps_driver_enable));
-    System::api.add_api_variable("vam", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_A_DR; }));
-    System::api.add_api_variable("vbm", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_B_DR; }));
-    System::api.add_api_variable("vcm", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_C_DR; }));
+    System::api.add_api_variable("vam", new const APICallbackFloat([]() { return (33.0+2.0)/2.0 * 3.0/4096 * V_A_DR; }));
+    System::api.add_api_variable("vbm", new const APICallbackFloat([]() { return (33.0+2.0)/2.0 * 3.0/4096 * V_B_DR; }));
+    System::api.add_api_variable("vcm", new const APICallbackFloat([]() { return (33.0+2.0)/2.0 * 3.0/4096 * V_C_DR; }));
     System::api.add_api_variable("ibus", new const APICallbackFloat([]() { return (1.0/400) * (1000.0/4096 * I_BUS_DR - 1500); }));
     System::api.add_api_variable("shutdown", new const APICallback([](){
         // requires power cycle to return 
@@ -103,7 +103,7 @@ void system_init() {
     v_ref =  *((uint16_t *) (0x1FFF75AA)) * 3.0 / V_REF_DR;
     System::log("v_ref: " + std::to_string(v_ref));
 
-    ADC1->GCOMP = v_ref*4096;
+    ADC1->GCOMP = 3.0*4096;
     ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
     ADC1->CR |= ADC_CR_ADSTART;
     ADC2->CR |= ADC_CR_JADSTART;

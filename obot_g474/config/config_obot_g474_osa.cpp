@@ -24,7 +24,7 @@ uint16_t drv_regs_error = 0;
 namespace config {
     static_assert(((double) CPU_FREQUENCY_HZ * 32 / 2) / pwm_frequency < 65535);    // check pwm frequency
     TempSensor temp_sensor;
-    I2C i2c1(*I2C1);
+    I2C i2c1(*I2C1, 1000);
     MAX31875 i2c_temp_sensor(i2c1);
     HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 4, 5, 3, true, 200, 1000, 0};
     USB1 usb;
@@ -67,7 +67,7 @@ void system_init() {
     std::function<float()> get_t = std::bind(&TempSensor::get_value, &config::temp_sensor);
     std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config::temp_sensor, std::placeholders::_1);
     System::api.add_api_variable("Tdsp", new APICallbackFloat(get_t, set_t));
-    System::api.add_api_variable("T", new const APIFloat(&t_i2c));
+    System::api.add_api_variable("Tdrv", new const APIFloat(&t_i2c));
     System::api.add_api_variable("drv_err", new const APICallbackUint32([](){return is_mps_driver_faulted();}));
     System::api.add_api_variable("drv_enable", new APICallbackUint8(mps_driver_enable_status, mps_driver_enable));
     System::api.add_api_variable("vam", new const APICallbackFloat([]() { return (18.0+2.0)/2.0 * 3.0/4096 * V_A_DR; }));

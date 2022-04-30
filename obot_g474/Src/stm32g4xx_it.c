@@ -45,6 +45,15 @@ void ADC5_IRQHandler(void) __attribute__((section (".ccmram")));
 #define INTERRUPT_PROFILE_END(loop) t_exec_##loop = get_clock()-t_start; \
                                       t_period_##loop = t_start - last_start; \
                                       last_start = t_start;
+
+#ifdef SCOPE_DEBUG
+#define SET_SCOPE_PIN(X,x) GPIO##X->BSRR = 1 << x
+#define CLEAR_SCOPE_PIN(X,x) GPIO##X->BSRR = 1 << (16 + x)
+#else
+#define SET_SCOPE_PIN(X,x)
+#define CLEAR_SCOPE_PIN(X,x)
+#endif
+                                    
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -244,14 +253,14 @@ void SysTick_Handler(void)
 void USB_LP_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_IRQn 0 */
-  scope3_GPIO_Port->BSRR |= scope3_Pin; 
+  SET_SCOPE_PIN(C,5);
   usb_interrupt();
 #if 0
   /* USER CODE END USB_LP_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_LP_IRQn 1 */
 #endif
-  scope3_GPIO_Port->BSRR |= scope3_Pin << 16; 
+  CLEAR_SCOPE_PIN(C,5); 
   /* USER CODE END USB_LP_IRQn 1 */
 }
 
@@ -261,7 +270,7 @@ void USB_LP_IRQHandler(void)
 void TIM1_UP_TIM16_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
-  //scope2_GPIO_Port->BSRR |= scope2_Pin; 
+  SET_SCOPE_PIN(A,9);
   INTERRUPT_PROFILE_START;
   main_loop_interrupt();
 #if 0
@@ -271,7 +280,7 @@ void TIM1_UP_TIM16_IRQHandler(void)
 #endif
   TIM1->SR = 0;
   INTERRUPT_PROFILE_END(mainloop);
-  //scope2_GPIO_Port->BSRR |= scope2_Pin << 16; 
+  CLEAR_SCOPE_PIN(A,9); 
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
 }
 
@@ -281,7 +290,7 @@ void TIM1_UP_TIM16_IRQHandler(void)
 void ADC5_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC5_IRQn 0 */
-  //scope1_GPIO_Port->BSRR |= scope1_Pin; 
+  SET_SCOPE_PIN(A,8);
   INTERRUPT_PROFILE_START;
   fast_loop_interrupt();
 #if 0
@@ -291,6 +300,7 @@ void ADC5_IRQHandler(void)
 #endif
   ADC5->ISR = ADC_ISR_JEOC;
   INTERRUPT_PROFILE_END(fastloop)
+  CLEAR_SCOPE_PIN(A,8);
   //scope1_GPIO_Port->BSRR |= scope1_Pin << 16; 
   /* USER CODE END ADC5_IRQn 1 */
 }

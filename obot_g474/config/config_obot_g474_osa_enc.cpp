@@ -35,7 +35,7 @@ struct InitCode {
 
 namespace config {
     const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 50000;
+    const uint32_t pwm_frequency = 20000;
     InitCode init_code;
 
     QEPEncoder motor_encoder(*TIM2);

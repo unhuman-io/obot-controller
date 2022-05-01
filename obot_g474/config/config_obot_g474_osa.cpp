@@ -22,7 +22,7 @@ uint16_t drv_regs_error = 0;
 #include "../../motorlib/peripheral/stm32g4/max31875.h"
 
 namespace config {
-    static_assert(((double) CPU_FREQUENCY_HZ * 32 / 2) / pwm_frequency < 65535);    // check pwm frequency
+    static_assert(((double) CPU_FREQUENCY_HZ * 8 / 2) / pwm_frequency < 65535);    // check pwm frequency
     TempSensor temp_sensor;
     I2C i2c1(*I2C1, 1000);
     MAX31875 i2c_temp_sensor(i2c1);

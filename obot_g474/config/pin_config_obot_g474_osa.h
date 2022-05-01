@@ -111,7 +111,7 @@ void pin_config_obot_g474_osa() {
 
 
         // TIM1 main loop interrupt        
-        static_assert(CPU_FREQUENCY_HZ / config::main_loop_frequency < 65536, "Main loop frequency too low");
+        static_assert(CPU_FREQUENCY_HZ / config::main_loop_frequency/4 < 65536, "Main loop frequency too low");
         TIM1->ARR = CPU_FREQUENCY_HZ / config::main_loop_frequency - 1;
         TIM1->DIER = TIM_DIER_UIE;
         NVIC_SetPriority(TIM1_UP_TIM16_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 1, 0));

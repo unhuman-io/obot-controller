@@ -23,6 +23,10 @@ struct InitCode {
       GPIO_SETL(A, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPA TIM2
       GPIO_SETL(A, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPB TIM2
       GPIO_SETL(A, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPI TIM2
+      MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD0, GPIO_PULL::DOWN);       // reject noise with pull down
+      MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD1, GPIO_PULL::DOWN);
+      MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD2, GPIO_PULL::DOWN);
+
 
       // ma732 output encoder and torque sensor spi settings        
       SPI3->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit

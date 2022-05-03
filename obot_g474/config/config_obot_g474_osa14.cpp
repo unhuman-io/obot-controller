@@ -2,11 +2,12 @@
 #include "../st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/ma732_encoder.h"
+#include "../../motorlib/ma782_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "../../motorlib/gpio.h"
 
 using TorqueSensor = SPITorque;
-using MotorEncoder = MA732Encoder;
+using MotorEncoder = MA782Encoder;
 using OutputEncoder = MA732Encoder;
 
 extern "C" void SystemClock_Config();
@@ -37,7 +38,7 @@ namespace config {
     InitCode init_code;
 
     GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
-    MA732Encoder motor_encoder(*SPI1, motor_encoder_cs);
+    MA782Encoder motor_encoder(*SPI1, motor_encoder_cs);
     GPIO torque_sensor_cs(*GPIOB, 4, GPIO::OUTPUT);
     TorqueSensor torque_sensor(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2);
     GPIO output_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);

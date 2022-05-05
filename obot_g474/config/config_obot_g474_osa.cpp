@@ -13,6 +13,7 @@ uint16_t drv_regs_error = 0;
 #include "../../motorlib/controller/torque_controller.h"
 #include "../../motorlib/controller/impedance_controller.h"
 #include "../../motorlib/controller/velocity_controller.h"
+#include "../../motorlib/controller/state_controller.h"
 #include "../../motorlib/fast_loop.h"
 #include "../../motorlib/main_loop.h"
 #include "../../motorlib/actuator.h"
@@ -36,7 +37,8 @@ namespace config {
     TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
     ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
     VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
+    StateController state_controller = {(float) (1.0/main_loop_frequency)};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, state_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
 };
 
 Communication System::communication_ = {config::usb};

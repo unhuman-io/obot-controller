@@ -16,6 +16,7 @@ typedef USB_OTG USB1;
 #include "../motorlib/controller/torque_controller.h"
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
+#include "../motorlib/controller/state_controller.h"
 typedef TorqueSensorBase TorqueSensor;
 typedef PWM_EN PWM;
 typedef EncoderBase OutputEncoder;
@@ -69,7 +70,8 @@ static struct {
     TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
     ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
     VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
+    StateController state_controller = {(float) (1.0/main_loop_frequency)};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, state_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
 } config_items;
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};

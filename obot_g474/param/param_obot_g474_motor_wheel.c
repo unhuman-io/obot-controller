@@ -1,4 +1,4 @@
-#include "param_freebot_g474.h"
+#include "param_obot_g474.h"
 #include "math.h"
 
 
@@ -25,7 +25,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc2_gain = -3.3/4096/(.005*10),
     .fast_loop_param.adc3_gain = -3.3/4096/(.005*10), 
     .fast_loop_param.motor_encoder.dir = -1,
-    .fast_loop_param.phase_mode = 0,
+    .fast_loop_param.phase_mode = 1,
     .fast_loop_param.motor_encoder.cpr = pow(2,24),
     .fast_loop_param.motor_encoder.rollover = pow(2,24),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
@@ -65,8 +65,17 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.cogging.table = {
 //#include "cogprocessed.csv"
     },
+    .drv_regs = {
+        (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
+        (3<<11) | 0x3FF, // hs_reg      0x3CC, moderate drive current
+        (4<<11) | 0x37F, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
+                                        // moderate drive current (.57,1.14A)
+        (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
+                                    //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
+        (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
+    },
     .startup_param.do_phase_lock = 1,
-    .startup_param.phase_lock_current = 5,
+    .startup_param.phase_lock_current = -5,
     .startup_param.phase_lock_duration = 2,
     .name = "wl",
 #ifdef PARAM_OVERRIDES

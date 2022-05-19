@@ -65,9 +65,13 @@ uint16_t drv_regs[] = {
     MASK_SET(GPIO##gpio->OSPEEDR, GPIO_OSPEEDR_OSPEED##pin, speed); \
     MASK_SET(GPIO##gpio->AFR[1], GPIO_AFRH_AFSEL##pin, af)
 
+
+extern "C" void SystemClock_Config();
+
 volatile uint32_t * const cpu_clock = &TIM2->CNT;
 struct InitCode {
     InitCode() {
+        SystemClock_Config();
         // Peripheral clock enable
         RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM5EN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
@@ -140,16 +144,15 @@ struct InitCode {
 };
 
 static struct {
-    SystemInitClass system_init;
     InitCode init_code;
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
+    SPIDMA spi_dma{*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
     //ADS1235 torque_sensor = {spi_dma};
-    SPIDebug spi_debug = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
-    ICPZ motor_encoder = {spi_dma};
+    ICPZ motor_encoder{spi_dma};
+    SPIDebug spi_debug{spi_dma};
     TorqueSensor torque_sensor;
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
@@ -222,14 +225,9 @@ void drv_reset(uint32_t blah) {
 //     return vdq0.vd;
 // 
 
-std::string val;
-void set_spi_debug(std::string s) {
-    config_items.motor_encoder.set_register_operation();
-    val = config_items.spi_debug.read(s);
-    config_items.motor_encoder.clear_register_operation();
-}
-std::string get_spi_debug() {
-    return val;
+void config_init() {
+    System::api.add_api_variable("spi", new APICallback([](){ return config_items.spi_debug.read(); }, 
+        [](std::string s) { config_items.spi_debug.write(s); }));
 }
 
 void system_init() {
@@ -245,7 +243,7 @@ void system_init() {
     //     System::log("Motor encoder init failure");
     // }
     config_items.torque_sensor.init();
-    config_items.spi_debug.init();
+    config_init();
 
     if (config_items.motor_encoder.init()) {
         System::log("icpz configure success");
@@ -264,9 +262,6 @@ void system_init() {
     // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
     // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 
-
-    System::api.add_api_variable("spi", new APICallback(get_spi_debug, set_spi_debug));
-
     System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
     System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
     config_items.main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&config_items.main_loop.status_.fast_loop.foc_status.command.v_d);
@@ -276,3 +271,6 @@ void system_init() {
 void system_maintenance() {}
 
 #include "../motorlib/system.cpp"
+
+void setup_sleep() {} //todo
+void finish_sleep() {}

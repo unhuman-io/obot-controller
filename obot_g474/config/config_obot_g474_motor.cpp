@@ -17,7 +17,7 @@ uint16_t drv_regs_error = 0;
 #include "../../motorlib/main_loop.h"
 #include "../../motorlib/actuator.h"
 #include "../../motorlib/system.h"
-#include "pin_config_freebot_g474_motor.h"
+#include "pin_config_obot_g474_motor.h"
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
 
 namespace config {
@@ -65,10 +65,73 @@ void system_init() {
         System::log("drv configure success");
     }
     config::torque_sensor.init();
+
+    System::api.add_api_variable("3v3", new APIFloat(&v3v3));
+    std::function<float()> get_t = std::bind(&TempSensor::get_value, &config::temp_sensor);
+    std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config::temp_sensor, std::placeholders::_1);
+    System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t));
+    System::api.add_api_variable("index_mod", new APIInt32(&index_mod));
+    System::api.add_api_variable("drv_err", new const APICallbackUint32(get_drv_status));
+    System::api.add_api_variable("drv_reset", new const APICallback(drv_reset));
+    System::api.add_api_variable("A1", new const APICallbackFloat([](){ return A1_DR; }));
+    System::api.add_api_variable("A2", new const APICallbackFloat([](){ return A2_DR; }));
+    System::api.add_api_variable("shutdown", new const APICallback([](){
+        // requires power cycle to return 
+        setup_sleep();
+        SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+        PWR->CR1 |= 0b100 << PWR_CR1_LPMS_Pos;
+        __WFI();
+        return "";
+    }));
+    System::api.add_api_variable("deadtime", new APICallbackUint16([](){ 
+        return config::motor_pwm.deadtime_ns_; }, [](uint16_t u) {config::motor_pwm.set_deadtime(u); }));
+
+    for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC3, ADC4, ADC5}) {
+        regs->CR = ADC_CR_ADVREGEN;
+        ns_delay(20000);
+        regs->CR |= ADC_CR_ADCAL;
+        while(regs->CR & ADC_CR_ADCAL);
+        ns_delay(100);
+
+        regs->ISR = ADC_ISR_ADRDY;
+        regs->CR |= ADC_CR_ADEN;
+        while(!(regs->ISR & ADC_ISR_ADRDY));
+    }
+
+    ADC1->CR |= ADC_CR_JADSTART;
+    while(ADC1->CR & ADC_CR_JADSTART);
+
+    v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 / V_REF_DR;
+    System::log("3v3: " + std::to_string(v3v3));
+
+    ADC1->GCOMP = v3v3*4096;
+    ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
+    ADC1->CR |= ADC_CR_ADSTART;
+    ADC5->CR |= ADC_CR_JADSTART;
+    ADC5->IER |= ADC_IER_JEOCIE;
+    ADC4->CR |= ADC_CR_JADSTART;
+    ADC3->CR |= ADC_CR_JADSTART;
+
+    config_init();
+
+    TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
+    config::usb.connect();
+    HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN; // start high res timer
+}
+
+FrequencyLimiter temp_rate = {10};
+
+void config_maintenance();
+void system_maintenance() {
+    if (temp_rate.run()) {
+        ADC1->CR |= ADC_CR_JADSTART;
+        while(ADC1->CR & ADC_CR_JADSTART);
+        config::temp_sensor.read();
+        v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
+    }
+    index_mod = config::motor_encoder.index_error(param->fast_loop_param.motor_encoder.cpr);
+    config_maintenance();
 }
 
 
-#include "../motorlib/system.cpp"
-
-void setup_sleep() {} //todo
-void finish_sleep() {}
+#include "../../motorlib/system.cpp"

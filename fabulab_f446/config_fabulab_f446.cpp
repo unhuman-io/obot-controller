@@ -38,9 +38,17 @@ void usb_interrupt() {
     usb.interrupt();
 }
 
+extern "C" void SystemClock_Config();
+
+struct InitCode {
+    InitCode() {
+      SystemClock_Config();
+    }
+};
+
 volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 static struct {
-    SystemInitClass system_init;
+    InitCode init_code;
     int32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_period);
     GPIO enable = {*GPIOC, 14, GPIO::OUTPUT};
@@ -75,5 +83,8 @@ void system_init() {
 }
 
 void system_maintenance() {}
+
+void setup_sleep() {} // todo
+void finish_sleep() {}
 
 #include "../motorlib/system.cpp"

@@ -187,7 +187,7 @@ CPPFLAGS = $(CFLAGS)
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32G474RETx_FLASH.ld
+LDSCRIPT = ../motorlib/peripheral/stm32g4/STM32G474RETx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

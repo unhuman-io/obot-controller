@@ -13,15 +13,19 @@ class Table:
         parser = argparse.ArgumentParser(description='Process motor data for a table')
         parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
         parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
-        parser.add_argument('-s,--table-size', dest="table_size", default=512)
+        parser.add_argument('-s,--table-size', dest="table_size", type=int, default=512)
         parser.add_argument('-i,--index-pos',dest="index_pos", default=0)
         parser.add_argument('-c,--cpr',dest="cpr",default=8192)
-        parser.add_argument('-e,--encoder',dest="encoder_table", type=bool, default=False)
+        parser.add_argument('-n,--gear-ratio',dest="gear_ratio",type=float,default=1.)
+        parser.add_argument('-e,--encoder',dest="encoder_table", action="store_true", default=False)
+        parser.add_argument('-j,--joint',dest="joint_table", action="store_true", default=False)
         self.args = parser.parse_args(args_in)
 
         self.data = genfromtxt(self.args.infile, delimiter=',', names=True)
         if (self.args.encoder_table):
             self.table = self.parse_encoder_table(nbins=self.args.table_size,index_pos=self.args.index_pos,cpr=self.args.cpr)
+        elif (self.args.joint_table):
+            self.table = self.parse_joint_table(nbins=self.args.table_size,index_pos=self.args.index_pos,n=self.args.gear_ratio)
         else:
             self.table = self.parse_cogging_table(nbins=self.args.table_size,index_pos=self.args.index_pos,cpr=self.args.cpr)
         self.save()
@@ -49,6 +53,17 @@ class Table:
 
         return self.create_table(x, y, nbins)
 
+    def parse_joint_table(self, nbins=32, index_pos=0, n=1.):
+        e = self.data["joint_position0"]
+        m = self.data["motor_position0"] 
+        y = m/n - e
+        x = e    
+        i = where(abs(e) > .9*max(e))
+        x = delete(x, i) 
+        y = delete(y, i)
+        return self.create_table(x, y, nbins)
+
+
     def create_table(self, x, y, nbins):
         yfilt = circular_filt(x, y-mean(y), nbins=nbins)
         xfilt = linspace(0, 2*pi, nbins+1)[:-1]
@@ -58,8 +73,8 @@ class Table:
         pchip = pchip_coeff(xfilt, yfilt, yfiltd)
         xcalc = linspace(0,2*pi,1000)
         ycalc = pchip_calc(pchip, xcalc)
-        figure()
-        plot(xfilt,yfiltd)
+        # figure()
+        # plot(xfilt,yfiltd)
         
         figure()
         plot(xfilt,yfilt)

@@ -58,6 +58,6 @@ void config_init() {
 
 void config_maintenance() {
     if (get_motor_temperature(A3_DR) > 110) {
-        config::main_loop.status_.error.motor = 1;
+        config::main_loop.status_.error.motor_temperature = 1;
     }
 }

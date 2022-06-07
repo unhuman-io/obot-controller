@@ -133,7 +133,7 @@ void system_maintenance() {
         float T = config::temp_sensor.read();
         v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
         if (T > 100) {
-            config::main_loop.status_.error.system = 1;
+            config::main_loop.status_.error.microcontroller_temperature = 1;
         }
     }
     index_mod = config::motor_encoder.index_error(param->fast_loop_param.motor_encoder.cpr);

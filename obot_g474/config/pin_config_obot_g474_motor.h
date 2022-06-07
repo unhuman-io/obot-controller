@@ -11,6 +11,7 @@
 #define V_TEMP_DR ADC1->JDR1
 #define A1_DR ADC1->JDR3
 #define A2_DR ADC1->JDR4
+#define A3_DR ADC2->JDR1
 
 #define TIM_R TIM4->CCR1
 #define TIM_G TIM4->CCR2
@@ -159,7 +160,6 @@ void pin_config_obot_g474_motor_r0() {
         ADC1->JSQR = 3 << ADC_JSQR_JL_Pos | 16 << ADC_JSQR_JSQ1_Pos | 18 << ADC_JSQR_JSQ2_Pos | 6 << ADC_JSQR_JSQ3_Pos 
             | 7 << ADC_JSQR_JSQ4_Pos; // internal temperature, vrefint, A1, A2
     
-        
         ADC1->CFGR = ADC_CFGR_JQDIS | ADC_CFGR_OVRMOD |1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos; // trigger 21 -> hrtim trig1
         ADC1->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos); // 256x oversample
         ADC1->SMPR1 = 6 << ADC_SMPR1_SMP6_Pos | // 247.5 cycles A1, 5.8us
@@ -167,6 +167,14 @@ void pin_config_obot_g474_motor_r0() {
         ADC1->SMPR2 = 2 << ADC_SMPR2_SMP13_Pos | // 12.5 cycles vbus, 294 ns, 200 ns min for opamp1
                       6 << ADC_SMPR2_SMP16_Pos | // 247.5 cycles interal temperature, 5.8us, 5us min
                       6 << ADC_SMPR2_SMP18_Pos;  // 247.5 cycles vrefint (~1.21V), 5.8us, 4us min
+
+                // ADC2 A3->JDR1
+        GPIO_SETL(C, 2, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VC
+        ADC2->JSQR = 0 << ADC_JSQR_JL_Pos | 8 << ADC_JSQR_JSQ1_Pos | 1 << ADC_JSQR_JEXTEN_Pos | 19 << ADC_JSQR_JEXTSEL_Pos; // trig 19 hrtim_adc_trg2 (injected)
+        ADC2->CFGR = ADC_CFGR_JQDIS | ADC_CFGR_OVRMOD |1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos; // trigger 21 -> hrtim trig1
+        ADC2->SMPR1 = 6 << ADC_SMPR1_SMP8_Pos;  // 247.5 cycles A3, 5.8us
+        ADC2->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos); // 256x oversample
+
         
         //ADC3,4,5
         ADC345_COMMON->CCR = ADC_CCR_VREFEN | 3 << ADC_CCR_CKMODE_Pos; // hclk/4 (42.5 MHz)
@@ -227,10 +235,10 @@ uint32_t get_drv_status() {
         while(!(SPI1->SR & SPI_SR_RXNE));
         reg_in |= SPI1->DR << 16;
 
-        // SPI1->CR1 = 0; // clear SPE
-        // // SPI1 CS-> gpio
-        // GPIO_SETL(A, 4, 1, 0, 0);
-        // GPIOA->BSRR = GPIO_ODR_OD4;
+        SPI1->CR1 = 0; // clear SPE
+        // SPI1 CS-> gpio
+        GPIO_SETL(A, 4, 1, 0, 0);
+        GPIOA->BSRR = GPIO_ODR_OD4;
 
         // // SPI1 ADS1235
         // SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/32

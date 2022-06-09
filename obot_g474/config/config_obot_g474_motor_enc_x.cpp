@@ -50,14 +50,19 @@ float get_motor_temperature(float v) {
     return T;
 }
 
+float Tmotor = 0;
+extern float T;
+
 void config_init() {
     System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return get_motor_temperature(A3_DR); }));
-
+    config::main_loop.reserved0_ = reinterpret_cast<uint32_t *>(&Tmotor);
+    config::main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&T);
 }
 
 void config_maintenance() {
-    if (get_motor_temperature(A3_DR) > 110) {
+    Tmotor = get_motor_temperature(A3_DR);
+    if (Tmotor> 110) {
         config::main_loop.status_.error.motor_temperature = 1;
     }
 }

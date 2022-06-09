@@ -124,13 +124,14 @@ void system_init() {
 }
 
 FrequencyLimiter temp_rate = {10};
+float T = 0;
 
 void config_maintenance();
 void system_maintenance() {
     if (temp_rate.run()) {
         ADC1->CR |= ADC_CR_JADSTART;
         while(ADC1->CR & ADC_CR_JADSTART);
-        float T = config::temp_sensor.read();
+        T = config::temp_sensor.read();
         v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
         if (T > 100) {
             config::main_loop.status_.error.microcontroller_temperature = 1;

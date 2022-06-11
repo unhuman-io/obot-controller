@@ -95,6 +95,10 @@ void system_init() {
         regs->CR |= ADC_CR_ADCAL;
         while(regs->CR & ADC_CR_ADCAL);
         ns_delay(100);
+        regs->CR |= ADC_CR_ADCALDIF;
+        regs->CR |= ADC_CR_ADCAL;
+        while(regs->CR & ADC_CR_ADCAL);
+        ns_delay(100);
 
         regs->ISR = ADC_ISR_ADRDY;
         regs->CR |= ADC_CR_ADEN;

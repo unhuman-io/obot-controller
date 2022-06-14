@@ -10,7 +10,9 @@
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = ICPZ;
-using OutputEncoder = AMSEncoder;
+//using MotorEncoder = EncoderBase;
+//using OutputEncoder = AMSEncoder;
+using OutputEncoder = EncoderBase;
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -45,9 +47,11 @@ namespace config {
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     ICPZ motor_encoder(spi3dma);
+    //MotorEncoder motor_encoder;
     TorqueSensor torque_sensor;
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
-    AMSEncoder output_encoder(*SPI1, output_encoder_cs);
+    //AMSEncoder output_encoder(*SPI1, output_encoder_cs);
+    OutputEncoder output_encoder;
 };
 
 #include "config_obot_g474_motor.cpp"
@@ -65,13 +69,13 @@ extern float T;
 
 void config_init() {
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return get_motor_temperature(A3_DR); }));
-    config::main_loop.reserved0_ = reinterpret_cast<uint32_t *>(&Tmotor);
+    config::main_loop.reserved0_ = reinterpret_cast<uint32_t *>(&config::main_loop.position_controller_.controller_.error_);
     config::main_loop.reserved1_ = reinterpret_cast<uint32_t *>(&T);
 }
 
 void config_maintenance() {
     Tmotor = get_motor_temperature(A3_DR);
     if (Tmotor> 110) {
-        config::main_loop.status_.error.motor_temperature = 1;
+        //config::main_loop.status_.error.motor_temperature = 1;
     }
 }

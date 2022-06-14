@@ -21,9 +21,9 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc1_offset = 1980,
     .fast_loop_param.adc2_offset = 1980,
     .fast_loop_param.adc3_offset = 1980,
-    .fast_loop_param.adc1_gain = -3.3/4096/(.002*10),  // A/count
-    .fast_loop_param.adc2_gain = -3.3/4096/(.002*10),
-    .fast_loop_param.adc3_gain = -3.3/4096/(.002*10), 
+    .fast_loop_param.adc1_gain = -3.3/4096/(.005*10),  // A/count
+    .fast_loop_param.adc2_gain = -3.3/4096/(.005*10),
+    .fast_loop_param.adc3_gain = -3.3/4096/(.005*10), 
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 1,
     .fast_loop_param.motor_encoder.cpr = pow(2,24),
@@ -86,9 +86,9 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
         //(6<<11) | 0x200, // csa_reg     0x200 -> bidirectional current, 5V/V
     },
     .startup_param.do_phase_lock = 1,
-    .startup_param.phase_lock_current = -20,
+    .startup_param.phase_lock_current = -10,
     .startup_param.phase_lock_duration = 2,
-    .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
+    .startup_param.motor_encoder_startup = ENCODER_ZERO,
     .startup_param.gear_ratio = 20.25,
     .startup_param.output_encoder_rollover = 3,
     .name = "test",

@@ -56,6 +56,9 @@ void config_init() {
                     [](uint32_t u){ config::motor_encoder.set_et(u); }));
     System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
                     [](uint32_t u){ config::motor_encoder.set_mgt(u); }));
+
+    System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor_direct.result0_));
+    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor_direct.result1_));     
 }
 
 void config_maintenance() {}

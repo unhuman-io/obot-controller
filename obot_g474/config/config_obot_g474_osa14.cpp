@@ -37,7 +37,7 @@ namespace config {
     SPITorque torque_sensor_direct(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2, 0, &spi3_register_operation);
     GPIO output_encoder_cs(*GPIOB, 4, GPIO::OUTPUT); // spi3 cs2
     MA782Encoder output_encoder_direct(*SPI3, output_encoder_cs, 119, &spi3_register_operation);
-    TorqueSensorMultiplex<SPITorque, MA782Encoder> torque_sensor(torque_sensor_direct, output_encoder_direct);
+    TorqueSensorMultiplex<SPITorque, MA782Encoder> torque_sensor(torque_sensor_direct, output_encoder_direct, 10);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 };
 

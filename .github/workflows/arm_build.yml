@@ -54,7 +54,8 @@ jobs:
       run: |
         tar xzf motor_enc.tgz
         ./motor_enc/load_motor_enc.sh -p 1-2.1 || true
-        sleep 2
+        sleep 6
+        # motor_util -p 1-2.1 read | head # doesn't exit for some reason
         motor_util -p 1-2.1 --run-stats
         motor_util -p 1-2.1 --run-stats 1000 --no-list | awk -F", " \
           'NR==1 { for (i = 1; i < 5; i++) { headers[i]=$(i+5) } } \

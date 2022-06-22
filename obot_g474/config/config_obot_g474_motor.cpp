@@ -77,6 +77,7 @@ void system_init() {
     System::api.add_api_variable("drv_reset", new const APICallback(drv_reset));
     System::api.add_api_variable("A1", new const APICallbackFloat([](){ return A1_DR; }));
     System::api.add_api_variable("A2", new const APICallbackFloat([](){ return A2_DR; }));
+    System::api.add_api_variable("A3", new const APICallbackFloat([](){ return A3_DR; }));
     System::api.add_api_variable("shutdown", new const APICallback([](){
         // requires power cycle to return 
         setup_sleep();
@@ -88,9 +89,13 @@ void system_init() {
     System::api.add_api_variable("deadtime", new APICallbackUint16([](){ 
         return config::motor_pwm.deadtime_ns_; }, [](uint16_t u) {config::motor_pwm.set_deadtime(u); }));
 
-    for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC3, ADC4, ADC5}) {
+    for (auto regs : std::vector<ADC_TypeDef*>{ADC1, ADC2, ADC3, ADC4, ADC5}) {
         regs->CR = ADC_CR_ADVREGEN;
         ns_delay(20000);
+        regs->CR |= ADC_CR_ADCAL;
+        while(regs->CR & ADC_CR_ADCAL);
+        ns_delay(100);
+        regs->CR |= ADC_CR_ADCALDIF;
         regs->CR |= ADC_CR_ADCAL;
         while(regs->CR & ADC_CR_ADCAL);
         ns_delay(100);
@@ -109,6 +114,7 @@ void system_init() {
     ADC1->GCOMP = v3v3*4096;
     ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
     ADC1->CR |= ADC_CR_ADSTART;
+    ADC2->CR |= ADC_CR_JADSTART;
     ADC5->CR |= ADC_CR_JADSTART;
     ADC5->IER |= ADC_IER_JEOCIE;
     ADC4->CR |= ADC_CR_JADSTART;
@@ -122,14 +128,18 @@ void system_init() {
 }
 
 FrequencyLimiter temp_rate = {10};
+float T = 0;
 
 void config_maintenance();
 void system_maintenance() {
     if (temp_rate.run()) {
         ADC1->CR |= ADC_CR_JADSTART;
         while(ADC1->CR & ADC_CR_JADSTART);
-        config::temp_sensor.read();
+        T = config::temp_sensor.read();
         v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
+        if (T > 100) {
+            config::main_loop.status_.error.microcontroller_temperature = 1;
+        }
     }
     index_mod = config::motor_encoder.index_error(param->fast_loop_param.motor_encoder.cpr);
     config_maintenance();

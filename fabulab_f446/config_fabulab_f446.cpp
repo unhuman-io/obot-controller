@@ -65,7 +65,7 @@ static struct {
     FastLoop fast_loop = {pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR2)),
-               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR4)), .1};
+               const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM3->CCR4)), main_loop_frequency, .1};
     PositionController position_controller = {(float) (1.0/main_loop_frequency)};
     TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
     ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};

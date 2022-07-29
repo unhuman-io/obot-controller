@@ -19,6 +19,7 @@ CONFIG = motor
 TARGET = ${CONFIG}
 CONFIG_FILE = config_fabulab_f446.cpp
 
+GCC_PATH=../motorlib/gcc/bin
 ######################################
 # building variables
 ######################################

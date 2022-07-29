@@ -29,9 +29,7 @@ jobs:
         submodules: recursive
     - name: arm-none-eabi-gcc
       timeout-minutes: 5
-      uses: fiam/arm-none-eabi-gcc@master
-      with:
-        release: '10-2020-q4'
+      run: motorlib/scripts/install_gcc.sh
     - name: make ${{ matrix.project }} ${{ matrix.config }}
       run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}

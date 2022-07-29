@@ -27,6 +27,7 @@ $(shell touch $(PARAM_FILE))
 TARGET = $(CONFIG)$(if $(PARAM_OVERRIDE),_$(PARAM_OVERRIDE))
 PARAM_OVERRIDE_FILE = $(PARAM_FILE:.c=_$(PARAM_OVERRIDE).h)
 
+GCC_PATH=../motorlib/gcc/bin
 ######################################
 # building variables
 ######################################

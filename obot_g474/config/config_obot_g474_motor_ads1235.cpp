@@ -36,7 +36,7 @@ namespace config {
     OutputEncoder output_encoder;
 };
 
-#include "config_obot_g474_motor.cpp"
+#include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
     System::log("torque_sensor_init: " + std::to_string(config::torque_sensor.init()));

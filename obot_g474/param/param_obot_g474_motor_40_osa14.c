@@ -1,3 +1,4 @@
+        (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
 #include "param_obot_g474_motor40.h"
 #include "math.h"
 

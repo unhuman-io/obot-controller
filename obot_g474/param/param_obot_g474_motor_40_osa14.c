@@ -4,26 +4,26 @@
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
-    .fast_loop_param.foc_param.pi_d.kp=7,
-    .fast_loop_param.foc_param.pi_d.ki=.5,
+    .fast_loop_param.foc_param.pi_d.kp=1,
+    .fast_loop_param.foc_param.pi_d.ki=0,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd
     // .fast_loop_param.foc_param.pi_d.ki=0.4,
     .fast_loop_param.foc_param.pi_d.ki_limit=8,
-    .fast_loop_param.foc_param.pi_d.command_max=10,
-    .fast_loop_param.foc_param.pi_q.kp=7,
-    .fast_loop_param.foc_param.pi_q.ki=.5,
+    .fast_loop_param.foc_param.pi_d.command_max=1,
+    .fast_loop_param.foc_param.pi_q.kp=1,
+    .fast_loop_param.foc_param.pi_q.ki=0,
     .fast_loop_param.foc_param.pi_q.ki_limit=8,
-    .fast_loop_param.foc_param.pi_q.command_max=10,
+    .fast_loop_param.foc_param.pi_q.command_max=1,
     .fast_loop_param.foc_param.current_filter_frequency_hz=20000,//35000,
-    .fast_loop_param.foc_param.num_poles = 1,
+    .fast_loop_param.foc_param.num_poles = 0,
     .fast_loop_param.cogging.gain = 1,
     .startup_param.startup_mode = OPEN,
     .fast_loop_param.adc1_offset = 1980,
     .fast_loop_param.adc2_offset = 1980,
     .fast_loop_param.adc3_offset = 1980,
-    .fast_loop_param.adc1_gain = -3.3/4096/(.003*3),  // A/count
-    .fast_loop_param.adc2_gain = -3.3/4096/(.003*3),
-    .fast_loop_param.adc3_gain = -3.3/4096/(.003*3), 
+    .fast_loop_param.adc1_gain = 3.3/4096/(.003*3),  // A/count
+    .fast_loop_param.adc2_gain = 3.3/4096/(.003*3),
+    .fast_loop_param.adc3_gain = 3.3/4096/(.003*3), 
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 2048,
@@ -63,6 +63,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.output_encoder.cpr = -65536,
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = DAMPED,
+    .main_loop_param.vbus_min = 10,
     .main_loop_param.output_encoder.table = {
 #include "../../calibration/obot_g474/motor_enc/jtab.dat"
     },
@@ -72,7 +73,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.motor_encoder.table = {
 //#include "tab.csv"
     },
-    .startup_param.do_phase_lock = 1,
+    .startup_param.do_phase_lock = 0,
     .startup_param.phase_lock_current = .7,
     .startup_param.phase_lock_duration = 2,
     .startup_param.gear_ratio = 5.4,

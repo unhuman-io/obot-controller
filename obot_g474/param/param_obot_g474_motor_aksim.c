@@ -21,9 +21,9 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc1_offset = 1980,
     .fast_loop_param.adc2_offset = 1980,
     .fast_loop_param.adc3_offset = 1980,
-    .fast_loop_param.adc1_gain = -3.3/4096/(.005*10),  // A/count
-    .fast_loop_param.adc2_gain = -3.3/4096/(.005*10),
-    .fast_loop_param.adc3_gain = -3.3/4096/(.005*10), 
+    .fast_loop_param.adc1_gain = -3.3/4096/(.001*10),  // A/count
+    .fast_loop_param.adc2_gain = -3.3/4096/(.001*10),
+    .fast_loop_param.adc3_gain = -3.3/4096/(.001*10), 
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 2048,
@@ -64,7 +64,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = DAMPED,
     .main_loop_param.output_encoder.table = {
-#include "../../calibration/obot_g474/motor_enc/jtab.dat"
+//#include "../../calibration/obot_g474/motor_enc/jtab.dat"
     },
     .fast_loop_param.cogging.table = {
 //#include "cog.csv"
@@ -75,8 +75,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = .7,
     .startup_param.phase_lock_duration = 2,
-    .startup_param.gear_ratio = 5.4,
-    .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
+    .startup_param.gear_ratio = 1,
+    //.startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
     .drv_regs = {
         (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
         //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current

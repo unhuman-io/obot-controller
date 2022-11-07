@@ -5,13 +5,19 @@
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/temperature_sensor.h"
+#include "../../motorlib/qia128.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#include "../../motorlib/sensor_multiplex.h"
 
-using TorqueSensor = TorqueSensorBase;
+//using TorqueSensor = QIA128; 
+//using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = Aksim2Encoder<18>;
 //using MotorEncoder = EncoderBase;
-using OutputEncoder = Aksim2Encoder<18>;
+//using OutputEncoder = Aksim2Encoder<18>;
 //using OutputEncoder = EncoderBase;
+
+using TorqueSensor = TorqueSensorMultiplex<QIA128, Aksim2Encoder<18>>;
+using OutputEncoder = TorqueSensor::SecondarySensor;
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -29,6 +35,8 @@ struct InitCode {
       SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
       SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
+      SPI1->CR1 = SPI_CR1_MSTR | (6 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/128 qia128
+      GPIO_SETH(B, 10, GPIO::OUTPUT, GPIO_SPEED::MEDIUM, 0);
       DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
       DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
@@ -50,7 +58,7 @@ namespace config {
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     MotorEncoder motor_encoder(spi3_dma);
     //EncoderBase motor_encoder;
-    TorqueSensor torque_sensor;
+    
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
     OutputEncoder output_encoder(spi1_dma);

@@ -111,6 +111,9 @@ void config_init() {
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
     System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor.read_error_));
     System::api.add_api_variable("tread_len", new const APIUint32(&config::torque_sensor.read_len_));
+    System::api.add_api_variable("tcrc_error", new const APIUint32(&config::torque_sensor.crc_error_));
+    System::api.add_api_variable("tcrc_calc", new const APIUint8(&config::torque_sensor.crc_calc_));
+    System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
 }
 
 FrequencyLimiter temp_rate_motor = {10};

@@ -20,20 +20,14 @@ jobs:
           - project: obot_g474
             config: osa14
     runs-on: ubuntu-latest
+    container: leemagnusson/arm-gcc
     steps:
-    - name: install dfu-suffix
-      run: sudo apt-get install -y dfu-util
     - uses: actions/checkout@master
       with:
         fetch-depth: 0
         submodules: recursive
-    - name: arm-none-eabi-gcc
-      timeout-minutes: 5
-      uses: fiam/arm-none-eabi-gcc@master
-      with:
-        release: '10-2020-q4'
     - name: make ${{ matrix.project }} ${{ matrix.config }}
-      run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2
+      run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2 GCC_PATH=/gcc/bin
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@v2
       with:

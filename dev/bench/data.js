@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1668710374274,
+  "lastUpdate": 1668710638727,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -13890,6 +13890,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkstack_used",
             "value": 1187,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 14927,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "269ca2ac6b13edb5e3edef8c3e01a15b6c6aa4cc",
+          "message": "Merge pull request #67 from unhuman-io/feature/aksim\n\nFeature/aksim",
+          "timestamp": "2022-11-17T10:41:17-08:00",
+          "tree_id": "3943dd7a0e09997f97663ede871b417ba3cab0d6",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/269ca2ac6b13edb5e3edef8c3e01a15b6c6aa4cc"
+        },
+        "date": 1668710637017,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 664,
+            "unit": "cycles",
+            "extra": "664 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.91,
+            "unit": "cycles",
+            "extra": "3407 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 5105.33,
+            "unit": "cycles",
+            "extra": "8341 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.6,
+            "unit": "cycles",
+            "extra": "17036 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 795.310273351,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 101412,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 18880,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 96800,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 23456,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 58696,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 1219,
             "unit": "bytes",
             "extra": "0 times"
           },

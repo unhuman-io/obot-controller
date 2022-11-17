@@ -4,6 +4,7 @@
 #include "../../motorlib/aksim2_encoder.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
+#include "../../motorlib/temperature_sensor.h"
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = Aksim2Encoder<18>;
@@ -50,6 +51,10 @@ namespace config {
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
+namespace config {
+    PT1000 motor_temperature(A1_DR);
+};
+
 void config_init() {
     System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
     System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
@@ -58,6 +63,13 @@ void config_init() {
     System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
     System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
+    System::api.add_api_variable("mtemp", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
 }
 
-void config_maintenance() {}
+FrequencyLimiter temp_rate_motor = {10};
+void config_maintenance() {
+    if(temp_rate_motor.run()) {
+        config::motor_temperature.read();
+    }
+
+}

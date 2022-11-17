@@ -14,7 +14,7 @@ and when pulling or checking out
 or for automatic support plus recommended pull ff-only global option
 ```console
 git config --global submodule.recurse true
-git pull --global pull.ff only
+git config --global pull.ff only
 ```
 
 ## Build

@@ -56,6 +56,10 @@ namespace config {
 void config_init() {
     System::api.add_api_variable("spi", new APICallback([](){ return config::spi_debug.read(); }, 
         [](std::string s) { config::spi_debug.write(s); }));
+    
+    System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));
+    System::api.add_api_variable("torque2", new const APIFloat(&config::torque_sensor.torque2_));
+    System::api.add_api_variable("torque_decimation", new APIUint16(&config::torque_sensor.decimation_));
 }
 
 void config_maintenance() {}

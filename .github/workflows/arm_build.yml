@@ -29,7 +29,7 @@ jobs:
     - name: make ${{ matrix.project }} ${{ matrix.config }}
       run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2 GCC_PATH=/gcc/bin
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@main
       with:
         name: ${{ matrix.project }} ${{ matrix.config }}
         path: |
@@ -40,8 +40,8 @@ jobs:
     needs: [build]
     runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/download-artifact@v2
+    - uses: actions/checkout@main
+    - uses: actions/download-artifact@main
       with:
         name: obot_g474 motor_enc
     - name: test

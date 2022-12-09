@@ -32,7 +32,7 @@ namespace config {
     GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT);
     QEPEncoder motor_encoder(*TIM2);
     SPIDMA spi_dma(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2, 1000, 1000);
-    ADS1235 torque_sensor(spi_dma, ADS1235::GAIN_1, ADS1235::SPS_100);
+    ADS1235 torque_sensor(spi_dma, ADS1235::GAIN_1, ADS1235::SPS_1200);
     OutputEncoder output_encoder;
 };
 

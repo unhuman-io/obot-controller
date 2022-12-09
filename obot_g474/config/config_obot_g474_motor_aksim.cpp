@@ -15,6 +15,8 @@ using OutputEncoder = Aksim2Encoder<18>;
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
 
+// setup for R4
+
 struct InitCode {
     InitCode() {
       SystemClock_Config();
@@ -40,12 +42,12 @@ namespace config {
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-    OutputEncoder output_encoder(spi3_dma);
+    MotorEncoder motor_encoder(spi3_dma);
     //EncoderBase motor_encoder;
     TorqueSensor torque_sensor;
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
-    MotorEncoder motor_encoder(spi1_dma);
+    OutputEncoder output_encoder(spi1_dma);
     //EncoderBase output_encoder;
 };
 

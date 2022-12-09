@@ -2,10 +2,10 @@
 #include "../st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/qep_encoder.h"
-#include "../../motorlib/ads1235.h"
+#include "../../motorlib/ads1235_2.h"
 #include "../../motorlib/gpio.h"
 
-using TorqueSensor = ADS1235;
+using TorqueSensor = ADS1235_2;
 using MotorEncoder = QEPEncoder;
 using OutputEncoder = EncoderBase;
 
@@ -32,7 +32,7 @@ namespace config {
     GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT);
     QEPEncoder motor_encoder(*TIM2);
     SPIDMA spi_dma(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2, 1000, 1000);
-    ADS1235 torque_sensor(spi_dma, ADS1235::GAIN_1, ADS1235::SPS_100);
+    ADS1235_2 torque_sensor(spi_dma);
     OutputEncoder output_encoder;
 };
 
@@ -41,8 +41,9 @@ namespace config {
 void config_init() {
     System::log("torque_sensor_init: " + std::to_string(config::torque_sensor.init()));
 
-    System::api.add_api_variable("torque", new const APIFloat(&config::torque_sensor.torque_));
-    //System::api.add_api_variable("decimation", new APIUint16(&config::torque_sensor.decimation_));
+    System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));
+    System::api.add_api_variable("torque2", new const APIFloat(&config::torque_sensor.torque2_));
+    System::api.add_api_variable("decimation", new APIUint16(&config::torque_sensor.decimation_));
 }
 
 void config_maintenance() {}

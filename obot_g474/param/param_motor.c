@@ -1,9 +1,9 @@
     .fast_loop_param.adc1_offset = 1980,
     .fast_loop_param.adc2_offset = 1980,
     .fast_loop_param.adc3_offset = 1980,
-    .fast_loop_param.adc1_gain = -3.3/4096/(.001*40),  // A/count
-    .fast_loop_param.adc2_gain = -3.3/4096/(.001*40),
-    .fast_loop_param.adc3_gain = -3.3/4096/(.001*40),
+    .fast_loop_param.adc1_gain = -3.3/4096/(.001*10),  // A/count
+    .fast_loop_param.adc2_gain = -3.3/4096/(.001*10),
+    .fast_loop_param.adc3_gain = -3.3/4096/(.001*10),
     .fast_loop_param.vbus_gain = 1.0/4096*(215+13.7)/13.7,
     .drv_regs = {
         (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
@@ -13,9 +13,9 @@
                                         // moderate drive current (.57,1.14A)
         (4<<11) | 0x37F, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
                                         // moderate drive current (.57,1.14A)
-        (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
-                                    //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
-        (6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
+        (5<<11) | 0x004,  // ocp_reg     0x00 -> 50 ns dead time, 
+                                    //latched ocp, 2 us ocp deglitch, 0.31 Vds thresh -> .31/.003 = 100A
+        //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
         //(6<<11) | 0x280,
-        //(6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
+        (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
     },

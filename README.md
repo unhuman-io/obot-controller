@@ -18,7 +18,20 @@ git config --global pull.ff only
 ```
 
 ## Build
-The current build system is `gcc` due to it being supported by STMCubeMX. The specific setup I've been using that works is the build of the `gcc` compiler available on the ARM website. This complier will have a prefix of `arm-none-eabi`, so for example `arm-none-eabi-gcc` should be on your path. Run make in a project folder to build. Then programming can be accomplished either through the built in bootloader or through a debugger connection, both described below.
+The current build system is `gcc` due to it being supported by STMCubeMX. The specific setup I've been using that works is the build of the `gcc` compiler available on the ARM website. This complier will have a prefix of `arm-none-eabi`, so for example `arm-none-eabi-gcc` should be on your path. Run make in a project folder to build. Then programming can be accomplished either through the built in bootloader or through a debugger connection, both described below. For convenience there is a script that can install the gcc arm into gcc directory in motorlib. It is the default referenced location for the firmware build script. For example to setup and build:
+```console
+# May need these packages
+sudo apt-get install -y wget xz-utils dfu-util make
+
+git clone --recurse-submodules https://github.com/unhuman-io/obot-controller.git
+cd obot-controller
+git checkout --recurse-submodules develop
+./motorlib/scripts/install_gcc.sh
+cd obot_g474 
+make -j C_DEFS=-DR4 CONFIG=motor_aksim PARAM=motor_test PARAM_OVERRIDE=param/j30.h
+# loading, also described below
+./build/motor_aksim/load_motor_aksim.sh -S SERIAL_NUMBER
+```
 
 ## Motorlib
 Motorlib the core of the firmware. It is described the motorlib readme file.

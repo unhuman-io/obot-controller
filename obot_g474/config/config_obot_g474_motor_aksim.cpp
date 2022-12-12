@@ -51,6 +51,15 @@ namespace config {
     //EncoderBase output_encoder;
 };
 
+#define SPI1_REINIT_CALLBACK
+void spi1_reinit_callback() {
+    SPI1->CR1=0;
+    SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
+    // ORDER DEPENDANCE SPE set last
+    SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
+    config::spi1_dma.reinit();
+}
+
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 namespace config {
@@ -58,6 +67,7 @@ namespace config {
 };
 
 void config_init() {
+    config::output_encoder.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
     System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
     System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));
@@ -66,6 +76,9 @@ void config_init() {
     System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
     System::api.add_api_variable("mtemp", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
+    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
+    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
+    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
 }
 
 FrequencyLimiter temp_rate_motor = {10};

@@ -85,6 +85,17 @@ FrequencyLimiter temp_rate_motor = {10};
 void config_maintenance() {
     if(temp_rate_motor.run()) {
         config::motor_temperature.read();
+        if (config::motor_temperature.get_temperature() > 100) {
+            config::main_loop.status_.error.motor_temperature = true;
+        }
+    }
+    if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
+        config::motor_encoder.diag_warn_count_ > 10000) {
+            config::main_loop.status_.error.motor_encoder = true;
+    }
+    if(config::output_encoder.crc_err_count_ > 100 || config::output_encoder.diag_err_count_ > 100 ||
+        config::output_encoder.diag_warn_count_ > 10000) {
+            config::main_loop.status_.error.output_encoder = true;
     }
 
 }

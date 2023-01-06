@@ -36,22 +36,28 @@ struct InitCode {
       SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
       SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
-      SPI1->CR1 = SPI_CR1_MSTR | (6 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/128 qia128
-      GPIO_SETH(B, 10, GPIO::OUTPUT, GPIO_SPEED::MEDIUM, 0);
       DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
       DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
 
       // uart
-      RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
-      MASK_SET(RCC->CCIPR, RCC_CCIPR_LPUART1SEL, 1); // sysclk: 
-      LPUART1->BRR = 256*CPU_FREQUENCY_HZ/320000;
-      LPUART1->CR3 = 2 << USART_CR3_RXFTCFG_Pos; // 4 bytes fifo threshold
-      LPUART1->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
-      GPIO_SETL(C, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
-      GPIO_SETL(C, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
+    //   RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
+    //   MASK_SET(RCC->CCIPR, RCC_CCIPR_LPUART1SEL, 1); // sysclk: 
+    //   LPUART1->BRR = 256*CPU_FREQUENCY_HZ/320000;
+    //   LPUART1->CR3 = 2 << USART_CR3_RXFTCFG_Pos; // 4 bytes fifo threshold
+    //   LPUART1->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
+    //   GPIO_SETL(C, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
+    //   GPIO_SETL(C, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
 
+        // uart5
+        RCC->APB1ENR1 |= RCC_APB1ENR1_UART5EN;
+        MASK_SET(RCC->CCIPR, RCC_CCIPR_UART5SEL, 1); // sysclk: 
+        UART5->BRR = 256*CPU_FREQUENCY_HZ/320000;
+        UART5->CR3 = 2 << USART_CR3_RXFTCFG_Pos; // 4 bytes fifo threshold
+        UART5->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
+        GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);
+        GPIO_SETL(D, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);
       // gpio out
       GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
       // gpio in
@@ -73,7 +79,8 @@ namespace config {
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
     OutputEncoder output_encoder(spi1_dma);
     //EncoderBase output_encoder;
-    QIA128_UART torque_sensor(*LPUART1);
+    //QIA128_UART torque_sensor(*LPUART1);
+    QIA128_UART torque_sensor(*UART5);
 };
 
 #define SPI1_REINIT_CALLBACK
@@ -118,7 +125,6 @@ void config_init() {
 
 FrequencyLimiter temp_rate_motor = {10};
 void config_maintenance() {
-    // static char i = 0;
     if(temp_rate_motor.run()) {
         config::motor_temperature.read();
         if (config::motor_temperature.get_temperature() > 100) {

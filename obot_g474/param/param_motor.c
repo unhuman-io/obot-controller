@@ -1,6 +1,3 @@
-    .fast_loop_param.adc1_offset = 1980,
-    .fast_loop_param.adc2_offset = 1980,
-    .fast_loop_param.adc3_offset = 1980,
     .fast_loop_param.adc1_gain = -3.3/4096/(.001*10),  // A/count
     .fast_loop_param.adc2_gain = -3.3/4096/(.001*10),
     .fast_loop_param.adc3_gain = -3.3/4096/(.001*10),

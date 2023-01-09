@@ -39,7 +39,7 @@ namespace config {
     OutputEncoder output_encoder;
 };
 
-#include "config_obot_g474_motor.cpp"
+#include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
     System::api.add_api_variable("spi", new APICallback([](){ return config::spi_debug.read(); }, 

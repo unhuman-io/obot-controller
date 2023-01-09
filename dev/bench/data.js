@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1673302936537,
+  "lastUpdate": 1673303436377,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -16638,6 +16638,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 797.091001611,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 102740,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 18880,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 98128,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 23456,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 58712,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 1195,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 14927,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5b70eb459c8f380c2a128d6e63bb4b79bc6b40fe",
+          "message": "Merge pull request #75 from unhuman-io/feature/config\n\nmove all configs to motorlib",
+          "timestamp": "2023-01-09T14:27:48-08:00",
+          "tree_id": "af1175c479bd5512231d03b2511148e4167f1ac5",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/5b70eb459c8f380c2a128d6e63bb4b79bc6b40fe"
+        },
+        "date": 1673303433262,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 664.649,
+            "unit": "cycles",
+            "extra": "665 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.66,
+            "unit": "cycles",
+            "extra": "3407 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 5036.68,
+            "unit": "cycles",
+            "extra": "7986 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17020 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 798.868568221,
             "unit": "Hz",
             "extra": "300 times"
           },

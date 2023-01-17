@@ -50,10 +50,10 @@ struct InitCode {
     //   GPIO_SETL(C, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
     //   GPIO_SETL(C, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
 
-        // uart5
+        //uart5
         RCC->APB1ENR1 |= RCC_APB1ENR1_UART5EN;
         MASK_SET(RCC->CCIPR, RCC_CCIPR_UART5SEL, 1); // sysclk: 
-        UART5->BRR = 256*CPU_FREQUENCY_HZ/320000;
+        UART5->BRR = CPU_FREQUENCY_HZ/320000;
         UART5->CR3 = 2 << USART_CR3_RXFTCFG_Pos; // 4 bytes fifo threshold
         UART5->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
         GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);
@@ -121,6 +121,7 @@ void config_init() {
     System::api.add_api_variable("tcrc_error", new const APIUint32(&config::torque_sensor.crc_error_));
     System::api.add_api_variable("tcrc_calc", new const APIUint8(&config::torque_sensor.crc_calc_));
     System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
+    System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
 }
 
 FrequencyLimiter temp_rate_motor = {10};

@@ -5,6 +5,7 @@
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/temperature_sensor.h"
+#include "../../motorlib/peripheral/stm32g4/pin_config.h"
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = Aksim2Encoder<18>;
@@ -32,6 +33,11 @@ struct InitCode {
       DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
+
+      // gpio out
+      GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
+      // gpio in
+      GPIO_SETL(A, 2, GPIO::INPUT, GPIO_SPEED::VERY_HIGH, 0);
     }
 };
 

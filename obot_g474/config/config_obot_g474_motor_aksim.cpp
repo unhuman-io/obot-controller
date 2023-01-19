@@ -5,13 +5,20 @@
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/temperature_sensor.h"
+//#include "../../motorlib/qia128.h"
+#include "../../motorlib/peripheral/stm32g4/qia128_uart.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+//#include "../../motorlib/sensor_multiplex.h"
 
-using TorqueSensor = TorqueSensorBase;
+using TorqueSensor = QIA128_UART; 
+//using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = Aksim2Encoder<18>;
 //using MotorEncoder = EncoderBase;
 using OutputEncoder = Aksim2Encoder<18>;
 //using OutputEncoder = EncoderBase;
+
+//using TorqueSensor = TorqueSensorMultiplex<QIA128, Aksim2Encoder<18>>;
+//using OutputEncoder = TorqueSensor::SecondarySensor;
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -34,6 +41,23 @@ struct InitCode {
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
 
+      // uart
+    //   RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
+    //   MASK_SET(RCC->CCIPR, RCC_CCIPR_LPUART1SEL, 1); // sysclk: 
+    //   LPUART1->BRR = 256*CPU_FREQUENCY_HZ/320000;
+    //   LPUART1->CR3 = 2 << USART_CR3_RXFTCFG_Pos; // 4 bytes fifo threshold
+    //   LPUART1->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
+    //   GPIO_SETL(C, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
+    //   GPIO_SETL(C, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
+
+        //uart5
+        RCC->APB1ENR1 |= RCC_APB1ENR1_UART5EN;
+        MASK_SET(RCC->CCIPR, RCC_CCIPR_UART5SEL, 1); // sysclk: 
+        UART5->BRR = CPU_FREQUENCY_HZ/320000;
+        UART5->CR3 = 2 << USART_CR3_RXFTCFG_Pos; // 4 bytes fifo threshold
+        UART5->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
+        GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);
+        GPIO_SETL(D, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);
       // gpio out
       GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
       // gpio in
@@ -50,11 +74,13 @@ namespace config {
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     MotorEncoder motor_encoder(spi3_dma);
     //EncoderBase motor_encoder;
-    TorqueSensor torque_sensor;
+    
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
     OutputEncoder output_encoder(spi1_dma);
     //EncoderBase output_encoder;
+    //QIA128_UART torque_sensor(*LPUART1);
+    QIA128_UART torque_sensor(*UART5);
 };
 
 #define SPI1_REINIT_CALLBACK
@@ -85,6 +111,17 @@ void config_init() {
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
     System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
+    System::api.add_api_variable("brr", new APIUint32(&LPUART1->BRR));
+    System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
+    System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));
+    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
+    System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
+    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor.read_error_));
+    System::api.add_api_variable("tread_len", new const APIUint32(&config::torque_sensor.read_len_));
+    System::api.add_api_variable("tcrc_error", new const APIUint32(&config::torque_sensor.crc_error_));
+    System::api.add_api_variable("tcrc_calc", new const APIUint8(&config::torque_sensor.crc_calc_));
+    System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
+    System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
 }
 
 FrequencyLimiter temp_rate_motor = {10};

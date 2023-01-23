@@ -17,6 +17,9 @@ typedef USB_OTG USB1;
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
 #include "../motorlib/controller/state_controller.h"
+#include "../motorlib/driver.h"
+
+using Driver = DriverBase;
 typedef TorqueSensorBase TorqueSensor;
 typedef PWM_EN PWM;
 typedef EncoderBase OutputEncoder;
@@ -52,6 +55,7 @@ static struct {
     InitCode init_code;
     int32_t pwm_frequency = (double) CPU_FREQUENCY_HZ / (pwm_period);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_period);
+    Driver driver;
     GPIO enable = {*GPIOC, 14, GPIO::OUTPUT};
     PhonyEncoder motor_encoder = {100};
     QEPEncoder output_encoder = {*TIM2};
@@ -71,7 +75,7 @@ static struct {
     ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
     VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
     StateController state_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, state_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, state_controller, System::communication_, led, output_encoder, torque_sensor, driver, param->main_loop_param};
 } config_items;
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};

@@ -19,6 +19,9 @@
 #include "../motorlib/controller/impedance_controller.h"
 #include "../motorlib/controller/velocity_controller.h"
 #include "../motorlib/controller/state_controller.h"
+#include "../motorlib/driver.h"
+
+using Driver = DriverBase;
 typedef TorqueSensorBase TorqueSensor;
 typedef HRPWM PWM;
 typedef EncoderBase OutputEncoder;
@@ -148,6 +151,7 @@ static struct {
     InitCode init_code;
     uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
+    Driver driver;
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
     SPIDMA spi_dma{*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
@@ -172,7 +176,7 @@ static struct {
     ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
     VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
     StateController state_controller = {(float) (1.0/main_loop_frequency)};
-    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, state_controller, System::communication_, led, output_encoder, torque_sensor, param->main_loop_param};
+    MainLoop main_loop = {fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, state_controller, System::communication_, led, output_encoder, torque_sensor, driver, param->main_loop_param};
 } config_items;
 
 Actuator System::actuator_ = {config_items.fast_loop, config_items.main_loop, param->startup_param};

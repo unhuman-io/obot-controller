@@ -1,9 +1,10 @@
-#include "param_obot_g474.h"
+#include "param_obot_g474_motor40.h"
 #include "math.h"
 
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
+#include "param_motor40.c"
     .fast_loop_param.foc_param.pi_d.kp=1,
     .fast_loop_param.foc_param.pi_d.ki=0,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd
@@ -18,16 +19,10 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.num_poles = 0,
     .fast_loop_param.cogging.gain = 1,
     .startup_param.startup_mode = OPEN,
-    .fast_loop_param.adc1_offset = 1980,
-    .fast_loop_param.adc2_offset = 1980,
-    .fast_loop_param.adc3_offset = 1980,
-    .fast_loop_param.adc1_gain = 3.3/4096/(.003*3),  // A/count
-    .fast_loop_param.adc2_gain = 3.3/4096/(.003*3),
-    .fast_loop_param.adc3_gain = 3.3/4096/(.003*3), 
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
-    .fast_loop_param.motor_encoder.cpr = 2048,
-    .fast_loop_param.motor_encoder.rollover = pow(2,23),
+    .fast_loop_param.motor_encoder.cpr = pow(2,24),
+    .fast_loop_param.motor_encoder.rollover = pow(2,23+6),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
     .fast_loop_param.motor_encoder.index_electrical_offset_pos = -22643,
     .main_loop_param.torque_sensor.gain = 1,
@@ -65,7 +60,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.safe_mode = DAMPED,
     .main_loop_param.vbus_min = 10,
     .main_loop_param.output_encoder.table = {
-#include "../../calibration/obot_g474/motor_enc/jtab.dat"
+//#include "../../calibration/obot_g474/motor_enc/jtab.dat"
     },
     .fast_loop_param.cogging.table = {
 //#include "cog.csv"
@@ -77,21 +72,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.phase_lock_current = .7,
     .startup_param.phase_lock_duration = 2,
     .startup_param.gear_ratio = 5.4,
-    .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
-    .drv_regs = {
-        (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
-        //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
-        (3<<11) | 0x3FF, // hs_reg      0x3CC, moderate drive current
-        //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive
-                                        // moderate drive current (.57,1.14A)
-        (4<<11) | 0x37F, // ls_reg      0x0CC, no cycle by cycle, 4000 ns tdrive
-                                        // moderate drive current (.57,1.14A)
-        (5<<11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time, 
-                                    //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
-        //(6<<11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
-        //(6<<11) | 0x280,
-        (6<<11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
-    },
+
+    .startup_param.motor_encoder_startup = ENCODER_ZERO,
     .name = "J1",
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES

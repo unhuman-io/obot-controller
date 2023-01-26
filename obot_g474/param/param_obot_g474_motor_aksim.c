@@ -34,6 +34,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.phase_lock_current = 5,
     .startup_param.phase_lock_duration = 2,
     .startup_param.gear_ratio = 81,
+    .startup_param.no_driver_enable = 1,
+    .startup_param.no_zero_current_sensors = 1,
     .main_loop_param.output_encoder.bias = -1.5767,
     .main_loop_param.encoder_limits.output_hard_max = 1.9,
     .main_loop_param.encoder_limits.output_hard_min = -1.9,
@@ -41,6 +43,10 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.encoder_limits.motor_controlled_min = -1.8*81,
     .main_loop_param.encoder_limits.motor_hard_max = 1.9*81,
     .main_loop_param.encoder_limits.motor_hard_min = -1.9*80,
+
+//    .main_loop_param.error_mask.all = ERROR_MASK_ALL,
+    .main_loop_param.error_mask.driver_not_enabled = 1,
+
     .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT_WITH_MOTOR_CORRECTION,
     .startup_param.motor_encoder_bias = 0,
     .startup_param.output_encoder_rollover = M_PI,

@@ -19,6 +19,8 @@ jobs:
             config: motor_wheel
           - project: obot_g474
             config: osa14
+          - project: obot_g474
+            config: motor_40_osa14
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc
     steps:

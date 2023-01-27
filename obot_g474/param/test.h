@@ -12,7 +12,7 @@
 .fast_loop_param.phase_mode = 1, \
 .startup_param.phase_lock_current = -5, \
 .startup_param.motor_encoder_startup = ENCODER_ZERO, \
-.main_loop_param.disable_safe_mode = 1, \
+.main_loop_param.error_mask.all = ERROR_MASK_NONE, \
 .fast_loop_param.adc1_gain = -3.3/4096/(.0005*10), \
 .fast_loop_param.adc2_gain = -3.3/4096/(.0005*10), \
 .fast_loop_param.adc3_gain = -3.3/4096/(.0005*10),

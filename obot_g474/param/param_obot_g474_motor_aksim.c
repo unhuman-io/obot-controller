@@ -45,11 +45,14 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.encoder_limits.motor_hard_min = -1.9*80,
 
 //    .main_loop_param.error_mask.all = ERROR_MASK_ALL,
-    .main_loop_param.error_mask.driver_not_enabled = 1,
+    .main_loop_param.error_mask.all = ERROR_MASK_ALL & ~ERROR_MASK_MOTOR_TEMPERATURE & ~ERROR_MASK_OUTPUT_ENCODER & ~ERROR_MASK_MOTOR_ENCODER,
+    .main_loop_param.safe_mode_driver_disable = 1,
 
     .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT_WITH_MOTOR_CORRECTION,
     .startup_param.motor_encoder_bias = 0,
     .startup_param.output_encoder_rollover = M_PI,
+
+    .main_loop_param.no_latch_driver_fault = 1,
 
     .name = "A",
 #ifdef PARAM_OVERRIDES

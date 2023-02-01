@@ -43,6 +43,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.encoder_limits.motor_controlled_min = -1.8*81,
     .main_loop_param.encoder_limits.motor_hard_max = 1.9*81,
     .main_loop_param.encoder_limits.motor_hard_min = -1.9*80,
+    .fast_loop_param.beep_amplitude = 1,
+    .fast_loop_param.beep_frequency = 300,
 
 //    .main_loop_param.error_mask.all = ERROR_MASK_ALL,
     .main_loop_param.error_mask.all = ERROR_MASK_ALL & ~ERROR_MASK_MOTOR_TEMPERATURE & ~ERROR_MASK_OUTPUT_ENCODER & ~ERROR_MASK_MOTOR_ENCODER,

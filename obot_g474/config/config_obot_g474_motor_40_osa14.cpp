@@ -20,12 +20,12 @@ struct InitCode {
       SystemClock_Config();
       pin_config_obot_g474_motor_40();
 
-
-        // SPI1 ADS1235_2
-        DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
-        DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
-        SPI1->CR1 = SPI_CR1_CPHA | SPI_CR1_MSTR | (2 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/8 (ads1235 can do up to 52.6 MHz)
-        SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit  
+        //SPI3 PZ
+        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
+        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
+        SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16 spi mode 0
+        SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit   
+ 
     }
 };
 

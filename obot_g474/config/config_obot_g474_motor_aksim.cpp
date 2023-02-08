@@ -96,6 +96,7 @@ void spi1_reinit_callback() {
 
 namespace config {
     PT1000 motor_temperature(A1_DR);
+    MAX31875 ambient_temperature(i2c1, 7);
 };
 
 void config_init() {
@@ -107,7 +108,8 @@ void config_init() {
     System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
     System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
-    System::api.add_api_variable("mtemp", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
+    System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
+    System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.read(); }));
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
     System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
@@ -127,6 +129,7 @@ void config_init() {
 #define MOTOR_TEMPERATURE_INDEX 0
 #define BOARD_TEMPERATURE_INDEX 1
 #define BUS_VOLTAGE_INDEX       2
+#define AMBIENT_TEMPERATURE_INDEX   3
 
 FrequencyLimiter temp_rate_motor = {10};
 void config_maintenance() {
@@ -136,6 +139,8 @@ void config_maintenance() {
         if (config::motor_temperature.get_temperature() > 100) {
             config::main_loop.status_.error.motor_temperature = true;
         }
+        config::ambient_temperature.read();
+        round_robin_logger.log_data(AMBIENT_TEMPERATURE_INDEX, config::ambient_temperature.get_temperature());
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
         config::motor_encoder.diag_warn_count_ > 10000) {

@@ -37,6 +37,28 @@ jobs:
         path: |
           ${{ matrix.project }}/build/${{ matrix.config }}.elf
           ${{ matrix.project }}/build/${{ matrix.config }}.tgz
+    - name: rename
+      run: |
+        mv ${{ matrix.project }}/build/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
+        mv ${{ matrix.project }}/build/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
+    - name: releaser main
+      uses: pyTooling/Actions/releaser@main
+      if: contains(github.ref, 'develop')
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          ${{ matrix.project }}_${{ matrix.config }}.elf
+          ${{ matrix.project }}_${{ matrix.config }}.tgz
+        tag: develop
+    - name: releaser develop
+      uses: pyTooling/Actions/releaser@main
+      if: contains(github.ref, 'main')
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          ${{ matrix.project }}_${{ matrix.config }}.elf
+          ${{ matrix.project }}_${{ matrix.config }}.tgz
+        tag: main
   test:
     timeout-minutes: 10
     needs: [build]

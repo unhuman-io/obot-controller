@@ -49,6 +49,13 @@ or use the generated script
 > ./build/motor_enc/load_motor_enc.sh
 ```
 
+#### Prebuilt firmware
+Some examples of prebuilt firmware are included in the github releases. For example one can download a `.tgz` file from https://github.com/unhuman-io/obot-controller/releases/develop, then:
+```console
+tar xf motor_enc.tgz
+./motor_enc/load_motor_enc.sh
+```
+
 ### Parameters
 Various motor control parameters that may be specific to the application are placed in a separate flash block that can be reprogrammed independently of the main firmware. The format is the struct Param.
 

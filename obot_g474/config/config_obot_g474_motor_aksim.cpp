@@ -155,11 +155,8 @@ void config_maintenance() {
     }
     round_robin_logger.log_data(BOARD_TEMPERATURE_INDEX, config::board_temperature.get_temperature());
     round_robin_logger.log_data(BUS_VOLTAGE_INDEX, config::main_loop.status_.fast_loop.vbus);
-    static int32_t last_energy_uJ = 0;
-    int32_t current_energy = config::main_loop.status_.fast_loop.energy_uJ;
-    float bus_current = (current_energy - last_energy_uJ)/config::main_loop.status.fast_loop.vbus;
+    float bus_current = config::main_loop.status_.power/config::main_loop.status_.fast_loop.vbus;
     round_robin_logger.log_data(BUS_CURRENT_INDEX, bus_current);
-    last_energy_uJ = current_energy;
     round_robin_logger.log_data(MOTOR_POWER_INDEX, config::main_loop.status_.fast_loop.power);
 
 }

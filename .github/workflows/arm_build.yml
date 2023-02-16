@@ -22,7 +22,7 @@ jobs:
           - project: obot_g474
             config: motor_40_osa14
     runs-on: ubuntu-latest
-    container: leemagnusson/arm-gcc
+    container: leemagnusson/arm-gcc:gcc12
     steps:
     - uses: actions/checkout@master
       with:

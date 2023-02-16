@@ -10,6 +10,7 @@
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 //#include "../../motorlib/sensor_multiplex.h"
 
+#define END_TRIGGER_MOTOR_ENCODER
 using TorqueSensor = QIA128_UART; 
 //using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = Aksim2Encoder<18>;

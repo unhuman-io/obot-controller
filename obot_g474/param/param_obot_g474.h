@@ -6,7 +6,7 @@ typedef struct {
     FastLoopParam fast_loop_param;
     MainLoopParam main_loop_param;
     StartupParam startup_param;
-    uint16_t drv_regs[6];
+    uint16_t drv_regs[5];
 } Param;
 
 extern const Param * const param;

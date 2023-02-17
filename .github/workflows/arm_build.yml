@@ -21,6 +21,9 @@ jobs:
             config: osa14
           - project: obot_g474
             config: motor_40_osa14
+          - project: obot_g474
+            config: motor_aksim
+            build_other: C_DEFS=-DR3
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:gcc12
     steps:
@@ -29,7 +32,7 @@ jobs:
         fetch-depth: 0
         submodules: recursive
     - name: make ${{ matrix.project }} ${{ matrix.config }}
-      run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2 GCC_PATH=/gcc/bin
+      run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2 GCC_PATH=/gcc/bin ${{ matrix.build_other }}
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@main
       with:

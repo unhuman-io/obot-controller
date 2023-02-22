@@ -58,7 +58,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
 
     .name = "A",
 #ifdef PARAM_OVERRIDES
-    PARAM_OVERRIDES
+#include XSTR(PARAM_OVERRIDES)
 #endif
 };
 const volatile char * const name = param_store.name;

@@ -1,5 +1,7 @@
 #pragma once
 #include "../../motorlib/messages.h"
+#define XSTR(x) STR(x)
+#define STR(x) #x
 
 typedef struct {
     char name[64];    // name available through usb string

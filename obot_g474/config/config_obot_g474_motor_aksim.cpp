@@ -10,12 +10,23 @@
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 //#include "../../motorlib/sensor_multiplex.h"
 
+#ifndef MOTOR_ENCODER_BITS
+#define MOTOR_ENCODER_BITS 18
+#endif
+
+#ifndef OUTPUT_ENCODER_BITS
+#define OUTPUT_ENCODER_BITS 18
+#endif
+
+//#pragma message XSTR(MOTOR_ENCODER_BITS)
+//#pragma message XSTR(OUTPUT_ENCODER_BITS)
+
 #define END_TRIGGER_MOTOR_ENCODER
 using TorqueSensor = QIA128_UART; 
 //using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = Aksim2Encoder<18>;
+using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
 //using MotorEncoder = EncoderBase;
-using OutputEncoder = Aksim2Encoder<18>;
+using OutputEncoder = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
 //using OutputEncoder = EncoderBase;
 
 //using TorqueSensor = TorqueSensorMultiplex<QIA128, Aksim2Encoder<18>>;
@@ -109,6 +120,7 @@ void config_init() {
     System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
     System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
+    System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
     System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.read(); }));
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));

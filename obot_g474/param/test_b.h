@@ -1,4 +1,4 @@
-.name = "test_b",
+.name = "right_hip_y",
 .main_loop_param.output_encoder.bias = 3.14,
 .main_loop_param.encoder_limits.output_hard_max = 1,
 .main_loop_param.encoder_limits.output_hard_min = -1,
@@ -12,6 +12,7 @@
 .main_loop_param.encoder_limits.motor_controlled_min = 0,
 .main_loop_param.encoder_limits.motor_hard_max = 0,
 .main_loop_param.encoder_limits.motor_hard_min = 0,
+.main_loop_param.state_controller_param.command_max = 10,
 .startup_param.do_phase_lock = 0,
 .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
 .fast_loop_param.motor_encoder.index_electrical_offset_pos = 21000,

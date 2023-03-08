@@ -158,11 +158,11 @@ void config_maintenance() {
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_INDEX, config::ambient_temperature.get_temperature());
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
-        config::motor_encoder.diag_warn_count_ > 10000) {
+        config::motor_encoder.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.motor_encoder = true;
     }
     if(config::output_encoder.crc_err_count_ > 100 || config::output_encoder.diag_err_count_ > 100 ||
-        config::output_encoder.diag_warn_count_ > 10000) {
+        config::output_encoder.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
     round_robin_logger.log_data(BOARD_TEMPERATURE_INDEX, config::board_temperature.get_temperature());

@@ -38,18 +38,16 @@ void pin_config_obot_g474_h2() {
         MASK_SET(FLASH->ACR, FLASH_ACR_LATENCY, 4);
  
         // SPI1
-        GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0);    // SPI1 CS1
-        GPIO_SETL(A, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 5);   // SPI1 CLK
-        GPIO_SETL(A, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 5);   // SPI1 MISO
-        GPIO_SETL(A, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 5);   // SPI1 MOSI
-        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD6, 1); // MISO pull up
+        // GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0);    // SPI1 CS1
+        // GPIO_SETL(A, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 5);   // SPI1 CLK
+        // GPIO_SETL(A, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 5);   // SPI1 MISO
+        // GPIO_SETL(A, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 5);   // SPI1 MOSI
+        // MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD6, 1); // MISO pull up
 
         GPIO_SETH(B, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13); // hrtim1 chd1
         GPIO_SETH(B, 15, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13); // hrtim1 chd2 
-        GPIO_SETL(C, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13);  // hrtim1 chf1
-        GPIO_SETL(C, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13);  // hrtim1 chf2
-        GPIO_SETH(C, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 3);   // hrtim1 che1
-        GPIO_SETH(C, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 3);   // hrtim1 che2
+        GPIO_SETH(A, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13);  // hrtim1 cha1
+        GPIO_SETH(A, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13);  // hrtim1 cha2
 
         GPIO_SETH(A, 11, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);         // usb dm
         GPIO_SETH(A, 12, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);         // usb dp
@@ -63,22 +61,23 @@ void pin_config_obot_g474_h2() {
         GPIO_SETL(B, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH1 green
         GPIO_SETL(B, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH2 red
         GPIO_SETH(B, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH4 blue
-        TIM4->CCMR1 = TIM_CCMR1_OC1PE | 7 << TIM_CCMR1_OC1M_Pos |   // preload and pwm mode 3
+        TIM4->CCMR1 = TIM_CCMR1_OC1PE | 7 << TIM_CCMR1_OC1M_Pos |   // preload and pwm mode 2
                         TIM_CCMR1_OC2PE | 7 << TIM_CCMR1_OC2M_Pos;
         TIM4->CCMR2 = TIM_CCMR2_OC4PE | 7 << TIM_CCMR2_OC4M_Pos;
         TIM4->CCER = TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC4E; // enable
         TIM4->CR1 = TIM_CR1_CEN;
      
         // spi 3
-        GPIO_SETH(C, 10, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 CLK
-        GPIO_SETH(C, 11, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 HIDO
-        GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 HODI 
+        GPIO_SETH(A,15, GPIO_MODE::OUTPUT,  GPIO_SPEED::MEDIUM, 0);
+        GPIO_SETL(B, 3, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 6);   // SPI3 CLK
+        GPIO_SETL(B, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 6);   // SPI3 MISO
+        GPIO_SETL(B, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 6);   // SPI3 MOSI 
 
-        GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // spi3 cs
+        //GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // spi3 cs
 
-        GPIO_SETH(C, 13, 1, 0, 0);  // drv enable
-        GPIO_SETH(C, 14, GPIO_MODE::INPUT, GPIO_SPEED::LOW, 0);  // drv fault
-        MASK_SET(GPIOC->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
+        // GPIO_SETH(C, 13, 1, 0, 0);  // drv enable
+        // GPIO_SETH(C, 14, GPIO_MODE::INPUT, GPIO_SPEED::LOW, 0);  // drv fault
+        // MASK_SET(GPIOC->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
 
         // TIM1 main loop interrupt        
         static_assert(CPU_FREQUENCY_HZ / config::main_loop_frequency < 65536, "Main loop frequency too low");
@@ -104,7 +103,7 @@ void pin_config_obot_g474_h2() {
         RTC->SCR = RTC_SCR_CWUTF;
 
         // ADC
-        VREFBUF->CSR = VREFBUF_CSR_ENVR | 2 << VREFBUF_CSR_VRS_Pos;
+        //VREFBUF->CSR = VREFBUF_CSR_ENVR | 2 << VREFBUF_CSR_VRS_Pos;
         // ADC1
         GPIO_SETL(C, 0, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A1
         GPIO_SETL(C, 1, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A2
@@ -156,12 +155,6 @@ void pin_config_obot_g474_h2() {
         NVIC_SetPriority(USB_LP_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));
         NVIC_EnableIRQ(USB_LP_IRQn);
 
-
-        // //SPI3 PZ
-        // DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
-        // DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
-        // SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16 spi mode 0
-        // SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit
 
         // // I2C1
         // GPIO_SETH(A, 15, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 scl

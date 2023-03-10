@@ -3,6 +3,7 @@
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/ma782_encoder.h"
+#include "../../motorlib/peripheral/stm32g4/pin_config.h"
 
 using TorqueSensor = TorqueSensorBase;
 //using MotorEncoder = MA782Encoder;
@@ -15,8 +16,8 @@ void pin_config_obot_g474_h2();
 struct InitCode {
     InitCode() {
       SystemClock_Config();
-      pin_config_obot_g474_h2();
 
+      pin_config_obot_g474_h2();
       //SPI3 MA782
       SPI3->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
       // ORDER DEPENDANCE SPE set last
@@ -26,8 +27,8 @@ struct InitCode {
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 4000;    
-    const uint32_t pwm_frequency = 15000;
+    const uint32_t main_loop_frequency = 10000;    
+    const uint32_t pwm_frequency = 20000;
     InitCode init_code;
 
     GPIO motor_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
@@ -65,6 +66,8 @@ volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 #include "pin_config_obot_g474_h2.h"
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
 #include "../../motorlib/peripheral/stm32g4/max31875.h"
+
+HardwareBrakeBase MainLoop::no_brake_;
 
 namespace config {
     static_assert(((double) CPU_FREQUENCY_HZ * 8 / 2) / pwm_frequency < 65535);    // check pwm frequency
@@ -185,12 +188,9 @@ void system_maintenance() {
         T = config::temp_sensor.read();
         v3v3 =  *((uint16_t *) (0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
         if (T > 100) {
-            config::main_loop.status_.error.microcontroller_temperature = 1;
+           // config::main_loop.status_.error.microcontroller_temperature = 1;
         }
-        config::board_temperature.read();
-        if (config::board_temperature.get_temperature() > 100) {
-            config::main_loop.status_.error.board_temperature = 1;
-        }
+
     }
     if (!(GPIOC->IDR & 1<<14)) {
         driver_fault = true;

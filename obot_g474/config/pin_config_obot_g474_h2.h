@@ -10,9 +10,9 @@
 #define V_REF_DR ADC1->JDR2
 #define V_TEMP_DR ADC1->JDR1
 
-#define TIM_R TIM4->CCR1
-#define TIM_G TIM4->CCR2
-#define TIM_B TIM4->CCR3
+#define TIM_G TIM4->CCR1
+#define TIM_R TIM4->CCR2
+#define TIM_B TIM4->CCR4
 
 
 void pin_config_obot_g474_h2() {
@@ -60,13 +60,13 @@ void pin_config_obot_g474_h2() {
         EXTI->IMR1 = EXTI_IMR1_IM10;                                     // interrupt unmasked, but not enabled in NVIQ
 
         // LED
-        GPIO_SETL(B, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH1
-        GPIO_SETL(B, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH2
-        GPIO_SETH(B, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH3
-        TIM4->CCMR1 = TIM_CCMR1_OC1PE | 6 << TIM_CCMR1_OC1M_Pos |   // preload and pwm mode 1
-                        TIM_CCMR1_OC2PE | 6 << TIM_CCMR1_OC2M_Pos;
-        TIM4->CCMR2 = TIM_CCMR2_OC3PE | 6 << TIM_CCMR2_OC3M_Pos;
-        TIM4->CCER = TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E; // enable
+        GPIO_SETL(B, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH1 green
+        GPIO_SETL(B, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH2 red
+        GPIO_SETH(B, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 2);      // TIM4 CH4 blue
+        TIM4->CCMR1 = TIM_CCMR1_OC1PE | 7 << TIM_CCMR1_OC1M_Pos |   // preload and pwm mode 3
+                        TIM_CCMR1_OC2PE | 7 << TIM_CCMR1_OC2M_Pos;
+        TIM4->CCMR2 = TIM_CCMR2_OC4PE | 7 << TIM_CCMR2_OC4M_Pos;
+        TIM4->CCER = TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC4E; // enable
         TIM4->CR1 = TIM_CR1_CEN;
      
         // spi 3
@@ -104,6 +104,7 @@ void pin_config_obot_g474_h2() {
         RTC->SCR = RTC_SCR_CWUTF;
 
         // ADC
+        VREFBUF->CSR = VREFBUF_CSR_ENVR | 2 << VREFBUF_CSR_VRS_Pos;
         // ADC1
         GPIO_SETL(C, 0, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A1
         GPIO_SETL(C, 1, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A2
@@ -156,20 +157,20 @@ void pin_config_obot_g474_h2() {
         NVIC_EnableIRQ(USB_LP_IRQn);
 
 
-        //SPI3 PZ
-        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
-        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
-        SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16 spi mode 0
-        SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit
+        // //SPI3 PZ
+        // DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
+        // DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
+        // SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16 spi mode 0
+        // SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit
 
-        // I2C1
-        GPIO_SETH(A, 15, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 scl
-        GPIO_SETH(B, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 sda
-        MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD15, GPIO_PULL::UP);
-        MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD9, GPIO_PULL::UP);
-        MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT15, 1);       // open drain
-        MASK_SET(GPIOB->OTYPER, GPIO_OTYPER_OT9, 1);
-        SYSCFG->CFGR1 |= SYSCFG_CFGR1_I2C1_FMP | SYSCFG_CFGR1_I2C2_FMP | SYSCFG_CFGR1_I2C_PB9_FMP;  // fast mode plus (1 MHz)
+        // // I2C1
+        // GPIO_SETH(A, 15, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 scl
+        // GPIO_SETH(B, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 4);   // i2c1 sda
+        // MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD15, GPIO_PULL::UP);
+        // MASK_SET(GPIOB->PUPDR, GPIO_PUPDR_PUPD9, GPIO_PULL::UP);
+        // MASK_SET(GPIOA->OTYPER, GPIO_OTYPER_OT15, 1);       // open drain
+        // MASK_SET(GPIOB->OTYPER, GPIO_OTYPER_OT9, 1);
+        // SYSCFG->CFGR1 |= SYSCFG_CFGR1_I2C1_FMP | SYSCFG_CFGR1_I2C2_FMP | SYSCFG_CFGR1_I2C_PB9_FMP;  // fast mode plus (1 MHz)
 }
 
 extern "C" void RTC_WKUP_IRQHandler() {

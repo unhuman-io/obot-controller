@@ -19,10 +19,10 @@ struct InitCode
         SystemClock_Config();
 
         pin_config_obot_g474_h2();
-        // SPI3 MA782
-        SPI3->CR2 = (15 << SPI_CR2_DS_Pos); // 16 bit
+        // SPI1 MA782
+        SPI1->CR2 = (15 << SPI_CR2_DS_Pos); // 16 bit
         // ORDER DEPENDANCE SPE set last
-        SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE; // baud = clock/16
+        SPI1->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE; // baud = clock/16
     }
 };
 
@@ -32,9 +32,9 @@ namespace config
     const uint32_t pwm_frequency = 100000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
+    GPIO motor_encoder_cs = {*GPIOA, 4, GPIO::OUTPUT};
 
-    MA782Encoder motor_encoder(*SPI3, motor_encoder_cs);
+    MA782Encoder motor_encoder(*SPI1, motor_encoder_cs);
 
     TorqueSensor torque_sensor;
 
@@ -250,6 +250,15 @@ void finish_sleep()
 
 void config_init()
 {
+    System::api.add_api_variable("mbct", new APICallbackUint32([](){ return config::motor_encoder.get_bct(); },
+                    [](uint32_t u){ config::motor_encoder.set_bct(u); }));
+    System::api.add_api_variable("met", new APICallbackUint32([](){ return config::motor_encoder.get_et(); },
+                    [](uint32_t u){ config::motor_encoder.set_et(u); }));
+    System::api.add_api_variable("mmgt", new APICallbackUint32([](){ return config::motor_encoder.get_magnetic_field_strength(); },
+                    [](uint32_t u){ config::motor_encoder.set_mgt(u); }));
+    System::api.add_api_variable("mfilt", new APICallbackUint32([](){ return config::motor_encoder.get_filt(); }, 
+                [](uint32_t u){ config::motor_encoder.set_filt(u); }));
+
 
     // System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));
     // System::api.add_api_variable("torque2", new const APIFloat(&config::torque_sensor.torque2_));

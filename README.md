@@ -93,3 +93,7 @@ Software downloads as of 11/2020:
   - Get the Cortex Debug extension in Visual Studio Code, View menu&rarr;Extensions
 - [SEGGER J-Link Software](https://www.segger.com/downloads/jlink/#J-LinkSoftwareAndDocumentationPack)
 - [Host PC software](https://raw.githubusercontent.com/unhuman-io/obot/master/install-obot.sh)
+
+## Hardware
+
+There is an open source motor controller design [here](https://a360.co/3vo8SC4)

@@ -1,7 +1,7 @@
-# [submodule "motorlib"]
-# 	path = motorlib
-# 	url = ../motorlib.git
-# [submodule "calibration"]
-# 	path = calibration
-# 	url = ../calibration
-# 	shallow = true
+[submodule "motorlib"]
+  path = motorlib
+  url = ../motorlib
+[submodule "calibration"]
+  path = calibration
+  url = ../calibration
+  shallow = true

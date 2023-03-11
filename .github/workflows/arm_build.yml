@@ -19,35 +19,56 @@ jobs:
             config: motor_wheel
           - project: obot_g474
             config: osa14
+          - project: obot_g474
+            config: motor_40_osa14
+          - project: obot_g474
+            config: motor_aksim
+            build_other: C_DEFS=-DR3
     runs-on: ubuntu-latest
+    container: leemagnusson/arm-gcc:gcc12
     steps:
-    - name: install dfu-suffix
-      run: sudo apt-get install -y dfu-util
     - uses: actions/checkout@master
       with:
         fetch-depth: 0
         submodules: recursive
-    - name: arm-none-eabi-gcc
-      timeout-minutes: 5
-      uses: fiam/arm-none-eabi-gcc@master
-      with:
-        release: '10-2020-q4'
     - name: make ${{ matrix.project }} ${{ matrix.config }}
-      run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2
+      run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2 GCC_PATH=/gcc/bin ${{ matrix.build_other }}
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@main
       with:
         name: ${{ matrix.project }} ${{ matrix.config }}
         path: |
           ${{ matrix.project }}/build/${{ matrix.config }}.elf
           ${{ matrix.project }}/build/${{ matrix.config }}.tgz
+    - name: rename
+      run: |
+        mv ${{ matrix.project }}/build/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
+        mv ${{ matrix.project }}/build/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
+    - name: releaser main
+      uses: pyTooling/Actions/releaser@main
+      if: contains(github.ref, 'develop')
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          ${{ matrix.project }}_${{ matrix.config }}.elf
+          ${{ matrix.project }}_${{ matrix.config }}.tgz
+        tag: develop
+    - name: releaser develop
+      uses: pyTooling/Actions/releaser@main
+      if: contains(github.ref, 'main')
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          ${{ matrix.project }}_${{ matrix.config }}.elf
+          ${{ matrix.project }}_${{ matrix.config }}.tgz
+        tag: main
   test:
     timeout-minutes: 10
     needs: [build]
     runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/download-artifact@v2
+    - uses: actions/checkout@main
+    - uses: actions/download-artifact@main
       with:
         name: obot_g474 motor_enc
     - name: test

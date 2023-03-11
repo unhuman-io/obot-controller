@@ -49,7 +49,7 @@ namespace config {
     MA732Encoder output_encoder(*SPI3, output_encoder_cs);
 };
 
-#include "config_obot_g474_osa.cpp"
+#include "../../motorlib/boards/config_obot_g474_osa.cpp"
 
 void config_init() {
     System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder.get_bct(); },

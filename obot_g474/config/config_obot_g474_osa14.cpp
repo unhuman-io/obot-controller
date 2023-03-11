@@ -41,7 +41,7 @@ namespace config {
     OutputEncoder &output_encoder = torque_sensor.secondary();
 };
 
-#include "config_obot_g474_osa.cpp"
+#include "../../motorlib/boards/config_obot_g474_osa.cpp"
 
 void config_init() {
     System::api.add_api_variable("mbct", new APICallbackUint32([](){ return config::motor_encoder.get_bct(); },

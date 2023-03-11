@@ -32,7 +32,7 @@ namespace config {
     QEPEncoder output_encoder(*TIM2);
 };
 
-#include "config_obot_g474_motor.cpp"
+#include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
     System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));

@@ -56,14 +56,14 @@ Similarly, when doing `pull` or `checkout` it can be handy to operate on all sub
 ```
 
 ## Build and Deploy
-Currently the code is written to support STM32 micros and therefore the build-chain utilizes `gcc`, since it is supported by STMCubeMX. On successful installation of the compiler it should appear on your path and will have a prefix of `arm-none-eabi`, so for example `arm-none-eabi-gcc`.
-
 Compilation steps are managed with `make` and the rules can be executed from the project folder. As an example, the firmware for a hall-based motor instance can be compiled as follows:
 ```console
-obot-controller/obot_g474> make -j C_DEFS=-DR4 CONFIG=motor_hall
+obot-controller/obot_g474> make -j CONFIG=motor_hall
 ```
+The `make` files in this repo assume `gcc` tools are installed at `obot-controller/motorlib/gcc/bin`. A different installation location can be used by passing the appropriate path with `make GCC_PATH=`.
 
-For this example the compiled artifacts will be placed into the `obot-controller/obot_g474/build/motor_hall` directory. Inside the directory will be the firmware, parameter blob, and two shell helper scripts for deploying the firmware.
+
+On successful compilation, the artifacts will be placed into the `obot-controller/obot_g474/build/motor_hall` directory. Inside the directory will be the firmware, parameter blob, and two shell helper scripts for deploying the firmware.
 
 Deploying the firmware to the device is then as simple as executing the appropriate shell script:
 

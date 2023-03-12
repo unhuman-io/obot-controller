@@ -132,6 +132,6 @@ Software downloads as of 11/2020:
 - [SEGGER J-Link Software](https://www.segger.com/downloads/jlink/#J-LinkSoftwareAndDocumentationPack)
 - [Host PC software](https://raw.githubusercontent.com/unhuman-io/obot/master/install-obot.sh)
 
-## Hardware
+# Hardware
 
-There is an open source motor controller design [here](https://a360.co/3vo8SC4)
+The nominal motor-controller design is also open source and available [here](https://a360.co/3vo8SC4) and corresponds to the **obot_g474** variant. Further description of the board and some useful pin-out information is found in this [document](https://docs.google.com/document/d/1p9xV1iErwQMZhck7lHwQfRsM6e2xIIJ8QxJ62v68LWk/edit).

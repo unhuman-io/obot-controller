@@ -19,6 +19,10 @@ ifeq ($(CONFIG), osa14)
 override C_DEFS += -DSCOPE_DEBUG
 endif
 
+ifeq (&(CONFIG), h2)
+override C_DEFS += -DUSE_HSI
+endif
+
 TARGET_MCU := stm32g474
 
 # for submake

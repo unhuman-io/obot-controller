@@ -213,9 +213,8 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-#ifdef USE_HSI
   HAL_Init();
-#endif
+
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};

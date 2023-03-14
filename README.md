@@ -54,6 +54,7 @@ Similarly, when doing `pull` or `checkout` it can be handy to operate on all sub
 > git pull --recurse-submodules
 > git checkout --recurse-submodules
 ```
+This [guide](https://codeyarns.com/tech/2016-02-10-how-to-work-with-git-submodules.html) has a nice write-up of the details when working with a repo that has submodules.
 
 ## Build and Deploy
 Compilation steps are managed with `make` and the rules can be executed from the project folder. As an example, the firmware for a hall-based motor instance can be compiled as follows:

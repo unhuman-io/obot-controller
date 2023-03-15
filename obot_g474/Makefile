@@ -19,7 +19,7 @@ ifeq ($(CONFIG), osa14)
 override C_DEFS += -DSCOPE_DEBUG
 endif
 
-ifeq (&(CONFIG), h2)
+ifeq ($(CONFIG), h2)
 override C_DEFS += -DUSE_HSI
 endif
 

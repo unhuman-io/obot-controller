@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1678720855264,
+  "lastUpdate": 1678900804033,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -24386,6 +24386,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 784.280038656,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 115836,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 18948,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 111208,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 23536,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 78456,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2603,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 17850,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ernesto.urdaneta@figure.ai",
+            "name": "Ernesto Urdaneta",
+            "username": "netogu"
+          },
+          "committer": {
+            "email": "ernesto.urdaneta@figure.ai",
+            "name": "Ernesto Urdaneta",
+            "username": "netogu"
+          },
+          "distinct": true,
+          "id": "3b345680ee0d289bf1bf9e2026b2194382953a20",
+          "message": "First Commit. Changed Makefile CONFIG=h2",
+          "timestamp": "2023-03-15T10:16:48-07:00",
+          "tree_id": "68eba7a7017b6e9bc12073b10d45aec06d26121a",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/3b345680ee0d289bf1bf9e2026b2194382953a20"
+        },
+        "date": 1678900801681,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 713,
+            "unit": "cycles",
+            "extra": "713 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.85,
+            "unit": "cycles",
+            "extra": "3406 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 5224.52,
+            "unit": "cycles",
+            "extra": "8345 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17020 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 824.108734403,
             "unit": "Hz",
             "extra": "300 times"
           },

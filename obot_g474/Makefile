@@ -7,7 +7,7 @@ $(shell touch version.h)
 
 #PARAM_DIR = params_obot_g474
 
-CONFIG=osa14
+CONFIG=h2
 CONFIG_FILE = config/config_obot_g474_$(CONFIG).cpp
 PARAM=$(CONFIG)
 PARAM_FILE = param/param_obot_g474_$(PARAM).c

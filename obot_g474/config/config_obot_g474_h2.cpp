@@ -77,7 +77,7 @@ namespace config
     MAX31875 board_temperature(i2c1);
     DriverMPS driver;
 
-    HRPWM motor_pwm(pwm_frequency, *HRTIM1, 4, 4, 1, true, 50, 1000, 0);
+    HRPWM3 motor_pwm(pwm_frequency, *HRTIM1, 4, 4, 1, 1000, 0);
     USB1 usb;
     FastLoop fast_loop = {(int32_t)pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t *>(reinterpret_cast<volatile uint16_t *>(&TIM_R)),

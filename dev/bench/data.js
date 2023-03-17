@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1679078491233,
+  "lastUpdate": 1679078769833,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -25046,6 +25046,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 539.268926141,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 117980,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 18948,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 113352,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 23536,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 78480,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2643,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 18282,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c7c28de089e1fa10290f8c63e1c60ead0b71fbd5",
+          "message": "Merge pull request #100 from unhuman-io/feature/encoder_bias\n\nFeature/encoder bias",
+          "timestamp": "2023-03-17T11:42:03-07:00",
+          "tree_id": "c968c6b10e7b7701669bae23f1b6f2f13df39e9d",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/c7c28de089e1fa10290f8c63e1c60ead0b71fbd5"
+        },
+        "date": 1679078767659,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 713,
+            "unit": "cycles",
+            "extra": "713 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.16,
+            "unit": "cycles",
+            "extra": "3408 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 5385.01,
+            "unit": "cycles",
+            "extra": "8435 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17030 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 796.687069298,
             "unit": "Hz",
             "extra": "300 times"
           },

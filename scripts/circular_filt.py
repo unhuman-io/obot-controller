@@ -10,6 +10,7 @@ def circular_filt(x, y, nbins=1000, modx=2*pi, ffilt=.05, magfilt=0):
     ibins = digitize(xm, xi)
     bc = bincount(ibins)[1:]
     bs = bincount(ibins,weights=y)[1:]
+    bc[bc == 0] = 1
     yavg = bs/bc
 
     # plot(yavg)

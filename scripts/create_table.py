@@ -18,6 +18,7 @@ class Table:
         parser.add_argument('-c,--cpr',dest="cpr",default=8192)
         parser.add_argument('-n,--gear-ratio',dest="gear_ratio",type=float,default=1.)
         parser.add_argument('-e,--encoder',dest="encoder_table", action="store_true", default=False)
+        parser.add_argument('-t,--torque',dest="torque_table", action="store_true", default=False )
         parser.add_argument('-j,--joint',dest="joint_table", action="store_true", default=False)
         self.args = parser.parse_args(args_in)
 
@@ -26,6 +27,8 @@ class Table:
             self.table = self.parse_encoder_table(nbins=self.args.table_size,index_pos=self.args.index_pos,cpr=self.args.cpr)
         elif (self.args.joint_table):
             self.table = self.parse_joint_table(nbins=self.args.table_size,index_pos=self.args.index_pos,n=self.args.gear_ratio)
+        elif (self.args.torque_table):
+            self.table = self.parse_torque_table(nbins=self.args.table_size)
         else:
             self.table = self.parse_cogging_table(nbins=self.args.table_size,index_pos=self.args.index_pos,cpr=self.args.cpr)
         self.save()
@@ -62,10 +65,20 @@ class Table:
         x = delete(x, i) 
         y = delete(y, i)
         return self.create_table(x, y, nbins)
+    
+    def parse_torque_table(self, nbins=32):
+        e = self.data["joint_position0"]
+        t = self.data["torque0"] 
+        y = t
+        x = e    
+        i = where(abs(e) > .95*max(e))
+        x = delete(x, i) 
+        y = delete(y, i)
+        return self.create_table(x, y, nbins, ffilt=.5)
 
 
-    def create_table(self, x, y, nbins):
-        yfilt = circular_filt(x, y-mean(y), nbins=nbins)
+    def create_table(self, x, y, nbins, ffilt = .05):
+        yfilt = circular_filt(x, y-mean(y), nbins=nbins, ffilt=ffilt)
         xfilt = linspace(0, 2*pi, nbins+1)[:-1]
 
         yfiltd = fft_derivative(xfilt,yfilt)

@@ -258,6 +258,7 @@ void config_init()
                     [](uint32_t u){ config::motor_encoder.set_mgt(u); }));
     System::api.add_api_variable("mfilt", new APICallbackUint32([](){ return config::motor_encoder.get_filt(); }, 
                 [](uint32_t u){ config::motor_encoder.set_filt(u); }));
+    System::api.add_api_variable("3v3_bus", new APIUint32(&V_3V3_BUS));
 
 
     // System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));

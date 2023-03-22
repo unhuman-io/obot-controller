@@ -19,5 +19,6 @@
 .fast_loop_param.phase_mode = 1,
 .startup_param.phase_lock_current = -5,
 .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
-.main_loop_param.error_mask.all = ERROR_MASK_ALL & ~ERROR_MASK_MOTOR_TEMPERATURE,
-#include "sn/2073395E5356.h"
+.main_loop_param.error_mask.all = ERROR_MASK_ALL & ~ERROR_MASK_MOTOR_TEMPERATURE & ~ERROR_MASK_OUTPUT_ENCODER,
+#include "sn/2055398D4630.h"
+//#include "sn/2073395E5356.h" // burnt out

@@ -27,7 +27,7 @@ jobs:
           - project: obot_g474
             config: motor_aksim
             build_other: C_DEFS=-DR3
-          - project: h2
+          - project: obot_g474
             config: h2
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:gcc12

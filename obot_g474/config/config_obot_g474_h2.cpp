@@ -47,7 +47,7 @@ namespace config
 #include "../../motorlib/util.h"
 #include "../../motorlib/driver_mps.h"
 
-using PWM = HRPWM;
+using PWM = HRPWM3;
 using Communication = USBCommunication;
 using Driver = DriverMPS;
 volatile uint32_t *const cpu_clock = &DWT->CYCCNT;
@@ -77,7 +77,7 @@ namespace config
     MAX31875 board_temperature(i2c1);
     DriverMPS driver;
 
-    HRPWM3 motor_pwm(pwm_frequency, *HRTIM1, 4, 4, 1, 1000, 0);
+    HRPWM3 motor_pwm(pwm_frequency, *HRTIM1, 3, 3, 0, 1000, 0);
     USB1 usb;
     FastLoop fast_loop = {(int32_t)pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t *>(reinterpret_cast<volatile uint16_t *>(&TIM_R)),
@@ -194,7 +194,7 @@ void system_init()
 
     TIM1->CR1 = TIM_CR1_CEN; // start main loop interrupt
     config::usb.connect();
-    HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TECEN + HRTIM_MCR_TFCEN; // start high res timer
+    HRTIM1->sMasterRegs.MCR = HRTIM_MCR_TDCEN + HRTIM_MCR_TACEN + HRTIM_MCR_TFCEN; // start high res timer
 }
 
 FrequencyLimiter temp_rate = {10};
@@ -216,11 +216,14 @@ void system_maintenance()
             // config::main_loop.status_.error.microcontroller_temperature = 1;
         }
     }
+    // pc 14 is low there is a fault
     if (!(GPIOC->IDR & 1 << 14))
     {
         driver_fault = true;
+    } else if (param->main_loop_param.no_latch_driver_fault) {
+        driver_fault = false;
     }
-    config::main_loop.status_.error.driver_fault = driver_fault; // latch driver fault until reset
+    config::main_loop.status_.error.driver_fault |= driver_fault;
     index_mod = config::motor_encoder.index_error(param->fast_loop_param.motor_encoder.cpr);
     config_maintenance();
 }

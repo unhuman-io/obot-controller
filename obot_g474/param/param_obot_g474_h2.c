@@ -8,6 +8,11 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.output_encoder.cpr = 1,
     .fast_loop_param.motor_encoder.cpr = pow(2,16),
     .fast_loop_param.motor_encoder.rollover = pow(2,25),
+    .fast_loop_param.vbus_gain = 1.0/4096*(100+6.34)/6.34,
+    .fast_loop_param.adc1_gain = 3.3/4096*(9200/1000.0),  // A/count
+    .fast_loop_param.adc2_gain = 3.3/4096*(9200/1000.0),
+    .fast_loop_param.adc3_gain = 3.3/4096*(9200/1000.0),
+    .main_loop_param.no_latch_driver_fault = 1,
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES
 #endif

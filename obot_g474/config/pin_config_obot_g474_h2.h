@@ -153,9 +153,15 @@ void pin_config_obot_g474_h2() {
         /* RCC->APB2SMENR |= RCC_APB2ENR_HRTIM1EN; */
 
         GPIO_SETH(B, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13); // hrtim1 chd1
-        GPIO_SETH(B, 15, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13); // hrtim1 chd2 
+        GPIO_SETH(B, 15, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13); // hrtim1 chd2
         GPIO_SETH(A, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13);  // hrtim1 cha1
-        /* GPIO_SETH(A, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13);  // hrtim1 cha2 */
+        GPIO_SETH(A, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 13);  // hrtim1 cha2, pwm enable is managed through hrtim
+
+
+        // driver fault and enable
+        GPIO_SETH(C, 13, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);  // drv enable
+        GPIO_SETH(C, 14, GPIO_MODE::INPUT, GPIO_SPEED::LOW, 0);  // drv fault
+        MASK_SET(GPIOC->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
 
         /***************************************************
           Analog Input Configuration
@@ -300,6 +306,11 @@ void pin_config_obot_g474_h2() {
         OPAMP4->CSR = 2 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb11/vinp2
         OPAMP6->CSR = 0 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb12/vinp0
         OPAMP3->CSR = 1 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb13/vinp1
+
+        // VREF/2 on opamp1, input PA1, output PA2
+        //GPIO_SETL(A, 1, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);
+        //GPIO_SETL(A, 2, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);
+        OPAMP1->CSR = 0 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPxEN; // external follower on pa1/vinp0 pa2/vout
 
         /***************************************************
           USB Configuration

@@ -29,7 +29,7 @@ struct InitCode
 namespace config
 {
     const uint32_t main_loop_frequency = 10000;
-    const uint32_t pwm_frequency = 100000;
+    const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
     GPIO motor_encoder_cs = {*GPIOA, 4, GPIO::OUTPUT};

@@ -13,6 +13,18 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc2_gain = 3.3/4096*(9200/1000.0),
     .fast_loop_param.adc3_gain = 3.3/4096*(9200/1000.0),
     .main_loop_param.no_latch_driver_fault = 1,
+
+    .fast_loop_param.foc_param.pi_d.kp=10,
+    .fast_loop_param.foc_param.pi_d.ki=1.5,
+    .fast_loop_param.foc_param.pi_d.ki_limit=28,
+    .fast_loop_param.foc_param.pi_d.command_max=30,
+    .fast_loop_param.foc_param.pi_q.kp=10,
+    .fast_loop_param.foc_param.pi_q.ki=1.5,
+    .fast_loop_param.foc_param.pi_q.ki_limit=28,
+    .fast_loop_param.foc_param.pi_q.command_max=30,
+    .fast_loop_param.foc_param.current_filter_frequency_hz=20000,
+    .fast_loop_param.foc_param.num_poles = 7,
+
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES
 #endif

@@ -1,65 +1,101 @@
 # Obot-controller
 The obot-controller project is motor driver software for an embedded microcontroller. It has two components: project specific software and a motorlib folder. The project specific folders were generated with STMCubeMX software with generic makefile output but effort has been made to remove most of the ST code on the Obot project. Projects can have multiple configurations to support different hardware and sensors. The configuration is selected at compile time. A configuration of a project can have muliple parameter files to support the same hardware but with different sensor calibrations and control parameters. Parameters are stored in a struct in a specific location in flash memory and can be loaded independently from the main firmware.
 
-## Submodules
-This repository uses git submodules. Ensure to keep them in sync after clone with
+# Installation
+
+## Repo
+
+This repository uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). To checkout all the necessary code begin with the following command:
 ```console
-> git submodule update --init
+> git clone --recurse-submodules https://github.com/unhuman-io/obot-controller.git
 ```
-and when pulling or checking out
+To keep the submodules tidy it is encouraged to setup your new git repo with the following options:
+```bash
+git config --global submodule.recurse true
+git config --global pull.ff only
+```
+Finally, checkout the latest branch and make sure it is up-to-date:
+```console
+> git checkout --recurse-submodules develop
+```
+
+## Build
+The firmware is designed around a **gcc** toolchain for ARM and the compiler (`arm-none-eabi`) can be manually downloaded from the [ARM website](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads) or automatically with a script.
+
+Prepare the environment by installing the following modules:
+```console
+> sudo apt-get install curl wget xz-utils dfu-util make
+```
+Then run the install script from within the root `obot-controller/` directory, which will install **gcc** into `obot-controller/motorlib/gcc/`:
+```console
+> ./motorlib/scripts/install_gcc.sh
+```
+
+## Debugging
+The firmware is designed to communicate via USB, which allows interactive debugging and tuning via a command-line utility `motor_util`. Installation of the utility can be achieved by:
+
+```bash
+sudo apt install -y linux-headers-$(uname -r)
+curl https://raw.githubusercontent.com/unhuman-io/obot/main/install-obot.sh > install-obot.sh
+chmod +x install-obot.sh
+./install-obot.sh
+```
+
+This will install a realtime USB kernel module for communicating with the motor controller and install a set of utilities for working with the device. The utilities can be upgraded with `update-obot`.
+
+# Development
+## Repo
+This repository uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). It is useful to periodically sync the various repos after the initial `clone` with:
+```console
+> git submodule update --init --recursive
+```
+Similarly, when doing `pull` or `checkout` it can be handy to operate on all submodules of the repo:
 ```console
 > git pull --recurse-submodules
 > git checkout --recurse-submodules
 ```
-or for automatic support plus recommended pull ff-only global option
+This [guide](https://codeyarns.com/tech/2016-02-10-how-to-work-with-git-submodules.html) has a nice write-up of the details when working with a repo that has submodules.
+
+## Build and Deploy
+Compilation steps are managed with `make` and the rules can be executed from the project folder. As an example, the firmware for a hall-based motor instance can be compiled as follows:
 ```console
-git config --global submodule.recurse true
-git config --global pull.ff only
+obot-controller/obot_g474> make -j CONFIG=motor_hall
+```
+The `make` files in this repo assume `gcc` tools are installed at `obot-controller/motorlib/gcc/bin`. A different installation location can be used by passing the appropriate path with `make GCC_PATH=`.
+
+
+On successful compilation, the artifacts will be placed into the `obot-controller/obot_g474/build/motor_hall` directory. Inside the directory will be the firmware, parameter blob, and two shell helper scripts for deploying the firmware.
+
+Deploying the firmware to the device is then as simple as executing the appropriate shell script:
+
+```console
+obot-controller/obot_g474> ./build/motor_hall/load_motor_hall.sh
 ```
 
-## Build
-The current build system is `gcc` due to it being supported by STMCubeMX. The specific setup I've been using that works is the build of the `gcc` compiler available on the ARM website. This complier will have a prefix of `arm-none-eabi`, so for example `arm-none-eabi-gcc` should be on your path. Run make in a project folder to build. Then programming can be accomplished either through the built in bootloader or through a debugger connection, both described below. For convenience there is a script that can install the gcc arm into gcc directory in motorlib. It is the default referenced location for the firmware build script. For example to setup and build:
-```console
-# May need these packages
-sudo apt-get install -y wget xz-utils dfu-util make
+## Flashing firmware artifacts
 
-git clone --recurse-submodules https://github.com/unhuman-io/obot-controller.git
-cd obot-controller
-git checkout --recurse-submodules develop
-./motorlib/scripts/install_gcc.sh
-cd obot_g474 
-make -j C_DEFS=-DR4 CONFIG=motor_aksim PARAM=motor_test PARAM_OVERRIDE=param/j30.h
-# loading, also described below
-./build/motor_aksim/load_motor_aksim.sh -S SERIAL_NUMBER
+In general, firmware can usually be deployed using the shell scripts from the build step. However, it can be useful to manually load or upgrade through USB using the Device Firmware Upgrade (DFU) mode. DFU mode is built into the ST bootloader. Interacting with a board in DFU mode can be accomplished using the `dfu-util` software package.
+
+ If the board is initially unprogrammed or has corrupted firmware, the ST bootloader can be accessed through setting the appropriate hardware pins, e.g. obot_g474 press the reset button on power-up. A board that is already programmed can be switched into DFU mode at runtime by sending a DFU_DETACH packet over USB.
+
+ An example of manually flashing the firmware (the first step of the deploy script above):
+```console
+obot-controller/obot_g474> dfu-util -a0 -s 0x8000000 -D ./build/motor_hall/motor_hall_noparam.bin
 ```
 
-## Motorlib
-Motorlib the core of the firmware. It is described the motorlib readme file.
-
-### Communication
-The assumed usage case for this software is multiple motor drivers that are connected to a central control host. The currently recommended communication system is USB to a linux host and there are custom drivers, utilities, and example code for this in the repositories usb_rt_driver and realtime-tmp. The host pc software is centrally linked in the adjacent `obot` repository.
-
-### Programming
-The firmware can be upgraded through USB in Device Firmware Upgrade (DFU) mode. DFU mode is built into the ST bootloader. For an unprogrammed or board with corrupted firmware the ST bootloader can be accessed with a combination of external pin settings. For an already programmed board you can switch to DFU mode at runtime by sending a DFU_DETACH packet over USB. This and DFU programming are available through the dfu-util software package. The output of the make process described in build is a bin file. This can be programmed with the command:
+Various motor control parameters that may be specific to the application are placed in a separate flash block that can be reprogrammed independently of the main firmware. The format is the struct [Param](/obot_g474/param/param_obot_g474.h). The built parameters can be flashed as follows:
 ```console
-> dfu-util -a0 -s 0x8000000 -D build/obot_g474.bin
-```
-or use the generated script
-```console
-> ./build/motor_enc/load_motor_enc.sh
+obot-controller/obot_g474> dfu-util -a0 -s 0x8060000:leave -D ./build/motor_hall/motor_hall_param_only.bin
 ```
 
-#### Prebuilt firmware
-Some examples of prebuilt firmware are included in the github releases. For example one can download a `.tgz` file from https://github.com/unhuman-io/obot-controller/releases/develop, then:
-```console
+## Prebuilt firmware
+Some examples of prebuilt firmware are included in the github [releases](https://github.com/unhuman-io/obot-controller/releases/develop). For example one can download a `.tgz` file, extract the build artifacts, and load the firmware:
+```bash
 tar xf motor_enc.tgz
 ./motor_enc/load_motor_enc.sh
 ```
 
-### Parameters
-Various motor control parameters that may be specific to the application are placed in a separate flash block that can be reprogrammed independently of the main firmware. The format is the struct Param.
-
-### Tuning and debugging
+## Tuning and debugging
 With the gcc build system described above I also use Visual Studio Code and the Cortex Debug extension. In addition I prefer the SEGGER JLink debugger as it has a low cost edu mini version that is full featured but with a non commercial license. There is an install file for SEGGER JLink that must be installed as well as having the debugger. The debugger connection allows for fast programming and source debugging through Visual Studio Code. In addition I have also found it very handy to use `arm-none-eabi-gdb` directly, which essentially provides a command line interface to the internals of the software while running with no implementation effort or runtime overhead. To use the command line gdb version separate from Visual Studio Code and Cortex Debug you can run the SEGGER GDBServer executable separately, then run gdb with an example below.
 ```console
 > arm-none-eabi-gdb build/obot_g474.elf
@@ -72,7 +108,7 @@ With the gcc build system described above I also use Visual Studio Code and the 
 ```
 One caveat to the debugging through gdb is that it is not available when running with link time optimization (LTO) turned on. LTO should be disabled through the Makefile, in order to do the above debugging. However LTO turned off will adversely effect control loop timing.
 
-#### Text api
+### Text api
 Support for a separate ascii based communication channel is also provided. A small subset of parameters is provided in motorlib/system.h that may be read and tuned at runtime. For example using motor_util from the `realtime-tmp` repository.
 ```console
 > motor_util --api --no-list
@@ -84,7 +120,10 @@ kp
 99
 ```
 
-## Software downloads
+# Host communication
+The assumed use case for this software is for a central control host to connect to multiple motor drivers. The currently recommended communication system is USB to a linux host and there are custom drivers, utilities, and example code for this in the repositories usb_rt_driver and realtime-tmp. The host pc software is centrally linked in the adjacent [obot](https://github.com/unhuman-io/obot) repository.
+
+# Software downloads
 Software downloads as of 11/2020:
 - [STM32CubeMX](https://www.st.com/en/development-tools/stm32cubemx.html)
 - [gcc-arm](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads)
@@ -94,6 +133,6 @@ Software downloads as of 11/2020:
 - [SEGGER J-Link Software](https://www.segger.com/downloads/jlink/#J-LinkSoftwareAndDocumentationPack)
 - [Host PC software](https://raw.githubusercontent.com/unhuman-io/obot/master/install-obot.sh)
 
-## Hardware
+# Hardware
 
-There is an open source motor controller design [here](https://a360.co/3vo8SC4)
+The nominal motor-controller design is also open source and available [here](https://a360.co/3vo8SC4) and corresponds to the **obot_g474** variant. Further description of the board and some useful pin-out information is found in this [document](https://docs.google.com/document/d/1p9xV1iErwQMZhck7lHwQfRsM6e2xIIJ8QxJ62v68LWk/edit).

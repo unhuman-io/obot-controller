@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1679526022889,
+  "lastUpdate": 1679676818404,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -25990,6 +25990,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 778.094185651,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 118660,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 27144,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 114032,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 31732,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 86680,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2659,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 18346,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "bingjeff@gmail.com",
+            "name": "Jeff Bingham",
+            "username": "bingjeff"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "18dd1f2d9871d99be10d85fd6eb06935e821c033",
+          "message": "Update README. (#97)\n\n* Comment out submodules during setup.\r\n\r\n* Update git modules to match my structure.\r\n\r\n* Update git modules to match my structure.\r\n\r\n* Fix some typos in motorlib.\r\n\r\n* Update motorlib pointer.\r\n\r\n* Clean-up the main README.\r\n\r\nRemoves a few typos and updates some of the directions to follow the\r\nsteps that I have been going through to get the system to work.\r\n\r\n* Incorporate the hardware info too.\r\n\r\n* Clean-up/correct gcc location directions.\r\n\r\n* Add a link to a git-submodule guide.\r\n\r\n* Sync motorlib repo.",
+          "timestamp": "2023-03-24T09:50:18-07:00",
+          "tree_id": "5f90a00d157a78cc8f367ec240194de1b1ced4ea",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/18dd1f2d9871d99be10d85fd6eb06935e821c033"
+        },
+        "date": 1679676816585,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 713,
+            "unit": "cycles",
+            "extra": "713 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.22,
+            "unit": "cycles",
+            "extra": "3408 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 5541.47,
+            "unit": "cycles",
+            "extra": "8524 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16998.5,
+            "unit": "cycles",
+            "extra": "17023 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 558.20556502,
             "unit": "Hz",
             "extra": "300 times"
           },

@@ -1,0 +1,3 @@
+config:
+  - ["204E38803136", "motor_aksim", "gpio_test", "gpio_test.h", "R3"]
+  

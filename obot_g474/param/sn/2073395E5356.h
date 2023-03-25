@@ -1,0 +1,6 @@
+.fast_loop_param.adc1_gain = -3.3/4096/(.000635*10),
+.fast_loop_param.adc2_gain = -3.3/4096/(.000610*10),
+.fast_loop_param.adc3_gain = -3.3/4096/(.000617*10),
+.fast_loop_param.ia_bias = 3.991,
+.fast_loop_param.ib_bias = 1.686,
+.fast_loop_param.ic_bias = 3.725,

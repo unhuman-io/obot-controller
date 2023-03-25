@@ -15,6 +15,13 @@
 #define TIM_R TIM4->CCR2
 #define TIM_B TIM4->CCR4
 
+inline void set_adc_seq(ADC_TypeDef* adc_base, uint8_t ch, uint8_t seq_n){
+        const uint32_t pos_table[] = {ADC_JSQR_JSQ1_Pos, ADC_JSQR_JSQ2_Pos, ADC_JSQR_JSQ3_Pos, ADC_JSQR_JSQ4_Pos};
+        const uint32_t mask_table[] = {ADC_JSQR_JSQ1_Msk, ADC_JSQR_JSQ2_Msk, ADC_JSQR_JSQ3_Msk, ADC_JSQR_JSQ4_Msk};
+        adc_base->JSQR &= ~(mask_table[seq_n]);
+        adc_base->JSQR |= ch << pos_table[seq_n];
+
+}
 
 void pin_config_obot_g474_h2() {
 
@@ -164,15 +171,14 @@ void pin_config_obot_g474_h2() {
         MASK_SET(GPIOC->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
 
         /***************************************************
-          Analog Input Configuration
+          ++++++++++++++++++++++++++++++++++++++++++++++++++
+          Analog Configuration Summary
+          ++++++++++++++++++++++++++++++++++++++++++++++++++
 
           Motor Currents:
-          IA - PB13 - ADC3.5  - OPAMP3.VINP [or OPAMP4.VINP or OPAMP6.VINP]
-          IB - PB12 - ADC4.3 or ADC1.11 - OPAMP6.VINP 
-          IC - PB11 - ADC12.14 - OPAMP4.VINP
-           + OPAMP3.VOUT Internal [IA] - ADC3.13
-           + OPAMP6.VOUT Internal [IB] - ADC4.17
-           + OPAMP4.VOUT Internal [IC] - ADC5.5
+          IA - PB13 -> OPAMP3.VINP -> ADC3.13
+          IB - PB12 -> OPAMP6.VINP -> ADC4.17
+          IC - PB11 -> OPAMP4.VINP -> ADC5.5
 
           Motor Bus Voltage:
           VSNS_BUS - PB0 - ADC3.12 or ADC1.15 - COMP4.INP - OPAMP2.VINP [or OPAMP3.VINP]
@@ -182,7 +188,45 @@ void pin_config_obot_g474_h2() {
           Logic Bus Voltage:
           VSNS_3V3 - PB1 - ADC1.12 [or ADC3.1]
 
+          Force Sensors:
+          FS_SG1 - PA0 - ADC12.1
+          FS_SG2 - PA3 - ADC1.4
+
+
         ***************************************************/
+
+        enum Adc1Channels{
+                strainGauge1 = 1,
+                strainGauge2 = 4,
+                V3v3 = 12,
+                /* Vbus = 15, */
+                Vt = 16,
+                VrefInt = 18,
+        };
+
+        #define ADC1_CH_STRGAUGE1 1
+        #define ADC1_CH_STRGAUGE2 4
+        #define ADC1_CH_V3V3    12
+        #define ADC1_CH_VT      16
+        #define ADC1_CH_VREFINT 18
+        #define ADC1_CH_VBUS 15
+        /* ADD_CH2SEQ(ADC1_CH_STRGAUGE1, 1); */
+
+        enum Adc2Channels{
+                Vbus = 16
+        };
+
+        enum Adc3Channels{
+                Ia = 13
+        };
+
+        enum Adc4Channels{
+                Ib = 17
+        };
+
+        enum Adc5Channels{
+                Ic = 5
+        };
 
         /* // Enable Peripheral Clocks */
         /* RCC->AHB2RSTR |= RCC_AHB2ENR_GPIOBEN; */
@@ -198,17 +242,15 @@ void pin_config_obot_g474_h2() {
 
         /***************************************************
           VREFBUF
+
+          *Currently Tied to VDDA (3V3)
         ***************************************************/
-        //TODO Configure VREFBUF
-        /* VREFBUF->CSR = */ 
+
 
         /***************************************************
           ADC1
-            CH12 - VSNS_3V3
-            CH16 - Internal Temp
-            CH18 - VREFINT
-            CH15 - VBUS
         ***************************************************/
+
 
         // Enable Internal Vtemp, Enable VREFINT, ADCclk = hclk/4 (42.5Mhz)
         ADC12_COMMON->CCR = ADC_CCR_VSENSESEL | ADC_CCR_VREFEN | 3 << ADC_CCR_CKMODE_Pos;
@@ -217,18 +259,23 @@ void pin_config_obot_g474_h2() {
         // Injected Oversample Enable, Regular Oversample enable, Oversampling shift = 8-bits, Oversampling Ratio = 256x
         ADC1->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos);
 
-        ADC1->SQR1 = 12 << ADC_SQR1_SQ1_Pos; // 3V3 Bus    
-        // vbus on opamp -> Vbus is on opamp2 now and that feeds to ADC2.3 oe ADC2.16
-
         // Regular Samples
-        // ADC1->SQR1 = 16 << ADC_SQR1_SQ1_Pos | // Internal Temperature [S1]
-        //              18 << ADC_SQR1_SQ2_Pos; //  vrefint [S2]
+        ADC1->SQR1 = 12 << ADC_SQR1_SQ1_Pos;
+        /* ADC1->SQR1 = 12 <<  ADC_SQR1_SQ1_Pos; */
 
         // Injected Samples
-        ADC1->JSQR = 16 << ADC_JSQR_JSQ1_Pos | // Internal Temperature [S1]
-                     18 << ADC_JSQR_JSQ2_Pos | // VREFINT [S2]
-                     15 << ADC_JSQR_JSQ3_Pos | // Vbus [S3]
-                     2 << ADC_JSQR_JL_Pos; // 3 Conversions in Queue
+        /* ADC1->JSQR = Adc1Channels::Vt << ADC_JSQR_JSQ1_Pos | */
+
+        /*              Adc1Channels::VrefInt << ADC_JSQR_JSQ2_Pos | */
+
+        /*              /1* ADC1_STRGAUGE1 << ADC_JSQR_JSQ3_Pos | *1/ */
+        /*              /1* ADC1_STRGAUGE2 << ADC_JSQR_JSQ4_Pos | *1/ */
+        /*              3 << ADC_JSQR_JL_Pos; // 4 Conversions in Queue */
+        set_adc_seq(ADC1, ADC1_CH_VT, 0);
+        set_adc_seq(ADC1, ADC1_CH_VREFINT, 1);
+        set_adc_seq(ADC1, ADC1_CH_VBUS, 2);
+        ADC1->JSQR |= 2 << ADC_JSQR_JL_Pos;
+
 
         // Sample Time Configuration
         ADC1->SMPR1 = 6 << ADC_SMPR1_SMP1_Pos; // 247.5 cycles A1, 5.8us
@@ -240,19 +287,20 @@ void pin_config_obot_g474_h2() {
         /***************************************************
           ADC2
 
-
         ***************************************************/
+
         // ADC2 A3->JDR1
         // GPIO_SETL(C, 2, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VC
-        // Injected Sample Queue
-        ADC2->JSQR = 0 << ADC_JSQR_JL_Pos | 
-                     8 << ADC_JSQR_JSQ1_Pos |
-                     1 << ADC_JSQR_JEXTEN_Pos | 
-                     19 << ADC_JSQR_JEXTSEL_Pos; // trig 19 hrtim_adc_trg2 (injected)
         // Flush Injected Queue, Enable Overrun, Rising Edge Ext Trigger & Trigger Source = trigger 21 -> hrtim_adc_trg1
         ADC2->CFGR = ADC_CFGR_JQDIS | ADC_CFGR_OVRMOD |1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos;
         // Injected Oversample Enable, Regular Oversample enable, Oversampling shift = 8-bits, Oversampling Ratio = 256x
         ADC2->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos); // 256x oversample
+
+        // Injected Sample Queue
+        ADC2->JSQR = 8 << ADC_JSQR_JSQ1_Pos |
+                     0 << ADC_JSQR_JL_Pos |
+                     1 << ADC_JSQR_JEXTEN_Pos | 
+                     19 << ADC_JSQR_JEXTSEL_Pos; // trig 19 hrtim_adc_trg2 (injected)
         // Sample Time Configuration
         ADC2->SMPR1 = 6 << ADC_SMPR1_SMP8_Pos;  // 247.5 cycles A3, 5.8us
 
@@ -284,10 +332,11 @@ void pin_config_obot_g474_h2() {
         /***************************************************
           ADC5
         ***************************************************/
+
         // Injected Sample Queue
         ADC5->JSQR = 1 << ADC_JSQR_JEXTEN_Pos |
                      27 << ADC_JSQR_JEXTSEL_Pos | 
-                     5 << ADC_JSQR_JSQ1_Pos;  // trig 27 hrtim adc_trig1 (injected)
+                     13 << ADC_JSQR_JSQ1_Pos;  // trig 27 hrtim adc_trig1 (injected)
         ADC5->SMPR1 = 2 << ADC_SMPR1_SMP5_Pos; // 12.5 cycles current_sense, 294 ns, 200 ns min for opamp4
 
 

@@ -14,16 +14,51 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.adc3_gain = 3.3/4096*(9200/1000.0),
     .main_loop_param.no_latch_driver_fault = 1,
 
-    .fast_loop_param.foc_param.pi_d.kp=10,
-    .fast_loop_param.foc_param.pi_d.ki=1.5,
-    .fast_loop_param.foc_param.pi_d.ki_limit=28,
-    .fast_loop_param.foc_param.pi_d.command_max=30,
-    .fast_loop_param.foc_param.pi_q.kp=10,
-    .fast_loop_param.foc_param.pi_q.ki=1.5,
-    .fast_loop_param.foc_param.pi_q.ki_limit=28,
-    .fast_loop_param.foc_param.pi_q.command_max=30,
+
+    /*************************************************************
+      H1 Motor
+      
+      L_1kHz = 1.09mH
+      L_10kHz = 1.2mH
+      L_100kHz = 1.00mH
+      DCR = 6.7ohm
+
+    *************************************************************/
+    
+    /* .fast_loop_param.foc_param.pi_d.kp=10, */
+    /* .fast_loop_param.foc_param.pi_d.ki=1.5, */
+    /* .fast_loop_param.foc_param.pi_d.ki_limit=28, */
+    /* .fast_loop_param.foc_param.pi_d.command_max=30, */
+    /* .fast_loop_param.foc_param.pi_q.kp=10, */
+    /* .fast_loop_param.foc_param.pi_q.ki=1.5, */
+    /* .fast_loop_param.foc_param.pi_q.ki_limit=28, */
+    /* .fast_loop_param.foc_param.pi_q.command_max=30, */
+    /* .fast_loop_param.foc_param.current_filter_frequency_hz=20000, */
+    /* .fast_loop_param.foc_param.num_poles = 7, */
+    /* /1* .fast_loop_param.motor_encoder.index_electrical_offset_pos = *1/ */ 
+    
+    /*************************************************************
+      H2 Motor
+
+      L_1kHz = 4.7mH
+      L_10kHz = 4.6mH
+      L_100kHz = 4mH
+      DCR = 29ohm
+    *************************************************************/
+    
+    .fast_loop_param.foc_param.pi_d.kp=45,
+    .fast_loop_param.foc_param.pi_d.ki=5.0,
+    .fast_loop_param.foc_param.pi_d.ki_limit=24,
+    .fast_loop_param.foc_param.pi_d.command_max=25,
+    .fast_loop_param.foc_param.pi_q.kp=45,
+    .fast_loop_param.foc_param.pi_q.ki=5.0,
+    .fast_loop_param.foc_param.pi_q.ki_limit=24,
+    .fast_loop_param.foc_param.pi_q.command_max=25,
     .fast_loop_param.foc_param.current_filter_frequency_hz=20000,
     .fast_loop_param.foc_param.num_poles = 7,
+    .fast_loop_param.phase_mode = 1,
+    /* .fast_loop_param.motor_encoder.index_electrical_offset_pos = */ 
+
 
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES

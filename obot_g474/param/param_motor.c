@@ -1,7 +1,7 @@
     .fast_loop_param.adc1_gain = -3.3/4096/(.001*10*1.04),  // A/count, 1.04 is a measured factor
     .fast_loop_param.adc2_gain = -3.3/4096/(.001*10*1.04),
     .fast_loop_param.adc3_gain = -3.3/4096/(.001*10*1.04),
-    .fast_loop_param.vbus_gain = 1.0/4096*(215+13.7)/13.7,
+    .fast_loop_param.vbus_gain = 1.0/4096*(215+13.7)/13.7, // note adc1 set up with GCOMP, 1V -> 4096 counts
     .drv_regs = {
         (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
         //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current

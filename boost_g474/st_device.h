@@ -3,6 +3,6 @@
 
 #include "stm32g474xx.h"
 #include "stm32g4xx_hal.h"
-#define CPU_FREQUENCY_HZ    170e6
+#define CPU_FREQUENCY_HZ 170e6
 
 #endif

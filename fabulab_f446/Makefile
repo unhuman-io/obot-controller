@@ -18,6 +18,7 @@ $(shell touch version.h)
 CONFIG = motor
 TARGET = ${CONFIG}
 CONFIG_FILE = config_fabulab_f446.cpp
+TYPE_HEADER_DEFINE = -DINSTANCE_SYSTEM_TYPES_HEADER="\"../fabulab_f446/config_fabulab_f446_types.h\""
 
 ######################################
 # building variables
@@ -92,7 +93,7 @@ startup_stm32f446xx.s
 PREFIX = arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
-GCC_PATH=$(dir $(lastword $(MAKEFILE_LIST)))../motorlib/gcc/bin
+GCC_PATH=$(dir $(lastword $(MAKEFILE_LIST)))../../motorlib/gcc/bin
 ifdef GCC_PATH
 CC = $(GCC_PATH)/$(PREFIX)gcc
 AS = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
@@ -192,7 +193,7 @@ $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
-	$(CXX) -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+	$(CXX) -c $(CPPFLAGS) $(TYPE_HEADER_DEFINE) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@

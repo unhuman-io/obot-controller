@@ -26,6 +26,7 @@ $(shell touch $(PARAM_FILE))
 
 TARGET = $(CONFIG)$(if $(PARAM_OVERRIDE),_$(PARAM_OVERRIDE))
 PARAM_OVERRIDE_FILE = $(PARAM_FILE:.c=_$(PARAM_OVERRIDE).h)
+TYPE_HEADER_DEFINE = -DINSTANCE_SYSTEM_TYPES_HEADER="\"../boost_g474/config_g474_boost_$(CONFIG)_types.h\""
 
 ######################################
 # building variables
@@ -215,7 +216,7 @@ $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 	$(CC) $(if $(PARAM_OVERRIDE),--include $(PARAM_OVERRIDE_FILE)) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
-	$(CXX) -c $(CPPFLAGS) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+	$(CXX) -c $(CPPFLAGS) $(TYPE_HEADER_DEFINE) -std=c++11 -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@

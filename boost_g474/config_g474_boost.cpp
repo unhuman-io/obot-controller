@@ -1,20 +1,10 @@
-#include "../../motorlib/peripheral/usb.h"
-#include "../../motorlib/usb_communication.h"
-#include "../../motorlib/peripheral/stm32g4/hrpwm.h"
 #include "../../motorlib/util.h"
+#include "config_g474_boost_types.h"
 
-using PWM = HRPWM;
-using Communication = USBCommunication;
 volatile uint32_t * const cpu_clock = &DWT->CYCCNT;
 uint16_t drv_regs_error = 0;  
 
 #include "../../motorlib/led.h"
-#include "../../motorlib/controller/position_controller.h"
-#include "../../motorlib/controller/torque_controller.h"
-#include "../../motorlib/controller/impedance_controller.h"
-#include "../../motorlib/controller/velocity_controller.h"
-#include "../../motorlib/controller/state_controller.h"
-#include "../../motorlib/controller/joint_position_controller.h"
 #include "../../motorlib/fast_loop.h"
 #include "../../motorlib/main_loop.h"
 #include "../../motorlib/actuator.h"
@@ -61,7 +51,7 @@ MainLoop main_loop = {fast_loop,
                       param->main_loop_param};
 };  // namespace config
 
-Communication System::communication_ = {config::usb};
+USBCommunication<USB1> System::communication_ = {config::usb};
 void usb_interrupt() { config::usb.interrupt(); }
 Actuator System::actuator_ = {config::fast_loop, config::main_loop,
                               param->startup_param};

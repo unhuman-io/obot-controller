@@ -1,13 +1,8 @@
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/hall.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#include "../../motorlib/torque_sensor.h"
 #include "../param/param_obot_g474.h"
 #include "../st_device.h"
-
-using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = HallEncoder;
-using OutputEncoder = EncoderBase;
+#include "config_obot_g474_motor_hall_types.h"
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -33,7 +28,7 @@ GPIO gpio_a(*GPIOA, 0);
 GPIO gpio_b(*GPIOA, 1);
 GPIO gpio_c(*GPIOA, 2);
 HallEncoder motor_encoder(gpio_a, gpio_b, gpio_c);
-TorqueSensor torque_sensor;
+TorqueSensorBase torque_sensor;
 EncoderBase output_encoder;
 };  // namespace config
 

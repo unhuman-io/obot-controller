@@ -1,36 +1,14 @@
-// TODO: Fix includes. spi_dma.h must come first.
-#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-// TODO: Fix includes. Remaining can be alphabetical.
-#include "../../motorlib/aksim2_encoder.h"
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/temperature_sensor.h"
-#include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#include "../../motorlib/peripheral/stm32g4/qia128_uart.h"
+#include "../../motorlib/temperature_sensor.h"
 #include "../param/param_obot_g474.h"
 #include "../st_device.h"
-
-#ifndef MOTOR_ENCODER_BITS
-#define MOTOR_ENCODER_BITS 18
-#endif
-
-#ifndef OUTPUT_ENCODER_BITS
-#define OUTPUT_ENCODER_BITS 18
-#endif
+#include "config_obot_g474_motor_aksim_types.h"
 
 // #pragma message XSTR(MOTOR_ENCODER_BITS)
 // #pragma message XSTR(OUTPUT_ENCODER_BITS)
 
 #define END_TRIGGER_MOTOR_ENCODER
-using TorqueSensor = QIA128_UART;
-// using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
-// using MotorEncoder = EncoderBase;
-using OutputEncoder = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
-// using OutputEncoder = EncoderBase;
-
-// using TorqueSensor = TorqueSensorMultiplex<QIA128, Aksim2Encoder<18>>;
-// using OutputEncoder = TorqueSensor::SecondarySensor;
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -86,15 +64,14 @@ InitCode init_code;
 
 GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
 SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-MotorEncoder motor_encoder(spi3_dma);
-// EncoderBase motor_encoder;
+MotorEncoderType motor_encoder(spi3_dma);
 
 GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
 SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
-OutputEncoder output_encoder(spi1_dma);
+OutputEncoderType output_encoder(spi1_dma);
 // EncoderBase output_encoder;
 // QIA128_UART torque_sensor(*LPUART1);
-QIA128_UART torque_sensor(*UART5);
+TorqueSensorType torque_sensor(*UART5);
 };  // namespace config
 
 #define SPI1_REINIT_CALLBACK

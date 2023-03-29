@@ -1,17 +1,8 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/peripheral/stm32g4/spi_torque.h"
-#include "../../motorlib/sensor_multiplex.h"
 #include "../param/param_obot_g474_osa.h"
 #include "../st_device.h"
-// TODO: Fix includes. Encoders must be at the end.
-#include "../../motorlib/ma732_encoder.h"
-#include "../../motorlib/ma782_encoder.h"
-
-using TorqueSensor = TorqueSensorMultiplex<SPITorque, MA782Encoder>;
-using MotorEncoder = MA782Encoder;
-using OutputEncoder =
-    TorqueSensorMultiplex<SPITorque, MA782Encoder>::SecondarySensor;
+#include "config_obot_g474_osa14_types.h"
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_osa();
@@ -43,7 +34,8 @@ MA782Encoder output_encoder_direct(*SPI3, output_encoder_cs, 119,
                                    &spi3_register_operation);
 TorqueSensorMultiplex<SPITorque, MA782Encoder> torque_sensor(
     torque_sensor_direct, output_encoder_direct, 5);
-OutputEncoder &output_encoder = torque_sensor.secondary();
+TorqueSensorMultiplex<SPITorque, MA782Encoder>::SecondarySensor
+    &output_encoder = torque_sensor.secondary();
 };  // namespace config
 
 #include "../../motorlib/boards/config_obot_g474_osa.cpp"

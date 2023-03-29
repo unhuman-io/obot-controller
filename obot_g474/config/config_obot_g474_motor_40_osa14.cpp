@@ -1,17 +1,10 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/qep_encoder.h"
-#include "../../motorlib/torque_sensor.h"
 #include "../param/param_obot_g474_motor40.h"
 #include "../st_device.h"
-// TODO: Fix includes. ads1235.h and icpz.h must be at end.
-#include "../../motorlib/ads1235.h"
-#include "../../motorlib/icpz.h"
+#include "config_obot_g474_motor_40_osa14_types.h"
 
-using TorqueSensor = ADS1235;
-using MotorEncoder = ICPZ;
-using OutputEncoder = EncoderBase;
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_40();

@@ -1,15 +1,8 @@
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/ma732_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/peripheral/stm32g4/spi_torque.h"
-#include "../../motorlib/qep_encoder.h"
 #include "../param/param_obot_g474_osa.h"
 #include "../st_device.h"
-
-using TorqueSensor = SPITorque;
-using MotorEncoder = QEPEncoder;
-using OutputEncoder = MA732Encoder;
+#include "config_obot_g474_osa14_enc_types.h"
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_osa();
@@ -45,8 +38,8 @@ InitCode init_code;
 
 QEPEncoder motor_encoder(*TIM2);
 GPIO torque_sensor_cs(*GPIOB, 4, GPIO::OUTPUT);
-TorqueSensor torque_sensor(*SPI3, torque_sensor_cs, *DMA1_Channel1,
-                           *DMA1_Channel2);
+SPITorque torque_sensor(*SPI3, torque_sensor_cs, *DMA1_Channel1,
+                        *DMA1_Channel2);
 GPIO output_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
 MA732Encoder output_encoder(*SPI3, output_encoder_cs);
 };  // namespace config

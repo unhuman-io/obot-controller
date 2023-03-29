@@ -1,16 +1,9 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/spi_debug.h"
-#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-// TODO: Fix includes. icpz.h must be included after spi_dma.h
-#include "../../motorlib/icpz.h"
-// TODO: Fix includes.
 #include "../../motorlib/torque_sensor.h"
 #include "../param/param_obot_g474.h"
 #include "../st_device.h"
-
-typedef TorqueSensorBase TorqueSensor;
-typedef ICPZ MotorEncoder;
-typedef EncoderBase OutputEncoder;
+#include "config_obot_g474_motor_wheel_types.h"
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -37,9 +30,9 @@ volatile int spi3_register_operation = 0;
 SPIDMA spi_dma = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
 ICPZ motor_encoder(spi_dma);
 SPIDebug spi_debug(spi_dma);
-TorqueSensor torque_sensor;
+TorqueSensorBase torque_sensor;
 GPIO output_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
-OutputEncoder output_encoder;
+EncoderBase output_encoder;
 };  // namespace config
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"

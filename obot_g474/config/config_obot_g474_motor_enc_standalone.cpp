@@ -1,16 +1,10 @@
-#include "../../motorlib/ads1235_2.h"
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/ma732_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/qep_encoder.h"
-#include "../../motorlib/torque_sensor.h"
 #include "../param/param_obot_g474.h"
 #include "../st_device.h"
+#include "config_obot_g474_motor_enc_standalone_types.h"
 
-using TorqueSensor = ADS1235_2;
-using MotorEncoder = QEPEncoder;
-using OutputEncoder = EncoderBase;
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -61,7 +55,7 @@ GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT);
 SPIDMA spi_dma(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2, 1000,
                1000);
 ADS1235_2 torque_sensor(spi_dma);
-OutputEncoder output_encoder;
+EncoderBase output_encoder;
 
 GPIODebounce gpio1(*GPIOC, 0);
 GPIODebounce gpio2(*GPIOC, 1);

@@ -1,41 +1,23 @@
-#include "../motorlib/system_log.h"
-#include "../motorlib/peripheral/usb.h"
-#include "../motorlib/usb_communication.h"
-#include "st_device.h"
-#include "../motorlib/peripheral/stm32g4/hrpwm.h"
 #include "../motorlib/led.h"
-#include "../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../motorlib/icpz.h"
-#include "../motorlib/peripheral/stm32g4/spi_torque.h"
+#include "../motorlib/motor_messages/motor_messages.h"
+#include "../motorlib/peripheral/stm32g4/spi_debug.h"
+#include "../motorlib/system_log.h"
 #include "Inc/main.h"
 #include "param_g474_boost.h"
-#include "../motorlib/peripheral/stm32g4/spi_debug.h"
-#include "../motorlib/torque_sensor.h"
+#include "st_device.h"
 
-#include "../motorlib/qep_encoder.h"
-
-#include "../motorlib/controller/position_controller.h"
-#include "../motorlib/controller/torque_controller.h"
-#include "../motorlib/controller/impedance_controller.h"
-#include "../motorlib/controller/velocity_controller.h"
-#include "../motorlib/controller/state_controller.h"
-#include "../motorlib/controller/joint_position_controller.h"
-#include "../motorlib/driver.h"
-
-using Driver = DriverBase;
-typedef TorqueSensorBase TorqueSensor;
-typedef HRPWM PWM;
-typedef EncoderBase OutputEncoder;
-typedef ICPZ MotorEncoder;
-//typedef QEPEncoder MotorEncoder;
-typedef USBCommunication Communication;
+// TODO: Fix includes. fast_loop.h logger.h and main_loop.h must be in middle.
 #include "../motorlib/fast_loop.h"
+#include "../motorlib/logger.h"
 #include "../motorlib/main_loop.h"
+
+// TODO: Fix includes. actuator.h and system.h need to come last.
 #include "../motorlib/actuator.h"
 #include "../motorlib/system.h"
+#include "config_g474_boost_pz_types.h"
 
 USB1 usb1;
-Communication System::communication_ = {usb1};
+USBCommunication<USB1> System::communication_ = {usb1};
 
 void usb_interrupt() { usb1.interrupt(); }
 
@@ -157,14 +139,14 @@ static struct {
   InitCode init_code;
   uint32_t pwm_frequency = (double)CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
   uint32_t main_loop_frequency = (double)CPU_FREQUENCY_HZ / (main_loop_period);
-  Driver driver;
+  DriverBase driver;
   GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
   GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
   SPIDMA spi_dma{*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
   // ADS1235 torque_sensor = {spi_dma};
   ICPZ motor_encoder{spi_dma};
   SPIDebug spi_debug{spi_dma};
-  TorqueSensor torque_sensor;
+  TorqueSensorBase torque_sensor;
   GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
   GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
   GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};

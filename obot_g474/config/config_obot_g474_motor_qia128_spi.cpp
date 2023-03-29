@@ -1,23 +1,11 @@
-#include "../../motorlib/aksim2_encoder.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/qia128.h"
-#include "../../motorlib/sensor_multiplex.h"
 #include "../../motorlib/temperature_sensor.h"
-#include "../../motorlib/torque_sensor.h"
 #include "../param/param_obot_g474.h"
 #include "../st_device.h"
+#include "config_obot_g474_motor_qia128_spi_types.h"
 
-// using TorqueSensor = QIA128;
-// using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = Aksim2Encoder<18>;
-// using MotorEncoder = EncoderBase;
-// using OutputEncoder = Aksim2Encoder<18>;
-// using OutputEncoder = EncoderBase;
-
-using TorqueSensor = TorqueSensorMultiplex<QIA128, Aksim2Encoder<18>>;
-using OutputEncoder = TorqueSensor::SecondarySensor;
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -52,7 +40,7 @@ InitCode init_code;
 
 GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
 SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-MotorEncoder motor_encoder(spi3_dma);
+MotorEncoderType motor_encoder(spi3_dma);
 // EncoderBase motor_encoder;
 
 GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
@@ -65,8 +53,8 @@ SPIDMA spi1_dma2(*SPI1, output_encoder_cs, *DMA1_Channel3,
 Aksim2Encoder<18> output_encoder_direct(spi1_dma);
 QIA128 torque_sensor_direct(spi1_dma2);
 //    TorqueSensor torque_sensor;
-TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct, 5);
-OutputEncoder &output_encoder = torque_sensor.secondary();
+TorqueSensorType torque_sensor(torque_sensor_direct, output_encoder_direct, 5);
+OutputEncoderType &output_encoder = torque_sensor.secondary();
 // EncoderBase output_encoder;
 };  // namespace config
 

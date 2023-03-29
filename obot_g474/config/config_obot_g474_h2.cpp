@@ -1,14 +1,8 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#include "../../motorlib/torque_sensor.h"
 #include "../param/param_obot_g474_h2.h"
 #include "../st_device.h"
-// TODO: Fix includes. ma782_encoder.h must come last.
-#include "../../motorlib/ma782_encoder.h"
-
-using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = MA782Encoder;
-using OutputEncoder = EncoderBase;
+#include "config_obot_g474_h2_types.h"
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_h2();
@@ -35,29 +29,17 @@ GPIO motor_encoder_cs = {*GPIOA, 4, GPIO::OUTPUT};
 
 MA782Encoder motor_encoder(*SPI1, motor_encoder_cs);
 
-TorqueSensor torque_sensor;
+TorqueSensorBase torque_sensor;
 
 EncoderBase output_encoder;
 };  // namespace config
 
-#include "../../motorlib/peripheral/usb.h"
-#include "../../motorlib/usb_communication.h"
-#include "../../motorlib/peripheral/stm32g4/hrpwm.h"
-#include "../../motorlib/util.h"
-#include "../../motorlib/driver_mps.h"
 
-using PWM = HRPWM3;
-using Communication = USBCommunication;
-using Driver = DriverMPS;
+#include "../../motorlib/util.h"
+
 volatile uint32_t *const cpu_clock = &DWT->CYCCNT;
 
 #include "pin_config_obot_g474_h2.h"
-#include "../../motorlib/controller/impedance_controller.h"
-#include "../../motorlib/controller/joint_position_controller.h"
-#include "../../motorlib/controller/position_controller.h"
-#include "../../motorlib/controller/state_controller.h"
-#include "../../motorlib/controller/torque_controller.h"
-#include "../../motorlib/controller/velocity_controller.h"
 #include "../../motorlib/fast_loop.h"
 #include "../../motorlib/led.h"
 #include "../../motorlib/main_loop.h"
@@ -106,7 +88,7 @@ MainLoop main_loop(fast_loop, position_controller, torque_controller,
                    param->main_loop_param);
 };  // namespace config
 
-Communication System::communication_ = {config::usb};
+USBCommunication<USB1> System::communication_ = {config::usb};
 void usb_interrupt() { config::usb.interrupt(); }
 Actuator System::actuator_ = {config::fast_loop, config::main_loop,
                               param->startup_param};

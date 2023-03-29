@@ -1,13 +1,8 @@
-#include "../../motorlib/ads1235.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/qep_encoder.h"
 #include "../param/param_obot_g474.h"
 #include "../st_device.h"
-
-using TorqueSensor = ADS1235;
-using MotorEncoder = QEPEncoder;
-using OutputEncoder = EncoderBase;
+#include "config_obot_g474_motor_ads1235_types.h"
 
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
@@ -35,7 +30,7 @@ QEPEncoder motor_encoder(*TIM2);
 SPIDMA spi_dma(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2, 1000,
                1000);
 ADS1235 torque_sensor(spi_dma, ADS1235::GAIN_1, ADS1235::SPS_1200);
-OutputEncoder output_encoder;
+EncoderBase output_encoder;
 };  // namespace config
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"

@@ -1,38 +1,23 @@
-#include "../motorlib/peripheral/stm32f4/otg_usb.h"
-typedef USB_OTG USB1;
-#include "../motorlib/usb_communication.h"
-#include "st_device.h"
-#include "../motorlib/qep_encoder.h"
-#include "../motorlib/peripheral/stm32f4/pwm_en.h"
-#include "../motorlib/hall.h"
+#include "../motorlib/gpio.h"
 #include "../motorlib/led.h"
+#include "../motorlib/motor_messages/motor_messages.h"
+#include "../motorlib/util.h"
 #include "Inc/main.h"
-#include "../motorlib/ma732_encoder.h"
-#include "../motorlib/phony_encoder.h"
-#include "../motorlib/torque_sensor.h"
 #include "param_fabulab_f446.h"
+#include "st_device.h"
 
-#include "../motorlib/controller/position_controller.h"
-#include "../motorlib/controller/torque_controller.h"
-#include "../motorlib/controller/impedance_controller.h"
-#include "../motorlib/controller/velocity_controller.h"
-#include "../motorlib/controller/state_controller.h"
-#include "../motorlib/controller/joint_position_controller.h"
-#include "../motorlib/driver.h"
-
-using Driver = DriverBase;
-typedef TorqueSensorBase TorqueSensor;
-typedef PWM_EN PWM;
-typedef EncoderBase OutputEncoder;
-typedef PhonyEncoder MotorEncoder;
-typedef USBCommunication Communication;
+// TODO: Fix includes. fast_loop.h logger.h and main_loop.h must be in middle.
 #include "../motorlib/fast_loop.h"
+#include "../motorlib/logger.h"
 #include "../motorlib/main_loop.h"
+
+// TODO: Fix includes. actuator.h and system.h need to come last.
 #include "../motorlib/actuator.h"
 #include "../motorlib/system.h"
+#include "config_fabulab_f446_types.h"
 
 USB_OTG usb;
-Communication System::communication_ = {usb};
+USBCommunication<USB_OTG> System::communication_ = {usb};
 
 #define I_A_DR ADC3->JDR1
 #define I_B_DR ADC2->JDR1
@@ -52,13 +37,13 @@ static struct {
   InitCode init_code;
   int32_t pwm_frequency = (double)CPU_FREQUENCY_HZ / (pwm_period);
   uint32_t main_loop_frequency = (double)CPU_FREQUENCY_HZ / (main_period);
-  Driver driver;
+  DriverBase driver;
   GPIO enable = {*GPIOC, 14, GPIO::OUTPUT};
   PhonyEncoder motor_encoder = {100};
   QEPEncoder output_encoder = {*TIM2};
   GPIO spi1_cs = {*GPIOA, 15, GPIO::OUTPUT};
   // MA732Encoder motor_encoder = {*SPI1, spi1_cs};
-  TorqueSensor torque_sensor;  // TODO implement for F446
+  TorqueSensorBase torque_sensor;  // TODO implement for F446
   PWM_EN motor_pwm = {pwm_frequency,
                       *const_cast<uint32_t *>(&TIM8->CCR3),
                       *const_cast<uint32_t *>(&TIM8->CCR2),

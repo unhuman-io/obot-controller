@@ -140,13 +140,6 @@ void config_init() {
     System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
 }
 
-#define MOTOR_TEMPERATURE_INDEX 0
-#define BOARD_TEMPERATURE_INDEX 1
-#define BUS_VOLTAGE_INDEX       2
-#define BUS_CURRENT_INDEX       3
-#define MOTOR_POWER_INDEX       4
-#define AMBIENT_TEMPERATURE_INDEX   5
-
 FrequencyLimiter temp_rate_motor = {10};
 void config_maintenance() {
     if(temp_rate_motor.run()) {
@@ -167,7 +160,6 @@ void config_maintenance() {
             config::main_loop.status_.error.output_encoder = true;
     }
     round_robin_logger.log_data(BOARD_TEMPERATURE_INDEX, config::board_temperature.get_temperature());
-    round_robin_logger.log_data(BUS_VOLTAGE_INDEX, config::main_loop.status_.fast_loop.vbus);
     float bus_current = config::main_loop.status_.power/config::main_loop.status_.fast_loop.vbus;
     round_robin_logger.log_data(BUS_CURRENT_INDEX, bus_current);
     round_robin_logger.log_data(MOTOR_POWER_INDEX, config::main_loop.status_.fast_loop.power);

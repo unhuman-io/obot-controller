@@ -3,19 +3,24 @@
 #include "stm32g474xx.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 
+
+#define V_3V3_BUS ADC1->JDR1
+#define V_TEMP_DR ADC1->JDR1
+#define V_REF_DR ADC1->JDR2
+#define V_SG1_DR ADC1->JDR3
+#define V_SG2_DR ADC1->JDR4
+#define V_BUS_DR ADC2->JDR1
+
 #define I_A_DR  ADC3->JDR1
 #define I_B_DR  ADC4->JDR1
 #define I_C_DR  ADC5->JDR1
-#define V_BUS_DR ADC1->JDR3
-#define V_3V3_BUS ADC1->DR
-#define V_REF_DR ADC1->JDR2
-#define V_TEMP_DR ADC1->JDR1
 
 #define TIM_G TIM4->CCR1
 #define TIM_R TIM4->CCR2
 #define TIM_B TIM4->CCR4
 
-inline void set_adc_seq(ADC_TypeDef* adc_base, uint8_t ch, uint8_t seq_n){
+
+inline void set_adc_jsq(ADC_TypeDef* adc_base, uint8_t ch, uint8_t seq_n){
         const uint32_t pos_table[] = {ADC_JSQR_JSQ1_Pos, ADC_JSQR_JSQ2_Pos, ADC_JSQR_JSQ3_Pos, ADC_JSQR_JSQ4_Pos};
         const uint32_t mask_table[] = {ADC_JSQR_JSQ1_Msk, ADC_JSQR_JSQ2_Msk, ADC_JSQR_JSQ3_Msk, ADC_JSQR_JSQ4_Msk};
         adc_base->JSQR &= ~(mask_table[seq_n]);
@@ -181,12 +186,11 @@ void pin_config_obot_g474_h2() {
           IC - PB11 -> OPAMP4.VINP -> ADC5.5
 
           Motor Bus Voltage:
-          VSNS_BUS - PB0 - ADC3.12 or ADC1.15 - COMP4.INP - OPAMP2.VINP [or OPAMP3.VINP]
-           + OPAMP2.VOUT Internal [VSNS_BUS] - ADC2.16
+          VSNS_BUS - PB0 -> OPAMP2.VINP2 -> ADC2.16
 
 
           Logic Bus Voltage:
-          VSNS_3V3 - PB1 - ADC1.12 [or ADC3.1]
+          VSNS_3V3 - PB1 - ADC1.12 
 
           Force Sensors:
           FS_SG1 - PA0 - ADC12.1
@@ -195,57 +199,30 @@ void pin_config_obot_g474_h2() {
 
         ***************************************************/
 
-        enum Adc1Channels{
-                strainGauge1 = 1,
-                strainGauge2 = 4,
-                V3v3 = 12,
-                /* Vbus = 15, */
-                Vt = 16,
-                VrefInt = 18,
-        };
 
-        #define ADC1_CH_STRGAUGE1 1
-        #define ADC1_CH_STRGAUGE2 4
-        #define ADC1_CH_V3V3    12
-        #define ADC1_CH_VT      16
-        #define ADC1_CH_VREFINT 18
-        #define ADC1_CH_VBUS 15
-        /* ADD_CH2SEQ(ADC1_CH_STRGAUGE1, 1); */
+        #define ADC1_CH1_STRGAUGE1 1
+        #define ADC1_CH4_STRGAUGE2 4
+        #define ADC1_CH12_V3V3    12
+        #define ADC1_CH16_VT      16
+        #define ADC1_CH18_VREFINT 18
+        #define ADC1_CH15_VBUS 15
+        
+        #define ADC2_CH16_VBUS 16
+        
+        #define ADC3_CH13_IA 13
+        
+        #define ADC4_CH17_IB 17
 
-        enum Adc2Channels{
-                Vbus = 16
-        };
-
-        enum Adc3Channels{
-                Ia = 13
-        };
-
-        enum Adc4Channels{
-                Ib = 17
-        };
-
-        enum Adc5Channels{
-                Ic = 5
-        };
-
-        /* // Enable Peripheral Clocks */
-        /* RCC->AHB2RSTR |= RCC_AHB2ENR_GPIOBEN; */
-        /* RCC->AHB2ENR |=  RCC_AHB2ENR_ADC12EN | RCC_AHB2ENR_ADC345EN; */
-
-        //VREFBUF->CSR = VREFBUF_CSR_ENVR | 2 << VREFBUF_CSR_VRS_Pos;
-        // ADC1
-        /* GPIO_SETL(C, 0, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A1 */
-        /* GPIO_SETL(C, 1, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A2 */
-        /* GPIO_SETL(C, 2, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // A3 */
+        #define ADC5_CH5_IC 5
 
 
 
         /***************************************************
           VREFBUF
-
           *Currently Tied to VDDA (3V3)
         ***************************************************/
-
+        // VREFBUF->CSR = 0;
+        // VREFBUF->CSR |= VREFBUF_CSR_HIZ;
 
         /***************************************************
           ADC1
@@ -255,70 +232,57 @@ void pin_config_obot_g474_h2() {
         // Enable Internal Vtemp, Enable VREFINT, ADCclk = hclk/4 (42.5Mhz)
         ADC12_COMMON->CCR = ADC_CCR_VSENSESEL | ADC_CCR_VREFEN | 3 << ADC_CCR_CKMODE_Pos;
         // Flush Injected Queue, Enable Overrun, Rising Edge Ext Trigger & Regular Sample Trigger Source = trigger 21 -> hrtim_adc_trg1
-        ADC1->CFGR = ADC_CFGR_JQDIS | ADC_CFGR_OVRMOD |1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos;
+        ADC1->CFGR = ADC_CFGR_JQDIS;// | ADC_CFGR_OVRMOD; //|1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos;
         // Injected Oversample Enable, Regular Oversample enable, Oversampling shift = 8-bits, Oversampling Ratio = 256x
         ADC1->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos);
 
         // Regular Samples
-        ADC1->SQR1 = 12 << ADC_SQR1_SQ1_Pos;
-        /* ADC1->SQR1 = 12 <<  ADC_SQR1_SQ1_Pos; */
+        ADC1->SQR1 = ADC1_CH18_VREFINT << ADC_SQR1_SQ1_Pos |
+                     0 << ADC_SQR1_L_Pos;
 
-        // Injected Samples
-        /* ADC1->JSQR = Adc1Channels::Vt << ADC_JSQR_JSQ1_Pos | */
 
-        /*              Adc1Channels::VrefInt << ADC_JSQR_JSQ2_Pos | */
-
-        /*              /1* ADC1_STRGAUGE1 << ADC_JSQR_JSQ3_Pos | *1/ */
-        /*              /1* ADC1_STRGAUGE2 << ADC_JSQR_JSQ4_Pos | *1/ */
-        /*              3 << ADC_JSQR_JL_Pos; // 4 Conversions in Queue */
-        set_adc_seq(ADC1, ADC1_CH_VT, 0);
-        set_adc_seq(ADC1, ADC1_CH_VREFINT, 1);
-        set_adc_seq(ADC1, ADC1_CH_VBUS, 2);
-        ADC1->JSQR |= 2 << ADC_JSQR_JL_Pos;
+        ADC1->JSQR = ADC1_CH16_VT << ADC_JSQR_JSQ1_Pos |
+                     ADC1_CH18_VREFINT << ADC_JSQR_JSQ2_Pos |
+                     ADC1_CH1_STRGAUGE1 << ADC_JSQR_JSQ3_Pos |
+                     ADC1_CH4_STRGAUGE2 << ADC_JSQR_JSQ4_Pos |
+                     /* ADC1_CH15_VBUS << ADC_JSQR_JSQ3_Pos | */
+                     3 << ADC_JSQR_JL_Pos;
 
 
         // Sample Time Configuration
-        ADC1->SMPR1 = 6 << ADC_SMPR1_SMP1_Pos; // 247.5 cycles A1, 5.8us
-        // ADC1->SMPR2 = 2 << ADC_SMPR2_SMP13_Pos | // 12.5 cycles vbus, 294 ns, 200 ns min for opamp1
-        ADC1->SMPR2 = 6 << ADC_SMPR2_SMP16_Pos | // 247.5 cycles interal temperature, 5.8us, 5us min
-                      6 << ADC_SMPR2_SMP18_Pos |  // 247.5 cycles vrefint (~1.21V), 5.8us, 4us min
-                      6 << ADC_SMPR2_SMP15_Pos;  // 247.5 cycles vrefint (~1.21V), 5.8us, 4us min
+        ADC1->SMPR1 = 6 << ADC_SMPR1_SMP1_Pos | // 247.5 cycles 5.8us
+                      6 << ADC_SMPR1_SMP4_Pos; // 247.5 cycles 5.8us
+
+        ADC1->SMPR2 = 6 << ADC_SMPR2_SMP16_Pos | // 247.5 cycles 5.8us, 5us min
+                      6 << ADC_SMPR2_SMP15_Pos |  // 247.5 cycles 5.8us, 4us minF
+                      6 << ADC_SMPR2_SMP18_Pos ;  // 247.5 cycles 5.8us, 4us min
 
         /***************************************************
           ADC2
 
         ***************************************************/
-
-        // ADC2 A3->JDR1
-        // GPIO_SETL(C, 2, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0); // VC
-        // Flush Injected Queue, Enable Overrun, Rising Edge Ext Trigger & Trigger Source = trigger 21 -> hrtim_adc_trg1
-        ADC2->CFGR = ADC_CFGR_JQDIS | ADC_CFGR_OVRMOD |1 << ADC_CFGR_EXTEN_Pos | 21 << ADC_CFGR_EXTSEL_Pos;
-        // Injected Oversample Enable, Regular Oversample enable, Oversampling shift = 8-bits, Oversampling Ratio = 256x
-        ADC2->CFGR2 =  ADC_CFGR2_JOVSE | ADC_CFGR2_ROVSE | (8 << ADC_CFGR2_OVSS_Pos) | (7 << ADC_CFGR2_OVSR_Pos); // 256x oversample
-
         // Injected Sample Queue
-        ADC2->JSQR = 8 << ADC_JSQR_JSQ1_Pos |
+        ADC2->JSQR = ADC2_CH16_VBUS << ADC_JSQR_JSQ1_Pos |
                      0 << ADC_JSQR_JL_Pos |
                      1 << ADC_JSQR_JEXTEN_Pos | 
                      19 << ADC_JSQR_JEXTSEL_Pos; // trig 19 hrtim_adc_trg2 (injected)
         // Sample Time Configuration
-        ADC2->SMPR1 = 6 << ADC_SMPR1_SMP8_Pos;  // 247.5 cycles A3, 5.8us
+        ADC2->SMPR2 = 3 << ADC_SMPR2_SMP16_Pos;  // 24.5 cycles
 
         
         /***************************************************
           ADC3,4,5 Common
         ***************************************************/
         // Enable VREFINT, ADCclk = hclk/4 (42.5Mhz)
-        ADC345_COMMON->CCR = ADC_CCR_VREFEN | 3 << ADC_CCR_CKMODE_Pos; // hclk/4 (42.5 MHz)
+        ADC345_COMMON->CCR = 3 << ADC_CCR_CKMODE_Pos; // hclk/4 (42.5 MHz)
 
         /***************************************************
           ADC3
         ***************************************************/
-        // Regular Sample Queue
         // Injected Sample Queue
         ADC3->JSQR = 1 << ADC_JSQR_JEXTEN_Pos |
                      27 << ADC_JSQR_JEXTSEL_Pos | // trig 27 hrtim adc_trig1 (injected)
-                     13 << ADC_JSQR_JSQ1_Pos; 
+                     ADC3_CH13_IA << ADC_JSQR_JSQ1_Pos; 
 
         ADC3->SMPR2 = 2 << ADC_SMPR2_SMP13_Pos; // 12.5 cycles current_sense, 294 ns, 200 ns min for opamp3
         /***************************************************
@@ -327,7 +291,7 @@ void pin_config_obot_g474_h2() {
         // Injected Sample Queue
         ADC4->JSQR = 1 << ADC_JSQR_JEXTEN_Pos |
                      27 << ADC_JSQR_JEXTSEL_Pos | 
-                     17 << ADC_JSQR_JSQ1_Pos; // trig 27 hrtim adc_trig1 (injected)
+                     ADC4_CH17_IB << ADC_JSQR_JSQ1_Pos; // trig 27 hrtim adc_trig1 (injected)
         ADC4->SMPR2 = 2 << ADC_SMPR2_SMP17_Pos; // 12.5 cycles current_sense, 294 ns, 200 ns min for opamp6
         /***************************************************
           ADC5
@@ -336,25 +300,31 @@ void pin_config_obot_g474_h2() {
         // Injected Sample Queue
         ADC5->JSQR = 1 << ADC_JSQR_JEXTEN_Pos |
                      27 << ADC_JSQR_JEXTSEL_Pos | 
-                     13 << ADC_JSQR_JSQ1_Pos;  // trig 27 hrtim adc_trig1 (injected)
+                     ADC5_CH5_IC << ADC_JSQR_JSQ1_Pos;  // trig 27 hrtim adc_trig1 (injected)
         ADC5->SMPR1 = 2 << ADC_SMPR1_SMP5_Pos; // 12.5 cycles current_sense, 294 ns, 200 ns min for opamp4
 
 
         NVIC_SetPriority(ADC5_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
         NVIC_EnableIRQ(ADC5_IRQn);
 
+
         /***************************************************
-          OPAMPs
+          OPAMPS
         ***************************************************/
-        // OPAMP
-        // GPIO_SETL(A, 3, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);
-        // OPAMP1->CSR = 1 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pa3/vinp1
         GPIO_SETH(B, 11, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);
         GPIO_SETH(B, 12, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);
         GPIO_SETH(B, 13, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);
-        OPAMP4->CSR = 2 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb11/vinp2
-        OPAMP6->CSR = 0 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb12/vinp0
+        GPIO_SETL(B, 0, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);
+
+
+        //VBUS
+        OPAMP2->CSR = 2 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb0/vinp2
+        //IA
         OPAMP3->CSR = 1 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb13/vinp1
+        //IC
+        OPAMP4->CSR = 2 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb11/vinp2
+        //IB
+        OPAMP6->CSR = 0 << OPAMP_CSR_VPSEL_Pos | 3 << OPAMP_CSR_VMSEL_Pos | OPAMP_CSR_HIGHSPEEDEN | OPAMP_CSR_OPAMPINTEN | OPAMP_CSR_OPAMPxEN; // internal follower on pb12/vinp0
 
         // VREF/2 on opamp1, input PA1, output PA2
         //GPIO_SETL(A, 1, GPIO_MODE::ANALOG, GPIO_SPEED::LOW, 0);

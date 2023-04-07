@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1680885349120,
+  "lastUpdate": 1680896907412,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -28587,6 +28587,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkheap_used",
             "value": 18236,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ernesto.urdaneta@figure.ai",
+            "name": "Ernesto Urdaneta",
+            "username": "netogu"
+          },
+          "committer": {
+            "email": "ernesto.urdaneta@figure.ai",
+            "name": "Ernesto Urdaneta",
+            "username": "netogu"
+          },
+          "distinct": true,
+          "id": "b9f0fb420d1178746f45255a1744ac52ee8455b9",
+          "message": "adding strain gauges to ADC1",
+          "timestamp": "2023-04-07T12:44:47-07:00",
+          "tree_id": "5e5a2e1256636724006023f085047de97defe8d0",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/b9f0fb420d1178746f45255a1744ac52ee8455b9"
+        },
+        "date": 1680896905543,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 712.874,
+            "unit": "cycles",
+            "extra": "713 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3396.64,
+            "unit": "cycles",
+            "extra": "3410 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 3587.72,
+            "unit": "cycles",
+            "extra": "6672 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.1,
+            "unit": "cycles",
+            "extra": "17039 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 800.042872454,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 173848,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 27144,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 167944,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 32992,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 87176,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2771,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 17276,
             "unit": "bytes",
             "extra": "0 times"
           }

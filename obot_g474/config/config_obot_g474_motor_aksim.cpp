@@ -9,6 +9,7 @@
 #include "../../motorlib/peripheral/stm32g4/qia128_uart.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 //#include "../../motorlib/sensor_multiplex.h"
+#include "../../motorlib/peripheral/stm32g4/max31889.h"
 
 #ifndef MOTOR_ENCODER_BITS
 #define MOTOR_ENCODER_BITS 18
@@ -108,7 +109,7 @@ void spi1_reinit_callback() {
 
 namespace config {
     PT1000 motor_temperature(A1_DR);
-    MAX31875 ambient_temperature(i2c1, 7);
+    MAX31889 ambient_temperature(i2c1);
 };
 
 void config_init() {
@@ -122,7 +123,7 @@ void config_init() {
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
     System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
-    System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.read(); }));
+    System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
     System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));

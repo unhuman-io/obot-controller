@@ -79,7 +79,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.gear_ratio = 5.4,
     .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
     .drv_regs = {
-        (2<<11) | 0x00,  // control_reg 0x00, 6 PWM mode
+        (2<<11) | 0x20,  // control_reg 0x00, 3 PWM mode
         //(3<<11) | 0x3AA, // hs_reg      0x3CC, moderate drive current
         (3<<11) | 0x3FF, // hs_reg      0x3CC, moderate drive current
         //(4<<11) | 0x2FF, // ls_reg      0x0CC, no cycle by cycle, 500 ns tdrive

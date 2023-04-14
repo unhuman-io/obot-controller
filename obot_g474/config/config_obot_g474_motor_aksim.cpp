@@ -115,6 +115,7 @@ namespace config {
 float v5v;
 
 void config_init() {
+    config::motor_pwm.set_frequency_multiplier(3);
     config::output_encoder.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
     System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));

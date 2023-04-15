@@ -13,7 +13,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.motor_encoder.rollover = pow(2,25),
     /* .fast_loop_param.vbus_gain = 3.3/4096*(100+6.34)/6.34, */
     .fast_loop_param.vbus_gain = 1.0/4096*(100+6.34)/6.34,
-#ifdef CS_GAIN_MOD
+#if CS_GAIN_MOD
     .fast_loop_param.adc1_gain = 3.3/4096*(9200/3000.0),  // A/count
     .fast_loop_param.adc2_gain = 3.3/4096*(9200/3000.0),
     .fast_loop_param.adc3_gain = 3.3/4096*(9200/3000.0),
@@ -27,7 +27,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
 
 
 
-#ifdef H1
+#if H1
 
     /*************************************************************
 
@@ -77,9 +77,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.velocity.command_max = 0.15,
     .main_loop_param.velocity_controller_param.acceleration_limit = 1000,
 
-#endif
-
-#ifdef H2
+#elif H2
 
     /*************************************************************
       H2 Motor

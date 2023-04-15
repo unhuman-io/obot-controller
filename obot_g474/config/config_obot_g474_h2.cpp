@@ -29,7 +29,7 @@ struct InitCode
 namespace config
 {
     const uint32_t main_loop_frequency = 10000;
-    const uint32_t pwm_frequency = 20000;
+    const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
     GPIO motor_encoder_cs = {*GPIOA, 4, GPIO::OUTPUT};
@@ -193,7 +193,7 @@ void system_init()
 
 
     v3v3 =   *VREFINT_CAL_ADDR * VREFINT_CAL_VREF / V_REF_DR / 1000.0;
-    v3v3 = 3.3;
+    /* v3v3 = 3.3; */
     System::log("VREFINT_CAL:" + std::to_string(*VREFINT_CAL_ADDR));
     System::log("VREFINT_MEAS_2:" + std::to_string(V_REF_DR));
     System::log("3v3: " + std::to_string(v3v3));

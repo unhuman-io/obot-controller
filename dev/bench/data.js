@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1681521866801,
+  "lastUpdate": 1681525001388,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -29493,6 +29493,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 818.256487668,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 178752,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 27172,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 172828,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 33020,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 91328,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2843,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 18540,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ernesto.urdaneta@figure.ai",
+            "name": "Ernesto Urdaneta",
+            "username": "netogu"
+          },
+          "committer": {
+            "email": "ernesto.urdaneta@figure.ai",
+            "name": "Ernesto Urdaneta",
+            "username": "netogu"
+          },
+          "distinct": true,
+          "id": "a34e17ec8e0eb6a799063431d9b0653c6c5f70ee",
+          "message": "removing motorlib from tracked files",
+          "timestamp": "2023-04-14T19:13:39-07:00",
+          "tree_id": "b9ee383143df6d470d26e94af532aba750847b94",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/a34e17ec8e0eb6a799063431d9b0653c6c5f70ee"
+        },
+        "date": 1681524999536,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 701.731,
+            "unit": "cycles",
+            "extra": "702 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397,
+            "unit": "cycles",
+            "extra": "3411 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 3896.16,
+            "unit": "cycles",
+            "extra": "6676 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.7,
+            "unit": "cycles",
+            "extra": "17021 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 515.175395625,
             "unit": "Hz",
             "extra": "300 times"
           },

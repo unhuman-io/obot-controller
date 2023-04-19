@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1681862714302,
+  "lastUpdate": 1681863371019,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -29701,6 +29701,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarktext_size",
             "value": 172836,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 33020,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 91328,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2843,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 18540,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "46171a93e51ad5330e75ee0e0522b2e8d131517a",
+          "message": "Merge pull request #110 from unhuman-io/feature/h2-straingauge\n\nFeature/h2 straingauge",
+          "timestamp": "2023-04-18T17:13:01-07:00",
+          "tree_id": "0e38245640e14a73750259787663a7cebacc899d",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/46171a93e51ad5330e75ee0e0522b2e8d131517a"
+        },
+        "date": 1681863369125,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 701.641,
+            "unit": "cycles",
+            "extra": "702 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3396.25,
+            "unit": "cycles",
+            "extra": "3411 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 3818.45,
+            "unit": "cycles",
+            "extra": "6675 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.3,
+            "unit": "cycles",
+            "extra": "17045 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 787.209228355,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 178752,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 27172,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 172828,
             "unit": "bytes",
             "extra": "0 times"
           },

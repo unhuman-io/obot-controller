@@ -72,9 +72,9 @@ HardwareBrakeBase MainLoop::no_brake_;
 namespace config
 {
     static_assert(((double)CPU_FREQUENCY_HZ * 8 / 2) / pwm_frequency < 65535); // check pwm frequency
-    TempSensor temp_sensor;
-    I2C i2c1(*I2C1, 1000);
-    MAX31875 board_temperature(i2c1);
+    /* TempSensor temp_sensor; */
+    /* I2C i2c1(*I2C1, 1000); */
+    /* MAX31875 board_temperature(i2c1); */
     DriverMPS driver;
 
     HRPWM3 motor_pwm(pwm_frequency, *HRTIM1, 3, 3, 0, 1000, 0);
@@ -133,11 +133,17 @@ void system_init()
     }
 
     System::api.add_api_variable("3v3", new APIFloat(&v3v3));
-    std::function<float()> get_t = std::bind(&TempSensor::get_value, &config::temp_sensor);
-    std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config::temp_sensor, std::placeholders::_1);
-    System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t));
-    System::api.add_api_variable("Tboard", new const APICallbackFloat([]()
-                                                                      { return config::board_temperature.get_temperature(); }));
+    /* std::function<float()> get_t = std::bind(&TempSensor::get_value, &config::temp_sensor); */
+    /* std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config::temp_sensor, std::placeholders::_1); */
+    /* System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t)); */
+    /* System::api.add_api_variable("Tboard", new const APICallbackFloat([]() */
+    /*                                                                   { return config::board_temperature.get_temperature(); })); */
+    // System::api.add_api_variable("Tboard", new const APICallbackFloat([]()
+    //                                                                   { return (TS_CAL2_TEMP - TS_CAL1_TEMP)/(*(uint16_t*)TS_CAL2_REG - *(uint16_t*)TS_CAL1_REG) * (V_TEMP_DR - *(uint16_t*)TS_CAL1_REG) + 30.0f; }));
+    System::api.add_api_variable("SG1", new const APICallbackFloat([]()
+                                                                      { return V_SG1_DR; }));
+    System::api.add_api_variable("SG2", new const APICallbackFloat([]()
+                                                                      { return V_SG2_DR; }));
     System::api.add_api_variable("index_mod", new APIInt32(&index_mod));
     System::api.add_api_variable("drv_reset", new const APICallback([]()
                                                                     { return config::driver.reset(); }));
@@ -156,6 +162,7 @@ void system_init()
 
     for (auto regs : std::vector<ADC_TypeDef *>{ADC1, ADC2, ADC3, ADC4, ADC5})
     {
+        
         regs->CR = ADC_CR_ADVREGEN;
         ns_delay(20000);
         regs->CR |= ADC_CR_ADCAL;
@@ -177,12 +184,25 @@ void system_init()
     ADC1->CR |= ADC_CR_JADSTART;
     while (ADC1->CR & ADC_CR_JADSTART)
         ;
+    // ADC1->ISR = ADC_ISR_EOC;
+    // ADC1->CR |= ADC_CR_ADSTART;
+    
+    // while (!(ADC1->ISR & ADC_ISR_EOC));
+    // System::log("VREFINT_MEAS_1:" + std::to_string(V_REF_DR));
 
-    v3v3 = *((uint16_t *)(0x1FFF75AA)) * 3.0 / V_REF_DR;
+
+
+    v3v3 =   *VREFINT_CAL_ADDR * VREFINT_CAL_VREF / V_REF_DR / 1000.0;
+    /* v3v3 = 3.3; */
+    System::log("VREFINT_CAL:" + std::to_string(*VREFINT_CAL_ADDR));
+    System::log("VREFINT_MEAS_2:" + std::to_string(V_REF_DR));
     System::log("3v3: " + std::to_string(v3v3));
 
     ADC1->GCOMP = v3v3 * 4096;
     ADC1->CFGR2 |= ADC_CFGR2_GCOMP;
+    ADC2->GCOMP = v3v3 * 4096;
+    ADC2->CFGR2 |= ADC_CFGR2_GCOMP;
+
     ADC1->CR |= ADC_CR_ADSTART;
     ADC2->CR |= ADC_CR_JADSTART;
     ADC5->CR |= ADC_CR_JADSTART;
@@ -207,14 +227,14 @@ void system_maintenance()
     if (temp_rate.run())
     {
         ADC1->CR |= ADC_CR_JADSTART;
-        while (ADC1->CR & ADC_CR_JADSTART)
-            ;
-        T = config::temp_sensor.read();
-        v3v3 = *((uint16_t *)(0x1FFF75AA)) * 3.0 * ADC1->GCOMP / 4096.0 / ADC1->JDR2;
-        if (T > 100)
-        {
-            // config::main_loop.status_.error.microcontroller_temperature = 1;
-        }
+        while (ADC1->CR & ADC_CR_JADSTART);
+
+        /* T = config::temp_sensor.read(); */
+        v3v3 = *VREFINT_CAL_ADDR * VREFINT_CAL_VREF/1000.0 * ADC1->GCOMP / 4096.0 / V_REF_DR;
+        /* if (T > 100) */
+        /* { */
+        /*     // config::main_loop.status_.error.microcontroller_temperature = 1; */
+        /* } */
     }
     // pc 14 is low there is a fault
     if (!(GPIOC->IDR & 1 << 14))

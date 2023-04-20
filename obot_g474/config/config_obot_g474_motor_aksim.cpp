@@ -71,6 +71,8 @@ struct InitCode {
         UART5->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
         GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);
         GPIO_SETL(D, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);
+
+      GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PA0-> motor encoder cs
       // gpio out
       GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
       // gpio in
@@ -83,7 +85,7 @@ namespace config {
     const uint32_t pwm_frequency = 25000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
+    GPIO motor_encoder_cs(*GPIOA, 0, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     MotorEncoder motor_encoder(spi3_dma);
     //EncoderBase motor_encoder;
@@ -130,6 +132,8 @@ void config_init() {
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
     System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
+    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
+    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
     System::api.add_api_variable("brr", new APIUint32(&LPUART1->BRR));
     System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
     System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));

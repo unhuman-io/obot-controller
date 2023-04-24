@@ -148,6 +148,10 @@ void config_init() {
     System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
     System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
     System::api.add_api_variable("5V", new const APIFloat(&v5v));
+    System::api.add_api_variable("V5V", new const APIUint32(&V5V));
+    System::api.add_api_variable("I5V", new const APIUint32(&I5V));
+    System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
+    System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
 }
 
 FrequencyLimiter temp_rate_motor = {10};

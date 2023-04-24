@@ -127,6 +127,7 @@ void config_init() {
     System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
     System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
+    System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
     System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
@@ -134,6 +135,7 @@ void config_init() {
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
     System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
     System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
+    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("brr", new APIUint32(&LPUART1->BRR));
     System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
     System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));

@@ -148,6 +148,10 @@ void config_init() {
     System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
     System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
     System::api.add_api_variable("5V", new const APIFloat(&v5v));
+    System::api.add_api_variable("V5V", new const APIUint32(&V5V));
+    System::api.add_api_variable("I5V", new const APIUint32(&I5V));
+    System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
+    System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
 }
 
 FrequencyLimiter temp_rate_motor = {10};
@@ -171,9 +175,4 @@ void config_maintenance() {
     }
     v5v = (float) A3_DR/4096*v3v3*2;
     round_robin_logger.log_data(VOLTAGE_5V_INDEX, v5v);
-    round_robin_logger.log_data(BOARD_TEMPERATURE_INDEX, config::board_temperature.get_temperature());
-    float bus_current = config::main_loop.status_.power/config::main_loop.status_.fast_loop.vbus;
-    round_robin_logger.log_data(BUS_CURRENT_INDEX, bus_current);
-    round_robin_logger.log_data(MOTOR_POWER_INDEX, config::main_loop.status_.fast_loop.power);
-
 }

@@ -217,12 +217,13 @@ void config_maintenance() {
         if (config::joint_encoder_direct.get_value() != 0) {
             joint_bias_set = true;
             joint_encoder_bias = param->joint_encoder_bias;
-            float joint_position = (float) config::joint_encoder_direct.get_value()/pow(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
+            float joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
             if (joint_position > param->joint_encoder_rollover) {
                 joint_encoder_bias -= 2*M_PI;
             } else if (joint_position < -param->joint_encoder_rollover) {
                 joint_encoder_bias += 2*M_PI;
             }
+            logger.log_printf("joint encoder raw: %f, joint encoder bias: %f", (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS), joint_encoder_bias);
         }
     }
     if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
@@ -250,7 +251,7 @@ void load_send_data(const MainLoop &main_loop, SendData * const data) {
     data->mcu_timestamp = main_loop.status_.fast_loop.timestamp;
     data->motor_encoder = main_loop.status_.fast_loop.motor_position.raw;
     data->motor_position = main_loop.status_.motor_position;
-    data->joint_position = (float) config::joint_encoder_direct.get_value()/pow(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
+    data->joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
     data->torque = main_loop.status_.torque;
     data->rr_data = main_loop.status_.rr_data;
     data->reserved = main_loop.status_.output_position;

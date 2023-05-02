@@ -32,11 +32,11 @@ include ../motorlib/scripts/configure_gcc.mk
 include ../motorlib/scripts/configure.mk
 include ../motorlib/scripts/build.mk
 
-#include ../motorlib/scripts/make_param.mk
+include ../motorlib/scripts/make_param.mk
 
-# $(PARAM_DIR): $(BUILD_DIR)
-# 	$(MAKE) -C $(PARAM_DIR)
+$(PARAM_DIR): $(BUILD_DIR)
+	$(MAKE) -C $(PARAM_DIR)
 
-# .PHONY: $(PARAM_DIR)
+.PHONY: $(PARAM_DIR)
 
 

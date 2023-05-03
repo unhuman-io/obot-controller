@@ -1,4 +1,4 @@
-#include "param_obot_g474.h"
+#include "param_obot_g474_aksim.h"
 #include "math.h"
 
 

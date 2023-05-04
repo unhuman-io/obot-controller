@@ -3,6 +3,7 @@
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) initial_param = {
+#include "../motorlib/param_default.h"
     .fast_loop_param.pwm_frequency = 50000,
     .fast_loop_param.foc_param.pi_d.kp=0.25,
     .fast_loop_param.foc_param.pi_d.ki=0.04,

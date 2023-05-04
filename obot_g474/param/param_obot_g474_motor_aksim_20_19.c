@@ -4,7 +4,8 @@
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
-#include "param_motor_km_6013.c"
+#include "param_default.h"
+#include "param_motor_km_8508.c"
     .fast_loop_param.cogging.gain = 0,
     .startup_param.startup_mode = OPEN,
 #include "param_motor.c"

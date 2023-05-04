@@ -131,7 +131,7 @@ void spi1_reinit_callback() {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 namespace config {
-    PT1000 motor_temperature(A1_DR);
+    PT1000 motor_temperature(A1_DR, v3v3);
     MAX31889 ambient_temperature(i2c1);
 };
 

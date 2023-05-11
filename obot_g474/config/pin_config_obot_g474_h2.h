@@ -90,6 +90,7 @@ void pin_config_obot_g474_h2() {
           SCLK - PA5
           MISO - PA6
           MOSI - PA7
+          EN - PB10
           
         ***************************************************/
 
@@ -102,6 +103,8 @@ void pin_config_obot_g474_h2() {
         GPIO_SETL(A, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 5);   // SPI1 MISO
         GPIO_SETL(A, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 5);   // SPI1 MOSI
         MASK_SET(GPIOA->PUPDR, GPIO_PUPDR_PUPD6, 1); // MISO pull up
+        GPIO_SETH(B, 10, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);    // EN
+        GPIOB->BSRR = GPIO_BSRR_BS10;
 
 
         /***************************************************

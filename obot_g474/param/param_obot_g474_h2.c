@@ -28,7 +28,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
 
 
 #if H1
-
+    .name = "h1_test",
     /*************************************************************
 
       H1 Motor
@@ -44,15 +44,15 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     /* *      CURRENT CONTROL */
     /* *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-    .fast_loop_param.foc_param.pi_d.kp=25,
-    .fast_loop_param.foc_param.pi_d.ki=2.5,
-    .fast_loop_param.foc_param.pi_d.ki_limit=28,
-    .fast_loop_param.foc_param.pi_d.command_max=30,
-    .fast_loop_param.foc_param.pi_q.kp=25,
-    .fast_loop_param.foc_param.pi_q.ki=2.5,
-    .fast_loop_param.foc_param.pi_q.ki_limit=28,
-    .fast_loop_param.foc_param.pi_q.command_max=30,
-    .fast_loop_param.foc_param.current_filter_frequency_hz=50000,
+    .fast_loop_param.foc_param.pi_d.kp=15,
+    .fast_loop_param.foc_param.pi_d.ki=1.5,
+    .fast_loop_param.foc_param.pi_d.ki_limit=35,
+    .fast_loop_param.foc_param.pi_d.command_max=40,
+    .fast_loop_param.foc_param.pi_q.kp=15,
+    .fast_loop_param.foc_param.pi_q.ki=1.5,
+    .fast_loop_param.foc_param.pi_q.ki_limit=35,
+    .fast_loop_param.foc_param.pi_q.command_max=40,
+    .fast_loop_param.foc_param.current_filter_frequency_hz=20000,
     .fast_loop_param.foc_param.num_poles = 7,
     .fast_loop_param.phase_mode = 0,
     /* .fast_loop_param.motor_encoder.index_electrical_offset_pos = */ 
@@ -61,8 +61,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     /* *      POSITION CONTROL */
     /* *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/ 
     .main_loop_param.position_controller_param.position.kp = 2.5, 
-    .main_loop_param.position_controller_param.position.kd = 0.005, 
-    .main_loop_param.position_controller_param.position.command_max = 0.1, 
+    .main_loop_param.position_controller_param.position.kd = .005, 
+    .main_loop_param.position_controller_param.position.command_max = 1, 
     .main_loop_param.position_controller_param.position.output_filter_frequency_hz = 500.0, 
     .main_loop_param.position_controller_param.position.velocity_filter_frequency_hz = 500.0, 
      
@@ -72,13 +72,15 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
 
     .main_loop_param.velocity_controller_param.velocity.ki = 2.5,
     .main_loop_param.velocity_controller_param.velocity.kp = 0.005,
-    .main_loop_param.velocity_controller_param.velocity.ki_limit = 0.1,
-    .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 200,
-    .main_loop_param.velocity_controller_param.velocity.command_max = 0.15,
-    .main_loop_param.velocity_controller_param.acceleration_limit = 1000,
+    .main_loop_param.velocity_controller_param.velocity.ki_limit = 0.95,
+    .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 300,
+    .main_loop_param.velocity_controller_param.velocity.command_max = 1,
+    .main_loop_param.velocity_controller_param.acceleration_limit = 10000,
+
+    .startup_param.phase_lock_current = -1,
 
 #elif H2
-
+    .name = "h2_test",
     /*************************************************************
       H2 Motor
 
@@ -96,15 +98,15 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     /*/1*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
     /* *      CURRENT CONTROL */
     /* *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-    .fast_loop_param.foc_param.pi_d.kp=80.0, 
-    .fast_loop_param.foc_param.pi_d.ki=10.0,
-    .fast_loop_param.foc_param.pi_d.ki_limit=25,
-    .fast_loop_param.foc_param.pi_d.command_max=26,
-    .fast_loop_param.foc_param.pi_q.kp=80.0,
-    .fast_loop_param.foc_param.pi_q.ki=10.0,
-    .fast_loop_param.foc_param.pi_q.ki_limit=25,
-    .fast_loop_param.foc_param.pi_q.command_max=26,
-    .fast_loop_param.foc_param.current_filter_frequency_hz=50000,
+    .fast_loop_param.foc_param.pi_d.kp=80, 
+    .fast_loop_param.foc_param.pi_d.ki=5,
+    .fast_loop_param.foc_param.pi_d.ki_limit=35,
+    .fast_loop_param.foc_param.pi_d.command_max=40,
+    .fast_loop_param.foc_param.pi_q.kp=80,
+    .fast_loop_param.foc_param.pi_q.ki=5,
+    .fast_loop_param.foc_param.pi_q.ki_limit=35,
+    .fast_loop_param.foc_param.pi_q.command_max=40,
+    .fast_loop_param.foc_param.current_filter_frequency_hz=10000,
     .fast_loop_param.foc_param.num_poles = 7,
     .fast_loop_param.phase_mode = 1,
     /* .fast_loop_param.motor_encoder.use_index_electrical_offset_pos=1, */
@@ -114,9 +116,9 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     /*/1*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
     /* *      POSITION CONTROL */
     /* *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/ 
-    .main_loop_param.position_controller_param.position.kd = 0.005, 
-    .main_loop_param.position_controller_param.position.kp = 2.5, 
-    .main_loop_param.position_controller_param.position.command_max = 0.2, 
+    .main_loop_param.position_controller_param.position.kd = .002, 
+    .main_loop_param.position_controller_param.position.kp = .5, 
+    .main_loop_param.position_controller_param.position.command_max = 0.3, 
     .main_loop_param.position_controller_param.position.output_filter_frequency_hz = 500.0, 
     .main_loop_param.position_controller_param.position.velocity_filter_frequency_hz = 500.0, 
      
@@ -124,12 +126,14 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     /* *      VELOCITY CONTROL */
     /* *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-    .main_loop_param.velocity_controller_param.velocity.ki = 2.5,
-    .main_loop_param.velocity_controller_param.velocity.kp = 0.005,
-    .main_loop_param.velocity_controller_param.velocity.ki_limit = 0.18,
-    .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 500,
-    .main_loop_param.velocity_controller_param.velocity.command_max = 0.20,
-    .main_loop_param.velocity_controller_param.acceleration_limit = 1000,
+    .main_loop_param.velocity_controller_param.velocity.ki = .5,
+    .main_loop_param.velocity_controller_param.velocity.kp = 0.002,
+    .main_loop_param.velocity_controller_param.velocity.ki_limit = .25,
+    .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 300,
+    .main_loop_param.velocity_controller_param.velocity.command_max = .3,
+    .main_loop_param.velocity_controller_param.acceleration_limit = 10000,
+    
+    .startup_param.phase_lock_current = 0.3,
 
 #endif
 

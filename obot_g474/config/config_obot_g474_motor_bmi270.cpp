@@ -48,7 +48,7 @@ namespace config {
     InitCode init_code;
 
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
-    //SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
+    SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
     //OutputEncoder output_encoder(spi1_dma);
     EncoderBase motor_encoder;
     TorqueSensor torque_sensor;
@@ -63,9 +63,19 @@ namespace config {
     EncoderBase output_encoder;
 };
 
+#define SPI1_REINIT_CALLBACK
+void spi1_reinit_callback() {
+    SPI1->CR1=0;
+    SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
+    // ORDER DEPENDANCE SPE set last
+    SPI1->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/64
+    config::spi1_dma2.reinit();
+}
+
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
+    config::spi1_dma2.register_operation_ = config::drv.register_operation_;
     // System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
     // System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
     // System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));

@@ -84,14 +84,21 @@ void config_init() {
     // System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
     // System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
     System::api.add_api_variable("imu", new const APICallback([](){ return config::imu.get_string(); }));
-    
+    System::api.add_api_variable("ax", new const APICallbackFloat([](){ return config::imu.data_.acc_x*8./pow(2,15); }));
+    System::api.add_api_variable("ay", new const APICallbackFloat([](){ return config::imu.data_.acc_y*8./pow(2,15); }));
+    System::api.add_api_variable("az", new const APICallbackFloat([](){ return config::imu.data_.acc_z*8./pow(2,15); }));
+    System::api.add_api_variable("gx", new const APICallbackFloat([](){ return config::imu.data_.gyr_x*2000.*M_PI/180/pow(2,15); }));
+    System::api.add_api_variable("gy", new const APICallbackFloat([](){ return config::imu.data_.gyr_y*2000.*M_PI/180/pow(2,15); }));
+    System::api.add_api_variable("gz", new const APICallbackFloat([](){ return config::imu.data_.gyr_z*2000.*M_PI/180/pow(2,15); }));
+
+
     GPIO_SETL(A, 4, 1, 0, 0);
     GPIOA->BSRR |= GPIO_BSRR_BS4; // set drv cs
 
     config::imu.init();
 }
 
-FrequencyLimiter imu_rate = {10};
+FrequencyLimiter imu_rate = {100};
 
 void config_maintenance() {
     if (imu_rate.run()) {

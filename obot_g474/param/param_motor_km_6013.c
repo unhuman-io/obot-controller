@@ -1,0 +1,11 @@
+ // approx 2 kHz bandwidth
+    .fast_loop_param.foc_param.pi_d.kp=3,
+    .fast_loop_param.foc_param.pi_d.ki=.3,
+    .fast_loop_param.foc_param.pi_d.ki_limit=35,
+    .fast_loop_param.foc_param.pi_d.command_max=40,
+    .fast_loop_param.foc_param.pi_q.kp=3,
+    .fast_loop_param.foc_param.pi_q.ki=.3,
+    .fast_loop_param.foc_param.pi_q.ki_limit=35,
+    .fast_loop_param.foc_param.pi_q.command_max=40,
+    .fast_loop_param.foc_param.current_filter_frequency_hz=20000,
+    .fast_loop_param.foc_param.num_poles = 10,

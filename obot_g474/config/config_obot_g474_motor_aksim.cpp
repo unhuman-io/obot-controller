@@ -208,7 +208,7 @@ void config_maintenance() {
     if(temp_rate_motor.run()) {
         config::motor_temperature.read();
         round_robin_logger.log_data(MOTOR_TEMPERATURE_INDEX, config::motor_temperature.get_temperature());
-        if (config::motor_temperature.get_temperature() > 100) {
+        if (config::motor_temperature.get_temperature() > 120) {
             config::main_loop.status_.error.motor_temperature = true;
         }
         config::ambient_temperature.read();

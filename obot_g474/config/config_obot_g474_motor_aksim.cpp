@@ -133,6 +133,7 @@ void spi1_reinit_callback() {
 namespace config {
     PT1000 motor_temperature(A1_DR, v3v3);
     MAX31889 ambient_temperature(i2c1);
+    MAX31889 ambient_temperature_if(i2c1,1);
 };
 
 float v5v;
@@ -157,6 +158,7 @@ void config_init() {
     System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
     System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
+    System::api.add_api_variable("Tambient2", new const APICallbackFloat([](){ return config::ambient_temperature_if.get_temperature(); }));
 #ifdef JOINT_ENCODER_BITS
     config::output_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     config::joint_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
@@ -198,6 +200,7 @@ void config_init() {
     System::api.add_api_variable("I5V", new const APIUint32(&I5V));
     System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
     System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
+
 }
 
 FrequencyLimiter temp_rate_motor = {10};
@@ -205,11 +208,13 @@ void config_maintenance() {
     if(temp_rate_motor.run()) {
         config::motor_temperature.read();
         round_robin_logger.log_data(MOTOR_TEMPERATURE_INDEX, config::motor_temperature.get_temperature());
-        if (config::motor_temperature.get_temperature() > 100) {
+        if (config::motor_temperature.get_temperature() > 120) {
             config::main_loop.status_.error.motor_temperature = true;
         }
         config::ambient_temperature.read();
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_INDEX, config::ambient_temperature.get_temperature());
+        config::ambient_temperature_if.read();
+        round_robin_logger.log_data(AMBIENT_TEMPERATURE_2_INDEX, config::ambient_temperature_if.get_temperature());
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
         config::motor_encoder.diag_warn_count_ > pow(2,31)) {

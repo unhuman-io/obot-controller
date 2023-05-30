@@ -138,7 +138,7 @@ namespace config {
     MAX31889 ambient_temperature_4(i2c1,3);
 };
 
-float v5v;
+float v5v, i5v, i48v;
 #ifdef JOINT_ENCODER_BITS
 float joint_encoder_bias = 0;
 bool joint_bias_set = false;
@@ -202,6 +202,9 @@ void config_init() {
     System::api.add_api_variable("5V", new const APIFloat(&v5v));
     System::api.add_api_variable("V5V", new const APIUint32(&V5V));
     System::api.add_api_variable("I5V", new const APIUint32(&I5V));
+    System::api.add_api_variable("i5V", new const APIFloat(&i5v));
+    System::api.add_api_variable("i48V", new const APIFloat(&i48v));
+    System::api.add_api_variable("IBUS", new const APIUint32(&I_BUS_DR));
     System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
     System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
 
@@ -264,7 +267,9 @@ void config_maintenance() {
     round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder.crc_err_count_);
     round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder.diag_err_count_);
 #endif
-    v5v = (float) A3_DR/4096*v3v3*2;
+    v5v = (float) V5V/4096*v3v3*2;
+    i5v = (float) I5V/4096*v3v3;
+    i48v = (float) I_BUS_DR/4096*v3v3/20/.0005;
     round_robin_logger.log_data(VOLTAGE_5V_INDEX, v5v);
     round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
     round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_);

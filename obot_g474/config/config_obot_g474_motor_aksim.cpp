@@ -269,8 +269,12 @@ void config_maintenance() {
 #endif
     v5v = (float) V5V/4096*v3v3*2;
     i5v = (float) I5V/4096*v3v3;
-    i48v = (float) I_BUS_DR/4096*v3v3/20/.0005;
+    i48v = -((float) I_BUS_DR-2048)/4096*v3v3/20/.0005;
     round_robin_logger.log_data(VOLTAGE_5V_INDEX, v5v);
+    round_robin_logger.log_data(CURRENT_5V_INDEX, i5v);
+#if defined (HAS_BUS_CURRENT_SENSE)
+    round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
+#endif
     round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
     round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_);
 }

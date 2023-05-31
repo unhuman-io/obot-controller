@@ -134,6 +134,8 @@ namespace config {
     PT1000 motor_temperature(A1_DR, v3v3);
     MAX31889 ambient_temperature(i2c1);
     MAX31889 ambient_temperature_if(i2c1,1);
+    MAX31889 ambient_temperature_3(i2c1,2);
+    MAX31889 ambient_temperature_4(i2c1,3);
 };
 
 float v5v;
@@ -159,6 +161,8 @@ void config_init() {
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
     System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
     System::api.add_api_variable("Tambient2", new const APICallbackFloat([](){ return config::ambient_temperature_if.get_temperature(); }));
+    System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
+    System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 #ifdef JOINT_ENCODER_BITS
     config::output_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     config::joint_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
@@ -215,11 +219,17 @@ void config_maintenance() {
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_INDEX, config::ambient_temperature.get_temperature());
         config::ambient_temperature_if.read();
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_2_INDEX, config::ambient_temperature_if.get_temperature());
+        config::ambient_temperature_3.read();
+        round_robin_logger.log_data(AMBIENT_TEMPERATURE_3_INDEX, config::ambient_temperature_3.get_temperature());
+        config::ambient_temperature_4.read();
+        round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, config::ambient_temperature_4.get_temperature());
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
         config::motor_encoder.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.motor_encoder = true;
     }
+    round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_err_count_);
+    round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder.diag_err_count_);
 #ifdef JOINT_ENCODER_BITS
     if (!joint_bias_set) {
         if (config::joint_encoder_direct.get_value() != 0) {
@@ -242,14 +252,22 @@ void config_maintenance() {
         config::joint_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
+    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
+    round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
+    round_robin_logger.log_data(JOINT_ENCODER_ERROR_INDEX, config::joint_encoder_direct.diag_err_count_);
 #else
     if(config::output_encoder.crc_err_count_ > pow(2,31) || config::output_encoder.diag_err_count_ > 100 ||
         config::output_encoder.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
+    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder.crc_err_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder.diag_err_count_);
 #endif
     v5v = (float) A3_DR/4096*v3v3*2;
     round_robin_logger.log_data(VOLTAGE_5V_INDEX, v5v);
+    round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
+    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_);
 }
 
 #ifdef JOINT_ENCODER_BITS

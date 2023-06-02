@@ -298,7 +298,7 @@ void ADC5_IRQHandler(void)
   HAL_ADC_IRQHandler(&hadc5);
   /* USER CODE BEGIN ADC5_IRQn 1 */
 #endif
-  ADC5->ISR = ADC_ISR_JEOC;
+  ADC5->ISR = ADC_ISR_JEOS;
   INTERRUPT_PROFILE_END(fastloop)
   CLEAR_SCOPE_PIN(A,8);
   //scope1_GPIO_Port->BSRR |= scope1_Pin << 16; 

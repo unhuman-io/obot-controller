@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1686875733069,
+  "lastUpdate": 1686879017741,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -36431,6 +36431,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkheap_used",
             "value": 18580,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dmitrii.akopian@figure.ai",
+            "name": "Dmitrii Akopian",
+            "username": "dakopian-figure"
+          },
+          "committer": {
+            "email": "dmitrii.akopian@figure.ai",
+            "name": "Dmitrii Akopian",
+            "username": "dakopian-figure"
+          },
+          "distinct": true,
+          "id": "01d3e3e028894a9dd067157b48dcbbd4e467c90c",
+          "message": "Add a configuration for the hands controller board",
+          "timestamp": "2023-06-15T18:27:10-07:00",
+          "tree_id": "b772ee77f026981a041a67e4b82506da3a907f8f",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/01d3e3e028894a9dd067157b48dcbbd4e467c90c"
+        },
+        "date": 1686879015721,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 794,
+            "unit": "cycles",
+            "extra": "794 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3400.13,
+            "unit": "cycles",
+            "extra": "3422 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 4972.63,
+            "unit": "cycles",
+            "extra": "8046 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.8,
+            "unit": "cycles",
+            "extra": "17035 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 778.572940927,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 166752,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 8744,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 160868,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14580,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 68456,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 7609,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 18508,
             "unit": "bytes",
             "extra": "0 times"
           }

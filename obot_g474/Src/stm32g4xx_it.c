@@ -26,6 +26,13 @@
 #include "../../motorlib/system.h"
 /* USER CODE END Includes */
 
+#define SPI_DEBUG_PIN2_SET()   do{GPIOC->ODR |= GPIO_ODR_OD12;}while(0)
+#define SPI_DEBUG_PIN2_CLEAR() do{GPIOC->ODR &= ~GPIO_ODR_OD12;}while(0)
+
+#define SPI_DEBUG_PIN3_SET()   do{GPIOC->ODR |= GPIO_ODR_OD11;}while(0)
+#define SPI_DEBUG_PIN3_CLEAR() do{GPIOC->ODR &= ~GPIO_ODR_OD11;}while(0)
+
+
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
 
@@ -269,6 +276,8 @@ void USB_LP_IRQHandler(void)
   */
 void TIM1_UP_TIM16_IRQHandler(void)
 {
+  SPI_DEBUG_PIN3_SET();
+
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
   SET_SCOPE_PIN(C,0);
   INTERRUPT_PROFILE_START;
@@ -282,6 +291,8 @@ void TIM1_UP_TIM16_IRQHandler(void)
   INTERRUPT_PROFILE_END(mainloop);
   CLEAR_SCOPE_PIN(C,0); 
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
+
+  SPI_DEBUG_PIN3_CLEAR();
 }
 
 /**
@@ -289,6 +300,7 @@ void TIM1_UP_TIM16_IRQHandler(void)
   */
 void ADC5_IRQHandler(void)
 {
+  //SPI_DEBUG_PIN2_SET();
   /* USER CODE BEGIN ADC5_IRQn 0 */
   SET_SCOPE_PIN(C,1);
   INTERRUPT_PROFILE_START;
@@ -303,6 +315,7 @@ void ADC5_IRQHandler(void)
   CLEAR_SCOPE_PIN(C,1);
   //scope1_GPIO_Port->BSRR |= scope1_Pin << 16; 
   /* USER CODE END ADC5_IRQn 1 */
+  //SPI_DEBUG_PIN2_CLEAR();
 }
 
 /* USER CODE BEGIN 1 */

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1686875647866,
+  "lastUpdate": 1686875733069,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -36293,6 +36293,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 544.571059987,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 166844,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 8744,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 160960,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14580,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 68456,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 7633,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 18580,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "dmitrii.akopian@figure.ai",
+            "name": "Dmitrii Akopian",
+            "username": "dakopian-figure"
+          },
+          "committer": {
+            "email": "dmitrii.akopian@figure.ai",
+            "name": "Dmitrii Akopian",
+            "username": "dakopian-figure"
+          },
+          "distinct": true,
+          "id": "733cc6ebac950caf7972fd5a49b885657acb1fe2",
+          "message": "Add a configuration for the hands controller board",
+          "timestamp": "2023-06-15T17:32:07-07:00",
+          "tree_id": "10a58bc66d97bf287aa06d67ff535235b978d0bc",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/733cc6ebac950caf7972fd5a49b885657acb1fe2"
+        },
+        "date": 1686875731109,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 794,
+            "unit": "cycles",
+            "extra": "794 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3399.95,
+            "unit": "cycles",
+            "extra": "3424 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 5023.55,
+            "unit": "cycles",
+            "extra": "7042 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.9,
+            "unit": "cycles",
+            "extra": "17032 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 561.135979097,
             "unit": "Hz",
             "extra": "300 times"
           },

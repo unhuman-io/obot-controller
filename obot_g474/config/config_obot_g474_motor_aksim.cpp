@@ -198,6 +198,8 @@ void config_init() {
     System::api.add_api_variable("tcrc_error", new const APIUint32(&config::torque_sensor.crc_error_));
     System::api.add_api_variable("tcrc_calc", new const APIUint8(&config::torque_sensor.crc_calc_));
     System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
+    System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
+    System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor.timeout_error_));
     System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
     System::api.add_api_variable("5V", new const APIFloat(&v5v));
     System::api.add_api_variable("V5V", new const APIUint32(&V5V));
@@ -276,7 +278,10 @@ void config_maintenance() {
     round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
 #endif
     round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
-    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_);
+    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_ + config::torque_sensor.wait_error_ + config::torque_sensor.timeout_error_);
+    if (config::torque_sensor.timeout_error_ > 100) {
+        config::main_loop.status_.error.torque_sensor = true;
+    }
 }
 
 #ifdef JOINT_ENCODER_BITS

@@ -150,7 +150,7 @@ struct InitCode {
 
 static struct {
     InitCode init_code;
-    uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 32.0 / (hrperiod);
+    uint32_t pwm_frequency = (double) CPU_FREQUENCY_HZ * 16.0 / (hrperiod);
     uint32_t main_loop_frequency = (double) CPU_FREQUENCY_HZ/(main_loop_period);
     Driver driver;
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
@@ -236,6 +236,8 @@ void drv_reset(uint32_t blah) {
 void config_init() {
     System::api.add_api_variable("spi", new APICallback([](){ return config_items.spi_debug.read(); }, 
         [](std::string s) { config_items.spi_debug.write(s); }));
+    System::api.add_api_variable("deadtime", new APICallbackUint16([](){ 
+        return config_items.motor_pwm.deadtime_ns_; }, [](uint16_t u) {config_items.motor_pwm.set_deadtime(u); }));
 }
 
 void system_init() {

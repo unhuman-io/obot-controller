@@ -89,6 +89,11 @@ struct InitCode {
       GPIO_SETL(C, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A3 used as joint encoder cs
       GPIOC->BSRR = GPIO_BSRR_BS2;
 #endif
+
+#ifndef ENABLE_USBN_PULLDOWN
+      GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A3 used as joint encoder cs
+      GPIOA->BSRR = GPIO_BSRR_BR9;
+#endif
     }
 };
 

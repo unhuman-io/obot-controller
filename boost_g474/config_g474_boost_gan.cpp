@@ -167,7 +167,7 @@ static struct {
     //QEPEncoder motor_encoder = {*TIM5};
     EncoderBase output_encoder;
     GPIO enable = {*GPIOC, 11, GPIO::OUTPUT};
-    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200};    // driver has 100ns turn off delay, then 50 ns deadband. Must avoid both to reduce jitter to 20 ns
+    HRPWM motor_pwm = {pwm_frequency, *HRTIM1, 3, 5, 4, false, 200, 100, 100};    // driver has 100ns turn off delay, then 50 ns deadband. Must avoid both to reduce jitter to 20 ns
     FastLoop fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &ADC5->JDR1, &ADC4->JDR1, &ADC3->JDR1, &ADC1->DR};
     LED led = {const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR1)), 
                const_cast<uint16_t*>(reinterpret_cast<volatile uint16_t *>(&TIM4->CCR2)),
@@ -238,6 +238,7 @@ void config_init() {
         [](std::string s) { config_items.spi_debug.write(s); }));
     System::api.add_api_variable("deadtime", new APICallbackUint16([](){ 
         return config_items.motor_pwm.deadtime_ns_; }, [](uint16_t u) {config_items.motor_pwm.set_deadtime(u); }));
+      System::api.add_api_variable("pwm_mult", new APICallbackUint8([](){return config_items.motor_pwm.get_frequency_multiplier();}, [](uint8_t mult){ config_items.motor_pwm.set_frequency_multiplier(mult);}));
 }
 
 void system_init() {

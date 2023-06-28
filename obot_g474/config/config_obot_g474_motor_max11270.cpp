@@ -23,7 +23,7 @@ struct InitCode {
       pin_config_obot_g474_motor_r0();
       SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
-      SPI3->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/64
+      SPI3->CR1 = SPI_CR1_MSTR | (6 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/64
            
       DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
       DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
@@ -71,6 +71,7 @@ void config_init() {
     // System::api.add_api_variable("tcrc_calc", new const APIUint8(&config::torque_sensor.crc_calc_));
     // System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
     // System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
+    System::api.add_api_variable("traw", new const APICallback([](){ return u32_to_hex(config::torque_sensor.raw_value_); }));
 }
 
 void config_maintenance() {

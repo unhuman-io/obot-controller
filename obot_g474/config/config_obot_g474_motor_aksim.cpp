@@ -286,12 +286,19 @@ void config_maintenance() {
 
 #ifdef JOINT_ENCODER_BITS
 void load_send_data(const MainLoop &main_loop, SendData * const data) {
-    data->iq = main_loop.status_.fast_loop.foc_status.measured.i_q;
+    static FirstOrderLowPassFilter joint_position_filter(1.0/config::main_loop_frequency, 1000);
+    static FIRFilter<> joint_velocity_filter(1.0/config::main_loop_frequency, param->main_loop_param.output_filter_hz.output_velocity);
+    data->iq = main_loop.status_.fast_loop.iq_filtered;
     data->host_timestamp_received = main_loop.host_timestamp_;
     data->mcu_timestamp = main_loop.status_.fast_loop.timestamp;
-    data->motor_encoder = main_loop.status_.fast_loop.motor_position.raw;
-    data->motor_position = main_loop.status_.motor_position;
-    data->joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
+    data->motor_position = main_loop.status_.motor_position_filtered;
+    data->reserved = main_loop.status_.output_position_filtered;
+    data->motor_velocity = main_loop.status_.motor_velocity_filtered;
+    
+    data->torque = main_loop.status_.torque_filtered;
+    float joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
+    data->joint_position = joint_position_filter.update(joint_position);
+    data->joint_velocity = joint_velocity_filter.update(joint_position);
     data->torque = main_loop.status_.torque;
     data->rr_data = main_loop.status_.rr_data;
     data->reserved = main_loop.status_.output_position;

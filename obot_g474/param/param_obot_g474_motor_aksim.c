@@ -57,8 +57,8 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
 
     .main_loop_param.no_latch_driver_fault = 1,
 
-    .main_loop_param.output_filter_hz.motor_velocity = {-0.0455, -0.0364, -0.0273, -0.0182, -0.0091, -0.0000, 0.0091, 0.0182, 0.0273, 0.0364, 0.0455},
-    .main_loop_param.output_filter_hz.output_velocity = {-0.0455, -0.0364, -0.0273, -0.0182, -0.0091, -0.0000, 0.0091, 0.0182, 0.0273, 0.0364, 0.0455},
+    // .main_loop_param.output_filter_hz.motor_velocity = {-0.0455, -0.0364, -0.0273, -0.0182, -0.0091, -0.0000, 0.0091, 0.0182, 0.0273, 0.0364, 0.0455},
+    // .main_loop_param.output_filter_hz.output_velocity = {-0.0455, -0.0364, -0.0273, -0.0182, -0.0091, -0.0000, 0.0091, 0.0182, 0.0273, 0.0364, 0.0455},
 
     .name = "test",
 #ifdef PARAM_OVERRIDES

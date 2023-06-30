@@ -99,7 +99,7 @@ struct InitCode {
 
 namespace config {
     const uint32_t main_loop_frequency = 10000;
-    const uint32_t pwm_frequency = 25000;
+    const uint32_t pwm_frequency = 33000;
     InitCode init_code;
 
     GPIO motor_encoder_cs(*GPIOA, 0, GPIO::OUTPUT);
@@ -151,7 +151,7 @@ bool joint_bias_set = false;
 
 void config_init() {
 #ifndef PWM_MULT
-#define PWM_MULT 3
+#define PWM_MULT 2
 #endif
     config::motor_pwm.set_frequency_multiplier(PWM_MULT);
     System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));

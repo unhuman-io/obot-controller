@@ -233,11 +233,11 @@ void config_maintenance() {
         }
         float Tambient = ambient_temperature_filter.update(config::ambient_temperature.read());
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_INDEX, Tambient);
-        float Tambient2 = ambient_temperature_filter2.update(config::ambient_temperature_if.read());
+        float Tambient2 = ambient2_temperature_filter.update(config::ambient_temperature_if.read());
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_2_INDEX, Tambient2);
-        float Tambient3 = ambient_temperature_filter3.update(config::ambient_temperature_3.read());
+        float Tambient3 = ambient3_temperature_filter.update(config::ambient_temperature_3.read());
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_3_INDEX, Tambient3);
-        float Tambien4 = ambient_temperature_filter4.update(config::ambient_temperature_4.read());
+        float Tambient4 = ambient4_temperature_filter.update(config::ambient_temperature_4.read());
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, Tambient4);
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||

@@ -217,22 +217,28 @@ void config_init() {
 
 }
 
+MedianFilter<> motor_temperature_filter;
+MedianFilter<> ambient_temperature_filter;
+MedianFilter<> ambient2_temperature_filter;
+MedianFilter<> ambient3_temperature_filter;
+MedianFilter<> ambient4_temperature_filter;
+
 FrequencyLimiter temp_rate_motor = {10};
 void config_maintenance() {
     if(temp_rate_motor.run()) {
-        config::motor_temperature.read();
-        round_robin_logger.log_data(MOTOR_TEMPERATURE_INDEX, config::motor_temperature.get_temperature());
-        if (config::motor_temperature.get_temperature() > 120) {
+        float Tmotor = motor_temperature_filter.update(config::motor_temperature.read());
+        round_robin_logger.log_data(MOTOR_TEMPERATURE_INDEX, Tmotor);
+        if (Tmotor > 120) {
             config::main_loop.status_.error.motor_temperature = true;
         }
-        config::ambient_temperature.read();
-        round_robin_logger.log_data(AMBIENT_TEMPERATURE_INDEX, config::ambient_temperature.get_temperature());
-        config::ambient_temperature_if.read();
-        round_robin_logger.log_data(AMBIENT_TEMPERATURE_2_INDEX, config::ambient_temperature_if.get_temperature());
-        config::ambient_temperature_3.read();
-        round_robin_logger.log_data(AMBIENT_TEMPERATURE_3_INDEX, config::ambient_temperature_3.get_temperature());
-        config::ambient_temperature_4.read();
-        round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, config::ambient_temperature_4.get_temperature());
+        float Tambient = ambient_temperature_filter.update(config::ambient_temperature.read());
+        round_robin_logger.log_data(AMBIENT_TEMPERATURE_INDEX, Tambient);
+        float Tambient2 = ambient2_temperature_filter.update(config::ambient_temperature_if.read());
+        round_robin_logger.log_data(AMBIENT_TEMPERATURE_2_INDEX, Tambient2);
+        float Tambient3 = ambient3_temperature_filter.update(config::ambient_temperature_3.read());
+        round_robin_logger.log_data(AMBIENT_TEMPERATURE_3_INDEX, Tambient3);
+        float Tambient4 = ambient4_temperature_filter.update(config::ambient_temperature_4.read());
+        round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, Tambient4);
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
         config::motor_encoder.diag_warn_count_ > pow(2,31)) {

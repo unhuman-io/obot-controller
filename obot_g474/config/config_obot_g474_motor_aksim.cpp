@@ -313,6 +313,7 @@ void load_send_data(const MainLoop &main_loop, SendData * const data) {
     data->torque = main_loop.status_.torque;
     data->rr_data = main_loop.status_.rr_data;
     data->reserved = main_loop.status_.output_position;
+    data->iq_desired = main_loop.status_.fast_loop.foc_command.desired.i_q;
     data->flags.mode = main_loop.status_.mode;
     data->flags.error = main_loop.status_.error;
     data->flags.misc.byte = 0;

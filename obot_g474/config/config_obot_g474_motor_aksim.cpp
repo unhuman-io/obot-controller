@@ -24,7 +24,14 @@
 //#pragma message XSTR(OUTPUT_ENCODER_BITS)
 
 #define END_TRIGGER_MOTOR_ENCODER
+
+#ifdef MAX11254_TORQUE_SENSOR
+#include "../../motorlib/max11254.h"
+using TorqueSensor = MAX11254;
+#else
 using TorqueSensor = QIA128_UART; 
+#endif
+
 //using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
 //using MotorEncoder = EncoderBase;
@@ -121,7 +128,13 @@ namespace config {
 #endif
     //EncoderBase output_encoder;
     //QIA128_UART torque_sensor(*LPUART1);
+    SPIDMA spi1_dma3(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
+#ifdef MAX11254_TORQUE_SENSOR
+    MAX11254 torque_sensor(spi1_dma3);
+#else
     QIA128_UART torque_sensor(*UART5);
+#endif
+
 };
 
 #define SPI1_REINIT_CALLBACK
@@ -196,6 +209,9 @@ void config_init() {
     System::api.add_api_variable("brr", new APIUint32(&LPUART1->BRR));
     System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
     System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));
+#ifdef MAX11254_TORQUE_SENSOR
+    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_value_));
+#else
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
     System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor.read_error_));
@@ -206,6 +222,7 @@ void config_init() {
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
     System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor.timeout_error_));
     System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
+#endif
     System::api.add_api_variable("5V", new const APIFloat(&v5v));
     System::api.add_api_variable("V5V", new const APIUint32(&V5V));
     System::api.add_api_variable("I5V", new const APIUint32(&I5V));
@@ -288,11 +305,14 @@ void config_maintenance() {
 #if defined (HAS_BUS_CURRENT_SENSE)
     round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
 #endif
+#ifdef MAX11254_TORQUE_SENSOR
+#else
     round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
     round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_ + config::torque_sensor.wait_error_ + config::torque_sensor.timeout_error_);
     if (config::torque_sensor.timeout_error_ > 100) {
         config::main_loop.status_.error.torque_sensor = true;
     }
+#endif
 }
 
 #ifdef JOINT_ENCODER_BITS

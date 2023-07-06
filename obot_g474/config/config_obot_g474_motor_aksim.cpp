@@ -40,9 +40,9 @@ using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
 using OutputEncoder = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2Encoder<JOINT_ENCODER_BITS>>;
 using JointEncoder = OutputEncoder::SecondarySensor;
 #else
-using OutputEncoder = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
+//using OutputEncoder = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
 #endif
-//using OutputEncoder = EncoderBase;
+using OutputEncoder = EncoderBase;
 
 //using TorqueSensor = TorqueSensorMultiplex<QIA128, Aksim2Encoder<18>>;
 //using OutputEncoder = TorqueSensor::SecondarySensor;
@@ -124,13 +124,14 @@ namespace config {
     OutputEncoder output_encoder(output_encoder_direct, joint_encoder_direct);
     JointEncoder &joint_encoder = output_encoder.secondary();
 #else
-    OutputEncoder output_encoder(spi1_dma);
+    Aksim2Encoder<OUTPUT_ENCODER_BITS> output_encoder_direct(spi1_dma);
 #endif
     //EncoderBase output_encoder;
-    //QIA128_UART torque_sensor(*LPUART1);
+
     SPIDMA spi1_dma3(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
 #ifdef MAX11254_TORQUE_SENSOR
     MAX11254 torque_sensor(spi1_dma3);
+    EncoderBase output_encoder;
 #else
     QIA128_UART torque_sensor(*UART5);
 #endif
@@ -182,14 +183,7 @@ void config_init() {
     System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 #ifdef JOINT_ENCODER_BITS
-    config::output_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     config::joint_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.diag_err_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.diag_warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_err_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
-    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder_direct.crc_error_raw_latch_));
     System::api.add_api_variable("jerr", new APIUint32(&config::joint_encoder_direct.diag_err_count_));
     System::api.add_api_variable("jwarn", new APIUint32(&config::joint_encoder_direct.diag_warn_count_));
     System::api.add_api_variable("jcrc_cnt", new APIUint32(&config::joint_encoder_direct.crc_err_count_));
@@ -197,15 +191,15 @@ void config_init() {
     System::api.add_api_variable("jrawh", new const APICallback([](){ return u32_to_hex(config::joint_encoder_direct.raw_value_); }));
     System::api.add_api_variable("jcrc_latch", new const APIUint32(&config::joint_encoder_direct.crc_error_raw_latch_));
     System::api.add_api_variable("jbias", new APIFloat(&joint_encoder_bias));
-#else
-    config::output_encoder.spi_dma_.register_operation_ = config::drv.register_operation_;
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
-    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
 #endif
+    config::output_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
+    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.diag_err_count_));
+    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.diag_warn_count_));
+    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_err_count_));
+    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
+    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
+    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder_direct.crc_error_raw_latch_));
+
     System::api.add_api_variable("brr", new APIUint32(&LPUART1->BRR));
     System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
     System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));
@@ -277,26 +271,21 @@ void config_maintenance() {
             logger.log_printf("joint encoder raw: %f, joint encoder bias: %f", (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS), joint_encoder_bias);
         }
     }
-    if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
-        config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
-            config::main_loop.status_.error.output_encoder = true;
-    }
+
     if(config::joint_encoder_direct.crc_err_count_ > pow(2,31) || config::joint_encoder_direct.diag_err_count_ > 100 ||
         config::joint_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
-    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
-    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
+
     round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
     round_robin_logger.log_data(JOINT_ENCODER_ERROR_INDEX, config::joint_encoder_direct.diag_err_count_);
-#else
-    if(config::output_encoder.crc_err_count_ > pow(2,31) || config::output_encoder.diag_err_count_ > 100 ||
-        config::output_encoder.diag_warn_count_ > pow(2,31)) {
+#endif 
+    if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
+        config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
-    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder.crc_err_count_);
-    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder.diag_err_count_);
-#endif
+    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
     v5v = (float) V5V/4096*v3v3*2;
     i5v = (float) I5V/4096*v3v3;
     i48v = -((float) I_BUS_DR-2048)/4096*v3v3/20/.0005;

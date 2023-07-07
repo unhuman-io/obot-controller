@@ -68,6 +68,9 @@ struct InitCode {
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
 
+      SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
+      // ORDER DEPENDANCE SPE set last
+      SPI1->CR1 = SPI_CR1_MSTR | (6 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/64
       // uart
     //   RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
     //   MASK_SET(RCC->CCIPR, RCC_CCIPR_LPUART1SEL, 1); // sysclk: 
@@ -101,6 +104,10 @@ struct InitCode {
       GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A3 used as joint encoder cs
       GPIOA->BSRR = GPIO_BSRR_BR9;
 #endif
+        GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // B3 torque sensor cs
+      GPIOB->BSRR = GPIO_BSRR_BS3;
+       GPIO_SETL(A, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A1 temp sensor cs
+      GPIOA->BSRR = GPIO_BSRR_BS1;
     }
 };
 
@@ -128,8 +135,10 @@ namespace config {
 #endif
     //EncoderBase output_encoder;
 
-    SPIDMA spi1_dma3(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
+    
 #ifdef MAX11254_TORQUE_SENSOR
+    GPIO torque_sensor_cs(*GPIOB, 3, GPIO::OUTPUT);
+    SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4);
     MAX11254 torque_sensor(spi1_dma3);
     EncoderBase output_encoder;
 #else
@@ -141,10 +150,10 @@ namespace config {
 #define SPI1_REINIT_CALLBACK
 void spi1_reinit_callback() {
     SPI1->CR1=0;
-    SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
-    // ORDER DEPENDANCE SPE set last
-    SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
-    config::spi1_dma.reinit();
+      SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
+      // ORDER DEPENDANCE SPE set last
+      SPI1->CR1 = SPI_CR1_MSTR | (6 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/64
+    config::spi1_dma3.reinit();
 }
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"

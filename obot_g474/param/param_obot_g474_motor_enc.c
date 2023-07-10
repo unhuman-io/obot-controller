@@ -63,7 +63,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.acceleration_limit = 1000,
     .main_loop_param.output_encoder.cpr = -65536,
     .main_loop_param.host_timeout = 0,
-    .main_loop_param.safe_mode = DAMPED,
+    .main_loop_param.safe_mode = {.mode_desired = DAMPED},
     .main_loop_param.output_encoder.table = {
 #include "../../calibration/obot_g474/motor_enc/jtab.dat"
     },

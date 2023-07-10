@@ -29,7 +29,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.acceleration_limit = 1000,
     .main_loop_param.output_encoder.cpr = pow(2,18),
     .main_loop_param.host_timeout = 0,
-    .main_loop_param.safe_mode = OPEN,
+    .main_loop_param.safe_mode = {.mode_desired = OPEN},
     .startup_param.do_phase_lock = 0,
     .startup_param.phase_lock_current = 5,
     .startup_param.phase_lock_duration = 2,

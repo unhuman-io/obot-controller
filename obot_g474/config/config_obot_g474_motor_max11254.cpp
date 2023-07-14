@@ -24,7 +24,14 @@
 //#pragma message XSTR(OUTPUT_ENCODER_BITS)
 
 #define END_TRIGGER_MOTOR_ENCODER
+
+#ifdef MAX11254_TORQUE_SENSOR
+#include "../../motorlib/max11254.h"
+using TorqueSensor = MAX11254;
+#else
 using TorqueSensor = QIA128_UART; 
+#endif
+
 //using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
 //using MotorEncoder = EncoderBase;
@@ -33,9 +40,9 @@ using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
 using OutputEncoder = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2Encoder<JOINT_ENCODER_BITS>>;
 using JointEncoder = OutputEncoder::SecondarySensor;
 #else
-using OutputEncoder = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
+//using OutputEncoder = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
 #endif
-//using OutputEncoder = EncoderBase;
+using OutputEncoder = EncoderBase;
 
 //using TorqueSensor = TorqueSensorMultiplex<QIA128, Aksim2Encoder<18>>;
 //using OutputEncoder = TorqueSensor::SecondarySensor;
@@ -61,6 +68,9 @@ struct InitCode {
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
 
+      SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
+      // ORDER DEPENDANCE SPE set last
+      SPI1->CR1 = SPI_CR1_MSTR | (6 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/64
       // uart
     //   RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
     //   MASK_SET(RCC->CCIPR, RCC_CCIPR_LPUART1SEL, 1); // sysclk: 
@@ -94,6 +104,12 @@ struct InitCode {
       GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A3 used as joint encoder cs
       GPIOA->BSRR = GPIO_BSRR_BR9;
 #endif
+        GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // B3 torque sensor cs
+      GPIOB->BSRR = GPIO_BSRR_BS3;
+       GPIO_SETL(A, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A1 temp sensor cs
+      GPIOA->BSRR = GPIO_BSRR_BS1;
+
+      GPIOC->BSRR = GPIO_BSRR_BS3;
     }
 };
 
@@ -117,20 +133,29 @@ namespace config {
     OutputEncoder output_encoder(output_encoder_direct, joint_encoder_direct);
     JointEncoder &joint_encoder = output_encoder.secondary();
 #else
-    OutputEncoder output_encoder(spi1_dma);
+    Aksim2Encoder<OUTPUT_ENCODER_BITS> output_encoder_direct(spi1_dma);
 #endif
     //EncoderBase output_encoder;
-    //QIA128_UART torque_sensor(*LPUART1);
+
+    
+#ifdef MAX11254_TORQUE_SENSOR
+    GPIO torque_sensor_cs(*GPIOB, 3, GPIO::OUTPUT);
+    SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4);
+    MAX11254 torque_sensor(spi1_dma3);
+    EncoderBase output_encoder;
+#else
     QIA128_UART torque_sensor(*UART5);
+#endif
+
 };
 
 #define SPI1_REINIT_CALLBACK
 void spi1_reinit_callback() {
     SPI1->CR1=0;
-    SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
-    // ORDER DEPENDANCE SPE set last
-    SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
-    config::spi1_dma.reinit();
+      SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
+      // ORDER DEPENDANCE SPE set last
+      SPI1->CR1 = SPI_CR1_MSTR | (6 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/64
+    config::spi1_dma3.reinit();
 }
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
@@ -169,14 +194,7 @@ void config_init() {
     System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 #ifdef JOINT_ENCODER_BITS
-    config::output_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     config::joint_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.diag_err_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.diag_warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_err_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
-    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder_direct.crc_error_raw_latch_));
     System::api.add_api_variable("jerr", new APIUint32(&config::joint_encoder_direct.diag_err_count_));
     System::api.add_api_variable("jwarn", new APIUint32(&config::joint_encoder_direct.diag_warn_count_));
     System::api.add_api_variable("jcrc_cnt", new APIUint32(&config::joint_encoder_direct.crc_err_count_));
@@ -184,18 +202,21 @@ void config_init() {
     System::api.add_api_variable("jrawh", new const APICallback([](){ return u32_to_hex(config::joint_encoder_direct.raw_value_); }));
     System::api.add_api_variable("jcrc_latch", new const APIUint32(&config::joint_encoder_direct.crc_error_raw_latch_));
     System::api.add_api_variable("jbias", new APIFloat(&joint_encoder_bias));
-#else
-    config::output_encoder.spi_dma_.register_operation_ = config::drv.register_operation_;
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
-    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
 #endif
+    config::output_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
+    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.diag_err_count_));
+    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.diag_warn_count_));
+    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_err_count_));
+    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
+    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
+    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder_direct.crc_error_raw_latch_));
+
     System::api.add_api_variable("brr", new APIUint32(&LPUART1->BRR));
     System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
     System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));
+#ifdef MAX11254_TORQUE_SENSOR
+    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_value_));
+#else
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
     System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor.read_error_));
@@ -206,6 +227,7 @@ void config_init() {
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
     System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor.timeout_error_));
     System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
+#endif
     System::api.add_api_variable("5V", new const APIFloat(&v5v));
     System::api.add_api_variable("V5V", new const APIUint32(&V5V));
     System::api.add_api_variable("I5V", new const APIUint32(&I5V));
@@ -260,26 +282,21 @@ void config_maintenance() {
             logger.log_printf("joint encoder raw: %f, joint encoder bias: %f", (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS), joint_encoder_bias);
         }
     }
-    if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
-        config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
-            config::main_loop.status_.error.output_encoder = true;
-    }
+
     if(config::joint_encoder_direct.crc_err_count_ > pow(2,31) || config::joint_encoder_direct.diag_err_count_ > 100 ||
         config::joint_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
-    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
-    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
+
     round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
     round_robin_logger.log_data(JOINT_ENCODER_ERROR_INDEX, config::joint_encoder_direct.diag_err_count_);
-#else
-    if(config::output_encoder.crc_err_count_ > pow(2,31) || config::output_encoder.diag_err_count_ > 100 ||
-        config::output_encoder.diag_warn_count_ > pow(2,31)) {
+#endif 
+    if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
+        config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
-    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder.crc_err_count_);
-    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder.diag_err_count_);
-#endif
+    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
     v5v = (float) V5V/4096*v3v3*2;
     i5v = (float) I5V/4096*v3v3;
     i48v = -((float) I_BUS_DR-2048)/4096*v3v3/20/.0005;
@@ -288,11 +305,14 @@ void config_maintenance() {
 #if defined (HAS_BUS_CURRENT_SENSE)
     round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
 #endif
+#ifdef MAX11254_TORQUE_SENSOR
+#else
     round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
     round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_ + config::torque_sensor.wait_error_ + config::torque_sensor.timeout_error_);
     if (config::torque_sensor.timeout_error_ > 100) {
         config::main_loop.status_.error.torque_sensor = true;
     }
+#endif
 }
 
 #ifdef JOINT_ENCODER_BITS

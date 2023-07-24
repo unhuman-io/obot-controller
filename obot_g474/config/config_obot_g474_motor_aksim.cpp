@@ -24,8 +24,7 @@
 //#pragma message XSTR(OUTPUT_ENCODER_BITS)
 
 #define END_TRIGGER_MOTOR_ENCODER
-using TorqueSensor = QIA128_UART; 
-//using TorqueSensor = TorqueSensorBase;
+
 using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
 //using MotorEncoder = EncoderBase;
 #ifdef JOINT_ENCODER_BITS
@@ -98,7 +97,7 @@ struct InitCode {
 #endif
 
 #ifndef ENABLE_USBN_PULLDOWN
-      GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A3 used as joint encoder cs
+      GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
       GPIOA->BSRR = GPIO_BSRR_BR9;
 #endif
         GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // B3 torque sensor cs
@@ -118,7 +117,6 @@ namespace config {
     GPIO motor_encoder_cs(*GPIOA, 0, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     MotorEncoder motor_encoder(spi3_dma);
-    //EncoderBase motor_encoder;
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
@@ -130,20 +128,19 @@ namespace config {
     Aksim2Encoder<JOINT_ENCODER_BITS> joint_encoder_direct(spi1_dma2);
     OutputEncoder output_encoder(output_encoder_direct, joint_encoder_direct);
     JointEncoder &joint_encoder = output_encoder.secondary();
-#else
-    OutputEncoder &output_encoder = output_encoder_direct;
 #endif
-    //EncoderBase output_encoder;
 
     
 #ifdef MAX11254_TORQUE_SENSOR
     GPIO torque_sensor_cs(*GPIOB, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
-        SPI_CR1_MSTR | (6 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;
+        SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
     MAX11254 torque_sensor_direct(spi1_dma3, 0);
-    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder)
+    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
+    OutputEncoder &output_encoder = torque_sensor.secondary();
 #else
     QIA128_UART torque_sensor(*UART5);
+    OutputEncoder &output_encoder = output_encoder_direct;
 #endif
 
 };
@@ -215,8 +212,8 @@ void config_init() {
     System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));
 #ifdef MAX11254_TORQUE_SENSOR
     config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
-    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_value_));
-    System::api.add_api_variable("tint", new const APIUint32(&config::torque_sensor.signed_value_));
+    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
+    System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
 #else
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
@@ -283,26 +280,21 @@ void config_maintenance() {
             logger.log_printf("joint encoder raw: %f, joint encoder bias: %f", (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS), joint_encoder_bias);
         }
     }
-    if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
-        config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
-            config::main_loop.status_.error.output_encoder = true;
-    }
+
     if(config::joint_encoder_direct.crc_err_count_ > pow(2,31) || config::joint_encoder_direct.diag_err_count_ > 100 ||
         config::joint_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
-    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
-    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
     round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
     round_robin_logger.log_data(JOINT_ENCODER_ERROR_INDEX, config::joint_encoder_direct.diag_err_count_);
-#else
-    if(config::output_encoder.crc_err_count_ > pow(2,31) || config::output_encoder.diag_err_count_ > 100 ||
-        config::output_encoder.diag_warn_count_ > pow(2,31)) {
+#endif
+    if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
+        config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
-    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder.crc_err_count_);
-    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder.diag_err_count_);
-#endif
+    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
+
     v5v = (float) V5V/4096*v3v3*2;
     i5v = (float) I5V/4096*v3v3;
     i48v = -((float) I_BUS_DR-2048)/4096*v3v3/20/.0005;

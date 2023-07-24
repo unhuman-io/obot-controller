@@ -100,12 +100,14 @@ struct InitCode {
       GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
       GPIOA->BSRR = GPIO_BSRR_BR9;
 #endif
-        GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // B3 torque sensor cs
+      
+      GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // B3 (SWO), hdr6 torque sensor cs
       GPIOB->BSRR = GPIO_BSRR_BS3;
-       GPIO_SETL(A, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A1 temp sensor cs
+
+      GPIO_SETL(A, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A1, hdr10 (QEPB) temp sensor cs
       GPIOA->BSRR = GPIO_BSRR_BS1;
 
-      GPIOC->BSRR = GPIO_BSRR_BS3;
+      GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
     }
 };
 
@@ -123,6 +125,9 @@ namespace config {
         SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
     Aksim2Encoder<OUTPUT_ENCODER_BITS> output_encoder_direct(spi1_dma);
 #ifdef JOINT_ENCODER_BITS
+#ifdef  MAX11254_TORQUE_SENSOR
+#error max11254 and joint encoder not supported yet
+#endif
     GPIO joint_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
     SPIDMA spi1_dma2(*SPI1, joint_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
     Aksim2Encoder<JOINT_ENCODER_BITS> joint_encoder_direct(spi1_dma2);

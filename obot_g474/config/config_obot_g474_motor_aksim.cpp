@@ -86,6 +86,8 @@ struct InitCode {
         GPIO_SETL(D, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);
 
       GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PA0-> motor encoder cs
+      //MASK_SET(GPIOC->PUPDR, GPIO_PUPDR_PUPD10, GPIO_PULL::UP);       // keep motor sclk high when spi disabled
+
       // gpio out
       GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
       // gpio in

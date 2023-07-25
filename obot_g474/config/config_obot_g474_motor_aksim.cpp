@@ -240,6 +240,8 @@ void config_init() {
     System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
     System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
 
+
+    ms_delay(200); // max aksim encoder startup time
 }
 
 MedianFilter<> motor_temperature_filter;

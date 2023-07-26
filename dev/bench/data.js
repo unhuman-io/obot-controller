@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1690385879725,
+  "lastUpdate": 1690386105054,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -42721,6 +42721,102 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 756.703513188,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 185244,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 8888,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 179360,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14724,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 71352,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 3051,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 25580,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4ccf6f435ae0c7fdbca7bd49cca538efa80be0c2",
+          "message": "Merge pull request #142 from unhuman-io/feature/uptime\n\nFeature/uptime",
+          "timestamp": "2023-07-26T08:38:32-07:00",
+          "tree_id": "d369bcc27e9aa96477d10293ae738726a0daf9d6",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/4ccf6f435ae0c7fdbca7bd49cca538efa80be0c2"
+        },
+        "date": 1690386102989,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 799.958,
+            "unit": "cycles",
+            "extra": "800 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.42,
+            "unit": "cycles",
+            "extra": "3423 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 5649.21,
+            "unit": "cycles",
+            "extra": "8580 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.8,
+            "unit": "cycles",
+            "extra": "17046 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 784.919736229,
             "unit": "Hz",
             "extra": "300 times"
           },

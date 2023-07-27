@@ -242,8 +242,10 @@ void config_init() {
     System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
     System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
 
-
+    // watchdog reset
+    IWDG->KR = 0xAAAA;
     ms_delay(200); // max aksim encoder startup time
+    IWDG->KR = 0xAAAA;
 }
 
 MedianFilter<> motor_temperature_filter;

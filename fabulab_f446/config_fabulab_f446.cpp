@@ -18,7 +18,7 @@ typedef USB_OTG USB1;
 #include "../motorlib/controller/velocity_controller.h"
 #include "../motorlib/controller/state_controller.h"
 #include "../motorlib/controller/joint_position_controller.h"
-#include "../controller/admittance_controller.h"
+#include "../motorlib/controller/admittance_controller.h"
 #include "../motorlib/driver.h"
 
 using Driver = DriverBase;

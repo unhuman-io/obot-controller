@@ -221,6 +221,7 @@ void config_init() {
     config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
+    System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
 #else
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
@@ -292,14 +293,14 @@ void config_maintenance() {
         }
     }
 
-    if(config::joint_encoder_direct.crc_err_count_ > pow(2,31) || config::joint_encoder_direct.diag_err_count_ > 100 ||
+    if(config::joint_encoder_direct.crc_err_count_ > 100 || config::joint_encoder_direct.diag_err_count_ > 100 ||
         config::joint_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
     round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
     round_robin_logger.log_data(JOINT_ENCODER_ERROR_INDEX, config::joint_encoder_direct.diag_err_count_);
 #endif
-    if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
+    if(config::output_encoder_direct.crc_err_count_ > 100 || config::output_encoder_direct.diag_err_count_ > 100 ||
         config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
@@ -315,6 +316,10 @@ void config_maintenance() {
     round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
 #endif
 #ifdef MAX11254_TORQUE_SENSOR
+    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_);
+    if (config::torque_sensor_direct.timeout_error_ > 10) {
+        config::main_loop.status_.error.torque_sensor = true;
+    }
 #else
     round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
     round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_ + config::torque_sensor.wait_error_ + config::torque_sensor.timeout_error_);

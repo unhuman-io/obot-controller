@@ -222,6 +222,7 @@ void config_init() {
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
     System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
+    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
 #else
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
@@ -316,8 +317,9 @@ void config_maintenance() {
     round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
 #endif
 #ifdef MAX11254_TORQUE_SENSOR
-    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_);
-    if (config::torque_sensor_direct.timeout_error_ > 10) {
+    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_ + config::torque_sensor_direct.read_error_);
+    if (config::torque_sensor_direct.timeout_error_ > 10 ||
+        config::torque_sensor_direct.read_error_ > 100) {
         config::main_loop.status_.error.torque_sensor = true;
     }
 #else

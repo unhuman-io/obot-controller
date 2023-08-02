@@ -33,6 +33,7 @@ using OutputEncoder = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2
 using JointEncoder = OutputEncoder::SecondarySensor;
 #else
 #ifdef MAX11254_TORQUE_SENSOR
+#define GPIO_OUT int gpio_out_1234
 #include "../../motorlib/max11254.h"
 using TorqueSensor = TorqueSensorMultiplex<MAX11254, Aksim2Encoder<OUTPUT_ENCODER_BITS>>;
 using OutputEncoder = TorqueSensor::SecondarySensor;
@@ -110,6 +111,9 @@ struct InitCode {
       GPIOA->BSRR = GPIO_BSRR_BS1;
 
       GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
+#ifdef SCOPE_DEBUG
+        GPIO_SETL(C, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0); // main loop scope
+#endif
     }
 };
 

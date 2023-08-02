@@ -270,7 +270,7 @@ void USB_LP_IRQHandler(void)
 void TIM1_UP_TIM16_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM16_IRQn 0 */
-  SET_SCOPE_PIN(A,9);
+  SET_SCOPE_PIN(C,0);
   INTERRUPT_PROFILE_START;
   main_loop_interrupt();
 #if 0
@@ -280,7 +280,7 @@ void TIM1_UP_TIM16_IRQHandler(void)
 #endif
   TIM1->SR = 0;
   INTERRUPT_PROFILE_END(mainloop);
-  CLEAR_SCOPE_PIN(A,9); 
+  CLEAR_SCOPE_PIN(C,0); 
   /* USER CODE END TIM1_UP_TIM16_IRQn 1 */
 }
 

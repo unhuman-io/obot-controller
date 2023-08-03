@@ -1,4 +1,4 @@
-#include "param_obot_g474_aksim.h"
+#include "param_obot_g474.h"
 #include "math.h"
 
 
@@ -9,12 +9,13 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.startup_mode = OPEN,
 #include "param_motor.c"
     .fast_loop_param.motor_encoder.dir = -1,
-    .fast_loop_param.phase_mode = 0,
-    .fast_loop_param.motor_encoder.cpr = pow(2,18),
-    .fast_loop_param.motor_encoder.rollover = pow(2,25),
+    .fast_loop_param.current_direction = 1,
+    .fast_loop_param.phase_mode = 1,
+    .fast_loop_param.motor_encoder.cpr = pow(2,24),
+    .fast_loop_param.motor_encoder.rollover = pow(2,30),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
-    .fast_loop_param.motor_encoder.index_electrical_offset_pos = 17000,
-    .main_loop_param.torque_sensor.gain = 242,
+    .fast_loop_param.motor_encoder.index_electrical_offset_pos = 1288021,
+    .main_loop_param.torque_sensor.gain = 1,
     .main_loop_param.torque_sensor.bias = 0,
     .main_loop_param.position_controller_param.position.kp = 300,
     .main_loop_param.position_controller_param.position.kd = 3,
@@ -27,7 +28,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 1000,
     .main_loop_param.velocity_controller_param.velocity.command_max = 10,
     .main_loop_param.velocity_controller_param.acceleration_limit = 1000,
-    .main_loop_param.output_encoder.cpr = pow(2,18),
+    .main_loop_param.output_encoder.cpr = pow(2,24),
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = OPEN,
     .startup_param.do_phase_lock = 0,
@@ -51,7 +52,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.safe_mode_driver_disable = 1,
 
     //.startup_param.output_encoder_startup = OUTPUT_ENCODER_BIAS,
-    .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
+    .startup_param.motor_encoder_startup = ENCODER_ZERO,
     .startup_param.motor_encoder_bias = 0,
     .startup_param.output_encoder_rollover = M_PI,
 

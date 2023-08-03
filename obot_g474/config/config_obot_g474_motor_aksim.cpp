@@ -33,8 +33,9 @@ using OutputEncoder = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2
 using JointEncoder = OutputEncoder::SecondarySensor;
 #else
 #ifdef MAX11254_TORQUE_SENSOR
+#define GPIO_OUT int gpio_out_1234
 #include "../../motorlib/max11254.h"
-using TorqueSensor = TorqueSensorMultiplex<MAX11254, Aksim2Encoder<OUTPUT_ENCODER_BITS>>;
+using TorqueSensor = TorqueSensorMultiplex<MAX11254<>, Aksim2Encoder<OUTPUT_ENCODER_BITS>>;
 using OutputEncoder = TorqueSensor::SecondarySensor;
 #else
 using TorqueSensor = QIA128_UART;
@@ -110,6 +111,9 @@ struct InitCode {
       GPIOA->BSRR = GPIO_BSRR_BS1;
 
       GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
+#ifdef SCOPE_DEBUG
+        GPIO_SETL(C, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0); // main loop scope
+#endif
     }
 };
 
@@ -142,7 +146,7 @@ namespace config {
     GPIO torque_sensor_cs(*GPIOB, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
-    MAX11254 torque_sensor_direct(spi1_dma3, 0);
+    MAX11254<> torque_sensor_direct(spi1_dma3, 0);
     TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 #else
@@ -222,6 +226,7 @@ void config_init() {
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
     System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
+    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
 #else
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
     System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
@@ -316,8 +321,9 @@ void config_maintenance() {
     round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
 #endif
 #ifdef MAX11254_TORQUE_SENSOR
-    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_);
-    if (config::torque_sensor_direct.timeout_error_ > 10) {
+    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_ + config::torque_sensor_direct.read_error_);
+    if (config::torque_sensor_direct.timeout_error_ > 10 ||
+        config::torque_sensor_direct.read_error_ > 100) {
         config::main_loop.status_.error.torque_sensor = true;
     }
 #else

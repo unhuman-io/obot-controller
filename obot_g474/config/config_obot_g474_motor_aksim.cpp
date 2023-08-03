@@ -35,7 +35,7 @@ using JointEncoder = OutputEncoder::SecondarySensor;
 #ifdef MAX11254_TORQUE_SENSOR
 #define GPIO_OUT int gpio_out_1234
 #include "../../motorlib/max11254.h"
-using TorqueSensor = TorqueSensorMultiplex<MAX11254, Aksim2Encoder<OUTPUT_ENCODER_BITS>>;
+using TorqueSensor = TorqueSensorMultiplex<MAX11254<>, Aksim2Encoder<OUTPUT_ENCODER_BITS>>;
 using OutputEncoder = TorqueSensor::SecondarySensor;
 #else
 using TorqueSensor = QIA128_UART;
@@ -146,7 +146,7 @@ namespace config {
     GPIO torque_sensor_cs(*GPIOB, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
-    MAX11254 torque_sensor_direct(spi1_dma3, 0);
+    MAX11254<> torque_sensor_direct(spi1_dma3, 0);
     TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 #else

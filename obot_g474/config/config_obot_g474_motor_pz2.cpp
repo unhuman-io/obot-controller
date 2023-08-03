@@ -8,7 +8,7 @@
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/max31889.h"
 
-
+#define GPIO_OUT int gpio_out_1234
 
 //#define END_TRIGGER_MOTOR_ENCODER
 
@@ -28,22 +28,40 @@ struct InitCode {
       pin_config_obot_g474_motor_r0();
       SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
-      SPI3->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
+      SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16
            
       SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
-      SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
+      SPI1->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16
       DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
       DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
 
 
-      GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PA0-> motor encoder cs
+      GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
       // gpio out
       GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
       // gpio in
       GPIO_SETL(A, 2, GPIO::INPUT, GPIO_SPEED::VERY_HIGH, 0);
+        // 17 PC3 output encoder cs
+        // 4  PB4 LTC cs
+        // 6  PB3 adc reset
+        // 8  PA0 ADC CS
+        // 10 PA1 temp CS
+        // 12 PA2 DRDY
+      GPIO_SETL(C, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PC3-> output encoder cs
+      GPIO_SETL(B, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PB4 LTC cs
+      GPIOB->BSRR = GPIO_BSRR_BS4;
+      GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PB3 adc reset
+      GPIOB->BSRR = GPIO_BSRR_BS3;
+      GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PA2 adc cs
+      GPIOA->BSRR = GPIO_BSRR_BS0;
+      GPIO_SETL(A, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PA1 temp CS
+      GPIOA->BSRR = GPIO_BSRR_BS1;
+      GPIO_SETL(A, 2, GPIO_MODE::INPUT, GPIO_SPEED::VERY_HIGH, 0);   // DRDY
+
+      GPIOC->BSRR = GPIO_BSRR_BS4; // bmi270
 
 
 
@@ -56,26 +74,26 @@ struct InitCode {
 
 namespace config {
     const uint32_t main_loop_frequency = 10000;
-    const uint32_t pwm_frequency = 25000;
+    const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOA, 0, GPIO::OUTPUT);
+    GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-    MotorEncoder motor_encoder(spi3_dma);
+    MotorEncoder motor_encoder(spi3_dma, ICPZ::PZ08S);
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
 
-    OutputEncoder output_encoder(spi1_dma);
+    OutputEncoder output_encoder(spi1_dma, ICPZ::PZ03S);
     TorqueSensorBase torque_sensor;
 };
 
 #define SPI1_REINIT_CALLBACK
 void spi1_reinit_callback() {
-    SPI1->CR1=0;
+    SPI1->CR1 &= ~SPI_CR1_SPE;
     SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
     // ORDER DEPENDANCE SPE set last
-    SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
+    SPI1->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/32
     config::spi1_dma.reinit();
 }
 
@@ -97,7 +115,7 @@ bool joint_bias_set = false;
 
 void config_init() {
 #ifndef PWM_MULT
-#define PWM_MULT 2
+#define PWM_MULT 1
 #endif
     config::motor_pwm.set_frequency_multiplier(PWM_MULT);
     // System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
@@ -115,7 +133,7 @@ void config_init() {
     System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
-    config::output_encoder.spi_dma_.register_operation_ = config::drv.register_operation_;
+    config::output_encoder.spidma_.register_operation_ = config::drv.register_operation_;
     // System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
     // System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
     // System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));

@@ -1,3 +1,4 @@
+#include "../../motorlib/boards/config_obot_g474_motor.h"
 #include "../param/param_obot_g474.h"
 #include "../st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
@@ -61,7 +62,8 @@ struct InitCode {
       GPIOA->BSRR = GPIO_BSRR_BS1;
       GPIO_SETL(A, 2, GPIO_MODE::INPUT, GPIO_SPEED::VERY_HIGH, 0);   // DRDY
 
-      GPIOC->BSRR = GPIO_BSRR_BS4; // bmi270
+    //   GPIO_SETL(C, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // TODO: figure out why base config isn't setting this
+    //   GPIOC->BSRR = GPIO_BSRR_BS4; // bmi270
 
 
 

@@ -1,4 +1,3 @@
-#include "../../motorlib/boards/config_obot_g474_motor.h"
 #include "../param/param_obot_g474_aksim.h"
 #include "../st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"

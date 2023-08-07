@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1691429898428,
+  "lastUpdate": 1691440408028,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -45837,6 +45837,100 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 739.836076993,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 187752,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 8948,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 181868,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14784,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 71640,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 3099,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 25420,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "a77fa30c0052ea187cae2a98f7afb7646749a3a8",
+          "message": "pz diag",
+          "timestamp": "2023-08-07T13:30:08-07:00",
+          "tree_id": "27fed3801a856f9f6d21edad539eec4358595c26",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/a77fa30c0052ea187cae2a98f7afb7646749a3a8"
+        },
+        "date": 1691440405937,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 799.937,
+            "unit": "cycles",
+            "extra": "800 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3395.55,
+            "unit": "cycles",
+            "extra": "3450 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 4390.78,
+            "unit": "cycles",
+            "extra": "5103 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.4,
+            "unit": "cycles",
+            "extra": "17038 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 504.425801382,
             "unit": "Hz",
             "extra": "300 times"
           },

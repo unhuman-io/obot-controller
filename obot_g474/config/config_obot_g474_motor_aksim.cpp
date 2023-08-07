@@ -304,6 +304,10 @@ void config_maintenance() {
     }
     round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
     round_robin_logger.log_data(JOINT_ENCODER_ERROR_INDEX, config::joint_encoder_direct.diag_err_count_);
+
+    if (config::actuator_.main_loop_.mode_ == CLEAR_FAULTS) {
+        config::joint_encoder_direct.clear_faults();
+    }
 #endif
     if(config::output_encoder_direct.crc_err_count_ > 100 || config::output_encoder_direct.diag_err_count_ > 100 ||
         config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {

@@ -72,7 +72,10 @@ struct InitCode {
       GPIOA->BSRR = GPIO_BSRR_BR9;
 #endif
 
-      ms_delay(14); // for pz encoders to power on
+      for (int i=0;i<1;i++) {
+        ms_delay(14); // for pz encoders to power on
+        IWDG->KR = 0xAAAA;
+      }
     }
 };
 
@@ -127,6 +130,7 @@ void config_init() {
     System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_error_count_));
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
     System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
+    System::api.add_api_variable("mdiag", new const APICallback([](){ return config::motor_encoder.read_diagnosis(); }));
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
     System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
@@ -140,6 +144,7 @@ void config_init() {
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_error_count_));
     System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
     System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
+    System::api.add_api_variable("odiag", new const APICallback([](){ return config::output_encoder.read_diagnosis(); }));
     //System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
    
     System::api.add_api_variable("5V", new const APIFloat(&v5v));

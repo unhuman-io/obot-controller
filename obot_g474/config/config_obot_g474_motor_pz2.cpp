@@ -162,6 +162,7 @@ FrequencyLimiter temp_rate_motor = {10};
 void config_maintenance() {
     if(temp_rate_motor.run()) {
         float Tmotor = motor_temperature_filter.update(config::motor_temperature.read());
+        config::main_loop.motor_temperature_model_.set_ambient_temperature(Tmotor);
         round_robin_logger.log_data(MOTOR_TEMPERATURE_INDEX, Tmotor);
         if (Tmotor > 120) {
             config::main_loop.status_.error.motor_temperature = true;

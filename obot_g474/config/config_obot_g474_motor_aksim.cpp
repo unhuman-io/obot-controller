@@ -31,6 +31,7 @@ using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
 #define CUSTOM_SENDDATA
 using OutputEncoder = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2Encoder<JOINT_ENCODER_BITS>>;
 using JointEncoder = OutputEncoder::SecondarySensor;
+using TorqueSensor = QIA128_UART;
 #else
 #ifdef MAX11254_TORQUE_SENSOR
 #define GPIO_OUT int gpio_out_1234
@@ -151,7 +152,9 @@ namespace config {
     OutputEncoder &output_encoder = torque_sensor.secondary();
 #else
     QIA128_UART torque_sensor(*UART5);
+#ifndef JOINT_ENCODER_BITS
     OutputEncoder &output_encoder = output_encoder_direct;
+#endif
 #endif
 
 };
@@ -305,7 +308,7 @@ void config_maintenance() {
     round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
     round_robin_logger.log_data(JOINT_ENCODER_ERROR_INDEX, config::joint_encoder_direct.diag_err_count_);
 
-    if (config::actuator_.main_loop_.mode_ == CLEAR_FAULTS) {
+    if (config::main_loop.mode_ == CLEAR_FAULTS) {
         config::joint_encoder_direct.clear_faults();
     }
 #endif

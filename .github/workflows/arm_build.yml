@@ -28,6 +28,12 @@ jobs:
             config: motor_aksim
             build_other: C_DEFS=-DR3
           - project: obot_g474
+            config: motor_aksim
+            build_other: C_DEFS="-DMR1 -DMAX11254_TORQUE_SENSOR"
+          - project: obot_g474
+            config: motor_pz2
+            build_other: C_DEFS=-DMR1
+          - project: obot_g474
             config: h2
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:gcc12

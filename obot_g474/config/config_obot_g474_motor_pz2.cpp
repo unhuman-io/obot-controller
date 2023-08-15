@@ -1,3 +1,4 @@
+#include "../../motorlib/boards/config_obot_g474_motor.h"
 #include "../param/param_obot_g474.h"
 #include "../st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
@@ -61,7 +62,8 @@ struct InitCode {
       GPIOA->BSRR = GPIO_BSRR_BS1;
       GPIO_SETL(A, 2, GPIO_MODE::INPUT, GPIO_SPEED::VERY_HIGH, 0);   // DRDY
 
-      GPIOC->BSRR = GPIO_BSRR_BS4; // bmi270
+    //   GPIO_SETL(C, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // TODO: figure out why base config isn't setting this
+    //   GPIOC->BSRR = GPIO_BSRR_BS4; // bmi270
 
 
 
@@ -69,6 +71,11 @@ struct InitCode {
       GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A3 used as joint encoder cs
       GPIOA->BSRR = GPIO_BSRR_BR9;
 #endif
+
+      for (int i=0;i<1;i++) {
+        ms_delay(14); // for pz encoders to power on
+        IWDG->KR = 0xAAAA;
+      }
     }
 };
 
@@ -118,14 +125,12 @@ void config_init() {
 #define PWM_MULT 1
 #endif
     config::motor_pwm.set_frequency_multiplier(PWM_MULT);
-    // System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
-    // System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
-    // System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));
-    // System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.diag_err_count_));
-    // System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
-    // System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
-    // System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
-    // System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
+    System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.error_count_));
+    System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.warn_count_));
+    System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_error_count_));
+    System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
+    System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
+    System::api.add_api_variable("mdiag", new const APICallback([](){ return config::motor_encoder.read_diagnosis(); }));
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
     System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
@@ -134,12 +139,13 @@ void config_init() {
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
     config::output_encoder.spidma_.register_operation_ = config::drv.register_operation_;
-    // System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
-    // System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
-    // System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
-    // System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
-    // System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
-    // System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
+    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.error_count_));
+    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.warn_count_));
+    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_error_count_));
+    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
+    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
+    System::api.add_api_variable("odiag", new const APICallback([](){ return config::output_encoder.read_diagnosis(); }));
+    //System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
    
     System::api.add_api_variable("5V", new const APIFloat(&v5v));
     System::api.add_api_variable("V5V", new const APIUint32(&V5V));
@@ -176,19 +182,19 @@ void config_maintenance() {
         float Tambient4 = ambient4_temperature_filter.update(config::ambient_temperature_4.read());
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, Tambient4);
     }
-    // if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
-    //     config::motor_encoder.diag_warn_count_ > pow(2,31)) {
-    //         config::main_loop.status_.error.motor_encoder = true;
-    // }
-    // round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_err_count_);
-    // round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder.diag_err_count_);
+    if(config::motor_encoder.crc_error_count_ > 100 || config::motor_encoder.error_count_ > 100 ||
+        config::motor_encoder.warn_count_ > pow(2,31)) {
+            config::main_loop.status_.error.motor_encoder = true;
+    }
+    round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_error_count_);
+    round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder.error_count_);
 
-    // if(config::output_encoder.crc_err_count_ > pow(2,31) || config::output_encoder.diag_err_count_ > 100 ||
-    //     config::output_encoder.diag_warn_count_ > pow(2,31)) {
-    //         config::main_loop.status_.error.output_encoder = true;
-    // }
-    // round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder.crc_err_count_);
-    // round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder.diag_err_count_);
+    if(config::output_encoder.crc_error_count_ > 100 || config::output_encoder.error_count_ > 100 ||
+        config::output_encoder.warn_count_ > pow(2,31)) {
+            config::main_loop.status_.error.output_encoder = true;
+    }
+    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder.crc_error_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder.error_count_);
 
     v5v = (float) V5V/4096*v3v3*2;
     i5v = (float) I5V/4096*v3v3;

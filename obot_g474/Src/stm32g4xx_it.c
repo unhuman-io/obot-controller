@@ -253,14 +253,14 @@ void SysTick_Handler(void)
 void USB_LP_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_IRQn 0 */
-  SET_SCOPE_PIN(C,5);
+  SET_SCOPE_PIN(C,2);
   usb_interrupt();
 #if 0
   /* USER CODE END USB_LP_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_LP_IRQn 1 */
 #endif
-  CLEAR_SCOPE_PIN(C,5); 
+  CLEAR_SCOPE_PIN(C,2); 
   /* USER CODE END USB_LP_IRQn 1 */
 }
 
@@ -290,7 +290,7 @@ void TIM1_UP_TIM16_IRQHandler(void)
 void ADC5_IRQHandler(void)
 {
   /* USER CODE BEGIN ADC5_IRQn 0 */
-  SET_SCOPE_PIN(A,8);
+  SET_SCOPE_PIN(C,1);
   INTERRUPT_PROFILE_START;
   fast_loop_interrupt();
 #if 0
@@ -300,7 +300,7 @@ void ADC5_IRQHandler(void)
 #endif
   ADC5->ISR = ADC_ISR_JEOS;
   INTERRUPT_PROFILE_END(fastloop)
-  CLEAR_SCOPE_PIN(A,8);
+  CLEAR_SCOPE_PIN(C,1);
   //scope1_GPIO_Port->BSRR |= scope1_Pin << 16; 
   /* USER CODE END ADC5_IRQn 1 */
 }

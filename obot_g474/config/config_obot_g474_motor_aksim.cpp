@@ -115,6 +115,8 @@ struct InitCode {
       GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
 #ifdef SCOPE_DEBUG
         GPIO_SETL(C, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0); // main loop scope
+        GPIO_SETL(C, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0); // fast loop scope
+        GPIO_SETL(C, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0); // usb int scope
 #endif
     }
 };
@@ -187,7 +189,7 @@ bool joint_bias_set = false;
 
 void config_init() {
 #ifndef PWM_MULT
-#define PWM_MULT 2
+#define PWM_MULT 1
 #endif
     config::motor_pwm.set_frequency_multiplier(PWM_MULT);
     System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));

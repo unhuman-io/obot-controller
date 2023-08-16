@@ -314,7 +314,7 @@ void config_maintenance() {
         config::joint_encoder_direct.clear_faults();
     }
 #endif
-    if(config::output_encoder_direct.crc_err_count_ > 100 || config::output_encoder_direct.diag_err_count_ > 100 ||
+    if(config::output_encoder_direct.crc_err_count_ > pow(2,31) || config::output_encoder_direct.diag_err_count_ > 100 ||
         config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }

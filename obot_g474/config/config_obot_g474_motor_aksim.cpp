@@ -188,10 +188,7 @@ bool joint_bias_set = false;
 #endif
 
 void config_init() {
-#ifndef PWM_MULT
-#define PWM_MULT 1
-#endif
-    config::motor_pwm.set_frequency_multiplier(PWM_MULT);
+    config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
     System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
     System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
     System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));

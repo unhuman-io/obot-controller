@@ -9,8 +9,6 @@ typedef struct {
     MainLoopParam main_loop_param;
     StartupParam startup_param;
     uint16_t drv_regs[5];
-    float joint_encoder_bias;
-    float joint_encoder_rollover;
     uint8_t pwm_multiplier;
 } Param;
 

@@ -121,10 +121,7 @@ bool joint_bias_set = false;
 #endif
 
 void config_init() {
-#ifndef PWM_MULT
-#define PWM_MULT 1
-#endif
-    config::motor_pwm.set_frequency_multiplier(PWM_MULT);
+    config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
     System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.error_count_));
     System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.warn_count_));
     System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_error_count_));

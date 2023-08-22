@@ -101,9 +101,11 @@ struct InitCode {
       GPIOC->BSRR = GPIO_BSRR_BS2;
 #endif
 
-#ifndef ENABLE_USBN_PULLDOWN
       GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
+#ifdef DISABLE_USBN_PULLDOWN
       GPIOA->BSRR = GPIO_BSRR_BR9;
+#else
+      GPIOA->BSRR = GPIO_BSRR_BS9;
 #endif
       
       GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // B3 (SWO), hdr6 torque sensor cs

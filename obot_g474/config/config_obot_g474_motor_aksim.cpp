@@ -289,6 +289,7 @@ void config_maintenance() {
     }
     round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_err_count_);
     round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder.diag_err_count_);
+    round_robin_logger.log_data(MOTOR_ENCODER_WARNING_INDEX, config::motor_encoder.diag_warn_count_);
 #ifdef NO_OCRC_FAULT
     uint32_t crc_fault_max =  pow(2,31);
 #else
@@ -315,6 +316,7 @@ void config_maintenance() {
     }
     round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
     round_robin_logger.log_data(JOINT_ENCODER_ERROR_INDEX, config::joint_encoder_direct.diag_err_count_);
+    round_robin_logger.log_data(JOINT_ENCODER_WARNING_INDEX, config::joint_encoder_direct.diag_warn_count_);
 
     if (config::main_loop.mode_ == CLEAR_FAULTS) {
         config::joint_encoder_direct.clear_faults();
@@ -326,6 +328,7 @@ void config_maintenance() {
     }
     round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
     round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_WARNING_INDEX, config::output_encoder_direct.diag_warn_count_);
 
     v5v = (float) V5V/4096*v3v3*2;
     i5v = (float) I5V/4096*v3v3;

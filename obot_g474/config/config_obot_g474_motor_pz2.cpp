@@ -1,5 +1,5 @@
 #include "../../motorlib/boards/config_obot_g474_motor.h"
-#include "../param/param_obot_g474.h"
+#include "../param/param_obot_g474_pz2.h"
 #include "../st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/icpz.h"

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1692991984999,
+  "lastUpdate": 1693004638379,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -48329,6 +48329,100 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkheap_used",
             "value": 26244,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "aead5f6852fe33991a6f93ea0df4373242088b0a",
+          "message": "rewriteable qia128",
+          "timestamp": "2023-08-25T16:00:26-07:00",
+          "tree_id": "96bf1710c1554d641275763f898f42a19b81b6b1",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/aead5f6852fe33991a6f93ea0df4373242088b0a"
+        },
+        "date": 1693004636280,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 799.916,
+            "unit": "cycles",
+            "extra": "800 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3397.02,
+            "unit": "cycles",
+            "extra": "3424 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 5566.22,
+            "unit": "cycles",
+            "extra": "8586 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.3,
+            "unit": "cycles",
+            "extra": "17046 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 529.5002877,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 185420,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 8884,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 179536,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14720,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 71328,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 3155,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 25364,
             "unit": "bytes",
             "extra": "0 times"
           }

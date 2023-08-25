@@ -297,6 +297,7 @@ void config_init() {
     System::api.add_api_variable("IBUS", new const APIUint32(&I_BUS_DR));
     System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
     System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
+    System::api.add_api_variable("set_qia_gain", new const APICallbackUint8([](){ return config::torque_sensor.set_gain(); }));
 
     // watchdog reset
     IWDG->KR = 0xAAAA;

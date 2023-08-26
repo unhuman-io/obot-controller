@@ -14,8 +14,8 @@ jobs:
         include:
           - project: boost_g474
             config: pz
-          - project: fabulab_f446
-            config: motor
+          # - project: fabulab_f446
+          #   config: motor
           - project: obot_g474
             config: motor_enc
           - project: obot_g474

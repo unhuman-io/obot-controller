@@ -5,6 +5,8 @@
 #include "stm32g4xx_hal.h"
 #define CPU_FREQUENCY_HZ    170e6
 
+#include "../motorlib/peripheral/stm32g4/cordic.h"
+
 
 
 #endif

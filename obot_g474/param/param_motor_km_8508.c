@@ -15,3 +15,7 @@
     .fast_loop_param.foc_param.pi_q.command_max=40,
     .fast_loop_param.foc_param.current_filter_frequency_hz=20000,
     .fast_loop_param.foc_param.num_poles = 10,
+    .fast_loop_param.foc_param.sensorless_estimator.motor_estimator_alpha.motor_model.R = .1,
+    .fast_loop_param.foc_param.sensorless_estimator.motor_estimator_alpha.motor_model.L = .1,
+    .fast_loop_param.foc_param.sensorless_estimator.motor_estimator_beta.motor_model.R = .1,
+    .fast_loop_param.foc_param.sensorless_estimator.motor_estimator_beta.motor_model.L = .1,

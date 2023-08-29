@@ -34,7 +34,12 @@ using OutputEncoder = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2
 using JointEncoder = OutputEncoder::SecondarySensor;
 using TorqueSensor = QIA128_UART;
 #else
-#ifdef MAX11254_TORQUE_SENSOR
+#ifdef ADS8339_TORQUE_SENSOR
+#define INTERFACE_BBS
+#include "../../motorlib/ads8339.h"
+using TorqueSensor = TorqueSensorMultiplex<ADS8339, Aksim2Encoder<OUTPUT_ENCODER_BITS>>;
+using OutputEncoder = TorqueSensor::SecondarySensor;
+#elif defined(MAX11254_TORQUE_SENSOR)
 #define INTERFACE_BBL
 #define GPIO_OUT int gpio_out_1234
 #include "../../motorlib/max11254.h"
@@ -80,7 +85,7 @@ struct InitCode {
     //   GPIO_SETL(C, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
     //   GPIO_SETL(C, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
 
-#ifndef MAX11254_TORQUE_SENSOR
+#if !defined(MAX11254_TORQUE_SENSOR) || !defined(ADS8339_TORQUE_SENSOR)
         //uart5
         RCC->APB1ENR1 |= RCC_APB1ENR1_UART5EN;
         MASK_SET(RCC->CCIPR, RCC_CCIPR_UART5SEL, 1); // sysclk: 
@@ -119,6 +124,10 @@ struct InitCode {
 
       GPIO_SETH(C, 12, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); 
       GPIOC->BSRR = GPIO_BSRR_BS12;
+#elif defined(INTERFACE_BBS)
+      // PA0 TCS
+      GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); 
+      GPIOA->BSRR = GPIO_BSRR_BS0;
 #else
       GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // B3 (SWO), hdr6 torque sensor cs
       GPIOB->BSRR = GPIO_BSRR_BS3;
@@ -144,7 +153,7 @@ namespace config {
     const uint32_t pwm_frequency = 25000;
     InitCode init_code;
 
-#ifdef INTERFACE_BBL
+#if defined(INTERFACE_BBL) || defined(INTERFACE_BBS)
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
 #else
     GPIO motor_encoder_cs(*GPIOA, 0, GPIO::OUTPUT);
@@ -157,8 +166,8 @@ namespace config {
         SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
     Aksim2Encoder<OUTPUT_ENCODER_BITS> output_encoder_direct(spi1_dma);
 #ifdef JOINT_ENCODER_BITS
-#ifdef  MAX11254_TORQUE_SENSOR
-#error max11254 and joint encoder not supported yet
+#if defined(MAX11254_TORQUE_SENSOR) || defined(ADS8339_TORQUE_SENSOR)
+#error spi torque sensors and joint encoder not supported yet
 #endif
     GPIO joint_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
     SPIDMA spi1_dma2(*SPI1, joint_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
@@ -168,15 +177,23 @@ namespace config {
 #endif
 
     
-#ifdef MAX11254_TORQUE_SENSOR
-#ifdef INTERFACE_BBL
+
+#if defined(INTERFACE_BBL) || defined(INTERFACE_BBS)
     GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
 #else
     GPIO torque_sensor_cs(*GPIOB, 3, GPIO::OUTPUT);
 #endif
+
+#ifdef MAX11254_TORQUE_SENSOR
     SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
     MAX11254<> torque_sensor_direct(spi1_dma3, 0);
+    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
+    OutputEncoder &output_encoder = torque_sensor.secondary();
+#elif defined(ADS8339_TORQUE_SENSOR)
+    SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+        SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
+    ADS8339 torque_sensor_direct(spi1_dma3, 0);
     TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 #else
@@ -251,6 +268,12 @@ void config_init() {
     System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
     System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));
 #ifdef MAX11254_TORQUE_SENSOR
+    config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
+    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
+    System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
+    System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
+    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
+#elif defined(ADS8339_TORQUE_SENSOR)
     config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
@@ -368,6 +391,8 @@ void config_maintenance() {
         config::torque_sensor_direct.read_error_ > 100) {
         config::main_loop.status_.error.torque_sensor = true;
     }
+#elif defined(ADS8339_TORQUE_SENSOR)
+
 #else
     round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
     round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_ + config::torque_sensor.wait_error_ + config::torque_sensor.timeout_error_);

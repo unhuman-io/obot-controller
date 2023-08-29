@@ -57,9 +57,9 @@ namespace config {
     //MotorEncoder motor_encoder(spi3_dma);
 
 
-    GPIO imu_cs(*GPIOC, 4, GPIO::OUTPUT);
-    SPIDMA spi1_dma2(*SPI1, imu_cs, *DMA1_Channel3, *DMA1_Channel4, 40, 40);
-    BMI270 imu(spi1_dma2);
+    // GPIO imu_cs(*GPIOC, 4, GPIO::OUTPUT);
+    // SPIDMA spi1_dma2(*SPI1, imu_cs, *DMA1_Channel3, *DMA1_Channel4, 40, 40);
+    // BMI270 imu(spi1_dma2);
     EncoderBase output_encoder;
 };
 
@@ -69,20 +69,14 @@ void spi1_reinit_callback() {
     SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
     // ORDER DEPENDANCE SPE set last
     SPI1->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/64
-    config::spi1_dma2.reinit();
+    //config::spi1_dma2.reinit();
 }
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    config::spi1_dma2.register_operation_ = config::drv.register_operation_;
-    // System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
-    // System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
-    // System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));
-    // System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.diag_err_count_));
-    // System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
-    // System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
-    // System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
+    //config::spi1_dma2.register_operation_ = config::drv.register_operation_;
+
     System::api.add_api_variable("imu", new const APICallback([](){ return config::imu.get_string(); }));
     System::api.add_api_variable("ax", new const APICallbackFloat([](){ return config::imu.data_.acc_x*8./pow(2,15); }));
     System::api.add_api_variable("ay", new const APICallbackFloat([](){ return config::imu.data_.acc_y*8./pow(2,15); }));

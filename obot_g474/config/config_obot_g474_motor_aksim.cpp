@@ -85,7 +85,7 @@ struct InitCode {
     //   GPIO_SETL(C, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
     //   GPIO_SETL(C, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 8);
 
-#if !defined(MAX11254_TORQUE_SENSOR) || !defined(ADS8339_TORQUE_SENSOR)
+#if !defined(MAX11254_TORQUE_SENSOR) && !defined(ADS8339_TORQUE_SENSOR)
         //uart5
         RCC->APB1ENR1 |= RCC_APB1ENR1_UART5EN;
         MASK_SET(RCC->CCIPR, RCC_CCIPR_UART5SEL, 1); // sysclk: 

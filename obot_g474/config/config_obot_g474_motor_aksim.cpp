@@ -167,7 +167,8 @@ namespace config {
 
 #ifdef JOINT_ENCODER_BITS
     GPIO joint_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
-    SPIDMA spi1_dma2(*SPI1, joint_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
+    SPIDMA spi1_dma2(*SPI1, joint_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+        SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
     Aksim2Encoder<JOINT_ENCODER_BITS> joint_encoder_direct(spi1_dma2);
     OutputEncoder1 output_encoder1(output_encoder_direct, joint_encoder_direct);
     JointEncoder &joint_encoder = output_encoder1.secondary();
@@ -204,11 +205,11 @@ namespace config {
 
 #define SPI1_REINIT_CALLBACK
 void spi1_reinit_callback() {
-    SPI1->CR1=0;
-    SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
-    // ORDER DEPENDANCE SPE set last
-    SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
-    config::spi1_dma.reinit();
+   // SPI1->CR1=0;
+    // SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
+    // // ORDER DEPENDANCE SPE set last
+    // SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
+    // config::spi1_dma.reinit();
 }
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"

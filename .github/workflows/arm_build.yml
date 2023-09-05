@@ -85,22 +85,22 @@ jobs:
     - name: test
       run: |
         tar xzf motor_enc.tgz
-        ./motor_enc/load_motor_enc.sh -p 1-2.1 || true
+        ./motor_enc/load_motor_enc.sh -p 1-3.1 || true
         sleep 6
-        # motor_util -p 1-2.1 read | head # doesn't exit for some reason
-        motor_util -p 1-2.1 --run-stats
-        motor_util -p 1-2.1 --run-stats 1000 --no-list | awk -F", " \
+        # motor_util -p 1-3.1 read | head # doesn't exit for some reason
+        motor_util -p 1-3.1 --run-stats
+        motor_util -p 1-3.1 --run-stats 1000 --no-list | awk -F", " \
           'NR==1 { for (i = 1; i < 5; i++) { headers[i]=$(i+5) } } \
           NR>1 { for (i in headers) { print "Benchmark" headers[i] \ 
           "\t" $(i+1) "\t" $(i+5) " cycles"} }' | tee output.txt
-        PYTHONPATH=/usr/share/motor-realtime python3 /usr/share/motor-realtime/python/test_motor.py -p 1-2.1 -v
+        PYTHONPATH=/usr/share/motor-realtime python3 /usr/share/motor-realtime/python/test_motor.py -p 1-3.1 -v
         echo "Benchmarkprogram_size 0 $(wc -c < motor_enc/motor_enc_noparam.bin) bytes" >> output.txt
         echo "Benchmarkparam_size 0 $(wc -c < motor_enc/motor_enc_param_only.bin) bytes" >> output.txt
         echo "Benchmarktext_size 0 $(size motor_enc.elf | tail -n1 | cut -f1) bytes" >> output.txt
         echo "Benchmarkdata_size 0 $(size motor_enc.elf | tail -n1 | cut -f2) bytes" >> output.txt
         echo "Benchmarkbss_size 0 $(size motor_enc.elf | tail -n1 | cut -f3) bytes" >> output.txt
-        echo "Benchmarkstack_used 0 $(motor_util -p 1-2.1 --no-list --set-api stack_used | cut -f2 -d' ') bytes" >> output.txt
-        echo "Benchmarkheap_used 0 $(motor_util -p 1-2.1 --no-list --set-api heap_used | cut -f2 -d' ') bytes" >> output.txt
+        echo "Benchmarkstack_used 0 $(motor_util -p 1-3.1 --no-list --set-api stack_used | cut -f2 -d' ') bytes" >> output.txt
+        echo "Benchmarkheap_used 0 $(motor_util -p 1-3.1 --no-list --set-api heap_used | cut -f2 -d' ') bytes" >> output.txt
         cat output.txt
     - name: Store benchmark result
       uses: rhysd/github-action-benchmark@v1

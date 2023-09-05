@@ -9,8 +9,8 @@
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .name = "test",
 #if MOONS
-#define NUM_POLES 1
-    .fast_loop_param.phase_mode = 0,
+#define NUM_POLE_PAIR 1
+    .fast_loop_param.phase_mode = 1,
     .fast_loop_param.motor_encoder.dir = 1,
     .fast_loop_param.motor_encoder.cpr = 4096,
     .fast_loop_param.motor_encoder.rollover = pow(2,25),
@@ -163,14 +163,14 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.pi_q.ki_limit=20,
     .fast_loop_param.foc_param.pi_q.command_max=20,
     .fast_loop_param.foc_param.current_filter_frequency_hz=10000,
-    .fast_loop_param.foc_param.num_poles = NUM_POLES,
+    .fast_loop_param.foc_param.num_poles = NUM_POLE_PAIR,
 
     /*/1*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
     /* *      POSITION CONTROL */
     /* *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/ 
     .main_loop_param.position_controller_param.position.kd = .002, 
     .main_loop_param.position_controller_param.position.kp = .5, 
-    .main_loop_param.position_controller_param.position.command_max = 0.3, 
+    .main_loop_param.position_controller_param.position.command_max = 0.25, 
     .main_loop_param.position_controller_param.position.output_filter_frequency_hz = 500.0, 
     .main_loop_param.position_controller_param.position.velocity_filter_frequency_hz = 500.0, 
      
@@ -182,7 +182,7 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.velocity.kp = 0.002,
     .main_loop_param.velocity_controller_param.velocity.ki_limit = .25,
     .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 300,
-    .main_loop_param.velocity_controller_param.velocity.command_max = .3,
+    .main_loop_param.velocity_controller_param.velocity.command_max = .25,
     .main_loop_param.velocity_controller_param.acceleration_limit = 10000,
     
 

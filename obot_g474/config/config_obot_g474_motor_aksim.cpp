@@ -27,28 +27,29 @@
 #define END_TRIGGER_MOTOR_ENCODER
 
 using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
-//using MotorEncoder = EncoderBase;
+
 #ifdef JOINT_ENCODER_BITS
-#define CUSTOM_SENDDATA
-using OutputEncoder = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2Encoder<JOINT_ENCODER_BITS>>;
-using JointEncoder = OutputEncoder::SecondarySensor;
-using TorqueSensor = QIA128_UART;
+    #define CUSTOM_SENDDATA
+    using OutputEncoder1 = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2Encoder<JOINT_ENCODER_BITS>>;
+    using JointEncoder = OutputEncoder1::SecondarySensor;
 #else
-#ifdef ADS8339_TORQUE_SENSOR
-#define INTERFACE_BBS
-#include "../../motorlib/ads8339.h"
-using TorqueSensor = TorqueSensorMultiplex<ADS8339, Aksim2Encoder<OUTPUT_ENCODER_BITS>>;
-using OutputEncoder = TorqueSensor::SecondarySensor;
-#elif defined(MAX11254_TORQUE_SENSOR)
-#define INTERFACE_BBL
-#define GPIO_OUT int gpio_out_1234
-#include "../../motorlib/max11254.h"
-using TorqueSensor = TorqueSensorMultiplex<MAX11254<>, Aksim2Encoder<OUTPUT_ENCODER_BITS>>;
-using OutputEncoder = TorqueSensor::SecondarySensor;
-#else
-using TorqueSensor = QIA128_UART;
-using OutputEncoder = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
+    using OutputEncoder1 = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
 #endif
+
+#ifdef ADS8339_TORQUE_SENSOR
+    #define INTERFACE_BBS
+    #include "../../motorlib/ads8339.h"
+    using TorqueSensor = TorqueSensorMultiplex<ADS8339, OutputEncoder1>;
+    using OutputEncoder = TorqueSensor::SecondarySensor;
+#elif defined(MAX11254_TORQUE_SENSOR)
+    #define INTERFACE_BBL
+    #define GPIO_OUT int gpio_out_1234
+    #include "../../motorlib/max11254.h"
+    using TorqueSensor = TorqueSensorMultiplex<MAX11254<>, OutputEncoder1>;
+    using OutputEncoder = TorqueSensor::SecondarySensor;
+#else
+    using TorqueSensor = QIA128_UART;
+    using OutputEncoder = OutputEncoder1;
 #endif
 
 
@@ -132,7 +133,7 @@ struct InitCode {
       GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // B3 (SWO), hdr6 torque sensor cs
       GPIOB->BSRR = GPIO_BSRR_BS3;
 
-      GPIO_SETL(A, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A1, hdr10 (QEPB) temp sensor cs
+      GPIO_SETL(A, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A1, hdr10 (QEPB) temp sensor cs (pz adapter board?)
       GPIOA->BSRR = GPIO_BSRR_BS1;
 #endif
 
@@ -163,16 +164,16 @@ namespace config {
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
     Aksim2Encoder<OUTPUT_ENCODER_BITS> output_encoder_direct(spi1_dma);
+
 #ifdef JOINT_ENCODER_BITS
-#if defined(MAX11254_TORQUE_SENSOR) || defined(ADS8339_TORQUE_SENSOR)
-#error spi torque sensors and joint encoder not supported yet
-#endif
     GPIO joint_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
     SPIDMA spi1_dma2(*SPI1, joint_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
     Aksim2Encoder<JOINT_ENCODER_BITS> joint_encoder_direct(spi1_dma2);
-    OutputEncoder output_encoder(output_encoder_direct, joint_encoder_direct);
-    JointEncoder &joint_encoder = output_encoder.secondary();
-#endif
+    OutputEncoder1 output_encoder1(output_encoder_direct, joint_encoder_direct);
+    JointEncoder &joint_encoder = output_encoder1.secondary();
+#else
+    OutputEncoder1 &output_encoder1 = output_encoder_direct;
+#endif // JOINT ENCODER
 
     
 
@@ -186,19 +187,17 @@ namespace config {
     SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
     MAX11254<> torque_sensor_direct(spi1_dma3, 0);
-    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
+    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder1);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 #elif defined(ADS8339_TORQUE_SENSOR)
     SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
     ADS8339 torque_sensor_direct(spi1_dma3, 0);
-    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
+    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder1);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 #else
     QIA128_UART torque_sensor(*UART5);
-#ifndef JOINT_ENCODER_BITS
-    OutputEncoder &output_encoder = output_encoder_direct;
-#endif
+    OutputEncoder &output_encoder = output_encoder1;
 #endif
 
 };

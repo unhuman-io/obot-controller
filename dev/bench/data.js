@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1693952523143,
+  "lastUpdate": 1693958787073,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -50351,6 +50351,100 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarktext_size",
             "value": 185748,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14808,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 73352,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": null,
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": null,
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ernesto.gonzalez.u@gmail.com",
+            "name": "eurdaneta",
+            "username": "netogu"
+          },
+          "committer": {
+            "email": "ernesto.gonzalez.u@gmail.com",
+            "name": "eurdaneta",
+            "username": "netogu"
+          },
+          "distinct": true,
+          "id": "138d73331f420502f4fff1b23917057aaa94a003",
+          "message": "Merge remote-tracking branch 'origin/feature-h2-moons-motor' into feature-h2-moons-motor",
+          "timestamp": "2023-09-05T17:02:31-07:00",
+          "tree_id": "c29802431194de09163d700d4738ea60d471d58e",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/138d73331f420502f4fff1b23917057aaa94a003"
+        },
+        "date": 1693958785922,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 4955.72,
+            "unit": "cycles",
+            "extra": "5305 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3396.51,
+            "unit": "cycles",
+            "extra": "3422 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 848.937,
+            "unit": "cycles",
+            "extra": "849 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.8,
+            "unit": "cycles",
+            "extra": "17037 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 523.8604334726406,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 191640,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 8972,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 185756,
             "unit": "bytes",
             "extra": "0 times"
           },

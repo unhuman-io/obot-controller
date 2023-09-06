@@ -11,6 +11,7 @@
 # ------------------------------------------------
 
 GIT_VERSION := $(shell git describe --dirty --always --tags)
+GIT_HASH := $(shell git rev-parse HEAD)
 $(shell touch version.h)
 
 ######################################
@@ -154,7 +155,8 @@ AS_DEFS =
 C_DEFS =  \
 -DGIT_VERSION=\"$(GIT_VERSION)\" \
 -DUSE_HAL_DRIVER \
--DSTM32G474xx
+-DSTM32G474xx \
+-DGIT_HASH=\"$(GIT_HASH)\"
 
 
 

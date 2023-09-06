@@ -6,6 +6,7 @@ typedef struct {
     FastLoopParam fast_loop_param;
     MainLoopParam main_loop_param;
     StartupParam startup_param;
+    char git_hash[41];
 } Param;
 
 extern const Param * const param;

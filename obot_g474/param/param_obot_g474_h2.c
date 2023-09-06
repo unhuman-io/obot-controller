@@ -7,6 +7,7 @@
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
+#include "param_default.h"
     .name = "test",
     .main_loop_param.output_encoder.cpr = 1,
     .fast_loop_param.motor_encoder.cpr = pow(2,16),

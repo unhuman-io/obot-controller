@@ -3,6 +3,7 @@
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
+#include "param_default.h"
     .fast_loop_param.foc_param.pi_d.kp=.5,
     .fast_loop_param.foc_param.pi_d.ki=.05,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd

@@ -9,6 +9,7 @@ typedef struct {
     MainLoopParam main_loop_param;
     StartupParam startup_param;
     uint16_t drv_regs[5];
+    char git_hash[41];
 } Param;
 
 extern const Param * const param;

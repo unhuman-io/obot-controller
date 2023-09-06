@@ -12,6 +12,7 @@ typedef struct {
     float joint_encoder_bias;
     float joint_encoder_rollover;
     uint8_t pwm_multiplier;
+    char git_hash[41];
 } Param;
 
 extern const Param * const param;

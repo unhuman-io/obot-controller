@@ -10,6 +10,7 @@ typedef struct {
     StartupParam startup_param;
     uint16_t drv_regs[5];
     uint8_t pwm_multiplier;
+    char git_hash[41];
 } Param;
 
 extern const Param * const param;

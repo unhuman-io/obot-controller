@@ -8,14 +8,17 @@
 #include "../../motorlib/temperature_sensor.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/max31889.h"
+#include "../../motorlib/sensor_multiplex.h"
+#include "../../motorlib/max11254.h"
 
-#define GPIO_OUT int gpio_out_1234
+#define GPIO_OUT int gpio_out_1234 // todo: necessary?
 
 //#define END_TRIGGER_MOTOR_ENCODER
 
-using TorqueSensor = TorqueSensorBase;
+
+using TorqueSensor = TorqueSensorMultiplex<MAX11254<>, ICPZ>;
+using OutputEncoder = TorqueSensor::SecondarySensor;
 using MotorEncoder = ICPZ;
-using OutputEncoder = ICPZ;
 
 
 extern "C" void SystemClock_Config();
@@ -67,9 +70,11 @@ struct InitCode {
 
 
 
-#ifndef ENABLE_USBN_PULLDOWN
-      GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // A3 used as joint encoder cs
+      GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
+#ifdef DISABLE_USBN_PULLDOWN
       GPIOA->BSRR = GPIO_BSRR_BR9;
+#else
+      GPIOA->BSRR = GPIO_BSRR_BS9;
 #endif
 
       for (int i=0;i<1;i++) {
@@ -87,12 +92,20 @@ namespace config {
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     MotorEncoder motor_encoder(spi3_dma, ICPZ::PZ08S);
+
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
-    SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
+    SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+        SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
 
-    OutputEncoder output_encoder(spi1_dma, ICPZ::PZ03S);
-    TorqueSensorBase torque_sensor;
+    ICPZ output_encoder_direct(spi1_dma, ICPZ::PZ03S);    
+    
+    GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
+    SPIDMA spi1_dma2(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+        SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
+    MAX11254<> torque_sensor_direct(spi1_dma2, 0);
+    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
+    OutputEncoder &output_encoder = torque_sensor.secondary();
 };
 
 #define SPI1_REINIT_CALLBACK
@@ -115,10 +128,6 @@ namespace config {
 };
 
 float v5v, i5v, i48v;
-#ifdef JOINT_ENCODER_BITS
-float joint_encoder_bias = 0;
-bool joint_bias_set = false;
-#endif
 
 void config_init() {
     config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
@@ -135,14 +144,20 @@ void config_init() {
     System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
-    config::output_encoder.spidma_.register_operation_ = config::drv.register_operation_;
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.error_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_error_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
-    System::api.add_api_variable("odiag", new const APICallback([](){ return config::output_encoder.read_diagnosis(); }));
+    config::output_encoder_direct.spidma_.register_operation_ = config::drv.register_operation_;
+    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.error_count_));
+    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.warn_count_));
+    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_error_count_));
+    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
+    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
+    System::api.add_api_variable("odiag", new const APICallback([](){ return config::output_encoder_direct.read_diagnosis(); }));
     //System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
+
+    config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
+    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
+    System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
+    System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
+    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
    
     System::api.add_api_variable("5V", new const APIFloat(&v5v));
     System::api.add_api_variable("V5V", new const APIUint32(&V5V));
@@ -186,12 +201,12 @@ void config_maintenance() {
     round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_error_count_);
     round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder.error_count_);
 
-    if(config::output_encoder.crc_error_count_ > 100 || config::output_encoder.error_count_ > 100 ||
-        config::output_encoder.warn_count_ > pow(2,31)) {
+    if(config::output_encoder_direct.crc_error_count_ > 100 || config::output_encoder_direct.error_count_ > 100 ||
+        config::output_encoder_direct.warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
-    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder.crc_error_count_);
-    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder.error_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_error_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.error_count_);
 
     v5v = (float) V5V/4096*v3v3*2;
     i5v = (float) I5V/4096*v3v3;
@@ -201,9 +216,10 @@ void config_maintenance() {
 #if defined (HAS_BUS_CURRENT_SENSE)
     round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
 #endif
-    // round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor.crc_error_);
-    // round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor.read_error_ + config::torque_sensor.wait_error_ + config::torque_sensor.timeout_error_);
-    // if (config::torque_sensor.timeout_error_ > 100) {
-    //     config::main_loop.status_.error.torque_sensor = true;
-    // }
+    round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor_direct.read_error_);
+    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_);
+    if (config::torque_sensor_direct.timeout_error_ > 100 ||
+        config::torque_sensor_direct.read_error_ > 100) {
+        config::main_loop.status_.error.torque_sensor = true;
+    }
 }

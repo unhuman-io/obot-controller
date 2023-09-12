@@ -23,7 +23,7 @@ struct InitCode {
       pin_config_obot_g474_motor_r0();
       SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
-      SPI1->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/32
+      SPI1->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA;    // baud = clock/32
     //   DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
     //   DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
@@ -44,7 +44,7 @@ namespace config {
 
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
-    SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
+    SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA);
     OutputEncoder output_encoder(spi1_dma);
     //Aksim2Encoder<18> output_encoder(spi1_dma);
 
@@ -55,7 +55,7 @@ void spi1_reinit_callback() {
    SPI1->CR1=0;
     SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
     // ORDER DEPENDANCE SPE set last
-    SPI1->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
+    SPI1->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA;    // baud = clock/64
     config::spi1_dma.reinit();
 }
 
@@ -75,6 +75,10 @@ void config_init() {
     System::api.add_api_variable("oraw4h", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value4_); }));
    System::api.add_api_variable("olen", new APIUint8(&config::output_encoder.length_));
     System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
+    System::api.add_api_variable("oind", new const APIUint8(&config::output_encoder.byte_ind));
+    System::api.add_api_variable("ocrc_calc", new const APIUint8(&config::output_encoder.crc_calc_));
+    System::api.add_api_variable("ozeros", new const APIUint32(&config::output_encoder.leading_zeros));
+    System::api.add_api_variable("odiag", new const APIUint8(&config::output_encoder.diag_raw_.word));
 
 }
 

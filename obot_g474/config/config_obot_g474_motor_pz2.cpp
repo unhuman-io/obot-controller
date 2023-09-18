@@ -142,6 +142,11 @@ void config_init() {
     System::api.add_api_variable("mauto_dig", new const APICallback([](){ config::motor_encoder.start_auto_adj_dig(); return "ok"; }));
     System::api.add_api_variable("mreadj_dig", new const APICallback([](){ config::motor_encoder.start_auto_readj_dig(); return "ok"; }));
     System::api.add_api_variable("mauto_ecc", new const APICallback([](){ config::motor_encoder.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("mecc_correction", new APICallbackUint8([](){ return config::motor_encoder.get_ecc_correction(); }, 
+        [](uint8_t u){ config::motor_encoder.set_ecc_correction(u); }));
+    System::api.add_api_variable("mecc_um", new const APICallbackFloat([](){ return config::motor_encoder.get_ecc_um(); }));
+    System::api.add_api_variable("mlow", new APICallbackUint8([](){ return config::motor_encoder.get_ac_eto(); }, 
+        [](uint8_t u){ config::motor_encoder.set_ac_eto(u); }));
     System::api.add_api_variable("mcmd_result", new const APICallback([](){ return config::motor_encoder.get_cmd_result(); }));
 
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
@@ -163,6 +168,11 @@ void config_init() {
     System::api.add_api_variable("oauto_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_dig(); return "ok"; }));
     System::api.add_api_variable("oreadj_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_readj_dig(); return "ok"; }));
     System::api.add_api_variable("oauto_ecc", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("oecc_correction", new APICallbackUint8([](){ return config::output_encoder_direct.get_ecc_correction(); }, 
+        [](uint8_t u){ config::output_encoder_direct.set_ecc_correction(u); }));
+    System::api.add_api_variable("oecc_um", new const APICallbackFloat([](){ return config::output_encoder_direct.get_ecc_um(); }));
+    System::api.add_api_variable("olow", new APICallbackUint8([](){ return config::output_encoder_direct.get_ac_eto(); }, 
+        [](uint8_t u){ config::output_encoder_direct.set_ac_eto(u); }));
     System::api.add_api_variable("ocmd_result", new const APICallback([](){ return config::output_encoder_direct.get_cmd_result(); }));
     //System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
 

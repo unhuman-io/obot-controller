@@ -137,6 +137,13 @@ void config_init() {
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
     System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
     System::api.add_api_variable("mdiag", new const APICallback([](){ return config::motor_encoder.read_diagnosis(); }));
+    System::api.add_api_variable("mconf_write", new const APICallback([](){ return config::motor_encoder.write_conf(); }));
+    System::api.add_api_variable("mauto_ana", new const APICallback([](){ config::motor_encoder.start_auto_adj_ana(); return "ok"; }));
+    System::api.add_api_variable("mauto_dig", new const APICallback([](){ config::motor_encoder.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("mreadj_dig", new const APICallback([](){ config::motor_encoder.start_auto_readj_dig(); return "ok"; }));
+    System::api.add_api_variable("mauto_ecc", new const APICallback([](){ config::motor_encoder.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("mcmd_result", new const APICallback([](){ return config::motor_encoder.get_cmd_result(); }));
+
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
     System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
@@ -151,6 +158,12 @@ void config_init() {
     System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
     System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
     System::api.add_api_variable("odiag", new const APICallback([](){ return config::output_encoder_direct.read_diagnosis(); }));
+    System::api.add_api_variable("oconf_write", new const APICallback([](){ return config::output_encoder_direct.write_conf(); }));
+    System::api.add_api_variable("oauto_ana", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_ana(); return "ok"; }));
+    System::api.add_api_variable("oauto_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("oreadj_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_readj_dig(); return "ok"; }));
+    System::api.add_api_variable("oauto_ecc", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("ocmd_result", new const APICallback([](){ return config::output_encoder_direct.get_cmd_result(); }));
     //System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
 
     config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;

@@ -147,6 +147,7 @@ void config_init() {
     System::api.add_api_variable("mecc_um", new const APICallbackFloat([](){ return config::motor_encoder.get_ecc_um(); }));
     System::api.add_api_variable("mlow", new APICallbackUint8([](){ return config::motor_encoder.get_ac_eto(); }, 
         [](uint8_t u){ config::motor_encoder.set_ac_eto(u); }));
+    System::api.add_api_variable("mcal", new const APICallback([](){ return config::motor_encoder.get_cal_string(); }));
     System::api.add_api_variable("mcmd_result", new const APICallback([](){ return config::motor_encoder.get_cmd_result(); }));
 
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
@@ -157,6 +158,7 @@ void config_init() {
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
     config::output_encoder_direct.spidma_.register_operation_ = config::drv.register_operation_;
+    config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.error_count_));
     System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.warn_count_));
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_error_count_));
@@ -173,6 +175,7 @@ void config_init() {
     System::api.add_api_variable("oecc_um", new const APICallbackFloat([](){ return config::output_encoder_direct.get_ecc_um(); }));
     System::api.add_api_variable("olow", new APICallbackUint8([](){ return config::output_encoder_direct.get_ac_eto(); }, 
         [](uint8_t u){ config::output_encoder_direct.set_ac_eto(u); }));
+    System::api.add_api_variable("ocal", new const APICallback([](){ return config::output_encoder_direct.get_cal_string(); }));
     System::api.add_api_variable("ocmd_result", new const APICallback([](){ return config::output_encoder_direct.get_cmd_result(); }));
     //System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
 

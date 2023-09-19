@@ -141,12 +141,15 @@ void config_init() {
     System::api.add_api_variable("mauto_ana", new const APICallback([](){ config::motor_encoder.start_auto_adj_ana(); return "ok"; }));
     System::api.add_api_variable("mauto_dig", new const APICallback([](){ config::motor_encoder.start_auto_adj_dig(); return "ok"; }));
     System::api.add_api_variable("mreadj_dig", new const APICallback([](){ config::motor_encoder.start_auto_readj_dig(); return "ok"; }));
-    System::api.add_api_variable("mauto_ecc", new const APICallback([](){ config::motor_encoder.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("mauto_ecc", new const APICallback([](){ config::motor_encoder.start_auto_adj_ecc(); return "ok"; }));
     System::api.add_api_variable("mecc_correction", new APICallbackUint8([](){ return config::motor_encoder.get_ecc_correction(); }, 
         [](uint8_t u){ config::motor_encoder.set_ecc_correction(u); }));
-    System::api.add_api_variable("mecc_um", new const APICallbackFloat([](){ return config::motor_encoder.get_ecc_um(); }));
+    System::api.add_api_variable("mecc_um", new APICallbackFloat([](){ return config::motor_encoder.get_ecc_um(); },
+        [](float f){ config::motor_encoder.set_ecc_um(f); }));
     System::api.add_api_variable("mlow", new APICallbackUint8([](){ return config::motor_encoder.get_ac_eto(); }, 
         [](uint8_t u){ config::motor_encoder.set_ac_eto(u); }));
+    System::api.add_api_variable("mac_count", new APICallbackUint8([](){ return config::motor_encoder.get_ac_count(); }, 
+        [](uint8_t u){ config::motor_encoder.set_ac_count(u); }));
     System::api.add_api_variable("mcal", new const APICallback([](){ return config::motor_encoder.get_cal_string(); }));
     System::api.add_api_variable("mcals", new const APICallback([](){ return config::motor_encoder.get_cals_string(); }));
     System::api.add_api_variable("mcmd_result", new const APICallback([](){ return config::motor_encoder.get_cmd_result(); }));
@@ -170,12 +173,15 @@ void config_init() {
     System::api.add_api_variable("oauto_ana", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_ana(); return "ok"; }));
     System::api.add_api_variable("oauto_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_dig(); return "ok"; }));
     System::api.add_api_variable("oreadj_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_readj_dig(); return "ok"; }));
-    System::api.add_api_variable("oauto_ecc", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("oauto_ecc", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_ecc(); return "ok"; }));
     System::api.add_api_variable("oecc_correction", new APICallbackUint8([](){ return config::output_encoder_direct.get_ecc_correction(); }, 
         [](uint8_t u){ config::output_encoder_direct.set_ecc_correction(u); }));
-    System::api.add_api_variable("oecc_um", new const APICallbackFloat([](){ return config::output_encoder_direct.get_ecc_um(); }));
+    System::api.add_api_variable("oecc_um", new APICallbackFloat([](){ return config::output_encoder_direct.get_ecc_um(); }, 
+        [](float f){ config::output_encoder_direct.set_ecc_um(f); }));
     System::api.add_api_variable("olow", new APICallbackUint8([](){ return config::output_encoder_direct.get_ac_eto(); }, 
         [](uint8_t u){ config::output_encoder_direct.set_ac_eto(u); }));
+    System::api.add_api_variable("oac_count", new APICallbackUint8([](){ return config::output_encoder_direct.get_ac_count(); }, 
+        [](uint8_t u){ config::output_encoder_direct.set_ac_count(u); }));
     System::api.add_api_variable("ocal", new const APICallback([](){ return config::output_encoder_direct.get_cal_string(); }));
     System::api.add_api_variable("ocals", new const APICallback([](){ return config::output_encoder_direct.get_cals_string(); }));
     System::api.add_api_variable("ocmd_result", new const APICallback([](){ return config::output_encoder_direct.get_cmd_result(); }));

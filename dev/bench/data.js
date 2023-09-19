@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1695144495898,
+  "lastUpdate": 1695151614738,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -52579,6 +52579,100 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbss_size",
             "value": 74648,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": null,
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": null,
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ernesto.gonzalez.u@gmail.com",
+            "name": "eurdaneta",
+            "username": "netogu"
+          },
+          "committer": {
+            "email": "ernesto.gonzalez.u@gmail.com",
+            "name": "eurdaneta",
+            "username": "netogu"
+          },
+          "distinct": true,
+          "id": "58327d5fb88523e24871261fe775d1c9d76774d4",
+          "message": "adding h2 config for moon motor dev",
+          "timestamp": "2023-09-19T12:23:38-07:00",
+          "tree_id": "1015651b273c538b16079b674dd91022f9de66c3",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/58327d5fb88523e24871261fe775d1c9d76774d4"
+        },
+        "date": 1695151613559,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 4953.81,
+            "unit": "cycles",
+            "extra": "5308 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3396.87,
+            "unit": "cycles",
+            "extra": "3417 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 848.979,
+            "unit": "cycles",
+            "extra": "849 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.8,
+            "unit": "cycles",
+            "extra": "17042 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 545.9992269037494,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 192296,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 9012,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 186412,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14848,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 73352,
             "unit": "bytes",
             "extra": "0 times"
           },

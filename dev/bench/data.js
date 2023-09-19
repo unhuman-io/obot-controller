@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1695153069540,
+  "lastUpdate": 1695153153435,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -52939,6 +52939,100 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarktext_size",
             "value": 189244,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14848,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 74648,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": null,
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": null,
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c7c99c513ecef41cffe821a9926a5949cf856dec",
+          "message": "Merge pull request #165 from unhuman-io/feature/status_bits\n\nadd status bit output",
+          "timestamp": "2023-09-19T12:49:00-07:00",
+          "tree_id": "6cd4e8d92b2cd6e1e735be942d9644bbebeca29a",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/c7c99c513ecef41cffe821a9926a5949cf856dec"
+        },
+        "date": 1695153152273,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 4721.94,
+            "unit": "cycles",
+            "extra": "5277 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.7,
+            "unit": "cycles",
+            "extra": "3425 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 848.142,
+            "unit": "cycles",
+            "extra": "850 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000.1,
+            "unit": "cycles",
+            "extra": "17040 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 555.8943566167848,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 195064,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 9012,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 189180,
             "unit": "bytes",
             "extra": "0 times"
           },

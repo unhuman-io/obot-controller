@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1695151614738,
+  "lastUpdate": 1695151968585,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -52643,6 +52643,100 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 545.9992269037494,
+            "unit": "Hz",
+            "extra": "300 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 192296,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 9012,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 186412,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 14848,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 73352,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": null,
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": null,
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "31810452+netogu@users.noreply.github.com",
+            "name": "Ernesto Gonzalez Urdaneta",
+            "username": "netogu"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0f783fe35833216864a5585b04d9522a52ac6b52",
+          "message": "Merge pull request #164 from unhuman-io/feature/moons-motor\n\nadding h2 config for moon motor dev",
+          "timestamp": "2023-09-19T12:28:29-07:00",
+          "tree_id": "1015651b273c538b16079b674dd91022f9de66c3",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/0f783fe35833216864a5585b04d9522a52ac6b52"
+        },
+        "date": 1695151967538,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 4994.31,
+            "unit": "cycles",
+            "extra": "5305 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3396.44,
+            "unit": "cycles",
+            "extra": "3420 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 849,
+            "unit": "cycles",
+            "extra": "849 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.5,
+            "unit": "cycles",
+            "extra": "17023 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 523.0102869518137,
             "unit": "Hz",
             "extra": "300 times"
           },

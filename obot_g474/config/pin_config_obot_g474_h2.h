@@ -106,6 +106,25 @@ void pin_config_obot_g474_h2() {
         GPIO_SETH(B, 10, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);    // EN
         GPIOB->BSRR = GPIO_BSRR_BS10;
 
+        /***************************************************
+          SPI3 Configuration
+
+          SPI1 - External BiSS Encoder
+          ~CS  - PA15
+          SCLK - PB3
+          MISO - PB4
+          MOSI - PB5
+          
+        ***************************************************/
+        GPIO_SETL(B, 3, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 CLK
+        GPIO_SETL(B, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 HIDO
+        GPIO_SETL(B, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 6);   // SPI3 HODI 
+
+        GPIO_SETH(A, 15, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // spi3 cs
+
+        // GPIO_SETH(C, 13, 1, 0, 0);  // Boostxl enable
+        // GPIO_SETH(C, 14, GPIO_MODE::INPUT, GPIO_SPEED::LOW, 0);  // Boostxl fault
+        // MASK_S2ET(GPIOC->PUPDR, GPIO_PUPDR_PUPD14, GPIO_PULL::UP);
 
         /***************************************************
           LED Configuration

@@ -78,7 +78,7 @@ struct InitCode {
 #endif
 
       for (int i=0;i<1;i++) {
-        ms_delay(14); // for pz encoders to power on
+        ms_delay(40); // for pz encoders to power on
         IWDG->KR = 0xAAAA;
       }
     }
@@ -137,6 +137,23 @@ void config_init() {
     System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
     System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
     System::api.add_api_variable("mdiag", new const APICallback([](){ return config::motor_encoder.read_diagnosis(); }));
+    System::api.add_api_variable("mconf_write", new const APICallback([](){ return config::motor_encoder.write_conf(); }));
+    System::api.add_api_variable("mauto_ana", new const APICallback([](){ config::motor_encoder.start_auto_adj_ana(); return "ok"; }));
+    System::api.add_api_variable("mauto_dig", new const APICallback([](){ config::motor_encoder.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("mreadj_dig", new const APICallback([](){ config::motor_encoder.start_auto_readj_dig(); return "ok"; }));
+    System::api.add_api_variable("mauto_ecc", new const APICallback([](){ config::motor_encoder.start_auto_adj_ecc(); return "ok"; }));
+    System::api.add_api_variable("mecc_correction", new APICallbackUint8([](){ return config::motor_encoder.get_ecc_correction(); }, 
+        [](uint8_t u){ config::motor_encoder.set_ecc_correction(u); }));
+    System::api.add_api_variable("mecc_um", new APICallbackFloat([](){ return config::motor_encoder.get_ecc_um(); },
+        [](float f){ config::motor_encoder.set_ecc_um(f); }));
+    System::api.add_api_variable("mlow", new APICallbackUint8([](){ return config::motor_encoder.get_ac_eto(); }, 
+        [](uint8_t u){ config::motor_encoder.set_ac_eto(u); }));
+    System::api.add_api_variable("mac_count", new APICallbackUint8([](){ return config::motor_encoder.get_ac_count(); }, 
+        [](uint8_t u){ config::motor_encoder.set_ac_count(u); }));
+    System::api.add_api_variable("mcal", new const APICallback([](){ return config::motor_encoder.get_cal_string(); }));
+    System::api.add_api_variable("mcals", new const APICallback([](){ return config::motor_encoder.get_cals_string(); }));
+    System::api.add_api_variable("mcmd_result", new const APICallback([](){ return config::motor_encoder.get_cmd_result(); }));
+
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
     System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
@@ -145,12 +162,29 @@ void config_init() {
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
     config::output_encoder_direct.spidma_.register_operation_ = config::drv.register_operation_;
+    config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.error_count_));
     System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.warn_count_));
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_error_count_));
     System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
     System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
     System::api.add_api_variable("odiag", new const APICallback([](){ return config::output_encoder_direct.read_diagnosis(); }));
+    System::api.add_api_variable("oconf_write", new const APICallback([](){ return config::output_encoder_direct.write_conf(); }));
+    System::api.add_api_variable("oauto_ana", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_ana(); return "ok"; }));
+    System::api.add_api_variable("oauto_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_dig(); return "ok"; }));
+    System::api.add_api_variable("oreadj_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_readj_dig(); return "ok"; }));
+    System::api.add_api_variable("oauto_ecc", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_ecc(); return "ok"; }));
+    System::api.add_api_variable("oecc_correction", new APICallbackUint8([](){ return config::output_encoder_direct.get_ecc_correction(); }, 
+        [](uint8_t u){ config::output_encoder_direct.set_ecc_correction(u); }));
+    System::api.add_api_variable("oecc_um", new APICallbackFloat([](){ return config::output_encoder_direct.get_ecc_um(); }, 
+        [](float f){ config::output_encoder_direct.set_ecc_um(f); }));
+    System::api.add_api_variable("olow", new APICallbackUint8([](){ return config::output_encoder_direct.get_ac_eto(); }, 
+        [](uint8_t u){ config::output_encoder_direct.set_ac_eto(u); }));
+    System::api.add_api_variable("oac_count", new APICallbackUint8([](){ return config::output_encoder_direct.get_ac_count(); }, 
+        [](uint8_t u){ config::output_encoder_direct.set_ac_count(u); }));
+    System::api.add_api_variable("ocal", new const APICallback([](){ return config::output_encoder_direct.get_cal_string(); }));
+    System::api.add_api_variable("ocals", new const APICallback([](){ return config::output_encoder_direct.get_cals_string(); }));
+    System::api.add_api_variable("ocmd_result", new const APICallback([](){ return config::output_encoder_direct.get_cmd_result(); }));
     //System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
 
     config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;

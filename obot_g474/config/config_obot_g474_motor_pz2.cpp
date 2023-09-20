@@ -78,7 +78,7 @@ struct InitCode {
 #endif
 
       for (int i=0;i<1;i++) {
-        ms_delay(14); // for pz encoders to power on
+        ms_delay(40); // for pz encoders to power on
         IWDG->KR = 0xAAAA;
       }
     }

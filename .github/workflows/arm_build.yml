@@ -36,7 +36,7 @@ jobs:
           - project: obot_g474
             config: h2
     runs-on: ubuntu-latest
-    container: leemagnusson/arm-gcc:gcc12
+    container: leemagnusson/arm-gcc:latest
     steps:
     - uses: actions/checkout@master
       with:

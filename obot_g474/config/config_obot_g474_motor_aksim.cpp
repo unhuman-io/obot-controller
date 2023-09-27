@@ -222,7 +222,6 @@ namespace config {
     MAX31889 ambient_temperature_4(i2c1,3);
 };
 
-float v5v, i5v, i48v;
 #ifdef JOINT_ENCODER_BITS
 float joint_encoder_bias = 0;
 bool joint_bias_set = false;
@@ -290,14 +289,14 @@ void config_init() {
     System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
     System::api.add_api_variable("set_qia_gain", new const APICallbackUint8([](){ return config::torque_sensor.set_gain(); }));
 #endif
-    System::api.add_api_variable("5V", new const APIFloat(&v5v));
-    System::api.add_api_variable("V5V", new const APIUint32(&V5V));
-    System::api.add_api_variable("I5V", new const APIUint32(&I5V));
-    System::api.add_api_variable("i5V", new const APIFloat(&i5v));
-    System::api.add_api_variable("i48V", new const APIFloat(&i48v));
-    System::api.add_api_variable("IBUS", new const APIUint32(&I_BUS_DR));
-    System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
-    System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
+    // System::api.add_api_variable("5V", new const APIFloat(&v5v));
+    // System::api.add_api_variable("V5V", new const APIUint32(&V5V));
+    // System::api.add_api_variable("I5V", new const APIUint32(&I5V));
+    // System::api.add_api_variable("i5V", new const APIFloat(&i5v));
+    // System::api.add_api_variable("i48V", new const APIFloat(&i48v));
+    // System::api.add_api_variable("IBUS", new const APIUint32(&I_BUS_DR));
+    // System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
+    // System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
 
     // watchdog reset
     IWDG->KR = 0xAAAA;
@@ -376,14 +375,6 @@ void config_maintenance() {
     round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.diag_err_count_);
     round_robin_logger.log_data(OUTPUT_ENCODER_WARNING_INDEX, config::output_encoder_direct.diag_warn_count_);
 
-    v5v = (float) V5V/4096*v3v3*2;
-    i5v = (float) I5V/4096*v3v3;
-    i48v = -((float) I_BUS_DR-2048)/4096*v3v3/20/.0005;
-    round_robin_logger.log_data(VOLTAGE_5V_INDEX, v5v);
-    round_robin_logger.log_data(CURRENT_5V_INDEX, i5v);
-#if defined (HAS_BUS_CURRENT_SENSE)
-    round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
-#endif
 #ifdef MAX11254_TORQUE_SENSOR
     round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_ + config::torque_sensor_direct.read_error_);
     if (config::torque_sensor_direct.timeout_error_ > 10 ||

@@ -127,32 +127,10 @@ namespace config {
     MAX31889 ambient_temperature_4(i2c1,3);
 };
 
-float v5v, i5v, i48v;
-
 void config_init() {
     config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
-    System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.error_count_));
-    System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.warn_count_));
-    System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_error_count_));
-    System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
-    System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
-    System::api.add_api_variable("mdiag", new const APICallback([](){ return config::motor_encoder.read_diagnosis(); }));
-    System::api.add_api_variable("mconf_write", new const APICallback([](){ return config::motor_encoder.write_conf(); }));
-    System::api.add_api_variable("mauto_ana", new const APICallback([](){ config::motor_encoder.start_auto_adj_ana(); return "ok"; }));
-    System::api.add_api_variable("mauto_dig", new const APICallback([](){ config::motor_encoder.start_auto_adj_dig(); return "ok"; }));
-    System::api.add_api_variable("mreadj_dig", new const APICallback([](){ config::motor_encoder.start_auto_readj_dig(); return "ok"; }));
-    System::api.add_api_variable("mauto_ecc", new const APICallback([](){ config::motor_encoder.start_auto_adj_ecc(); return "ok"; }));
-    System::api.add_api_variable("mecc_correction", new APICallbackUint8([](){ return config::motor_encoder.get_ecc_correction(); }, 
-        [](uint8_t u){ config::motor_encoder.set_ecc_correction(u); }));
-    System::api.add_api_variable("mecc_um", new APICallbackFloat([](){ return config::motor_encoder.get_ecc_um(); },
-        [](float f){ config::motor_encoder.set_ecc_um(f); }));
-    System::api.add_api_variable("mlow", new APICallbackUint8([](){ return config::motor_encoder.get_ac_eto(); }, 
-        [](uint8_t u){ config::motor_encoder.set_ac_eto(u); }));
-    System::api.add_api_variable("mac_count", new APICallbackUint8([](){ return config::motor_encoder.get_ac_count(); }, 
-        [](uint8_t u){ config::motor_encoder.set_ac_count(u); }));
-    System::api.add_api_variable("mcal", new const APICallback([](){ return config::motor_encoder.get_cal_string(); }));
-    System::api.add_api_variable("mcals", new const APICallback([](){ return config::motor_encoder.get_cals_string(); }));
-    System::api.add_api_variable("mcmd_result", new const APICallback([](){ return config::motor_encoder.get_cmd_result(); }));
+
+    config::motor_encoder.set_debug_variables("m", System::api);
 
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
@@ -163,29 +141,7 @@ void config_init() {
 
     config::output_encoder_direct.spidma_.register_operation_ = config::drv.register_operation_;
     config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.error_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_error_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
-    System::api.add_api_variable("odiag", new const APICallback([](){ return config::output_encoder_direct.read_diagnosis(); }));
-    System::api.add_api_variable("oconf_write", new const APICallback([](){ return config::output_encoder_direct.write_conf(); }));
-    System::api.add_api_variable("oauto_ana", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_ana(); return "ok"; }));
-    System::api.add_api_variable("oauto_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_dig(); return "ok"; }));
-    System::api.add_api_variable("oreadj_dig", new const APICallback([](){ config::output_encoder_direct.start_auto_readj_dig(); return "ok"; }));
-    System::api.add_api_variable("oauto_ecc", new const APICallback([](){ config::output_encoder_direct.start_auto_adj_ecc(); return "ok"; }));
-    System::api.add_api_variable("oecc_correction", new APICallbackUint8([](){ return config::output_encoder_direct.get_ecc_correction(); }, 
-        [](uint8_t u){ config::output_encoder_direct.set_ecc_correction(u); }));
-    System::api.add_api_variable("oecc_um", new APICallbackFloat([](){ return config::output_encoder_direct.get_ecc_um(); }, 
-        [](float f){ config::output_encoder_direct.set_ecc_um(f); }));
-    System::api.add_api_variable("olow", new APICallbackUint8([](){ return config::output_encoder_direct.get_ac_eto(); }, 
-        [](uint8_t u){ config::output_encoder_direct.set_ac_eto(u); }));
-    System::api.add_api_variable("oac_count", new APICallbackUint8([](){ return config::output_encoder_direct.get_ac_count(); }, 
-        [](uint8_t u){ config::output_encoder_direct.set_ac_count(u); }));
-    System::api.add_api_variable("ocal", new const APICallback([](){ return config::output_encoder_direct.get_cal_string(); }));
-    System::api.add_api_variable("ocals", new const APICallback([](){ return config::output_encoder_direct.get_cals_string(); }));
-    System::api.add_api_variable("ocmd_result", new const APICallback([](){ return config::output_encoder_direct.get_cmd_result(); }));
-    //System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
+    config::output_encoder_direct.set_debug_variables("o", System::api);
 
     config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
@@ -193,14 +149,12 @@ void config_init() {
     System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
     System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
    
-    System::api.add_api_variable("5V", new const APIFloat(&v5v));
-    System::api.add_api_variable("V5V", new const APIUint32(&V5V));
-    System::api.add_api_variable("I5V", new const APIUint32(&I5V));
-    System::api.add_api_variable("i5V", new const APIFloat(&i5v));
-    System::api.add_api_variable("i48V", new const APIFloat(&i48v));
-    System::api.add_api_variable("IBUS", new const APIUint32(&I_BUS_DR));
-    System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
-    System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
+    // System::api.add_api_variable("5V", new const APIFloat(&v5v));
+    // System::api.add_api_variable("V5V", new const APIUint32(&V5V));
+    // System::api.add_api_variable("I5V", new const APIUint32(&I5V));
+    // System::api.add_api_variable("IBUS", new const APIUint32(&I_BUS_DR));
+    // System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
+    // System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
 
 }
 
@@ -242,14 +196,6 @@ void config_maintenance() {
     round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_error_count_);
     round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.error_count_);
 
-    v5v = (float) V5V/4096*v3v3*2;
-    i5v = (float) I5V/4096*v3v3;
-    i48v = -((float) I_BUS_DR-2048)/4096*v3v3/20/.0005;
-    round_robin_logger.log_data(VOLTAGE_5V_INDEX, v5v);
-    round_robin_logger.log_data(CURRENT_5V_INDEX, i5v);
-#if defined (HAS_BUS_CURRENT_SENSE)
-    round_robin_logger.log_data(BUS_CURRENT_INDEX, i48v);
-#endif
     round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor_direct.read_error_);
     round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_);
     if (config::torque_sensor_direct.timeout_error_ > 100 ||

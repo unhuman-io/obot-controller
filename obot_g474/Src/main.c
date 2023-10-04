@@ -230,7 +230,7 @@ void SystemClock_Config(void)
 
   /** Configure the main internal regulator output voltage 
   */
-  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
+//  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
 #ifdef USE_HSI
@@ -284,9 +284,14 @@ void SystemClock_Config(void)
   PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
   PeriphClkInit.Adc345ClockSelection = RCC_ADC345CLKSOURCE_SYSCLK;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  
+  RCC->CCIPR = 0 << RCC_CCIPR_CLK48SEL_Pos | // HSI48 (0) for usb
+    2 << RCC_CCIPR_ADC12SEL_Pos | 2 << RCC_CCIPR_ADC345SEL_Pos | // (2) sysclk
+    0 << RCC_CCIPR_I2C1SEL_Pos | 0 << RCC_CCIPR_I2C2Sel_Pos; // (0) pclk
+
+ // if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
-    Error_Handler();
+ //   Error_Handler();
   }
   /** Configures CRS 
   */
@@ -297,7 +302,14 @@ void SystemClock_Config(void)
   pInit.ErrorLimitValue = 34;
   pInit.HSI48CalibrationValue = 32;
 
-  HAL_RCCEx_CRSConfig(&pInit);
+
+  RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
+  RCC->APB1SMENR1 |= RCC_APB1SMER1_CRSSMEN;
+  CRS->CFGR = 2 << CRS_CFGR_SYNCSRC_Pos | 34 << CRS_CFGR_FELIM_Pos |
+    (48000000/1000 - 1) << CRS_CFGR_RELOAD_Pos; // DIV1, source usb sof (2), polarity rising, 34 felim was specificed by cubemx, reload (48000000/1000 - 1)
+  CRS->CR |= CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
+
+  //HAL_RCCEx_CRSConfig(&pInit);
 }
 
 // /**

@@ -253,14 +253,13 @@ void SystemClock_Config(void)
     RCC->PLLCFGR = 3 << RCC_PLLCFGR_PLLSRC_Pos | // (3) HSE is pll source (24 MHz)
       3 << RCC_PLLCFGR_PLLM_Pos | // (3) div4 
       85 << RCC_PLLCFGR_PLLN_Pos | // (85) x85
-      2 << RCC_PLLCFGR_PLLPDIV_Pos | // (2) div2?
+      2 << RCC_PLLCFGR_PLLPDIV_Pos | // (2) div2
       //RCC_PLLCFGR_PLLPEN |
       0 << RCC_PLLCFGR_PLLQ_Pos | // (0) div2
       //RCC_PLLCFGR_PLLQEN | 
       0 << RCC_PLLCFGR_PLLR_Pos | // (0) div2
       RCC_PLLCFGR_PLLREN;
     RCC->CR = RCC_CR_HSION | RCC_CR_PLLON;
-    RCC->CRRCR = RCC_CRRCR_HSI48ON
 #else
   // RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_HSI48;
   // RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -282,11 +281,11 @@ void SystemClock_Config(void)
     0 << RCC_PLLCFGR_PLLQ_Pos | // (0) div2
     //RCC_PLLCFGR_PLLQEN | 
     0 << RCC_PLLCFGR_PLLR_Pos | // (0) div2
-    RCC_PLLCFGR_PLLREN;
-  RCC->CR = RCC_CR_HSEON | RCC_CR_HSION | RCC_CR_PLLON;
-  while(!RCC->CR & RCC_CR_PLLRDY);
+    RCC_PLLCFGR_PLLREN;  RCC->CR = RCC_CR_HSEON | RCC_CR_HSION | RCC_CR_PLLON;
+
+#endif  
+  while(!(RCC->CR & RCC_CR_PLLRDY));
   RCC->CRRCR = RCC_CRRCR_HSI48ON;
-#endif
   // if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   // {
   //   Error_Handler();

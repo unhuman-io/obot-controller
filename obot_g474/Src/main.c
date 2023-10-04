@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "../../motorlib/system.h"
+#include "../st_device.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -221,12 +222,12 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-  HAL_Init();
+  // HAL_Init();
 
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-  RCC_CRSInitTypeDef pInit = {0};
+  // RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  // RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  // RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+  // RCC_CRSInitTypeDef pInit = {0};
 
   /** Configure the main internal regulator output voltage 
   */
@@ -234,80 +235,112 @@ void SystemClock_Config(void)
   /** Initializes the CPU, AHB and APB busses clocks 
   */
 #ifdef USE_HSI
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI48;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV4;
-  RCC_OscInitStruct.PLL.PLLN = 85;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+  // RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI48;
+  // RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  // RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  // RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
+  // RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  // RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  // RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV4;
+  // RCC_OscInitStruct.PLL.PLLN = 85;
+  // RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  // RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  // RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+
+
+  // calibration
+
+    RCC->PLLCFGR = 3 << RCC_PLLCFGR_PLLSRC_Pos | // (3) HSE is pll source (24 MHz)
+      3 << RCC_PLLCFGR_PLLM_Pos | // (3) div4 
+      85 << RCC_PLLCFGR_PLLN_Pos | // (85) x85
+      2 << RCC_PLLCFGR_PLLPDIV_Pos | // (2) div2?
+      //RCC_PLLCFGR_PLLPEN |
+      0 << RCC_PLLCFGR_PLLQ_Pos | // (0) div2
+      //RCC_PLLCFGR_PLLQEN | 
+      0 << RCC_PLLCFGR_PLLR_Pos | // (0) div2
+      RCC_PLLCFGR_PLLREN;
+    RCC->CR = RCC_CR_HSION | RCC_CR_PLLON;
+    RCC->CRRCR = RCC_CRRCR_HSI48ON
 #else
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_HSI48;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV6;
-  RCC_OscInitStruct.PLL.PLLN = 85;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+  // RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_HSI48;
+  // RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  // RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
+  // RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  // RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  // RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV6;
+  // RCC_OscInitStruct.PLL.PLLN = 85;
+  // RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  // RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  // RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+
+  // P, Q, R all 170 MHz
+  RCC->PLLCFGR = 3 << RCC_PLLCFGR_PLLSRC_Pos | // (3) HSE is pll source (24 MHz)
+    5 << RCC_PLLCFGR_PLLM_Pos | // (5) div6 
+    85 << RCC_PLLCFGR_PLLN_Pos | // (85) x85
+    2 << RCC_PLLCFGR_PLLPDIV_Pos | // (2) div2
+    //RCC_PLLCFGR_PLLPEN |
+    0 << RCC_PLLCFGR_PLLQ_Pos | // (0) div2
+    //RCC_PLLCFGR_PLLQEN | 
+    0 << RCC_PLLCFGR_PLLR_Pos | // (0) div2
+    RCC_PLLCFGR_PLLREN;
+  RCC->CR = RCC_CR_HSEON | RCC_CR_HSION | RCC_CR_PLLON;
+  while(!RCC->CR & RCC_CR_PLLRDY);
+  RCC->CRRCR = RCC_CRRCR_HSI48ON;
 #endif
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  // if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  // RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+  //                             |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  // RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  // RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  // RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  // RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  RCC->CFGR = 3 << RCC_CFGR_SW_Pos; // (3) // PLL clock
+
+
+  // if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_8) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
   /** Initializes the peripherals clocks 
   */
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C2
-                              |RCC_PERIPHCLK_USB|RCC_PERIPHCLK_ADC12
-                              |RCC_PERIPHCLK_ADC345;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
-  PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
-  PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
-  PeriphClkInit.Adc345ClockSelection = RCC_ADC345CLKSOURCE_SYSCLK;
+  // PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C2
+  //                             |RCC_PERIPHCLK_USB|RCC_PERIPHCLK_ADC12
+  //                             |RCC_PERIPHCLK_ADC345;
+  // PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
+  // PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
+  // PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
+  // PeriphClkInit.Adc12ClockSelection = RCC_ADC12CLKSOURCE_SYSCLK;
+  // PeriphClkInit.Adc345ClockSelection = RCC_ADC345CLKSOURCE_SYSCLK;
   
   RCC->CCIPR = 0 << RCC_CCIPR_CLK48SEL_Pos | // HSI48 (0) for usb
     2 << RCC_CCIPR_ADC12SEL_Pos | 2 << RCC_CCIPR_ADC345SEL_Pos | // (2) sysclk
-    0 << RCC_CCIPR_I2C1SEL_Pos | 0 << RCC_CCIPR_I2C2Sel_Pos; // (0) pclk
+    0 << RCC_CCIPR_I2C1SEL_Pos | 0 << RCC_CCIPR_I2C2SEL_Pos; // (0) pclk
 
- // if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
- //   Error_Handler();
-  }
+//  // if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+//   {
+//  //   Error_Handler();
+//   }
   /** Configures CRS 
   */
-  pInit.Prescaler = RCC_CRS_SYNC_DIV1;
-  pInit.Source = RCC_CRS_SYNC_SOURCE_USB;
-  pInit.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
-  pInit.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000,1000);
-  pInit.ErrorLimitValue = 34;
-  pInit.HSI48CalibrationValue = 32;
+  // pInit.Prescaler = RCC_CRS_SYNC_DIV1;
+  // pInit.Source = RCC_CRS_SYNC_SOURCE_USB;
+  // pInit.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
+  // pInit.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000,1000);
+  // pInit.ErrorLimitValue = 34;
+  // pInit.HSI48CalibrationValue = 32;
 
 
   RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
-  RCC->APB1SMENR1 |= RCC_APB1SMER1_CRSSMEN;
+  RCC->APB1SMENR1 |= RCC_APB1SMENR1_CRSSMEN;
   CRS->CFGR = 2 << CRS_CFGR_SYNCSRC_Pos | 34 << CRS_CFGR_FELIM_Pos |
     (48000000/1000 - 1) << CRS_CFGR_RELOAD_Pos; // DIV1, source usb sof (2), polarity rising, 34 felim was specificed by cubemx, reload (48000000/1000 - 1)
-  CRS->CR |= CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
+  //CRS->CR |= CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
 
   //HAL_RCCEx_CRSConfig(&pInit);
 }

@@ -281,11 +281,14 @@ void SystemClock_Config(void)
     0 << RCC_PLLCFGR_PLLQ_Pos | // (0) div2
     //RCC_PLLCFGR_PLLQEN | 
     0 << RCC_PLLCFGR_PLLR_Pos | // (0) div2
-    RCC_PLLCFGR_PLLREN;  RCC->CR = RCC_CR_HSEON | RCC_CR_HSION | RCC_CR_PLLON;
-
-#endif  
+    RCC_PLLCFGR_PLLREN;  
+    RCC->CR = RCC_CR_HSEON | RCC_CR_HSION | RCC_CR_PLLON;
+#endif
+  RCC->CRRCR = RCC_CRRCR_HSI48ON;  
   while(!(RCC->CR & RCC_CR_PLLRDY));
-  RCC->CRRCR = RCC_CRRCR_HSI48ON;
+
+  FLASH->ACR |= 4 << FLASH_ACR_LATENCY_Pos; // flash latency at least 4
+  
   // if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   // {
   //   Error_Handler();

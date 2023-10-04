@@ -28,8 +28,8 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32g4xx_hal.h"
-#include "stm32g4xx_ll_pwr.h"
+//#include "stm32g4xx_hal.h"
+//#include "stm32g4xx_ll_pwr.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -51,9 +51,9 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_HRTIM_MspPostInit(HRTIM_HandleTypeDef *hhrtim);
+// void HAL_HRTIM_MspPostInit(HRTIM_HandleTypeDef *hhrtim);
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+// void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);

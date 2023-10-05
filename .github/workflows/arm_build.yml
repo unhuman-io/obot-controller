@@ -76,7 +76,7 @@ jobs:
   test:
     timeout-minutes: 10
     needs: [build]
-    runs-on: self-hosted
+    runs-on: [self-hosted, motor_enc]
     steps:
     - uses: actions/checkout@main
     - uses: actions/download-artifact@main

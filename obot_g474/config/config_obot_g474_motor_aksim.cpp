@@ -205,11 +205,12 @@ namespace config {
 
 #define SPI1_REINIT_CALLBACK
 void spi1_reinit_callback() {
-   // SPI1->CR1=0;
-    // SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
-    // // ORDER DEPENDANCE SPE set last
-    // SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
-    // config::spi1_dma.reinit();
+    // necessary to recover from sleep
+    config::spi1_dma.reinit();
+    uint32_t tmp = DMA1_Channel4->CCR;
+    DMA1_Channel4->CCR = 0; // flush spi1 rx
+    DMA1_Channel4->CNDTR = 0;
+    DMA1_Channel4->CCR = tmp;
 }
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"

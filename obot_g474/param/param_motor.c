@@ -1,4 +1,4 @@
-#ifdef MR1
+#if defined(MR1) || defined(MR2)
     .fast_loop_param.adc1_gain = -3.3/4096/(.0005*10*1.0),  // A/count, 1.04 is a measured factor
     .fast_loop_param.adc2_gain = -3.3/4096/(.0005*10*1.0),
     .fast_loop_param.adc3_gain = -3.3/4096/(.0005*10*1.0),

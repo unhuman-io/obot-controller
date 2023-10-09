@@ -24,6 +24,18 @@ using MotorEncoder = ICPZ;
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_motor_r0();
 
+#ifdef HD11
+// MCS0 HDR24 PC1
+// MCS1 HDR22 PC2
+// OCS0 HDR17 PA4
+// OCS1 HDR5  PD2
+#define OCS_PIN D,2
+#else
+// MCS PD2
+// OCS PC3
+#define OCS_PIN C,3
+#endif
+
 // setup for R4
 
 struct InitCode {
@@ -43,7 +55,11 @@ struct InitCode {
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
 
 
+      GPIO_SETL(C, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
+      GPIO_SETL(C, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
       GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
+      GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
+      
       // gpio out
       GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
       // gpio in
@@ -77,6 +93,9 @@ struct InitCode {
       GPIOA->BSRR = GPIO_BSRR_BS9;
 #endif
 
+GPIOC->BSRR = GPIO_BSRR_BS1 | GPIO_BSRR_BS2;
+GPIOA->BSRR = GPIO_BSRR_BS4;
+GPIOD->BSRR = GPIO_BSRR_BS2;
       for (int i=0;i<1;i++) {
         ms_delay(40); // for pz encoders to power on
         IWDG->KR = 0xAAAA;
@@ -89,12 +108,12 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
+    GPIO motor_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     MotorEncoder motor_encoder(spi3_dma, ICPZ::PZ08S);
 
     
-    GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
+    GPIO output_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
 

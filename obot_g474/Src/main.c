@@ -250,7 +250,7 @@ void SystemClock_Config(void)
 
   // calibration
 
-    RCC->PLLCFGR = 3 << RCC_PLLCFGR_PLLSRC_Pos | // (3) HSE is pll source (24 MHz)
+    RCC->PLLCFGR = 2 << RCC_PLLCFGR_PLLSRC_Pos | // (2) HSI is pll source (16 MHz)
       3 << RCC_PLLCFGR_PLLM_Pos | // (3) div4 
       85 << RCC_PLLCFGR_PLLN_Pos | // (85) x85
       2 << RCC_PLLCFGR_PLLPDIV_Pos | // (2) div2

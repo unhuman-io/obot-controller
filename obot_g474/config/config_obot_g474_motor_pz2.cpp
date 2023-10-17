@@ -93,9 +93,9 @@ struct InitCode {
       GPIOA->BSRR = GPIO_BSRR_BS9;
 #endif
 
-GPIOC->BSRR = GPIO_BSRR_BS1 | GPIO_BSRR_BS2;
-GPIOA->BSRR = GPIO_BSRR_BS4;
-GPIOD->BSRR = GPIO_BSRR_BS2;
+      GPIOC->BSRR = GPIO_BSRR_BS1 | GPIO_BSRR_BS2 |GPIO_BSRR_BS3;
+      GPIOA->BSRR = GPIO_BSRR_BS4;
+      GPIOD->BSRR = GPIO_BSRR_BS2;
       for (int i=0;i<1;i++) {
         ms_delay(40); // for pz encoders to power on
         IWDG->KR = 0xAAAA;
@@ -108,12 +108,12 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
+    GPIO motor_encoder_cs(*GPIOC, 1, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     MotorEncoder motor_encoder(spi3_dma, ICPZ::PZ08S);
 
     
-    GPIO output_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
+    GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
 

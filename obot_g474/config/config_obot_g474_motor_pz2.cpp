@@ -108,7 +108,7 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOC, 1, GPIO::OUTPUT);
+    GPIO motor_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
     MotorEncoder motor_encoder(spi3_dma, ICPZ::PZ08S);
 

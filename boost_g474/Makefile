@@ -14,6 +14,7 @@ GIT_VERSION := $(shell git describe --dirty --always --tags)
 GIT_HASH := $(shell git rev-parse HEAD)
 $(shell touch version.h)
 
+MOTORLIB_HASH := $(shell git -C ../motorlib rev-parse HEAD)
 ######################################
 # target
 ######################################
@@ -156,7 +157,8 @@ C_DEFS =  \
 -DGIT_VERSION=\"$(GIT_VERSION)\" \
 -DUSE_HAL_DRIVER \
 -DSTM32G474xx \
--DGIT_HASH=\"$(GIT_HASH)\"
+-DGIT_HASH=\"$(GIT_HASH)\" \
+-DMOTORLIB_HASH=\"$(MOTORLIB_HASH)\"
 
 
 

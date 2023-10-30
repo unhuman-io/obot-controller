@@ -4,9 +4,16 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/qep_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../../motorlib/moons_encoder.h"
+
+#ifndef MOTOR_ENCODER_BITS
+#define MOTOR_ENCODER_BITS 12
+#endif
 
 using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = QEPEncoder;
+
+using MotorEncoder = MoonsEncoder<MOTOR_ENCODER_BITS>;
 using OutputEncoder = EncoderBase;
 
 extern "C" void SystemClock_Config();
@@ -19,16 +26,29 @@ struct InitCode
         SystemClock_Config();
 
         pin_config_obot_g474_motor_hands();
+
+        // Moons BiSS motor encoder on SPI3
+        SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH; // 8 bit
+        // ORDER DEPENDANCE SPE set last
+        SPI3->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/32
+
+        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
+        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
+        GPIO_SETH(A, 15, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PA15-> motor encoder cs
+        
     }
 };
 
 namespace config
 {
     const uint32_t main_loop_frequency = 10000;
-    const uint32_t pwm_frequency = 50000;
+    const uint32_t pwm_frequency = 30000;
     InitCode init_code;
-
-    QEPEncoder motor_encoder(*TIM2);
+    
+    // Moons motor BiSS encoder
+    GPIO motor_encoder_cs(*GPIOA, 15, GPIO::OUTPUT);
+    SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
+    MotorEncoder motor_encoder(spi3_dma);
 
     TorqueSensor torque_sensor;
 
@@ -74,6 +94,12 @@ namespace config
     /* I2C i2c1(*I2C1, 1000); */
     /* MAX31875 board_temperature(i2c1); */
     DriverMPS driver;
+
+#if defined(PALM_BOARD)
+    HRPWM3 motor_pwm(pwm_frequency, *HRTIM1, 3, 3, 5, 2000, 2000);
+#else
+    HRPWM3 motor_pwm(pwm_frequency, *HRTIM1, 3, 3, 0, 2000, 2000);
+#endif
 
     SpiSlave spi_slave({
       .spi          = SPI1,
@@ -329,6 +355,15 @@ void finish_sleep()
 void config_init()
 {
     System::api.add_api_variable("3v3_bus", new APIUint32(&V_3V3_BUS));
+    System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.status_.word));
+    System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
+    System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));
+    System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.diag_err_count_));
+    System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
+    System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
+    System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
+    System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
+    System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
 
     // Init SPI protocol
     config::spi_slave.init();
@@ -339,4 +374,11 @@ void config_init()
     // System::api.add_api_variable("torque_decimation", new APIUint16(&config::torque_sensor.decimation_));
 }
 
-void config_maintenance() {}
+void config_maintenance() {
+    if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
+        config::motor_encoder.diag_warn_count_ > pow(2,31)) {
+            config::main_loop.status_.error.motor_encoder = true;
+    }
+    round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_err_count_);
+    // round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder.diag_err_count_);
+}

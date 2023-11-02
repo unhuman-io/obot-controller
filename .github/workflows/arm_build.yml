@@ -29,7 +29,7 @@ jobs:
             build_other: C_DEFS=-DR3
           - project: obot_g474
             config: motor_aksim
-            build_other: C_DEFS="-DMR1 -DMAX11254_TORQUE_SENSOR"
+            build_other: C_DEFS="-DMR2 -DMAX11254_TORQUE_SENSOR"
           - project: obot_g474
             config: motor_pz2
             build_other: C_DEFS=-DMR1
@@ -84,10 +84,16 @@ jobs:
     - uses: actions/download-artifact@main
       with:
         name: obot_g474 motor_enc
+    - uses: actions/download-artifact@main
+      with:
+        name: obot_g474 motor_aksim
     - name: test
       run: |
         tar xzf motor_enc.tgz
-        ./motor_enc/load_motor_enc.sh -p 1-3.1 || true
+        ./motor_enc/load_motor_enc.sh -p 1-3.1 &
+        tar xzf motor_aksim.tgz
+        ./motor_aksim/load_motor_aksim.sh -p 1-3.2 &
+        wait
         sleep 6
         # motor_util -p 1-3.1 read | head # doesn't exit for some reason
         motor_util -p 1-3.1 --run-stats

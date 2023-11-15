@@ -67,7 +67,4 @@ LDSCRIPT = STM32F446RETx_FLASH.ld
 
 TARGET_MCU := stm32f446
 
-# for submake
-export
-
 include ../motorlib/make/main.mk

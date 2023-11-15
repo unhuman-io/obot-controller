@@ -55,7 +55,4 @@ Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_opamp_ex.c
 
 TARGET_MCU := stm32g474
 
-# for submake
-export
-
 include ../motorlib/make/main.mk

@@ -23,8 +23,5 @@ endif
 
 TARGET_MCU := stm32g474
 
-# for submake
-export
-
 include ../motorlib/make/main.mk
 

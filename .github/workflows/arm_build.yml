@@ -45,7 +45,9 @@ jobs:
         fetch-depth: 0
         submodules: recursive
     - name: make ${{ matrix.project }} ${{ matrix.config }}
-      run: make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2 GCC_PATH=/gcc/bin ${{ matrix.build_other }}
+      run: |
+        git config --global --add safe.directory '*'
+        make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2 GCC_PATH=/gcc/bin ${{ matrix.build_other }}
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@main
       with:

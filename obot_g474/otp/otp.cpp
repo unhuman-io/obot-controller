@@ -4,18 +4,11 @@
 #error Must define NAME and REV to use this file
 #endif
 
-#if NAME == "motor_molex" || NAME == "motor"
-#else
-#error Use a a supported NAME
-#endif
+static_assert(NAME == "motor_molex" || NAME == "motor");
 
-#if NAME == "motor_molex"
-#if REV == "MR0" || REV == "MR0P" || REV == "MR1" || REV == "MR2"
-#else
-#error Use a supported REV 
-#endif
-#endif
-
+static_assert(NAME == "motor_molex" ? 
+    REV == "MR0" || REV == "MR0P" || REV == "MR1" || REV == "MR2" : 
+    REV == "R0" || REV == "R1" || REV == "R3" || REV == "R4");
 
 
 const volatile OTP __attribute__ ((section ("otp"), used)) otp1 = {

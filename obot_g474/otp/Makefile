@@ -1,5 +1,5 @@
 
-usage := "make NAME=name REV=rev"
+usage := "USAGE: make NAME=name REV=rev"
 
 ifndef NAME
 $(error $(usage))
@@ -9,29 +9,32 @@ ifndef REV
 $(error $(usage))
 endif
 
-srcs = otp.c
+srcs = otp.cpp
 
 C_INCLUDES = \
 -I../../motorlib
 
 C_DEFS = \
--DNAME="$(NAME)" \
--DREV="$(REV)"
+-DNAME=\"$(NAME)\" \
+-DREV=\"$(REV)\"
 
 clean_build::
 	$(MAKE) clean
 	$(MAKE) all
 	
-all: $(srcs:c=bin)
+all: $(srcs:cpp=bin)
 
-%o: %.c
-	$(CC) $(C_INCLUDES) $(C_DEFS) -c $< $@
+%.o: %.cpp
+	$(CXX) $(C_INCLUDES) $(C_DEFS) -c $< $@
 
-%.bin: %.c
+%.bin: %.o
 	$(CP) -O binary -S -j otp $< $@ 
 
+clean:
+	rm -rf *.o *.d *.bin
+
 program: clean_build
-	dfu-util -a2 -s 0xx1FFF7000:leave -D $@
+	dfu-util -a2 -s 0x1FFF7000:leave -D otp.bin
 
 .PHONY: program clean_build all
 

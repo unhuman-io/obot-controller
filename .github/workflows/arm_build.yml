@@ -121,7 +121,7 @@ jobs:
           NR>1 { for (i in headers) { print "Benchmark" headers[i] \ 
           "\t" $(i+1) "\t" $(i+5) " cycles"} }' | tee -a output.txt
         
-        PYTHONPATH=/usr/share/motor-realtime python3 /usr/share/motor-realtime/python/test_motor.py -p 1-3.1 -v
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_enc.py -p 1-3.1 -v
 
         program_size=$(wc -c < motor_enc/motor_enc_noparam.bin)
         check_var program_size $program_size 100000 300000

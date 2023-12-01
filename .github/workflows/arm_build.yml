@@ -28,7 +28,7 @@ jobs:
             config: motor_aksim
             build_other: C_DEFS=-DR3
           - project: obot_g474
-            config: motor_aksim
+            config: motor_aksim_19_17
             build_other: C_DEFS="-DMR2 -DMAX11254_TORQUE_SENSOR"
           - project: obot_g474
             config: motor_pz2
@@ -37,6 +37,12 @@ jobs:
             config: h2
           - project: obot_g474
             config: motor_hands
+          - project: obot_g474
+            config: motor_aksim_20_19
+            build_other: C_DEFS=-DMR0
+          - project: obot_g474
+            config: motor_aksim_19_18
+            build_other: C_DEFS=-DMR0P
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:latest
     steps:
@@ -88,19 +94,34 @@ jobs:
         name: obot_g474 motor_enc
     - uses: actions/download-artifact@main
       with:
-        name: obot_g474 motor_aksim
+        path: .
     - name: test
       run: |
+        ls
         tar xzf motor_enc.tgz
-        ./motor_enc/load_motor_enc.sh -p 1-3.1 &
-        tar xzf motor_aksim.tgz
-        ./motor_aksim/load_motor_aksim.sh -p 1-3.2 &
+        ./motor_enc/load_motor_enc.sh -p 1-3.1 & # ? rev
+        tar xzf obot_g474\ motor_aksim_19_17/motor_aksim_19_17.tgz
+        ./motor_aksim_19_17/load_motor_aksim_19_17.sh -p 1-3.2 & # MR2
+        tar xzf obot_g474\ motor_aksim_20_19/motor_aksim_20_19.tgz
+        ./motor_aksim_20_19/load_motor_aksim_20_19.sh -p 1-3.7 & # MR0
+        tar xzf obot_g474\ motor_aksim_19_18/motor_aksim_19_18.tgz
+        ./motor_aksim_19_18/load_motor_aksim_19_18.sh -p 1-3.6 & # MR0P
+        tar xzf obot_g474\ motor_pz2/motor_pz2.tgz
+        ./motor_pz2/load_motor_pz2.sh -p 1-3.5 & # MR1
         wait
         sleep 6
         # motor_util -p 1-3.1 read | head # doesn't exit for some reason
 
+        # check for existence
         motor_util -p 1-3.1
         motor_util -p 1-3.2
+        motor_util -p 1-3.5
+        motor_util -p 1-3.6
+        motor_util -p 1-3.7
+
+        # check correct hash
+        sha=$(git rev-parse HEAD | head -c7)
+        [ $(motor_util -l | grep $sha | wc -l) -eq 5 ]
 
         check_var() { # name, value, low limit, high limit
           echo checking $3 "<" $1 "<" $4 with value $2

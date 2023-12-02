@@ -13,27 +13,16 @@
 #include "../../motorlib/peripheral/stm32g4/max31889.h"
 #include "../../motorlib/sensor_multiplex.h"
 
-#ifndef MOTOR_ENCODER_BITS
-#define MOTOR_ENCODER_BITS 18
-#endif
-
-#ifndef OUTPUT_ENCODER_BITS
-#define OUTPUT_ENCODER_BITS 18
-#endif
-
-//#pragma message XSTR(MOTOR_ENCODER_BITS)
-//#pragma message XSTR(OUTPUT_ENCODER_BITS)
-
 #define END_TRIGGER_MOTOR_ENCODER
 
-using MotorEncoder = Aksim2Encoder<MOTOR_ENCODER_BITS>;
+using MotorEncoder = Aksim2Encoder;
 
 #ifdef JOINT_ENCODER_BITS
     #define CUSTOM_SENDDATA
-    using OutputEncoder1 = SensorMultiplex<Aksim2Encoder<OUTPUT_ENCODER_BITS>, Aksim2Encoder<JOINT_ENCODER_BITS>>;
+    using OutputEncoder1 = SensorMultiplex<Aksim2Encoder, Aksim2Encoder>;
     using JointEncoder = OutputEncoder1::SecondarySensor;
 #else
-    using OutputEncoder1 = Aksim2Encoder<OUTPUT_ENCODER_BITS>;
+    using OutputEncoder1 = Aksim2Encoder;
 #endif
 
 #ifdef ADS8339_TORQUE_SENSOR
@@ -152,18 +141,18 @@ namespace config {
     GPIO motor_encoder_cs(*GPIOA, 0, GPIO::OUTPUT);
 #endif
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-    MotorEncoder motor_encoder(spi3_dma);
+    MotorEncoder motor_encoder(spi3_dma, param->fast_loop_param.motor_encoder.cpr);
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
-    Aksim2Encoder<OUTPUT_ENCODER_BITS> output_encoder_direct(spi1_dma);
+    Aksim2Encoder output_encoder_direct(spi1_dma, param->main_loop_param.output_encoder.cpr);
 
 #ifdef JOINT_ENCODER_BITS
     GPIO joint_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
     SPIDMA spi1_dma2(*SPI1, joint_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
-    Aksim2Encoder<JOINT_ENCODER_BITS> joint_encoder_direct(spi1_dma2);
+    Aksim2Encoder joint_encoder_direct(spi1_dma2, pow(2,18));
     OutputEncoder1 output_encoder1(output_encoder_direct, joint_encoder_direct);
     JointEncoder &joint_encoder = output_encoder1.secondary();
 #else

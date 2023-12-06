@@ -62,12 +62,9 @@ uint16_t drv_regs[] = {
     MASK_SET(GPIO##gpio->OSPEEDR, GPIO_OSPEEDR_OSPEED##pin, speed); \
     MASK_SET(GPIO##gpio->AFR[1], GPIO_AFRH_AFSEL##pin, af)
 
-extern "C" void SystemClock_Config();
-
 volatile uint32_t * const cpu_clock = &TIM2->CNT;
 struct InitCode {
     InitCode() {
-        SystemClock_Config();
         // Peripheral clock enable
         RCC->APB1ENR1 = RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM5EN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;

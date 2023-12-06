@@ -10,13 +10,8 @@ typedef TorqueSensorBase TorqueSensor;
 typedef ICPZ MotorEncoder;
 typedef EncoderBase OutputEncoder;
 
-extern "C" void SystemClock_Config();
-void pin_config_obot_g474_motor_r0();
-
 struct InitCode {
     InitCode() {
-        SystemClock_Config();
-        pin_config_obot_g474_motor_r0();
         //SPI3 PZ
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;

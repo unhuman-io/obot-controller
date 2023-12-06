@@ -14,13 +14,8 @@ using MotorEncoder = QEPEncoder;
 using OutputEncoder = ResoluteEncoder;
 //using OutputEncoder = Aksim2Encoder<18>;
 
-extern "C" void SystemClock_Config();
-void pin_config_obot_g474_motor_r0();
-
 struct InitCode {
     InitCode() {
-      SystemClock_Config();
-      pin_config_obot_g474_motor_r0();
       SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
       SPI1->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA;    // baud = clock/32

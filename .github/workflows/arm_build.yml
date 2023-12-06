@@ -36,7 +36,7 @@ jobs:
           - project: obot_g474
             config: h2
           - project: obot_g474
-            config: motor_hands
+            config: hands
           - project: obot_g474
             config: motor_aksim_20_19
             build_other: C_DEFS=-DMR0

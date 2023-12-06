@@ -19,13 +19,8 @@ using MotorEncoder = Aksim2Encoder<18>;
 using TorqueSensor = TorqueSensorMultiplex<QIA128, Aksim2Encoder<18>>;
 using OutputEncoder = TorqueSensor::SecondarySensor;
 
-extern "C" void SystemClock_Config();
-void pin_config_obot_g474_motor_r0();
-
 struct InitCode {
     InitCode() {
-      SystemClock_Config();
-      pin_config_obot_g474_motor_r0();
       SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
       SPI3->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64

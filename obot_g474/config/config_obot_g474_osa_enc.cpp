@@ -11,14 +11,8 @@ using TorqueSensor = SPITorque;
 using MotorEncoder = QEPEncoder;
 using OutputEncoder = MA732Encoder;
 
-extern "C" void SystemClock_Config();
-void pin_config_obot_g474_osa();
-
 struct InitCode {
     InitCode() {
-      SystemClock_Config();
-      pin_config_obot_g474_osa();
-
       // qep encoder
       GPIO_SETL(A, 0, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPA TIM2
       GPIO_SETL(A, 1, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 1);   // QEPB TIM2

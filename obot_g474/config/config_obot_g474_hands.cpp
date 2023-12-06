@@ -1,4 +1,4 @@
-#include "../param/param_obot_g474_motor_hands.h"
+#include "../param/param_obot_g474_hands.h"
 #include "../st_device.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
@@ -17,16 +17,17 @@ using MotorEncoder = MoonsEncoder<MOTOR_ENCODER_BITS>;
 using OutputEncoder = EncoderBase;
 
 extern "C" void SystemClock_Config();
-void pin_config_obot_g474_motor_hands();
+void pin_config_obot_g474_hands();
+
+extern "C" void board_init() {
+    SystemClock_Config();
+    pin_config_obot_g474_hands();
+}
 
 struct InitCode
 {
     InitCode()
     {
-        SystemClock_Config();
-
-        pin_config_obot_g474_motor_hands();
-
         // Moons BiSS motor encoder on SPI3
         SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH; // 8 bit
         // ORDER DEPENDANCE SPE set last
@@ -78,7 +79,7 @@ volatile uint32_t *const cpu_clock = &DWT->CYCCNT;
 #include "../../motorlib/main_loop.h"
 #include "../../motorlib/actuator.h"
 #include "../../motorlib/system.h"
-#include "pin_config_obot_g474_motor_hands.h"
+#include "pin_config_obot_g474_hands.h"
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
 #include "../../motorlib/peripheral/stm32g4/max31875.h"
 #include "../../motorlib/peripheral/stm32g4/spi_slave.h"

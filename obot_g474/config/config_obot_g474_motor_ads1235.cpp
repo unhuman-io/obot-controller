@@ -9,13 +9,8 @@ using TorqueSensor = ADS1235;
 using MotorEncoder = QEPEncoder;
 using OutputEncoder = EncoderBase;
 
-extern "C" void SystemClock_Config();
-void pin_config_obot_g474_motor_r0();
-
 struct InitCode {
-    InitCode() {
-      SystemClock_Config();
-      pin_config_obot_g474_motor_r0();        
+    InitCode() {      
         //SPI3 ADS1235
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;

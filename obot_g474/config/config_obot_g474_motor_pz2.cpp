@@ -21,15 +21,8 @@ using OutputEncoder = TorqueSensor::SecondarySensor;
 using MotorEncoder = ICPZ;
 
 
-extern "C" void SystemClock_Config();
-void pin_config_obot_g474_motor_r0();
-
-// setup for R4
-
 struct InitCode {
     InitCode() {
-      SystemClock_Config();
-      pin_config_obot_g474_motor_r0();
       SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
       SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16

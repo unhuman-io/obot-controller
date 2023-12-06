@@ -115,6 +115,8 @@ jobs:
         motor_util -p 1-3.6
         motor_util -p 1-3.7
 
+        motor_util -l --run-stats
+
         # check correct hash
         sha=$(git rev-parse HEAD | head -c7)
         [ $(motor_util -l | grep $sha | wc -l) -eq 5 ]

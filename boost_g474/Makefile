@@ -13,6 +13,7 @@ TARGET = $(CONFIG)$(if $(PARAM_OVERRIDE),_$(PARAM_OVERRIDE))
 PARAM_OVERRIDE_FILE = $(PARAM_FILE:.c=_$(PARAM_OVERRIDE).h)
 
 C_INCLUDES = \
+-IInc\
 -IDrivers/STM32G4xx_HAL_Driver/Inc \
 -IDrivers/STM32G4xx_HAL_Driver/Inc/Legacy
 
@@ -21,7 +22,10 @@ C_INCLUDES = \
 ######################################
 # C sources
 C_SOURCES =  \
+Src/stm32g4xx_it.c \
 Src/stm32g4xx_hal_msp.c \
+Src/system_stm32g4xx.c \
+Src/main.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_gpio.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd.c \
 Drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_hal_pcd_ex.c \

@@ -211,6 +211,17 @@ float joint_encoder_bias = 0;
 bool joint_bias_set = false;
 #endif
 
+extern uint32_t usbint_count;
+extern uint32_t mainloop_count;
+extern uint32_t fastloop_count;
+uint32_t last_usbint_count;
+uint32_t last_mainloop_count;
+uint32_t last_fastloop_count;
+extern uint32_t t_exec_usbint;
+float cpu_usbint = 0;
+float cpu_mainloop = 0;
+float cpu_fastloop = 0;
+
 void config_init() {
     config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
     System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
@@ -283,6 +294,11 @@ void config_init() {
     // System::api.add_api_variable("TSENSE", new const APIUint32(&TSENSE));
     // System::api.add_api_variable("TSENSE2", new const APIUint32(&TSENSE2));
 
+    System::api.add_api_variable("t_exec_usbint", new APIUint32(&t_exec_usbint));
+    System::api.add_api_variable("cpu_usbint", new APIFloat(&cpu_usbint));
+    System::api.add_api_variable("cpu_mainloop", new APIFloat(&cpu_mainloop));
+    System::api.add_api_variable("cpu_fastloop", new APIFloat(&cpu_fastloop));
+
     // watchdog reset
     IWDG->KR = 0xAAAA;
     ms_delay(200); // max aksim encoder startup time
@@ -312,6 +328,10 @@ void config_maintenance() {
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_3_INDEX, Tambient3);
         float Tambient4 = ambient4_temperature_filter.update(config::ambient_temperature_4.read());
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, Tambient4);
+
+        cpu_fastloop = (float) (fastloop_count - last_fastloop_count)/CPU_FREQUENCY_HZ*10;
+        last_fastloop_count = fastloop_count;
+
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
         config::motor_encoder.diag_warn_count_ > pow(2,31)) {

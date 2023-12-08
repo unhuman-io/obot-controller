@@ -46,11 +46,13 @@ void ADC5_IRQHandler(void) __attribute__((section (".ccmram")));
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #define INTERRUPT_PROFILE_GLOBALS(loop) uint32_t t_exec_##loop __attribute__((used));\
-                                        uint32_t t_period_##loop __attribute__((used));
+                                        uint32_t t_period_##loop __attribute__((used));\
+                                        uint32_t loop##_count __attribute__((used)) = 0;
 #define INTERRUPT_PROFILE_START static uint32_t last_start = 0; \
                                       uint32_t t_start = get_clock();
 #define INTERRUPT_PROFILE_END(loop) t_exec_##loop = get_clock()-t_start; \
                                       t_period_##loop = t_start - last_start; \
+                                      loop##_count += t_exec_##loop; \
                                       last_start = t_start;
 
 #ifdef SCOPE_DEBUG
@@ -78,6 +80,7 @@ void ADC5_IRQHandler(void) __attribute__((section (".ccmram")));
 #include "../../motorlib/util.h"
 INTERRUPT_PROFILE_GLOBALS(fastloop);
 INTERRUPT_PROFILE_GLOBALS(mainloop);
+INTERRUPT_PROFILE_GLOBALS(usbint);
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -261,12 +264,14 @@ void USB_LP_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_IRQn 0 */
   SET_SCOPE_PIN(C,2);
+  INTERRUPT_PROFILE_START;
   usb_interrupt();
 #if 0
   /* USER CODE END USB_LP_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_LP_IRQn 1 */
 #endif
+  INTERRUPT_PROFILE_END(usbint);
   CLEAR_SCOPE_PIN(C,2); 
   /* USER CODE END USB_LP_IRQn 1 */
 }

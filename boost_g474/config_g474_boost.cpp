@@ -22,6 +22,12 @@ uint16_t drv_regs_error = 0;
 #include "pin_config_freebot_g474_motor.h"
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
 
+extern "C" void SystemClock_Config();
+
+extern "C" void board_init() {
+    SystemClock_Config();
+}
+
 namespace config {
     static_assert(((double) CPU_FREQUENCY_HZ * 32 / 2) / pwm_frequency < 65535);    // check pwm frequency
     TempSensor temp_sensor;

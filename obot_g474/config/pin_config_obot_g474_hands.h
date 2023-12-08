@@ -28,7 +28,7 @@ inline void set_adc_jsq(ADC_TypeDef* adc_base, uint8_t ch, uint8_t seq_n){
 
 }
 
-void pin_config_obot_g474_motor_hands() {
+void pin_config_obot_g474_hands() {
 
 
         // Peripheral clock enable

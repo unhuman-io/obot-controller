@@ -9,14 +9,9 @@ using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = HallEncoder;
 using OutputEncoder = EncoderBase;
 
-extern "C" void SystemClock_Config();
-void pin_config_obot_g474_motor_r0();
 
 struct InitCode {
     InitCode() {
-      SystemClock_Config();
-      pin_config_obot_g474_motor_r0();
-
       // doing weird stuff registers directly
       GPIO_SETL(A, 0, GPIO::INPUT, GPIO_SPEED::VERY_HIGH, 0);
       GPIO_SETL(A, 1, GPIO::INPUT, GPIO_SPEED::VERY_HIGH, 0);

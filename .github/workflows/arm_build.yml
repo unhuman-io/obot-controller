@@ -26,23 +26,19 @@ jobs:
             config: motor_40_osa14
           - project: obot_g474
             config: motor_aksim
-            build_other: C_DEFS=-DR3
           - project: obot_g474
             config: motor_aksim_19_17
-            build_other: C_DEFS="-DMR2 -DMAX11254_TORQUE_SENSOR"
+            build_other: C_DEFS="-DMAX11254_TORQUE_SENSOR" # MR2
           - project: obot_g474
-            config: motor_pz2
-            build_other: C_DEFS=-DMR1
+            config: motor_pz2 # MR1
           - project: obot_g474
             config: h2
           - project: obot_g474
-            config: motor_hands
+            config: hands
           - project: obot_g474
-            config: motor_aksim_20_19
-            build_other: C_DEFS=-DMR0
+            config: motor_aksim_20_19 # MR0
           - project: obot_g474
-            config: motor_aksim_19_18
-            build_other: C_DEFS=-DMR0P
+            config: motor_aksim_19_18 # MR0P
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:latest
     steps:
@@ -118,6 +114,8 @@ jobs:
         motor_util -p 1-3.5
         motor_util -p 1-3.6
         motor_util -p 1-3.7
+
+        motor_util -l --run-stats
 
         # check correct hash
         sha=$(git rev-parse HEAD | head -c7)

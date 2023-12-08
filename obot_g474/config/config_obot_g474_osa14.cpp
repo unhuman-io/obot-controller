@@ -11,14 +11,8 @@ using TorqueSensor = TorqueSensorMultiplex<SPITorque, MA782Encoder>;
 using MotorEncoder = MA782Encoder;
 using OutputEncoder = TorqueSensorMultiplex<SPITorque, MA782Encoder>::SecondarySensor;
 
-extern "C" void SystemClock_Config();
-void pin_config_obot_g474_osa();
-
 struct InitCode {
     InitCode() {
-      SystemClock_Config();
-      pin_config_obot_g474_osa();
-
       // dma setup for spi torque
       DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
       DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;

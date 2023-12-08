@@ -1,4 +1,4 @@
-#include "param_obot_g474_motor_hands.h"
+#include "param_obot_g474_hands.h"
 
 #include "math.h"
 

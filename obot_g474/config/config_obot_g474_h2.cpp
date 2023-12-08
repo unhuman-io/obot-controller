@@ -21,14 +21,15 @@ using OutputEncoder = EncoderBase;
 extern "C" void SystemClock_Config();
 void pin_config_obot_g474_h2();
 
+extern "C" void board_init() {
+    SystemClock_Config();
+    pin_config_obot_g474_h2();
+}
+
 struct InitCode
 {
     InitCode()
     {
-        SystemClock_Config();
-
-        pin_config_obot_g474_h2();
-
         // Moons BiSS motor encoder on SPI3
         SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH; // 8 bit
         // ORDER DEPENDANCE SPE set last

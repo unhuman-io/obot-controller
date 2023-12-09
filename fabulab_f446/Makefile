@@ -12,6 +12,7 @@ PARAM_FILE=param_fabulab_f446.c
 ######################################
 # C sources
 C_SOURCES =  \
+Src/main.c \
 Src/stm32f4xx_it.c \
 Src/stm32f4xx_hal_msp.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
@@ -55,6 +56,7 @@ C_DEFS =  \
 
 # C includes
 C_INCLUDES =  \
+-IInc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \

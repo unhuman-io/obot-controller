@@ -1,5 +1,5 @@
 #include "../param/param_obot_g474_osa.h"
-#include "../st_device.h"
+#include "st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/ma732_encoder.h"
 #include "../../motorlib/ma782_encoder.h"

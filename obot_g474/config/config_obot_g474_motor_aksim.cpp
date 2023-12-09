@@ -1,6 +1,6 @@
 #include "../../motorlib/boards/config_obot_g474_motor.h"
 #include "../param/param_obot_g474_aksim.h"
-#include "../st_device.h"
+#include "st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/aksim2_encoder.h"
 #include "../../motorlib/torque_sensor.h"
@@ -211,6 +211,7 @@ float joint_encoder_bias = 0;
 bool joint_bias_set = false;
 #endif
 
+
 void config_init() {
     config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
     System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
@@ -312,6 +313,7 @@ void config_maintenance() {
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_3_INDEX, Tambient3);
         float Tambient4 = ambient4_temperature_filter.update(config::ambient_temperature_4.read());
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, Tambient4);
+
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
         config::motor_encoder.diag_warn_count_ > pow(2,31)) {

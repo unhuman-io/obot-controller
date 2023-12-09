@@ -23,6 +23,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stm_profile.h"
 #include "../../motorlib/system.h"
 /* USER CODE END Includes */
 
@@ -33,13 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define INTERRUPT_PROFILE_GLOBALS(loop) uint32_t t_exec_##loop __attribute__((used));\
-                                        uint32_t t_period_##loop __attribute__((used));
-#define INTERRUPT_PROFILE_START static uint32_t last_start = 0; \
-                                      uint32_t t_start = get_clock();
-#define INTERRUPT_PROFILE_END(loop) t_exec_##loop = get_clock()-t_start; \
-                                      t_period_##loop = t_start - last_start; \
-                                      last_start = t_start;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -62,6 +57,7 @@
 #include "../../motorlib/util.h"
 INTERRUPT_PROFILE_GLOBALS(fastloop);
 INTERRUPT_PROFILE_GLOBALS(mainloop);
+INTERRUPT_PROFILE_GLOBALS(comint);
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -255,13 +251,14 @@ void TIM1_UP_TIM10_IRQHandler(void)
 void OTG_FS_IRQHandler(void)
 {
   /* USER CODE BEGIN OTG_FS_IRQn 0 */
+  INTERRUPT_PROFILE_START;
   usb_interrupt();
 #if 0
   /* USER CODE END OTG_FS_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_OTG_FS);
   /* USER CODE BEGIN OTG_FS_IRQn 1 */
 #endif
-
+  INTERRUPT_PROFILE_END(comint);
   /* USER CODE END OTG_FS_IRQn 1 */
 }
 

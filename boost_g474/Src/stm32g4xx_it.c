@@ -23,6 +23,7 @@
 #include "stm32g4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stm_profile.h"
 #include "../../motorlib/system.h"
 void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 /* USER CODE END Includes */
@@ -34,13 +35,7 @@ void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define INTERRUPT_PROFILE_GLOBALS(loop) uint32_t t_exec_##loop __attribute__((used));\
-                                        uint32_t t_period_##loop __attribute__((used));
-#define INTERRUPT_PROFILE_START static uint32_t last_start = 0; \
-                                      uint32_t t_start = get_clock();
-#define INTERRUPT_PROFILE_END(loop) t_exec_##loop = get_clock()-t_start; \
-                                      t_period_##loop = t_start - last_start; \
-                                      last_start = t_start;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -63,6 +58,7 @@ void ADC1_2_IRQHandler(void) __attribute__((section (".ccmram")));
 #include "../../motorlib/util.h"
 INTERRUPT_PROFILE_GLOBALS(fastloop);
 INTERRUPT_PROFILE_GLOBALS(mainloop);
+INTERRUPT_PROFILE_GLOBALS(comint);
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -268,13 +264,14 @@ void ADC1_2_IRQHandler(void)
 void USB_HP_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_HP_IRQn 0 */
+  INTERRUPT_PROFILE_START;
   usb_interrupt();
 #if 0
   /* USER CODE END USB_HP_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_HP_IRQn 1 */
 #endif
-
+  INTERRUPT_PROFILE_END(comint);
   /* USER CODE END USB_HP_IRQn 1 */
 }
 
@@ -285,12 +282,14 @@ void USB_LP_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_IRQn 0 */
   gpio_usb_GPIO_Port->BSRR |= gpio_usb_Pin; 
+  INTERRUPT_PROFILE_START;
   usb_interrupt();
 #if 0
   /* USER CODE END USB_LP_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_FS);
   /* USER CODE BEGIN USB_LP_IRQn 1 */
 #endif
+  INTERRUPT_PROFILE_END(comint);
   gpio_usb_GPIO_Port->BSRR |= gpio_usb_Pin << 16; 
   /* USER CODE END USB_LP_IRQn 1 */
 }

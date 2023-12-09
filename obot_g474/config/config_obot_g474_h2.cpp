@@ -86,7 +86,6 @@ namespace config
 using PWM = HRPWM3;
 using Communication = USBCommunication;
 using Driver = DriverMPS;
-volatile uint32_t *const cpu_clock = &DWT->CYCCNT;
 
 #include "../../motorlib/led.h"
 #include "../../motorlib/controller/position_controller.h"

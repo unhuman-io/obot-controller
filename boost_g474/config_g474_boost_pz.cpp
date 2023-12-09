@@ -72,7 +72,6 @@ uint16_t drv_regs[] = {
     MASK_SET(GPIO##gpio->AFR[1], GPIO_AFRH_AFSEL##pin, af)
 
 
-volatile uint32_t * const cpu_clock = &TIM2->CNT;
 struct InitCode {
     InitCode() {
         // Peripheral clock enable

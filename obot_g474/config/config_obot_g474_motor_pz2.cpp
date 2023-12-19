@@ -124,7 +124,7 @@ namespace config {
 void config_init() {
     config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
 
-    config::motor_encoder.set_debug_variables("m", System::api);
+    ICPZ_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
 
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
@@ -135,7 +135,7 @@ void config_init() {
 
     config::output_encoder_direct.spidma_.register_operation_ = config::drv.register_operation_;
     config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
-    config::output_encoder_direct.set_debug_variables("o", System::api);
+    ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder_direct);
 
     config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));

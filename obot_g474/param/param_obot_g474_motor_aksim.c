@@ -5,6 +5,7 @@
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     #include "param_obot_g474_motor_aksim_base.c"
+    .fast_loop_param.max_i_bias = 40,
 };
 const volatile char * const name = param_store.name;
 #pragma GCC diagnostic push

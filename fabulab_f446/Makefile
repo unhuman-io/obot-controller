@@ -42,6 +42,7 @@ CPP_SOURCES = \
 ../motorlib/peripheral/stm32f4/otg_usb.cpp\
 ../motorlib/peripheral/stm32f4/bootloader.cpp\
 ../motorlib/peripheral/stm32f4/pwm.cpp\
+../motorlib/peripheral/stm32f4/stm32f4_serial.cpp\
 
 # ASM sources
 ASM_SOURCES =  \

@@ -12,10 +12,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - project: boost_g474
-          #   config: pz
-          # - project: fabulab_f446
-          #   config: motor
+          - project: boost_g474
+            config: pz
+          - project: fabulab_f446
+            config: motor
           - project: obot_g474
             config: motor_template
           - project: obot_g474

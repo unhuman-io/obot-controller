@@ -21,6 +21,10 @@ typedef USB_OTG USB1;
 #include "../motorlib/controller/admittance_controller.h"
 #include "../motorlib/driver.h"
 
+
+const Param * const param = (const Param * const) 0x8060000;
+extern const char * const name = param->name;
+
 using Driver = DriverBase;
 typedef TorqueSensorBase TorqueSensor;
 typedef PWM_EN PWM;

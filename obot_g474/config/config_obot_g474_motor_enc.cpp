@@ -5,6 +5,7 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/ma732_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = QEPEncoder;

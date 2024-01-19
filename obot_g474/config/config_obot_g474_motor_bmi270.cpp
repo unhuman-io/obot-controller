@@ -6,6 +6,7 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/bmi270.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
 //using MotorEncoder = Aksim2Encoder<18>;

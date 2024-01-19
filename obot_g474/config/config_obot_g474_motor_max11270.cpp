@@ -6,7 +6,7 @@
 #include "../../motorlib/temperature_sensor.h"
 #include "../../motorlib/max11270.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-
+#define COMMS   COMMS_USB
 
 using TorqueSensor = MAX11270;
 using MotorEncoder = EncoderBase;

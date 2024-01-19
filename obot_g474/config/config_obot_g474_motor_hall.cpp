@@ -4,6 +4,7 @@
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/hall.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = HallEncoder;

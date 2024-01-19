@@ -7,6 +7,7 @@
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/ads1235_2.h"
+#define COMMS   COMMS_USB
 
 
 using TorqueSensor = ADS1235_2;

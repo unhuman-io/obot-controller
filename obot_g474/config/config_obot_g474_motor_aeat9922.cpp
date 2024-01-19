@@ -6,6 +6,7 @@
 #include "../../motorlib/sensors/encoders/aeat9922.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/ltc4332.h"
+#define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
 using OutputEncoder = AEAT9922<>;

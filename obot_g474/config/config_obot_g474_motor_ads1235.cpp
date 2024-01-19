@@ -4,6 +4,7 @@
 #include "../../motorlib/qep_encoder.h"
 #include "../../motorlib/ads1235.h"
 #include "../../motorlib/gpio.h"
+#define COMMS   COMMS_USB
 
 using TorqueSensor = ADS1235;
 using MotorEncoder = QEPEncoder;

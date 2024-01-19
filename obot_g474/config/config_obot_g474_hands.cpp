@@ -82,7 +82,7 @@ using Driver = DriverMPS;
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
 #include "../../motorlib/peripheral/stm32g4/max31875.h"
 #include "../../motorlib/peripheral/stm32g4/spi_slave.h"
-#include "../../motorlib/peripheral/spi_protocol.h"
+#include "../../motorlib/peripheral/protocol.h"
 #include "../../motorlib/spi_communication.h"
 
 HardwareBrakeBase MainLoop::no_brake_;
@@ -136,30 +136,35 @@ namespace config
     });
 
     // SPI communication protocol buffers and pools allocation
-    SpiMailbox::Buffer spi_data_to_host_buffers[2];
-    SpiMailbox::Buffer spi_data_from_host_buffers[2];
-    SpiMailbox::Buffer spi_string_buffers[8];
+    Mailbox::Buffer protocol_data_to_host_buffers[2];
+    Mailbox::Buffer protocol_data_from_host_buffers[2];
+    Mailbox::Buffer protocol_string_buffers[8];
 
-    SpiMailbox::Pool spi_pools[] = {
+    Mailbox::Pool protocol_pools[] = {
        {
          .mailboxIds = {SPICommunication::MAILBOX_ID_DATA_TO_HOST},
-         .buffers = spi_data_to_host_buffers,
-         .buffersCount = FIGURE_COUNTOF(spi_data_to_host_buffers)
+         .buffers = protocol_data_to_host_buffers,
+         .buffersCount = FIGURE_COUNTOF(protocol_data_to_host_buffers)
        },
        {
          .mailboxIds = {SPICommunication::MAILBOX_ID_DATA_FROM_HOST},
-         .buffers = spi_data_from_host_buffers,
-         .buffersCount = FIGURE_COUNTOF(spi_data_from_host_buffers)
+         .buffers = protocol_data_from_host_buffers,
+         .buffersCount = FIGURE_COUNTOF(protocol_data_from_host_buffers)
        },
        {
          .mailboxIds = {SPICommunication::MAILBOX_ID_SERIAL_TO_HOST, SPICommunication::MAILBOX_ID_SERIAL_FROM_HOST},
-         .buffers = spi_string_buffers,
-         .buffersCount = FIGURE_COUNTOF(spi_string_buffers)
+         .buffers = protocol_string_buffers,
+         .buffersCount = FIGURE_COUNTOF(protocol_string_buffers)
        }
     };
 
-    SpiProtocol protocol(spi_slave, spi_pools, FIGURE_COUNTOF(spi_pools));
-
+    Protocol protocol = {
+      spi_slave,            // comms
+      Protocol::Mode::kSpi, // mode
+      protocol_pools,       // mailbox_pools
+      FIGURE_COUNTOF(protocol_pools) // mailbox_pools_count
+    };
+    
     FastLoop fast_loop = {(int32_t)pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t *>(reinterpret_cast<volatile uint16_t *>(&TIM_R)),
                const_cast<uint16_t *>(reinterpret_cast<volatile uint16_t *>(&TIM_G)),

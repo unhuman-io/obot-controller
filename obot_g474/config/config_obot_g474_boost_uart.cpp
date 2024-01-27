@@ -7,6 +7,7 @@
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_UART
 #define COMMS_UART_BAUDRATE 115200
+#define COMMS_UART_NUMBER 2
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = EncoderBase;

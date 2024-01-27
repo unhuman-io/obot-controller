@@ -4,6 +4,7 @@
 
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
+#include "param_default.h"
 .name = "template",
 };
 const volatile char * const name = param_store.name;

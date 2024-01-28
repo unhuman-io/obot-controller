@@ -168,6 +168,15 @@ jobs:
         check_var heap_used $heap_used 15000 30000
 
         cat output.txt
+    - name: test uart
+      run: |
+        tar xzf obot_g474\ boost_uart/boost_uart.tgz
+        cd boost_uart
+        motor_util -a /dev/ttyACM0 115200 set --mode crash || true
+        sleep 2
+        ../scripts/uart_program.sh
+        sleep 2
+        motor_util -a /dev/ttyACM0 115200 read | head
     - name: Store benchmark result
       uses: rhysd/github-action-benchmark@v1
       with:

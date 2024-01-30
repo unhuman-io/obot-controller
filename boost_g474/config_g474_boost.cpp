@@ -21,10 +21,12 @@ uint16_t drv_regs_error = 0;
 #include "../../motorlib/system.h"
 #include "pin_config_freebot_g474_motor.h"
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
+#include "../../motorlib/peripheral/stm32g4/stm32_serial.h"
 
 extern "C" void SystemClock_Config();
 
 extern "C" void board_init() {
+    init_serial_number();
     SystemClock_Config();
 }
 

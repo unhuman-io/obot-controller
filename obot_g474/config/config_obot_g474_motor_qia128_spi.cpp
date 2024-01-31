@@ -8,6 +8,7 @@
 #include "../../motorlib/qia128.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/sensor_multiplex.h"
+#define COMMS   COMMS_USB
 
 //using TorqueSensor = QIA128; 
 //using TorqueSensor = TorqueSensorBase;

@@ -10,6 +10,7 @@
 #include "../../motorlib/peripheral/stm32g4/max31889.h"
 #include "../../motorlib/sensor_multiplex.h"
 #include "../../motorlib/max11254.h"
+#define COMMS   COMMS_USB
 
 #define GPIO_OUT int gpio_out_1234 // todo: necessary?
 

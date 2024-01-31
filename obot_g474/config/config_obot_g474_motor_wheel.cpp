@@ -5,6 +5,7 @@
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/spi_debug.h"
+#define COMMS   COMMS_USB
 
 typedef TorqueSensorBase TorqueSensor;
 typedef ICPZ MotorEncoder;

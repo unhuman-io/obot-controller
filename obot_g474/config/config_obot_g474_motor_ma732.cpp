@@ -4,6 +4,7 @@
 #include "../../motorlib/ma732_encoder.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
+#define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = MA732Encoder;

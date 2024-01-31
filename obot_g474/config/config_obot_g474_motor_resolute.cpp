@@ -8,6 +8,7 @@
 //#include "../../motorlib/aksim2_encoder.h"
 #include "../../motorlib/resolute_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = QEPEncoder;

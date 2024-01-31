@@ -12,6 +12,7 @@
 //#include "../../motorlib/sensor_multiplex.h"
 #include "../../motorlib/peripheral/stm32g4/max31889.h"
 #include "../../motorlib/sensor_multiplex.h"
+#define COMMS   COMMS_USB
 
 const char obot_hash[41] __attribute__((section("flash_start"),used)) = OBOT_HASH;
 

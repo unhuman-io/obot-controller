@@ -124,12 +124,6 @@ struct InitCode {
 #endif
 
       GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
-
-#ifdef SCOPE_DEBUG
-        GPIO_SETL(C, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0); // main loop scope
-        GPIO_SETL(C, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0); // fast loop scope
-        GPIO_SETL(C, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0); // usb int scope
-#endif
     }
 };
 

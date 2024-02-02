@@ -19,7 +19,7 @@ jobs:
           - project: obot_g474
             config: motor_template
           - project: obot_g474
-            config: boost_uart
+            config: nucleo_uart
           - project: obot_g474
             config: motor_enc
           - project: obot_g474
@@ -171,8 +171,8 @@ jobs:
     - name: test uart
       run: |
         # not ready for test yet
-        # tar xzf obot_g474\ boost_uart/boost_uart.tgz
-        # cd boost_uart
+        # tar xzf obot_g474\ nucleo_uart/nucleo_uart.tgz
+        # cd nucleo_uart
         # motor_util -a /dev/ttyACM0 115200 set --mode crash || true
         # sleep 2
         # ../scripts/uart_program.sh

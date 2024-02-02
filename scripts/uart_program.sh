@@ -9,6 +9,6 @@
 ~/tmp/stm32flash/stm32flash /dev/ttyACM0 -o -b 4000000
 sleep 1
 # reduce frame size from 256 to 252
-~/tmp/stm32flash/stm32flash /dev/ttyACM0 -w boost_uart_noparam.bin -b 4000000 -F 252:252 -e0
-~/tmp/stm32flash/stm32flash /dev/ttyACM0 -w boost_uart_param_only.bin -b 4000000 -F 252:252 -e0 -s 0x8060000
+~/tmp/stm32flash/stm32flash /dev/ttyACM0 -w nucleo_uart_noparam.bin -b 4000000 -F 252:252 -e0
+~/tmp/stm32flash/stm32flash /dev/ttyACM0 -w nucleo_uart_param_only.bin -b 4000000 -F 252:252 -e0 -s 0x8060000
 ~/tmp/stm32flash/stm32flash /dev/ttyACM0 -g 0x8000000 -b 4000000

@@ -97,7 +97,7 @@ namespace config {
     GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
     SPIDMA spi1_dma2(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
-    MAX11254<> torque_sensor_direct(spi1_dma2, 0);
+    MAX11254<> torque_sensor_direct(spi1_dma2, 1);
     TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 };

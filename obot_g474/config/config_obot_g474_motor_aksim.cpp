@@ -173,7 +173,7 @@ namespace config {
 #ifdef MAX11254_TORQUE_SENSOR
     SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
-    MAX11254<> torque_sensor_direct(spi1_dma3, 1);
+    MAX11254<> torque_sensor_direct(spi1_dma3, 1, false);
     TorqueSensor torque_sensor(torque_sensor_direct, output_encoder1);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 #elif defined(ADS8339_TORQUE_SENSOR)

@@ -7,6 +7,9 @@
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/moons_encoder.h"
 
+const Param * const param = (const Param * const) 0x8060000;
+const char * name = param->name;
+
 #ifndef MOTOR_ENCODER_BITS
 #define MOTOR_ENCODER_BITS 12
 #endif

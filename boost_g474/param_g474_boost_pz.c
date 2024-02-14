@@ -68,5 +68,3 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     PARAM_OVERRIDES
 #endif
 };
-const volatile char * const name = param_store.name;
-const Param * const param = &param_store; // todo figure out a way to not inline without warning

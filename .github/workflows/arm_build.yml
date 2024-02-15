@@ -19,7 +19,7 @@ jobs:
           - project: obot_g474
             config: motor_template
           - project: obot_g474
-            config: boost_uart
+            config: nucleo_uart
           - project: obot_g474
             config: motor_enc
           - project: obot_g474
@@ -170,14 +170,15 @@ jobs:
         cat output.txt
     - name: test uart
       run: |
-        # not ready for test yet
-        # tar xzf obot_g474\ boost_uart/boost_uart.tgz
-        # cd boost_uart
-        # motor_util -a /dev/ttyACM0 115200 set --mode crash || true
-        # sleep 2
-        # ../scripts/uart_program.sh
-        # sleep 2
-        # motor_util -a /dev/ttyACM0 115200 read | head
+        tar xzf obot_g474\ nucleo_uart/nucleo_uart.tgz
+        cd nucleo_uart
+        st-flash reset
+        sleep 2
+        ../scripts/uart_program.sh
+        # extra reset because bootloader pin held misses watchdog reset
+        ~/tmp/stm32flash/stm32flash /dev/ttyACM0 -g 0x8000000 -b 4000000 || true
+        sleep 2
+        motor_util -a /dev/ttyACM0 --uart-raw
     - name: Store benchmark result
       uses: rhysd/github-action-benchmark@v1
       with:

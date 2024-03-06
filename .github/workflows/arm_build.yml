@@ -21,6 +21,9 @@ jobs:
           - project: obot_g474
             config: nucleo_uart
           - project: obot_g474
+            config: nucleo_uart_obot
+            build_other: C_DEFS="-DCOMMS_UART_OBOT"
+          - project: obot_g474
             config: motor_enc
           - project: obot_g474
             config: motor_wheel

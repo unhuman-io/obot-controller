@@ -1,0 +1,1 @@
+config_obot_g474_nucleo_uart.cpp

@@ -37,5 +37,3 @@ const volatile Param param_store = {
     .startup_param.phase_lock_duration = 2,
     .name = "J1",
 };
-const volatile char * const name = param_store.name;
-const Param * const param = &param_store; // todo figure out a way to not inline without warning

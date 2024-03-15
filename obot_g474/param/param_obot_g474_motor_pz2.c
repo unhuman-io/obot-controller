@@ -15,7 +15,6 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.motor_encoder.cpr = pow(2,24),
     .fast_loop_param.motor_encoder.rollover = pow(2,30),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
-    .fast_loop_param.motor_encoder.index_electrical_offset_pos = 1288021,
     .main_loop_param.torque_sensor.gain = 1,
     .main_loop_param.torque_sensor.bias = 0,
     .main_loop_param.position_controller_param.position.kp = 300,
@@ -38,7 +37,6 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.gear_ratio = 81,
     .startup_param.no_driver_enable = 1,
     .startup_param.no_zero_current_sensors = 1,
-    .main_loop_param.output_encoder.bias = 0, //-1.5767,
     .main_loop_param.encoder_limits.output_hard_max = 1.9,
     .main_loop_param.encoder_limits.output_hard_min = -1.9,
     .main_loop_param.encoder_limits.motor_controlled_max = 1.8*81,
@@ -48,13 +46,10 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.beep_amplitude = 1,
     .fast_loop_param.beep_frequency = 300,
 
-//    .main_loop_param.error_mask.all = ERROR_MASK_ALL,
-    .main_loop_param.error_mask.all = ERROR_MASK_ALL & ~ERROR_MASK_MOTOR_TEMPERATURE & ~ERROR_MASK_OUTPUT_ENCODER & ~ERROR_MASK_MOTOR_ENCODER,
     .main_loop_param.safe_mode_driver_disable = 1,
 
     //.startup_param.output_encoder_startup = OUTPUT_ENCODER_BIAS,
     .startup_param.motor_encoder_startup = ENCODER_ZERO,
-    .startup_param.motor_encoder_bias = 0,
     .startup_param.output_encoder_rollover = M_PI,
 
     .main_loop_param.no_latch_driver_fault = 1,

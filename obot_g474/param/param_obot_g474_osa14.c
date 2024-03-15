@@ -26,7 +26,6 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.motor_encoder.cpr = 10*65536,
     .fast_loop_param.motor_encoder.rollover = pow(2,24),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
-    .fast_loop_param.motor_encoder.index_electrical_offset_pos = -22643,
     .main_loop_param.torque_sensor.gain = 1000,
     .main_loop_param.torque_sensor.bias = 0,
     .main_loop_param.torque_sensor.k_temp = 0,

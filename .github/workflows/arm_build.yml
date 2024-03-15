@@ -27,6 +27,7 @@ jobs:
             config: nucleo_spi
           - project: obot_g474
             config: motor_enc
+            build_other: CALIBRATION_FILE=../calibration/obot_g474/motor_enc/cal.c
           - project: obot_g474
             config: motor_wheel
           - project: obot_g474

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1710944578188,
+  "lastUpdate": 1710949722196,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -82900,6 +82900,126 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarktext_size",
             "value": 234124,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 5888,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 75144,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2331,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 18364,
+            "unit": "bytes",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "94a8225e10a6df1eff1a499b802ec5c1244b2be0",
+          "message": "hrtim drives mainloop (#228)\n\nCo-authored-by: Lee Magnusson <lee@unhuman.io>",
+          "timestamp": "2024-03-20T14:18:35Z",
+          "tree_id": "74f0095de41a56adc9366c117412f9c70b40a481",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/94a8225e10a6df1eff1a499b802ec5c1244b2be0"
+        },
+        "date": 1710949721162,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles",
+            "value": 868,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period",
+            "value": 3423,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles",
+            "value": 4417,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period",
+            "value": 17021,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 4052.8,
+            "unit": "cycles",
+            "extra": "4422 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3400.05,
+            "unit": "cycles",
+            "extra": "3441 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 868,
+            "unit": "cycles",
+            "extra": "868 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 16999.9,
+            "unit": "cycles",
+            "extra": "17029 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1106.969849,
+            "unit": "Hz",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 230956,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 8984,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 234044,
             "unit": "bytes",
             "extra": "0 times"
           },

@@ -26,7 +26,6 @@ const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.motor_encoder.cpr = pow(2,24),//65536*7,//4096*7,
     .fast_loop_param.motor_encoder.rollover = pow(2,24), // one revolution rollover
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
-    .fast_loop_param.motor_encoder.index_electrical_offset_pos = 49546,
     .main_loop_param.output_encoder.cpr = 1,
     .main_loop_param.torque_sensor.gain = -1./10000,
     .main_loop_param.torque_sensor.bias = 0,

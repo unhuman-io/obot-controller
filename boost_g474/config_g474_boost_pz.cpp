@@ -280,6 +280,7 @@ void system_init() {
 }
 
 void system_maintenance() {}
+void main_maintenance() {}
 
 #include "../motorlib/system.cpp"
 

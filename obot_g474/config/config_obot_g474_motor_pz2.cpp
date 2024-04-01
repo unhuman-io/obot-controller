@@ -19,9 +19,9 @@
 
 using TorqueSensor = TorqueSensorMultiplex<MAX11254<>, ICPZ>;
 using OutputEncoder = TorqueSensor::SecondarySensor;
-using MotorEncoder = ICPZ;
+using MotorEncoder = ICPZDMA;
 
-
+uint32_t gpio_d2_bsrr[2] = {4 << 16, 4};
 struct InitCode {
     InitCode() {
       SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
@@ -62,7 +62,30 @@ struct InitCode {
     //   GPIO_SETL(C, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // TODO: figure out why base config isn't setting this
     //   GPIOC->BSRR = GPIO_BSRR_BS4; // bmi270
 
+        // motor icpz dma trigger
+        HRTIM1->sTimerxRegs[0].CMP1xR = 47000;
+        HRTIM1->sTimerxRegs[0].CMP2xR = 7000;
+        HRTIM1->sTimerxRegs[0].TIMxCR2 = 0;
+        HRTIM1->sTimerxRegs[0].PERxR = 54400;
+        HRTIM1->sTimerxRegs[0].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU | HRTIM_TIMCR_CONT | 1 << HRTIM_TIMCR_CK_PSC_Pos;
+        //HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE; // | HRTIM_TIMDIER_CMP2DE;
 
+        DMAMUX1_Channel4->CCR = 96; // hrtima
+        DMA1_Channel5->CMAR = (uint32_t)&gpio_d2_bsrr;
+        DMA1_Channel5->CPAR = (uint32_t)&GPIOD->BSRR;
+        DMA1_Channel5->CNDTR = 1;
+        GPIOD->BSRR = 4;
+        // DMA1_Channel5->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+
+        // DMAMUX1_Channel5->CCR = 16 << DMAMUX_CxCR_SYNC_ID_Pos | 1 << DMAMUX_CxCR_SPOL_Pos | DMAMUX_CxCR_SE | 1; // ch1 rx complete
+        DMAMUX1_Channel5->CCR = 1; // reqgen0
+        DMAMUX1_RequestGenerator0->RGCR = 1 << DMAMUX_RGxCR_GPOL_Pos | 17 << DMAMUX_RGxCR_SIG_ID_Pos | DMAMUX_RGxCR_GE;
+        DMA1_Channel6->CMAR = (uint32_t)&gpio_d2_bsrr[1];
+        DMA1_Channel6->CPAR = (uint32_t)&GPIOD->BSRR;
+        DMA1_Channel6->CNDTR = 1;
+        DMA1_Channel6->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+
+        MASK_SET(SYSCFG->EXTICR[0], SYSCFG_EXTICR1_EXTI2, 3); // EXTI PD2
 
       GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
 #ifdef DISABLE_USBN_PULLDOWN
@@ -145,6 +168,10 @@ void config_init() {
     System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
     System::api.add_api_variable("tmux_delay", new APICallbackUint16([](){ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
    
+    System::api.add_api_variable("mstart", new const APICallback([]
+                                                                 { config::motor_encoder.start_continuous_read(); return "ok"; }));
+    System::api.add_api_variable("mstop", new const APICallback([]
+                                                                { config::motor_encoder.stop_continuous_read(); return "ok"; }));
     // System::api.add_api_variable("5V", new const APIFloat(&v5v));
     // System::api.add_api_variable("V5V", new const APIUint32(&V5V));
     // System::api.add_api_variable("I5V", new const APIUint32(&I5V));

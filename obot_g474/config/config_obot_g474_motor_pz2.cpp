@@ -108,7 +108,7 @@ namespace config {
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-    MotorEncoder motor_encoder(spi3_dma, ICPZ::PZ08S);
+    MotorEncoder motor_encoder(spi3_dma, ICPZDMA::PZ08S);
 
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);

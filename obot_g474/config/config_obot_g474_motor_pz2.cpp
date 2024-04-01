@@ -17,11 +17,12 @@
 //#define END_TRIGGER_MOTOR_ENCODER
 
 
-using TorqueSensor = TorqueSensorMultiplex<MAX11254<>, ICPZ>;
-using OutputEncoder = TorqueSensor::SecondarySensor;
+using TorqueSensor = TorqueSensorBase;// TorqueSensorMultiplex<MAX11254<>, ICPZ>;
+using OutputEncoder = ICPZDMA;//TorqueSensor::SecondarySensor;
 using MotorEncoder = ICPZDMA;
 
 uint32_t gpio_d2_bsrr[2] = {4 << 16, 4};
+uint32_t gpio_c3_bsrr[2] = {8 << 16, 8};
 struct InitCode {
     InitCode() {
       SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
@@ -87,6 +88,31 @@ struct InitCode {
 
         MASK_SET(SYSCFG->EXTICR[0], SYSCFG_EXTICR1_EXTI2, 3); // EXTI PD2
 
+        // output icpz dma
+        HRTIM1->sMasterRegs.MCMP2R = 200;
+        HRTIM1->sMasterRegs.MDIER = HRTIM_MDIER_MCMP2DE;
+
+        DMAMUX1_Channel10->CCR = 95; // hrtim master
+        DMA2_Channel3->CMAR = (uint32_t)&gpio_c3_bsrr;
+        DMA2_Channel3->CPAR = (uint32_t)&GPIOC->BSRR;
+        DMA2_Channel3->CNDTR = 1;
+        GPIOC->BSRR = 2;
+        // DMA1_Channel5->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+
+        // DMAMUX1_Channel5->CCR = 16 << DMAMUX_CxCR_SYNC_ID_Pos | 1 << DMAMUX_CxCR_SPOL_Pos | DMAMUX_CxCR_SE | 1; // ch1 rx complete
+        DMAMUX1_Channel11->CCR = 2; // reqgen1
+        DMAMUX1_RequestGenerator1->RGCR = 1 << DMAMUX_RGxCR_GPOL_Pos | 19 << DMAMUX_RGxCR_SIG_ID_Pos | DMAMUX_RGxCR_GE;
+        DMA2_Channel4->CMAR = (uint32_t)&gpio_c3_bsrr[1];
+        DMA2_Channel4->CPAR = (uint32_t)&GPIOC->BSRR;
+        DMA2_Channel4->CNDTR = 1;
+        DMA2_Channel4->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+
+        MASK_SET(SYSCFG->EXTICR[0], SYSCFG_EXTICR1_EXTI3, 2); // EXTI PC3
+
+      DMAMUX1_Channel2->CCR = 3 << DMAMUX_CxCR_SYNC_ID_Pos | 4 << DMAMUX_CxCR_NBREQ_Pos | 2 << DMAMUX_CxCR_SPOL_Pos | DMAMUX_CxCR_SE | DMA_REQUEST_SPI1_TX;
+      DMAMUX1_Channel3->CCR = 4 << DMAMUX_CxCR_NBREQ_Pos | DMAMUX_CxCR_EGE | DMA_REQUEST_SPI1_RX;
+      DMA2_Channel3->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+
       GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
 #ifdef DISABLE_USBN_PULLDOWN
       GPIOA->BSRR = GPIO_BSRR_BR9;
@@ -115,14 +141,17 @@ namespace config {
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
 
-    ICPZ output_encoder_direct(spi1_dma, ICPZ::PZ03S);    
+    ICPZDMA output_encoder_direct(spi1_dma, ICPZDMA::PZ03S);    
     
-    GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
-    SPIDMA spi1_dma2(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
-        SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
-    MAX11254<> torque_sensor_direct(spi1_dma2, 1);
-    TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct);
-    OutputEncoder &output_encoder = torque_sensor.secondary();
+    // GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
+    // SPIDMA spi1_dma2(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+    //     SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
+    // MAX11254<> torque_sensor_direct(spi1_dma2, 1);
+    // TorqueSensor torque_sensor(torque_sensor_direct, output_encoder_direct)
+    // OutputEncoder &output_encoder = torque_sensor.secondary();
+
+    TorqueSensor torque_sensor;
+    OutputEncoder &output_encoder = output_encoder_direct;
 };
 
 #define SPI1_REINIT_CALLBACK
@@ -161,17 +190,21 @@ void config_init() {
     config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
     ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder_direct);
 
-    config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
-    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
-    System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
-    System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
-    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
-    System::api.add_api_variable("tmux_delay", new APICallbackUint16([](){ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
+    // config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
+    // System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
+    // System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
+    // System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
+    // System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
+    // System::api.add_api_variable("tmux_delay", new APICallbackUint16([](){ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
    
     System::api.add_api_variable("mstart", new const APICallback([]
                                                                  { config::motor_encoder.start_continuous_read(); return "ok"; }));
     System::api.add_api_variable("mstop", new const APICallback([]
                                                                 { config::motor_encoder.stop_continuous_read(); return "ok"; }));
+    System::api.add_api_variable("ostart", new const APICallback([]
+                                                                 { config::output_encoder.start_continuous_read(); return "ok"; }));
+    System::api.add_api_variable("ostop", new const APICallback([]
+                                                                { config::output_encoder.stop_continuous_read(); return "ok"; }));
     // System::api.add_api_variable("5V", new const APIFloat(&v5v));
     // System::api.add_api_variable("V5V", new const APIUint32(&V5V));
     // System::api.add_api_variable("I5V", new const APIUint32(&I5V));
@@ -219,10 +252,10 @@ void config_maintenance() {
     round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_error_count_);
     round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.error_count_);
 
-    round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor_direct.read_error_);
-    round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_);
-    if (config::torque_sensor_direct.timeout_error_ > 100 ||
-        config::torque_sensor_direct.read_error_ > 100) {
-        config::main_loop.status_.error.torque_sensor = true;
-    }
+    // round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor_direct.read_error_);
+    // round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_);
+    // if (config::torque_sensor_direct.timeout_error_ > 100 ||
+    //     config::torque_sensor_direct.read_error_ > 100) {
+    //     config::main_loop.status_.error.torque_sensor = true;
+    // }
 }

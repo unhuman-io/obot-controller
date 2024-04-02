@@ -134,14 +134,14 @@ namespace config {
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-    MotorEncoder motor_encoder(spi3_dma, ICPZDMA::PZ08S);
+    MotorEncoder motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, ICPZDMA::PZ08S);
 
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
 
-    ICPZDMA output_encoder_direct(spi1_dma, ICPZDMA::PZ03S);    
+    ICPZDMA output_encoder_direct(spi1_dma, *DMAMUX1_Channel2, *DMAMUX1_Channel3, ICPZDMA::PZ03S);    
     
     // GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
     // SPIDMA spi1_dma2(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,

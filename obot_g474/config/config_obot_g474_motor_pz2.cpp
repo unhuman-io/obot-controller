@@ -2,7 +2,7 @@
 #include "../param/param_obot_g474_pz2.h"
 #include "st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/icpz.h"
+#include "../../motorlib/sensors/encoders/stm32g4/icpz_dma.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/temperature_sensor.h"

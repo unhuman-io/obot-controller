@@ -10,7 +10,11 @@
 #include "../../motorlib/peripheral/stm32g4/max31889.h"
 #include "../../motorlib/sensor_multiplex.h"
 #include "../../motorlib/max11254.h"
-#define COMMS   COMMS_USB
+//#define COMMS   COMMS_USB
+
+#define COMMS   COMMS_UART
+#define COMMS_UART_BAUDRATE 4000000
+#define COMMS_UART_NUMBER 2
 
 #define GPIO_OUT int gpio_out_1234 // todo: necessary?
 
@@ -23,6 +27,27 @@ using MotorEncoder = ICPZDMA;
 
 uint32_t gpio_d2_bsrr[2] = {4 << 16, 4};
 uint32_t gpio_c3_bsrr[2] = {8 << 16, 8};
+
+inline void motor_start_cs_trigger() {
+    HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE;
+}
+    
+inline void motor_stop_cs_trigger() {
+    HRTIM1->sTimerxRegs[0].TIMxDIER = 0;
+    // wait for CS high
+    while(!(GPIOD->IDR & 0x4));
+}
+
+inline void output_start_cs_trigger() {
+    HRTIM1->sMasterRegs.MDIER |= HRTIM_MDIER_MCMP2DE;
+}
+    
+inline void output_stop_cs_trigger() {
+    HRTIM1->sMasterRegs.MDIER &= ~HRTIM_MDIER_MCMP2DE;
+    // wait for CS high
+    while(!(GPIOC->IDR & 0x8));
+}
+
 struct InitCode {
     InitCode() {
       SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
@@ -65,7 +90,6 @@ struct InitCode {
 
         // motor icpz dma trigger
         HRTIM1->sTimerxRegs[0].CMP1xR = 47000;
-        HRTIM1->sTimerxRegs[0].CMP2xR = 7000;
         HRTIM1->sTimerxRegs[0].TIMxCR2 = 0;
         HRTIM1->sTimerxRegs[0].PERxR = 54400;
         HRTIM1->sTimerxRegs[0].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU | HRTIM_TIMCR_CONT | 1 << HRTIM_TIMCR_CK_PSC_Pos;
@@ -76,7 +100,7 @@ struct InitCode {
         DMA1_Channel5->CPAR = (uint32_t)&GPIOD->BSRR;
         DMA1_Channel5->CNDTR = 1;
         GPIOD->BSRR = 4;
-        // DMA1_Channel5->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+        DMA1_Channel5->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
 
         // DMAMUX1_Channel5->CCR = 16 << DMAMUX_CxCR_SYNC_ID_Pos | 1 << DMAMUX_CxCR_SPOL_Pos | DMAMUX_CxCR_SE | 1; // ch1 rx complete
         DMAMUX1_Channel5->CCR = 1; // reqgen0
@@ -90,14 +114,13 @@ struct InitCode {
 
         // output icpz dma
         HRTIM1->sMasterRegs.MCMP2R = 200;
-        HRTIM1->sMasterRegs.MDIER = HRTIM_MDIER_MCMP2DE;
 
         DMAMUX1_Channel10->CCR = 95; // hrtim master
         DMA2_Channel3->CMAR = (uint32_t)&gpio_c3_bsrr;
         DMA2_Channel3->CPAR = (uint32_t)&GPIOC->BSRR;
         DMA2_Channel3->CNDTR = 1;
         GPIOC->BSRR = 2;
-        // DMA1_Channel5->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+        DMA2_Channel3->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
 
         // DMAMUX1_Channel5->CCR = 16 << DMAMUX_CxCR_SYNC_ID_Pos | 1 << DMAMUX_CxCR_SPOL_Pos | DMAMUX_CxCR_SE | 1; // ch1 rx complete
         DMAMUX1_Channel11->CCR = 2; // reqgen1
@@ -109,9 +132,9 @@ struct InitCode {
 
         MASK_SET(SYSCFG->EXTICR[0], SYSCFG_EXTICR1_EXTI3, 2); // EXTI PC3
 
-      DMAMUX1_Channel2->CCR = 3 << DMAMUX_CxCR_SYNC_ID_Pos | 4 << DMAMUX_CxCR_NBREQ_Pos | 2 << DMAMUX_CxCR_SPOL_Pos | DMAMUX_CxCR_SE | DMA_REQUEST_SPI1_TX;
-      DMAMUX1_Channel3->CCR = 4 << DMAMUX_CxCR_NBREQ_Pos | DMAMUX_CxCR_EGE | DMA_REQUEST_SPI1_RX;
-      DMA2_Channel3->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+    //   DMAMUX1_Channel2->CCR = 3 << DMAMUX_CxCR_SYNC_ID_Pos | 4 << DMAMUX_CxCR_NBREQ_Pos | 2 << DMAMUX_CxCR_SPOL_Pos | DMAMUX_CxCR_SE | DMA_REQUEST_SPI1_TX;
+    //   DMAMUX1_Channel3->CCR = 4 << DMAMUX_CxCR_NBREQ_Pos | DMAMUX_CxCR_EGE | DMA_REQUEST_SPI1_RX;
+    //   DMA2_Channel3->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
 
       GPIO_SETH(A, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
 #ifdef DISABLE_USBN_PULLDOWN
@@ -134,14 +157,16 @@ namespace config {
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-    MotorEncoder motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, ICPZDMA::PZ08S);
+    MotorEncoder motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 2,
+        motor_start_cs_trigger, motor_stop_cs_trigger, ICPZDMA::PZ08S);
 
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
 
-    ICPZDMA output_encoder_direct(spi1_dma, *DMAMUX1_Channel2, *DMAMUX1_Channel3, ICPZDMA::PZ03S);    
+    ICPZDMA output_encoder_direct(spi1_dma, *DMAMUX1_Channel2, *DMAMUX1_Channel3, 3,
+        output_start_cs_trigger, output_stop_cs_trigger, ICPZDMA::PZ03S);    
     
     // GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
     // SPIDMA spi1_dma2(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,

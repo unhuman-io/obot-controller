@@ -9,7 +9,7 @@
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/max31889.h"
 #include "../../motorlib/sensor_multiplex.h"
-#include "../../motorlib/max11254.h"
+#include "../../motorlib/sensors/torque/stm32g4/max11254_dma.h"
 #define COMMS   COMMS_USB
 
 // #define COMMS   COMMS_UART

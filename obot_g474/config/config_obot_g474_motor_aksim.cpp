@@ -36,7 +36,7 @@ using MotorEncoder = Aksim2Encoder;
 #elif defined(MAX11254_TORQUE_SENSOR)
     #define INTERFACE_BBL
     #define GPIO_OUT int gpio_out_1234
-    #include "../../motorlib/max11254.h"
+    #include "../../motorlib/sensors/torque/max11254.h"
     using TorqueSensor = TorqueSensorMultiplex<MAX11254<>, OutputEncoder1>;
     using OutputEncoder = TorqueSensor::SecondarySensor;
 #else

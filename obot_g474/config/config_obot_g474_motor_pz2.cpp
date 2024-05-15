@@ -211,7 +211,6 @@ void config_init() {
     System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
-    config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
     ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder_direct);
 
     // config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;

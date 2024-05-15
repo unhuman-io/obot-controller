@@ -178,16 +178,21 @@ namespace config {
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
-    MotorEncoder motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 2,
-        motor_start_cs_trigger, motor_stop_cs_trigger, ICPZ2DMA::PZ08S);
+    ICPZ motor_encoder1(spi3_dma, ICPZ::PZ08S);
+    ICPZ motor_encoder2(spi3_dma, ICPZ::PZ08S);
+
+    MotorEncoder motor_encoder(motor_encoder1, motor_encoder2, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 2,
+        motor_start_cs_trigger, motor_stop_cs_trigger);
 
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
         SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
+    ICPZ output_encoder1(spi1_dma, ICPZ::PZ08S);
+    ICPZ output_encoder2(spi1_dma, ICPZ::PZ08S);
 
-    ICPZ2DMA output_encoder_direct(spi1_dma, *DMAMUX1_Channel2, *DMAMUX1_Channel3, 3,
-        output_start_cs_trigger, output_stop_cs_trigger, ICPZ2DMA::PZ03S);    
+    ICPZ2DMA output_encoder_direct(output_encoder1, output_encoder2, *DMAMUX1_Channel2, *DMAMUX1_Channel3, 3,
+        output_start_cs_trigger, output_stop_cs_trigger);    
     
     // GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
     // SPIDMA spi1_dma2(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
@@ -223,7 +228,7 @@ namespace config {
 void config_init() {
     config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
 
-    ICPZ_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
+    ICPZ_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder1);
 
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
@@ -234,7 +239,7 @@ void config_init() {
 
     config::output_encoder_direct.spidma_.register_operation_ = config::drv.register_operation_;
     config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
-    ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder_direct);
+    ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder1);
 
     // config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     // System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
@@ -284,19 +289,19 @@ void config_maintenance() {
         float Tambient4 = ambient4_temperature_filter.update(config::ambient_temperature_4.read());
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, Tambient4);
     }
-    if(config::motor_encoder.crc_error_count_ > 100 || config::motor_encoder.error_count_ > 100 ||
-        config::motor_encoder.warn_count_ > pow(2,31)) {
+    if(config::motor_encoder1.crc_error_count_ > 100 || config::motor_encoder1.error_count_ > 100 ||
+        config::motor_encoder1.warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.motor_encoder = true;
     }
-    round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_error_count_);
-    round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder.error_count_);
+    round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder1.crc_error_count_);
+    round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder1.error_count_);
 
-    if(config::output_encoder_direct.crc_error_count_ > 100 || config::output_encoder_direct.error_count_ > 100 ||
-        config::output_encoder_direct.warn_count_ > pow(2,31)) {
+    if(config::output_encoder1.crc_error_count_ > 100 || config::output_encoder1.error_count_ > 100 ||
+        config::output_encoder1.warn_count_ > pow(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
-    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_error_count_);
-    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder_direct.error_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder1.crc_error_count_);
+    round_robin_logger.log_data(OUTPUT_ENCODER_ERROR_INDEX, config::output_encoder1.error_count_);
 
     // round_robin_logger.log_data(TORQUE_SENSOR_CRC_INDEX, config::torque_sensor_direct.read_error_);
     // round_robin_logger.log_data(TORQUE_SENSOR_ERROR_INDEX, config::torque_sensor_direct.timeout_error_);

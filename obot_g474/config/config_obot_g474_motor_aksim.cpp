@@ -137,17 +137,17 @@ namespace config {
 #else
     GPIO motor_encoder_cs(*GPIOA, 0, GPIO::OUTPUT);
 #endif
-    SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
+    SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0);
     MotorEncoder motor_encoder(spi3_dma, param->fast_loop_param.motor_encoder.cpr);
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
-    SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+    SPIDMA spi1_dma(SPIDMA::SP1, output_encoder_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
         SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
     Aksim2Encoder output_encoder_direct(spi1_dma, param->main_loop_param.output_encoder.cpr);
 
 #ifdef JOINT_ENCODER_BITS
     GPIO joint_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
-    SPIDMA spi1_dma2(*SPI1, joint_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+    SPIDMA spi1_dma2(SPIDMA::SP1, joint_encoder_cs,  DMA1_CH3, DMA1_CH4, 100, 100, 
         SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
     Aksim2Encoder joint_encoder_direct(spi1_dma2, pow(2,18));
     OutputEncoder1 output_encoder1(output_encoder_direct, joint_encoder_direct);
@@ -165,13 +165,13 @@ namespace config {
 #endif
 
 #ifdef MAX11254_TORQUE_SENSOR
-    SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+    SPIDMA spi1_dma3(SPIDMA::SP1, torque_sensor_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
     MAX11254<> torque_sensor_direct(spi1_dma3, 1, false);
     TorqueSensor torque_sensor(torque_sensor_direct, output_encoder1);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 #elif defined(ADS8339_TORQUE_SENSOR)
-    SPIDMA spi1_dma3(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+    SPIDMA spi1_dma3(SPIDMA::SP1, torque_sensor_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
         SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
     ADS8339 torque_sensor_direct(spi1_dma3, 0);
     TorqueSensor torque_sensor(torque_sensor_direct, output_encoder1);
@@ -226,7 +226,6 @@ void config_init() {
     System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 #ifdef JOINT_ENCODER_BITS
-    config::joint_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("jerr", new APIUint32(&config::joint_encoder_direct.diag_err_count_));
     System::api.add_api_variable("jwarn", new APIUint32(&config::joint_encoder_direct.diag_warn_count_));
     System::api.add_api_variable("jcrc_cnt", new APIUint32(&config::joint_encoder_direct.crc_err_count_));
@@ -235,7 +234,6 @@ void config_init() {
     System::api.add_api_variable("jcrc_latch", new const APIUint32(&config::joint_encoder_direct.crc_error_raw_latch_));
     System::api.add_api_variable("jbias", new APIFloat(&joint_encoder_bias));
 #endif
-    config::output_encoder_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.diag_err_count_));
     System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.diag_warn_count_));
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_err_count_));
@@ -247,14 +245,12 @@ void config_init() {
     System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
     System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));
 #ifdef MAX11254_TORQUE_SENSOR
-    config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
     System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
     System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
     System::api.add_api_variable("tmux_delay", new APICallbackUint16([](){ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
 #elif defined(ADS8339_TORQUE_SENSOR)
-    config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
     System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));

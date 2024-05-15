@@ -54,8 +54,6 @@ namespace config {
 
 void config_init() {
 
-    //config::output_encoder.spi_dma_.register_operation_ = config::drv.register_operation_;
-
     // System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
     // System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
     // System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor.read_error_));

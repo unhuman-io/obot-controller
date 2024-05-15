@@ -29,12 +29,12 @@ namespace config {
     InitCode init_code;
 
     GPIO motor_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
-    SPIDMA spi_dma = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
+    SPIDMA spi_dma = {SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0};
     ICPZ motor_encoder(spi_dma, ICPZ::PZ03S);
     SPIDebug spi_debug(spi_dma);
 
     GPIO torque_sensor_cs(*GPIOA, 4, GPIO::OUTPUT);
-    SPIDMA spi_dma2(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4, 50, 50);
+    SPIDMA spi_dma2(SPIDMA::SP3, torque_sensor_cs, DMA1_CH1, DMA1_CH2, 0, 50, 50);
     ADS1235 torque_sensor(spi_dma2);
     
     EncoderBase output_encoder;

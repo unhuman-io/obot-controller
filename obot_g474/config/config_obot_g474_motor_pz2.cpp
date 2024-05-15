@@ -213,7 +213,6 @@ void config_init() {
 
     ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder_direct);
 
-    // config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     // System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     // System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
     // System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));

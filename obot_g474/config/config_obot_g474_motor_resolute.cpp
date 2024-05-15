@@ -60,7 +60,6 @@ void spi1_reinit_callback() {
 void config_init() {
     System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
 
-    config::output_encoder.spi_dma_.register_operation_ = config::drv.register_operation_;
     System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
     System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));

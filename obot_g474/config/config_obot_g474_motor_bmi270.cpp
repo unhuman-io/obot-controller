@@ -71,7 +71,6 @@ void spi1_reinit_callback() {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    //config::spi1_dma2.register_operation_ = config::drv.register_operation_;
 
     System::api.add_api_variable("imu", new const APICallback([](){ return config::imu.get_string(); }));
     System::api.add_api_variable("ax", new const APICallbackFloat([](){ return config::imu.data_.acc_x*8./pow(2,15); }));

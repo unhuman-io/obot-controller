@@ -74,7 +74,6 @@ void spi1_reinit_callback() {
 
 void config_init() {
     config::torque_sensor.set_debug_variables("t", System::api);
-    config::torque_sensor.spi_dma_.register_operation_ = config::drv.register_operation_;
 }
 
 void config_maintenance() {

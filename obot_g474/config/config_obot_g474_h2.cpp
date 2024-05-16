@@ -73,7 +73,7 @@ namespace config
     
     // Moons motor BiSS encoder
     GPIO motor_encoder_cs(*GPIOA, 15, GPIO::OUTPUT);
-    SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
+    SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0);
     MotorEncoder motor_encoder(spi3_dma);
 
     TorqueSensor torque_sensor;

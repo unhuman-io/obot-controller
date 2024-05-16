@@ -49,6 +49,8 @@ jobs:
             config: motor_aksim_20_19 # MR0
           - project: obot_g474
             config: motor_aksim_19_18 # MR0P
+          - project: obot_g474
+            config: osa14_jl1
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:latest
     steps:

@@ -8,15 +8,9 @@
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #define COMMS   COMMS_USB
 
-class OutputEncoder : public MA732Encoder {
- public:
-    OutputEncoder(SPI_TypeDef& s, GPIO& g, SPIPause &sp) : MA732Encoder(s, g, sp) {}
-    // bypass some issue with CI encoder filter setting
-    bool init() { return true; }
-};
-
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = QEPEncoder;
+using OutputEncoder = MA730Encoder;
 
 struct InitCode {
     InitCode() {
@@ -40,14 +34,8 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder.get_bct(); },
-                    [](uint32_t u){ config::output_encoder.set_bct(u); }));
-    System::api.add_api_variable("jet", new APICallbackUint32([](){ return config::output_encoder.get_et(); },
-                    [](uint32_t u){ config::output_encoder.set_et(u); }));
-    System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::output_encoder.set_mgt(u); }));
-    System::api.add_api_variable("jfilt", new APICallbackUint32([](){ return config::output_encoder.get_filt(); }, 
-                [](uint32_t u){ config::output_encoder.set_filt(u); }));
+    MA732_SET_DEBUG_VARIABLES("j", System::api, config::output_encoder);
+
     System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
 }
 

@@ -145,4 +145,12 @@ check_var_regex("mcmd_result", r"command: \d{1,3}, result: \d{1,3}")
 mot.set_timeout_ms(25)
 check_var("mconf_write", "conf write success")
 
+mot.set_timeout_ms(10)
+check_var("mconf_write_no_check", "ok")
+time.sleep(.1)
+check_var("mcmd_result", "command: 0, result: 0")
+
 set_and_check_var("mled_cur", "1")
+
+check_var_is_int("menc")
+

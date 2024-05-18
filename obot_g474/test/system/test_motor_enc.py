@@ -86,7 +86,11 @@ class TestMotor(unittest.TestCase):
         print(f"jbct = {bct}")
         et = int(self.m.motors()[0]["jet"].get()) # check int only
         print(f"jet = {et}")
-
+        raw = int(self.m.motors()[0]["jraw"].get()) # check int only
+        print(f"jraw = {raw}")
+        err = int(self.m.motors()[0]["jerr"].get())
+        print(f"jerr = {err}")
+        self.assertEqual(err, 0)
 
     def test_current_bandwidth(self):
         self.m.set_command_current_tuning(motor.TuningMode.Chirp, .3, 200, 0)

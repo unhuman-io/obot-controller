@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_CAN
+#define CAN_NUM CAN::CAN3
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = EncoderBase;
@@ -13,6 +14,25 @@ using OutputEncoder = EncoderBase;
 
 struct InitCode {
     InitCode() {
+        GPIO_SETL(B, 3, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 11); // can3 rx
+        GPIO_SETL(B, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 11); // can3 tx
+
+        RCC->APB1ENR1 |= RCC_APB1ENR1_FDCANEN;
+
+        // Only if not reset
+        // FDCAN3->CCCR |= FDCAN_CCCR_INIT;
+        // while (!(FDCAN3->CCCR & FDCAN_CCCR_INIT));
+        FDCAN3->CCCR |= FDCAN_CCCR_CCE;
+
+        FDCAN3->CCCR |= FDCAN_CCCR_FDOE | FDCAN_CCCR_DAR; // fd mode, disable automatic retransmission
+        // NTSEG1 + NTSEG2 + 1 = 170
+        FDCAN3->NBTP = 50 << FDCAN_NBTP_NSJW_Pos | 99 << FDCAN_NBTP_NTSEG1_Pos | 70 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
+        //FDCAN3->TDCR ?
+        FDCAN3->RXGFC = 3 << FDCAN_RXGFC_LSS_Pos | FDCAN_RXGFC_ANFS | FDCAN_RXGFC_ANFE | FDCAN_RXGFC_RRFS | FDCAN_RXGFC_RRFE; // 3 acceptance filters, reject everything else
+        FDCAN3->TXBC |= FDCAN_TXBC_TFQM; // transmit fifo request queue mode
+
+        FDCAN3->CCCR &= ~FDCAN_CCCR_INIT;
+        
     }
 };
 

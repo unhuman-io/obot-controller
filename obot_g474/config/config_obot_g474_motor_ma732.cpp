@@ -1,7 +1,7 @@
 #include "../param/param_obot_g474.h"
 #include "st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/ma732_encoder.h"
+#include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #define COMMS   COMMS_USB

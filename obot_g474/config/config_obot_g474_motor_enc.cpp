@@ -3,7 +3,7 @@
 #include "../../motorlib/qep_encoder.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/ma732_encoder.h"
+#include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #define COMMS   COMMS_USB
@@ -34,7 +34,7 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    MA732_SET_DEBUG_VARIABLES("j", System::api, config::output_encoder);
+    MA7XX_SET_DEBUG_VARIABLES("j", System::api, config::output_encoder);
 
     System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
 }

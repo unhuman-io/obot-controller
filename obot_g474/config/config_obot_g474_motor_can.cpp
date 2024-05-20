@@ -25,15 +25,23 @@ struct InitCode {
         FDCAN3->CCCR |= FDCAN_CCCR_CCE;
 
         // DTSEG1 + DTSEG2 + 3 = 170/12 -> 14
-        FDCAN3->DBTP = 8 << FDCAN_DBTP_DTSEG1_Pos | 3 << FDCAN_DBTP_DTSEG2_Pos | 2 << FDCAN_DBTP_DSJW_Pos;
+        //FDCAN3->DBTP = 8 << FDCAN_DBTP_DTSEG1_Pos | 3 << FDCAN_DBTP_DTSEG2_Pos | 2 << FDCAN_DBTP_DSJW_Pos;
+
+        // DTSEG1 + DTSEG2 + 3 = 170/5 -> 34
+        FDCAN3->DBTP = 21 << FDCAN_DBTP_DTSEG1_Pos | 10 << FDCAN_DBTP_DTSEG2_Pos | 4 << FDCAN_DBTP_DSJW_Pos | FDCAN_DBTP_TDC | 1 << FDCAN_DBTP_DBRP_Pos;
+
+        FDCAN3->TDCR = 20 << FDCAN_TDCR_TDCO_Pos | 20 << FDCAN_TDCR_TDCF_Pos;
 
         FDCAN3->CCCR |= FDCAN_CCCR_BRSE | FDCAN_CCCR_FDOE | FDCAN_CCCR_DAR; // bit rate switch, fd mode, disable automatic retransmission
+
+
         // NTSEG1 + NTSEG2 + 3 = 170
         FDCAN3->NBTP = 10 << FDCAN_NBTP_NSJW_Pos | 98 << FDCAN_NBTP_NTSEG1_Pos | 69 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
         FDCAN3->TSCC = 1 << FDCAN_TSCC_TSS_Pos; // start counter
         //FDCAN3->TDCR ?
         FDCAN3->RXGFC = 3 << FDCAN_RXGFC_LSS_Pos | FDCAN_RXGFC_ANFS | FDCAN_RXGFC_ANFE | FDCAN_RXGFC_RRFS | FDCAN_RXGFC_RRFE; // 3 acceptance filters, reject everything else
         FDCAN3->TXBC |= FDCAN_TXBC_TFQM; // transmit fifo request queue mode
+
 
         FDCAN3->CCCR &= ~FDCAN_CCCR_INIT;
         

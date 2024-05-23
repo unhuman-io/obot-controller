@@ -1,6 +1,6 @@
 &elf_file="~/obot/obot-controller/obot_g474/build/motor_enc.elf"
 
-reset
+;reset
 
 system.cpu stm32g474re
 system.jtagclock 80MHz
@@ -20,17 +20,22 @@ IF FOUND()
 ELSE
   PRINT "FLASH programming completed successfully"
 
+system.Option.IMASKASM ON
+
 SYStem.Up
 
 ; Some preferred ITM settings
 itm.clock 170MHz
 tpiu.PortSize SWV
+tpiu.SWVPrescaler 1
 trace.TraceCLOCK 170MHz
-itm.InterruptTrace ON
+;itm.InterruptTrace ON
 ;itm.ON
 
 itm.DataTrace off
-itm.CycleAccurate ON
+;itm.CycleAccurate ON
 
+system.RESetTarget
 ; trace.chart.interrupt
 
+itm.TImeMode.PCSampler

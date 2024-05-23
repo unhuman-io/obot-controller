@@ -20,10 +20,13 @@ struct InitCode {
       DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
 
       // configure gpio CS pins as outputs
-      GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);   // SPI1 CSX
-      GPIO_SETL(B, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);   // SPI1 CSX
-      GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);   // SPI3 CSX
-      GPIO_SETL(C, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);   // SPI3 CSX
+      GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);   // SPI1 CS1
+      GPIO_SETL(B, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);   // SPI1 CS2
+      GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);   // SPI3 CS1
+      GPIO_SETL(B, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);   // SPI3 CS2
+      GPIOA->BSRR = GPIO_BSRR_BS4;
+      GPIOB->BSRR = GPIO_BSRR_BS0 | GPIO_BSRR_BS4;
+      GPIOD->BSRR = GPIO_BSRR_BS2;
     }
 };
 
@@ -32,18 +35,18 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
+    GPIO motor_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);
     MA782Encoder motor_encoder_direct(*SPI1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
-    GPIO output_encoder_cs(*GPIOB, 4, GPIO::OUTPUT); // spi3 cs2
+    GPIO output_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
     MA782Encoder output_encoder_direct(*SPI1, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1], 119);
     MotorEncoder motor_encoder(motor_encoder_direct, output_encoder_direct, 0);
     OutputEncoder &output_encoder = motor_encoder.secondary();
 
-    GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT); // spi3 cs1
+    GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPITorque torque_sensor(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2,  
         SPIDMA::spi_pause[SPIDMA::SP3], 5);
 
-    GPIO imu_cs(*GPIOC, 4, GPIO::OUTPUT);
+    GPIO imu_cs(*GPIOB, 4, GPIO::OUTPUT);
     SPIDMA spi1_dma_bmi270(SPIDMA::SP3, imu_cs, DMA1_CH1, DMA1_CH2, 1000, 40, 40,
         SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);    // baud = clock/32
     BMI270 imu(spi1_dma_bmi270);

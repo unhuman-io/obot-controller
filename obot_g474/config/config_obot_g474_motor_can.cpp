@@ -48,8 +48,8 @@ struct InitCode {
 
         // NTSEG1 + NTSEG2 + 3 = 170
         FDCAN3->NBTP = 42 << FDCAN_NBTP_NSJW_Pos | 125 << FDCAN_NBTP_NTSEG1_Pos | 42 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
-        // 2Mbps
-        FDCAN3->NBTP = 20 << FDCAN_NBTP_NSJW_Pos | 62 << FDCAN_NBTP_NTSEG1_Pos | 20 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
+        // // 2Mbps
+        // FDCAN3->NBTP = 20 << FDCAN_NBTP_NSJW_Pos | 62 << FDCAN_NBTP_NTSEG1_Pos | 20 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
 
 
         FDCAN3->TSCC = 1 << FDCAN_TSCC_TSS_Pos; // start counter

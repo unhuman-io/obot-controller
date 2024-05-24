@@ -185,6 +185,10 @@ jobs:
         heap_used=$(motor_util -p 1-3.1 --no-list --set-api heap_used | tail -n 1 | cut -f2 -d' ')
         check_var heap_used $heap_used 15000 30000
 
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_aksim.py -p 1-3.2 -v
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_aksim.py -p 1-3.6 -v
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_aksim.py -p 1-3.7 -v
+
         cat output.txt
 
         # test motor9

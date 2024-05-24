@@ -33,7 +33,17 @@ class TestMotor(unittest.TestCase):
         time.sleep(0.01)
         val = self.motor["ax"].get()
         print("ax: " + val)
-        self.assertAlmostEqual(float(val), -1.0, 1)
+        self.assertAlmostEqual(float(val), -1.0, delta=.05)
+        val = self.motor["ay"].get()
+        print("ay: " + val)
+        self.assertAlmostEqual(float(val), 0.0, delta=.05)
+        val = self.motor["az"].get()
+        print("az: " + val)
+        self.assertAlmostEqual(float(val), 0.0, delta=.05)
+        for item in ["gx", "gy", "gz"]:
+            val = self.motor[item].get()
+            print(item + ": " + val)
+            self.assertAlmostEqual(float(val), 0.0, delta=.05)
 
 
 if __name__ == "__main__":

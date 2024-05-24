@@ -44,7 +44,7 @@ namespace config {
 
     GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPITorque torque_sensor(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2,  
-        SPIDMA::spi_pause[SPIDMA::SP3], 5);
+        SPIDMA::spi_pause[SPIDMA::SP3], 10);
 
     GPIO imu_cs(*GPIOB, 4, GPIO::OUTPUT);
     SPIDMA spi1_dma_bmi270(SPIDMA::SP3, imu_cs, DMA1_CH1, DMA1_CH2, 1000, 40, 40,

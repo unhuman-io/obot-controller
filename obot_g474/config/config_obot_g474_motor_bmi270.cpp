@@ -44,17 +44,18 @@ namespace config {
     InitCode init_code;
 
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
-    SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4);
+    SPIDMA spi1_dma(SPIDMA::SP1, output_encoder_cs, DMA1_CH3, DMA1_CH4, 0);
     //OutputEncoder output_encoder(spi1_dma);
     EncoderBase motor_encoder;
     TorqueSensor torque_sensor;
     GPIO motor_encoder_cs(*GPIOA, 0, GPIO::OUTPUT);
-    SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel2, *DMA1_Channel3);
+    SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0);
     //MotorEncoder motor_encoder(spi3_dma);
 
 
+    // moved to ...motor.cpp
     // GPIO imu_cs(*GPIOC, 4, GPIO::OUTPUT);
-    // SPIDMA spi1_dma2(*SPI1, imu_cs, *DMA1_Channel3, *DMA1_Channel4, 40, 40);
+    // SPIDMA spi1_dma2(SPIDMA::SP1, imu_cs, DMA1_CH3, DMA1_CH4, 0, 40, 40);
     // BMI270 imu(spi1_dma2);
     EncoderBase output_encoder;
 };

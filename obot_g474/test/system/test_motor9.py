@@ -126,7 +126,8 @@ check_near("mdisk_um", 10700, 1)
 set_and_check_var("mipo_filt1", "ea")
 check_var("mipo_filt2", "04")
 check_near("mtemp", 30, 20)
-
+check_var_regex("mdiag_str", r"^err: \S* warn: \S*$")
+check_var("mclear_diag", "ok")
 
 set_and_check_var("mipo_filt1", "6e")
 set_and_check_var("mac_count", "0")

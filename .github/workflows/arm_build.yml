@@ -35,6 +35,8 @@ jobs:
           - project: obot_g474
             config: motor_40_osa14
           - project: obot_g474
+            config: motor_9
+          - project: obot_g474
             config: motor_aksim
           - project: obot_g474
             config: motor_aksim_19_17
@@ -116,6 +118,8 @@ jobs:
         ./motor_aksim_19_18/load_motor_aksim_19_18.sh -p 1-3.6 & # MR0P
         tar xzf obot_g474\ motor_pz2/motor_pz2.tgz
         ./motor_pz2/load_motor_pz2.sh -p 1-3.5 & # MR1
+        tar xzf obot_g474\ motor_9/motor_9.tgz
+        ./motor_9/load_motor_9.sh -p 1-3.4.3 &
         tar xzf obot_g474\ osa14_jl1/osa14_jl1.tgz
         ./osa14_jl1/load_osa14_jl1.sh -p 1-3.4.2 &
 
@@ -126,11 +130,12 @@ jobs:
         # check for existence
         motor_util -p 1-3.1
         motor_util -p 1-3.2
+        motor_util -p 1-3.4.3
         motor_util -p 1-3.5
         motor_util -p 1-3.6
         motor_util -p 1-3.7
         motor_util -p 1-3.4.2
-        num_motors=6
+        num_motors=7
         
         motor_util -l --run-stats
 
@@ -181,6 +186,9 @@ jobs:
         check_var heap_used $heap_used 15000 30000
 
         cat output.txt
+
+        # test motor9
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor9.py
     - name: test uart
       run: |
         tar xzf obot_g474\ nucleo_uart/nucleo_uart.tgz

@@ -71,9 +71,9 @@ void config_init() {
                     [](uint32_t u){ config::output_encoder_direct.set_mgt(u); }));
 
     System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor.result0_));
-    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result1_)); 
+    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result1_));
 
-    System::api.add_api_variable("imu_read", new const APICallback([](){ return config::imu.get_string(); }));
+    System::api.add_api_variable("imu_read", new const APICallback([](){ config::imu.read(); return "ok"; }));
     System::api.add_api_variable("ax", new const APICallbackFloat([](){ return config::imu.data_.acc_x*8./pow(2,15); }));
     System::api.add_api_variable("ay", new const APICallbackFloat([](){ return config::imu.data_.acc_y*8./pow(2,15); }));
     System::api.add_api_variable("az", new const APICallbackFloat([](){ return config::imu.data_.acc_z*8./pow(2,15); }));

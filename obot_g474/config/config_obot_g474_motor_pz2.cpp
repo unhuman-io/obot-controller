@@ -29,7 +29,7 @@ uint32_t gpio_d2_bsrr[2] = {4 << 16, 4};
 uint32_t gpio_c3_bsrr[2] = {8 << 16, 8};
 
 inline void motor_start_cs_trigger() {
-    HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE;
+    HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE |  HRTIM_TIMDIER_CMP2DE ;
 }
     
 inline void motor_stop_cs_trigger() {
@@ -90,6 +90,7 @@ struct InitCode {
 
         // motor icpz dma trigger
         HRTIM1->sTimerxRegs[0].CMP1xR = 47000;
+        HRTIM1->sTimerxRegs[0].CMP2xR = 7000;
         HRTIM1->sTimerxRegs[0].TIMxCR2 = 0;
         HRTIM1->sTimerxRegs[0].PERxR = 54400;
         HRTIM1->sTimerxRegs[0].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU | HRTIM_TIMCR_CONT | 1 << HRTIM_TIMCR_CK_PSC_Pos;

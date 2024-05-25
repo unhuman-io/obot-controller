@@ -74,7 +74,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.gear_ratio = 5.4,
 
     .startup_param.motor_encoder_startup = ENCODER_ZERO,
-    .name = "J1",
+    .name = "motor40",
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES
 #endif

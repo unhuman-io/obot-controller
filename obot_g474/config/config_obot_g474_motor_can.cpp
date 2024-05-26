@@ -43,13 +43,13 @@ struct InitCode {
         // FDCAN3->DBTP = 8 << FDCAN_DBTP_DTSEG1_Pos | 6 << FDCAN_DBTP_DTSEG2_Pos | 4 << FDCAN_DBTP_DSJW_Pos | FDCAN_DBTP_TDC | 4 << FDCAN_DBTP_DBRP_Pos;
         // FDCAN3->TDCR = 12 << FDCAN_TDCR_TDCO_Pos | 1 << FDCAN_TDCR_TDCF_Pos;
 
-        FDCAN3->CCCR |= FDCAN_CCCR_BRSE | FDCAN_CCCR_FDOE | FDCAN_CCCR_DAR; // bit rate switch, fd mode, disable automatic retransmission
+        FDCAN3->CCCR |= FDCAN_CCCR_BRSE | FDCAN_CCCR_FDOE; // bit rate switch, fd mode
 
 
         // NTSEG1 + NTSEG2 + 3 = 170
-        FDCAN3->NBTP = 42 << FDCAN_NBTP_NSJW_Pos | 125 << FDCAN_NBTP_NTSEG1_Pos | 42 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
-        // // 2Mbps
-        // FDCAN3->NBTP = 20 << FDCAN_NBTP_NSJW_Pos | 62 << FDCAN_NBTP_NTSEG1_Pos | 20 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
+        // FDCAN3->NBTP = 42 << FDCAN_NBTP_NSJW_Pos | 125 << FDCAN_NBTP_NTSEG1_Pos | 42 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
+        // 2Mbps
+        FDCAN3->NBTP = 20 << FDCAN_NBTP_NSJW_Pos | 62 << FDCAN_NBTP_NTSEG1_Pos | 20 << FDCAN_NBTP_NTSEG2_Pos; // 10 time quanta, 3 time quanta before sample point
 
 
         FDCAN3->TSCC = 1 << FDCAN_TSCC_TSS_Pos; // start counter

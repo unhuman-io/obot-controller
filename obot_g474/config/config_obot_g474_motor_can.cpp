@@ -54,7 +54,7 @@ struct InitCode {
 
         FDCAN3->TSCC = 1 << FDCAN_TSCC_TSS_Pos; // start counter
         //FDCAN3->TDCR ?
-        FDCAN3->RXGFC = 3 << FDCAN_RXGFC_LSS_Pos | FDCAN_RXGFC_ANFS | FDCAN_RXGFC_ANFE | FDCAN_RXGFC_RRFS | FDCAN_RXGFC_RRFE; // 3 acceptance filters, reject everything else
+        FDCAN3->RXGFC = 4 << FDCAN_RXGFC_LSS_Pos | FDCAN_RXGFC_ANFS | FDCAN_RXGFC_ANFE | FDCAN_RXGFC_RRFE; // 4 acceptance filters, reject everything else
         FDCAN3->TXBC |= FDCAN_TXBC_TFQM; // transmit fifo request queue mode
 
 

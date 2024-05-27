@@ -19,7 +19,7 @@ struct InitCode {
 
         RCC->APB1ENR1 |= RCC_APB1ENR1_FDCANEN;
 
-        
+        GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
         
     }
 };

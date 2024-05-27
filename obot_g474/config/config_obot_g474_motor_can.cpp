@@ -36,6 +36,8 @@ namespace config {
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
-void config_init() {}
+void config_init() {
+    System::api.add_api_variable("can_intrs", new APIUint32(&config::can.interrupt_called_));
+}
 
 void config_maintenance() {}

@@ -35,9 +35,9 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);
+    GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
     MA782Encoder motor_encoder_direct(*SPI1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
-    GPIO output_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
+    GPIO output_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);
     MA782Encoder output_encoder_direct(*SPI1, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1], 119);
     MotorEncoder motor_encoder(motor_encoder_direct, output_encoder_direct, 0);
     OutputEncoder &output_encoder = motor_encoder.secondary();
@@ -71,8 +71,9 @@ void config_init() {
                     [](uint32_t u){ config::output_encoder_direct.set_mgt(u); }));
 
     System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor.result0_));
-    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result1_));
+    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result1_)); 
 
+    //System::api.add_api_variable("imu_read", new const APICallback([](){ return config::imu.get_string(); }));
     System::api.add_api_variable("imu_read", new const APICallback([](){ config::imu.read(); return "ok"; }));
     System::api.add_api_variable("ax", new const APICallbackFloat([](){ return config::imu.data_.acc_x*8./pow(2,15); }));
     System::api.add_api_variable("ay", new const APICallbackFloat([](){ return config::imu.data_.acc_y*8./pow(2,15); }));

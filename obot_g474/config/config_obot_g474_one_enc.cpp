@@ -57,6 +57,7 @@ namespace config {
 void config_init() {
     config::imu.init();
     
+    
     System::api.add_api_variable("mbct", new APICallbackUint32([](){ return config::motor_encoder_direct.get_bct(); },
                     [](uint32_t u){ config::motor_encoder_direct.set_bct(u); }));
     System::api.add_api_variable("met", new APICallbackUint32([](){ return config::motor_encoder_direct.get_et(); },
@@ -70,8 +71,19 @@ void config_init() {
     System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
                     [](uint32_t u){ config::output_encoder_direct.set_mgt(u); }));
 
-    System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor.result0_));
-    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result1_)); 
+    
+/*     System::api.add_api_variable("CR", new APICallbackUint32([](){ return config::torque_sensor.result0_; },
+                    [](uint32_t u){ config::torque_sensor.reset(u); }));   */
+
+    System::api.add_api_variable("CR", new APICallbackUint32([](){ config::torque_sensor.reset(1); return 1; },
+                    [](uint32_t u){ config::torque_sensor.reset(u); }));                                            //RESET COMAND */
+
+    System::api.add_api_variable("C0", new const APIUint32(&config::torque_sensor.result0_));
+    System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor.result1_)); 
+    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result2_));
+    System::api.add_api_variable("C3", new const APIUint32(&config::torque_sensor.result3_));
+    System::api.add_api_variable("C4", new const APIUint32(&config::torque_sensor.result4_));
+    System::api.add_api_variable("C5", new const APIUint32(&config::torque_sensor.result5_)); 
 
     //System::api.add_api_variable("imu_read", new const APICallback([](){ return config::imu.get_string(); }));
     System::api.add_api_variable("imu_read", new const APICallback([](){ config::imu.read(); return "ok"; }));
@@ -80,7 +92,9 @@ void config_init() {
     System::api.add_api_variable("az", new const APICallbackFloat([](){ return config::imu.data_.acc_z*8./pow(2,15); }));
     System::api.add_api_variable("gx", new const APICallbackFloat([](){ return config::imu.data_.gyr_x*2000.*M_PI/180/pow(2,15); }));
     System::api.add_api_variable("gy", new const APICallbackFloat([](){ return config::imu.data_.gyr_y*2000.*M_PI/180/pow(2,15); }));
-    System::api.add_api_variable("gz", new const APICallbackFloat([](){ return config::imu.data_.gyr_z*2000.*M_PI/180/pow(2,15); }));    
+    System::api.add_api_variable("gz", new const APICallbackFloat([](){ return config::imu.data_.gyr_z*2000.*M_PI/180/pow(2,15); }));   
+    
+    config::torque_sensor.reset(1); 
 }
 
 void config_maintenance() {}

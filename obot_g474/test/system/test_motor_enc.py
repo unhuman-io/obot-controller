@@ -37,6 +37,7 @@ class TestMotor(unittest.TestCase):
         self.assertEqual(self.m.read()[0].host_timestamp_received, 1)
 
     def test_2sleep(self):
+        pass
         # self.m.set_command_mode(motor.ModeDesired.Sleep)
         # self.m.write_saved_commands()
         # time.sleep(1)

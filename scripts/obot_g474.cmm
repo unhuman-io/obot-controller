@@ -5,6 +5,8 @@
 system.cpu stm32g474re
 system.jtagclock 80MHz
 SYStem.CONFIG.DEBUGPORTTYPE SWD
+system.Option.EnReset OFF
+system.Option.DUALPORT ON
 system.mode attach
 break
 
@@ -39,3 +41,4 @@ system.RESetTarget
 ; trace.chart.interrupt
 
 itm.TImeMode.PCSampler
+list.auto

@@ -41,4 +41,8 @@ system.RESetTarget
 ; trace.chart.interrupt
 
 itm.TImeMode.PCSampler
+
 list.auto
+
+;menu.delete.name user.addtool
+menu.addtool "Reset" "R" "system.resettarget"

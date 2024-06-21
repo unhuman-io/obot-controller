@@ -64,6 +64,7 @@ struct InitCode {
 
 
       GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
+      GPIOD->BSRR = GPIO_BSRR_BS2;
       // gpio out
       GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
       // gpio in
@@ -75,6 +76,7 @@ struct InitCode {
         // 10 PA1 temp CS
         // 12 PA2 DRDY
       GPIO_SETL(C, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PC3-> output encoder cs
+      GPIOC->BSRR = GPIO_BSRR_BS3;
       GPIO_SETL(B, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PB4 LTC cs
       GPIOB->BSRR = GPIO_BSRR_BS4;
       GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PB3 adc reset
@@ -157,13 +159,13 @@ namespace config {
     InitCode init_code;
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
-    SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
+    SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 1000);
     MotorEncoder motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 2,
         motor_start_cs_trigger, motor_stop_cs_trigger, ICPZDMA::PZ08S);
 
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
-    SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+    SPIDMA spi1_dma(SPIDMA::SP1, output_encoder_cs, DMA1_CH3, DMA1_CH4, 1000, 100, 100,
         SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
 
     ICPZDMA output_encoder_direct(spi1_dma, *DMAMUX1_Channel2, *DMAMUX1_Channel3, 3,
@@ -212,11 +214,8 @@ void config_init() {
     System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
-    config::output_encoder_direct.spidma_.register_operation_ = config::drv.register_operation_;
-    config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
     ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder_direct);
 
-    // config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
     // System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     // System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
     // System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));

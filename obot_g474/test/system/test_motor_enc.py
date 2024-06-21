@@ -99,6 +99,18 @@ class TestMotor(unittest.TestCase):
         self.f.write("Benchmarkbandwidth 0 " + str(bw) + " Hz\n")
         self.assertTrue(abs(bw - 1050) < 150)
 
+    def test_logger(self):
+        count = 0
+        while True:
+            str = self.m.motors()[0]["log"].get()
+            print(str)
+            if str != "log end":
+                count += 1
+                self.assertLess(count, 100)
+            else:
+                self.assertGreater(count, 10)
+                break
+
     def test_z_flash_cal(self):
         self.assertEqual(float(self.m.motors()[0]["tgain"].get()), 0.0)
         self.m.motors()[0]["tgain"] = "2.0"

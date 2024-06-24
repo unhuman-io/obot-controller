@@ -1,3 +1,4 @@
+//dual flex
 #include "../param/param_obot_g474_osa.h"
 #include "st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
@@ -35,16 +36,18 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
+    //GPIO motor_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2      TWO ENCODERS
+    GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2        ONE ENCODER
     MA782Encoder motor_encoder_direct(*SPI1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
-    GPIO output_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);
+    //GPIO output_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2     TWO ENCODERS
+    GPIO output_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2       ONE ENCODER
     MA782Encoder output_encoder_direct(*SPI1, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1], 119);
     MotorEncoder motor_encoder(motor_encoder_direct, output_encoder_direct, 0);
     OutputEncoder &output_encoder = motor_encoder.secondary();
 
     GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPITorque torque_sensor(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2,  
-        SPIDMA::spi_pause[SPIDMA::SP3], 10);
+        SPIDMA::spi_pause[SPIDMA::SP3], 20);
 
     GPIO imu_cs(*GPIOB, 4, GPIO::OUTPUT);
     SPIDMA spi1_dma_bmi270(SPIDMA::SP3, imu_cs, DMA1_CH1, DMA1_CH2, 1000, 40, 40,
@@ -76,7 +79,7 @@ void config_init() {
                     [](uint32_t u){ config::torque_sensor.reset(u); }));   */
 
     System::api.add_api_variable("CR", new APICallbackUint32([](){ config::torque_sensor.reset(1); return 1; },
-                    [](uint32_t u){ config::torque_sensor.reset(u); }));                                            //RESET COMAND */
+                    [](uint32_t u){ config::torque_sensor.reset(u); }));                                            //TORQUE SENSOR RESET COMAND */
 
     System::api.add_api_variable("C0", new const APIUint32(&config::torque_sensor.result0_));
     System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor.result1_)); 

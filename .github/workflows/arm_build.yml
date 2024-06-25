@@ -109,7 +109,8 @@ jobs:
       run: |
         ls
         tar xzf motor_enc.tgz
-        ./motor_enc/load_motor_enc.sh -p 1-3.1 & # ? rev
+        ./motor_enc/load_motor_enc.sh -p 1-3.1 && sleep 5 && \
+        ./motor_enc/load_motor_enc_calibration.sh -p 1-3.1 &
         tar xzf obot_g474\ motor_aksim_19_17/motor_aksim_19_17.tgz
         ./motor_aksim_19_17/load_motor_aksim_19_17.sh -p 1-3.2 & # MR2
         tar xzf obot_g474\ motor_aksim_20_19/motor_aksim_20_19.tgz

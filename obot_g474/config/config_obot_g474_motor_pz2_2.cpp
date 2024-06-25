@@ -16,7 +16,7 @@
 // #define COMMS_UART_BAUDRATE 4000000
 // #define COMMS_UART_NUMBER 2
 
-#define GPIO_OUT int gpio_out_1234 // todo: necessary?
+
 
 //#define END_TRIGGER_MOTOR_ENCODER
 
@@ -177,7 +177,7 @@ namespace config {
     InitCode init_code;
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
-    SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
+    SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0);
     ICPZ motor_encoder1(spi3_dma, ICPZ::PZ08S);
     ICPZ motor_encoder2(spi3_dma, ICPZ::PZ08S);
 
@@ -186,7 +186,7 @@ namespace config {
 
     
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
-    SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
+    SPIDMA spi1_dma(SPIDMA::SP1, output_encoder_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
         SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM);
     ICPZ output_encoder1(spi1_dma, ICPZ::PZ08S);
     ICPZ output_encoder2(spi1_dma, ICPZ::PZ08S);
@@ -237,11 +237,10 @@ void config_init() {
     System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
-    config::output_encoder_direct.spidma_.register_operation_ = config::drv.register_operation_;
-    config::output_encoder_direct.register_operation_ = config::drv.register_operation_;
+
     ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder1);
 
-    // config::torque_sensor_direct.spi_dma_.register_operation_ = config::drv.register_operation_;
+
     // System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     // System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
     // System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));

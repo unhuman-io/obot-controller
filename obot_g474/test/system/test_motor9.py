@@ -104,10 +104,14 @@ set_and_check_var("mran_tol", "4")
 set_and_check_var("mran_tol", "5")
 set_and_check_near("mecc_um", 0, 0.001)
 set_and_check_near("mecc_um", 1, 0.001)
+set_and_check_near("mecc_phase", 50, 0.1)
+set_and_check_near("mecc_phase", -50, 0.1)
+set_and_check_near("mecc_phase", 0, 0.1)
 set_and_check_var("mlow", "1")
 set_and_check_var("mlow", "0")
 set_and_check_var("mac_count", "1")
 set_and_check_var("mac_count", "8")
+check_var_is_int("mlast_error_pos")
 
 fm = r"[-+]?[0-9]*\.?[0-9]+"
 match_cals = f"^cos_off: {fm}, sin_off: {fm}, sc_gain: {fm}, sc_phase: {fm}, ai_phase: {fm}, ai_scale: {fm}"

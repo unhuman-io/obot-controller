@@ -86,7 +86,15 @@ void config_init() {
     System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result2_));
     System::api.add_api_variable("C3", new const APIUint32(&config::torque_sensor.result3_));
     System::api.add_api_variable("C4", new const APIUint32(&config::torque_sensor.result4_));
-    System::api.add_api_variable("C5", new const APIUint32(&config::torque_sensor.result5_)); 
+    System::api.add_api_variable("C5", new const APIUint32(&config::torque_sensor.result5_));
+
+    System::api.add_api_variable("offset_A", new const APIInt32(&config::torque_sensor.offset_A));
+    System::api.add_api_variable("offset_B", new const APIInt32(&config::torque_sensor.offset_B));
+    System::api.add_api_variable("offset_C", new const APIInt32(&config::torque_sensor.offset_C));
+    System::api.add_api_variable("gain_A", new const APIInt32(&config::torque_sensor.gain_A));
+    System::api.add_api_variable("gain_B", new const APIInt32(&config::torque_sensor.gain_B));
+    System::api.add_api_variable("gain_C", new const APIInt32(&config::torque_sensor.gain_C));
+    System::api.add_api_variable("gain_T", new const APIInt32(&config::torque_sensor.gain_T));
 
     //System::api.add_api_variable("imu_read", new const APICallback([](){ return config::imu.get_string(); }));
     System::api.add_api_variable("imu_read", new const APICallback([](){ config::imu.read(); return "ok"; }));

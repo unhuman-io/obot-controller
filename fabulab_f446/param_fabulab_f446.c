@@ -23,7 +23,6 @@ const volatile Param param_store = {
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 28672,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
-    .fast_loop_param.motor_encoder.index_electrical_offset_pos = 402,
     .fast_loop_param.vbus_gain = (3.0/4096)*((2+18)/2),
     .main_loop_param.position_controller_param.position.kp = .1,
     .main_loop_param.position_controller_param.position.ki = 0,
@@ -37,5 +36,3 @@ const volatile Param param_store = {
     .startup_param.phase_lock_duration = 2,
     .name = "J1",
 };
-const volatile char * const name = param_store.name;
-const Param * const param = &param_store; // todo figure out a way to not inline without warning

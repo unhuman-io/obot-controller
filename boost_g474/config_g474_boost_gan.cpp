@@ -5,7 +5,7 @@
 #include "../motorlib/peripheral/stm32g4/hrpwm.h"
 #include "../motorlib/led.h"
 #include "../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../motorlib/icpz.h"
+#include "../motorlib/sensors/encoders/icpz.h"
 #include "../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "Inc/main.h"
 #include "param_g474_boost.h"

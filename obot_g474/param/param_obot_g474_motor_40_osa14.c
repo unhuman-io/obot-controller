@@ -25,10 +25,9 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.motor_encoder.cpr = pow(2,24),
     .fast_loop_param.motor_encoder.rollover = pow(2,23+6),
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,
-    .fast_loop_param.motor_encoder.index_electrical_offset_pos = -22643,
-    .main_loop_param.torque_sensor.gain = 1,
-    .main_loop_param.torque_sensor.bias = 0,
-    .main_loop_param.torque_sensor.k_temp = 0,
+    // .main_loop_param.torque_sensor.gain = 1,
+    // .main_loop_param.torque_sensor.bias = 0,
+    // .main_loop_param.torque_sensor.k_temp = 0,
     .fast_loop_param.vbus_gain = 1.0/4096*(215+13.7)/13.7,
     .main_loop_param.position_controller_param.position.kp = 1,
     .main_loop_param.position_controller_param.position.kd = .01,
@@ -75,7 +74,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.gear_ratio = 5.4,
 
     .startup_param.motor_encoder_startup = ENCODER_ZERO,
-    .name = "J1",
+    .name = "motor40",
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES
 #endif

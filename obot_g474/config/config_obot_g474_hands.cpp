@@ -8,6 +8,7 @@
 #include "../../motorlib/moons_encoder.h"
 
 const Param * const param = (const Param * const) 0x8060000;
+const Calibration * const calibration = (const Calibration * const) 0x8070000;
 const char * name = param->name;
 
 #ifndef MOTOR_ENCODER_BITS
@@ -51,7 +52,7 @@ namespace config
     
     // Moons motor BiSS encoder
     GPIO motor_encoder_cs(*GPIOA, 15, GPIO::OUTPUT);
-    SPIDMA spi3_dma(*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2);
+    SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0);
     MotorEncoder motor_encoder(spi3_dma);
 
     TorqueSensor torque_sensor;
@@ -168,7 +169,7 @@ namespace config
       FIGURE_COUNTOF(protocol_pools) // mailbox_pools_count
     };
     
-    FastLoop fast_loop = {(int32_t)pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
+    FastLoop fast_loop = {(int32_t)pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, *calibration, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
     LED led = {const_cast<uint16_t *>(reinterpret_cast<volatile uint16_t *>(&TIM_R)),
                const_cast<uint16_t *>(reinterpret_cast<volatile uint16_t *>(&TIM_G)),
                const_cast<uint16_t *>(reinterpret_cast<volatile uint16_t *>(&TIM_B))};
@@ -179,11 +180,11 @@ namespace config
     StateController state_controller = {(float)(1.0 / main_loop_frequency)};
     JointPositionController joint_position_controller(1.0 / main_loop_frequency);
     AdmittanceController admittance_controller = {1.0/main_loop_frequency};
-    MainLoop main_loop(main_loop_frequency, fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, state_controller, joint_position_controller, admittance_controller, System::communication_, led, output_encoder, torque_sensor, driver, param->main_loop_param);
+    MainLoop main_loop(main_loop_frequency, fast_loop, position_controller, torque_controller, impedance_controller, velocity_controller, state_controller, joint_position_controller, admittance_controller, System::communication_, led, output_encoder, torque_sensor, driver, param->main_loop_param, *calibration);
 };
 
 Communication System::communication_(config::protocol);
-Actuator System::actuator_ = {config::fast_loop, config::main_loop, param->startup_param};
+Actuator System::actuator_ = {config::fast_loop, config::main_loop, param->startup_param, *calibration};
 
 void usb_interrupt(){}
 
@@ -334,6 +335,7 @@ void system_maintenance()
     index_mod = config::motor_encoder.index_error(param->fast_loop_param.motor_encoder.cpr);
     config_maintenance();
 }
+void main_maintenance() {}
 
 void setup_sleep()
 {

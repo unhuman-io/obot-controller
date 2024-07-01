@@ -145,7 +145,7 @@ static struct {
     GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
     SPIDMA spi_dma = {*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2, 1000, 1000};
     ADS1235 torque_sensor = {spi_dma};
-    SPIDebug spi_debug {spi_dma, torque_sensor.register_operation_};
+    SPIDebug spi_debug {spi_dma};
     GPIO hall_a = {*GPIOC, 0, GPIO::INPUT};
     GPIO hall_b = {*GPIOC, 1, GPIO::INPUT};
     GPIO hall_c = {*GPIOC, 2, GPIO::INPUT};

@@ -5,5 +5,5 @@
 // Can be written by external methods, e.g. bootloader
 const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_default.h"
-.name = "nucleo_uart",
+.name = "timing",
 };

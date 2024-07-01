@@ -1,7 +1,7 @@
 #include "../param/param_obot_g474.h"
 #include "st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/icpz.h"
+#include "../../motorlib/sensors/encoders/icpz.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/spi_debug.h"
@@ -26,8 +26,7 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
     GPIO motor_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
-    volatile int spi3_register_operation = 0;
-    SPIDMA spi_dma = {*SPI3, motor_encoder_cs, *DMA1_Channel1, *DMA1_Channel2};
+    SPIDMA spi_dma = {SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0};
     ICPZ motor_encoder(spi_dma);
     SPIDebug spi_debug(spi_dma);
     TorqueSensor torque_sensor;

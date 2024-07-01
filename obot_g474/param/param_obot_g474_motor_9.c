@@ -5,5 +5,8 @@
 // Can be written by external methods, e.g. bootloader
 const Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_default.h"
-.name = "bmi270_test",
+    .name = "motor9",
+#ifdef PARAM_OVERRIDES
+    PARAM_OVERRIDES
+#endif
 };

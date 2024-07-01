@@ -228,7 +228,7 @@ namespace config {
 void config_init() {
     config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
 
-    ICPZ_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder1);
+    ICPZ2_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
 
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
@@ -238,7 +238,7 @@ void config_init() {
     System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
 
 
-    ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder1);
+    ICPZ2_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder);
 
 
     // System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));

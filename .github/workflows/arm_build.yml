@@ -60,6 +60,10 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
+    - name: make help
+      run: |
+        make -C ${{ matrix.project }} help
+        make -C ${{ matrix.project }} help | grep ${{ matrix.config }}
     - name: make ${{ matrix.project }} ${{ matrix.config }}
       run: |
         git config --global --add safe.directory '*'

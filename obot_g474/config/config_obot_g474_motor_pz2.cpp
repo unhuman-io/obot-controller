@@ -64,6 +64,7 @@ struct InitCode {
 
 
       GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
+      GPIOD->BSRR = GPIO_BSRR_BS2;
       // gpio out
       GPIO_SETL(A, 1, GPIO::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
       // gpio in
@@ -75,6 +76,7 @@ struct InitCode {
         // 10 PA1 temp CS
         // 12 PA2 DRDY
       GPIO_SETL(C, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PC3-> output encoder cs
+      GPIOC->BSRR = GPIO_BSRR_BS3;
       GPIO_SETL(B, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PB4 LTC cs
       GPIOB->BSRR = GPIO_BSRR_BS4;
       GPIO_SETL(B, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PB3 adc reset

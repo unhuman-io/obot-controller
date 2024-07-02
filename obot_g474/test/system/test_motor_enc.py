@@ -12,11 +12,15 @@ class TestMotor(unittest.TestCase):
     f = None
 
     @classmethod
-    def setUpClass(cls):
+    def connect(cls):
         cls.m = motor.MotorManager()
         if (path):
             cls.m.get_motors_by_path([path])
         cls.m.set_auto_count()
+
+    @classmethod
+    def setUpClass(cls):
+        cls.connect()
         cls.f = open("output.txt", "a+")
 
     @classmethod
@@ -114,6 +118,33 @@ class TestMotor(unittest.TestCase):
         print("bandwidth = " + str(bw))
         self.f.write("Benchmarkbandwidth 0 " + str(bw) + " Hz\n")
         self.assertTrue(abs(bw - 1050) < 150)
+
+    def test_logger(self):
+        count = 0
+        while True:
+            str = self.m.motors()[0]["log"].get()
+            print(str)
+            if str != "log end":
+                count += 1
+                self.assertLess(count, 100)
+            else:
+                self.assertGreater(count, 10)
+                break
+
+    def test_z_flash_cal(self):
+        self.assertEqual(float(self.m.motors()[0]["tgain"].get()), 0.0)
+        self.m.motors()[0]["tgain"] = "2.0"
+        self.assertEqual(float(self.m.motors()[0]["tgain"].get()), 2.0)
+        self.m.motors()[0].set_timeout_ms(3000) # flash cal takes a while
+        self.assertEqual(self.m.motors()[0]["flash_cal"].get(), "ok")
+
+        self.m.set_command_mode(motor.ModeDesired.Reset)
+        self.m.write_saved_commands()
+        time.sleep(5)
+        self.connect()
+        
+        self.assertEqual(float(self.m.motors()[0]["tgain"].get()), 2.0)
+
 
 
 if __name__ == "__main__":

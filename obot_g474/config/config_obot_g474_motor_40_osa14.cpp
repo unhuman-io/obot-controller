@@ -29,13 +29,13 @@ namespace config {
     InitCode init_code;
 
     GPIO motor_encoder_cs = {*GPIOD, 2, GPIO::OUTPUT};
-    SPIDMA spi_dma = {SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0};
-    ICPZ motor_encoder(spi_dma, ICPZ::PZ03S);
-    SPIDebug spi_debug(spi_dma);
+    SPIDMA spi3_dma = {SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0};
+    ICPZ motor_encoder(spi3_dma, ICPZ::PZ03S);
+    SPIDebug spi_debug(spi3_dma);
 
     GPIO torque_sensor_cs(*GPIOA, 4, GPIO::OUTPUT);
-    SPIDMA spi_dma2(SPIDMA::SP3, torque_sensor_cs, DMA1_CH1, DMA1_CH2, 0, 50, 50);
-    ADS1235 torque_sensor(spi_dma2);
+    SPIDMA spi1_dma(SPIDMA::SP1, torque_sensor_cs, DMA1_CH3, DMA1_CH4, 0, 50, 50);
+    ADS1235 torque_sensor(spi1_dma);
     
     EncoderBase output_encoder;
 };
@@ -45,6 +45,7 @@ namespace config {
 void config_init() {
     System::api.add_api_variable("spi", new APICallback([](){ return config::spi_debug.read(); }, 
         [](std::string s) { config::spi_debug.write(s); }));
+    ICPZ_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
     
     // System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));
     // System::api.add_api_variable("torque2", new const APIFloat(&config::torque_sensor.torque2_));

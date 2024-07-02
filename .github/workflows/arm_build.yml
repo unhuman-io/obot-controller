@@ -31,6 +31,8 @@ jobs:
           - project: obot_g474
             config: motor_wheel
           - project: obot_g474
+            config: motor_can
+          - project: obot_g474
             config: osa14
           - project: obot_g474
             config: motor_40_osa14

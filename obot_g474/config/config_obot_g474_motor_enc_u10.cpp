@@ -3,7 +3,7 @@
 #include "../../motorlib/qep_encoder.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/ma732_encoder.h"
+#include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
 #define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;

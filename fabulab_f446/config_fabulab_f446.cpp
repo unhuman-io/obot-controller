@@ -7,7 +7,7 @@ typedef USB_OTG USB1;
 #include "../motorlib/hall.h"
 #include "../motorlib/led.h"
 #include "Inc/main.h"
-#include "../motorlib/ma732_encoder.h"
+#include "../motorlib/sensors/encoders/ma7xx_encoder.h"
 #include "../motorlib/phony_encoder.h"
 #include "../motorlib/torque_sensor.h"
 #include "param_fabulab_f446.h"

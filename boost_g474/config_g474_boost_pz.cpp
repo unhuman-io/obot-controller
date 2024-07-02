@@ -157,7 +157,7 @@ static struct {
     Driver driver;
     GPIO motor_encoder_cs = {*GPIOA, 15, GPIO::OUTPUT};
     GPIO torque_sensor_cs = {*GPIOA, 15, GPIO::OUTPUT};
-    SPIDMA spi_dma{*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2};
+    SPIDMA spi_dma{SPIDMA::SP3, torque_sensor_cs, DMA1_CH1, DMA1_CH2, 0};
     //ADS1235 torque_sensor = {spi_dma};
     ICPZ motor_encoder{spi_dma};
     SPIDebug spi_debug{spi_dma};

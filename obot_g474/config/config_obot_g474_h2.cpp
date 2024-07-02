@@ -3,7 +3,7 @@
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/hall.h"
-#include "../../motorlib/ma782_encoder.h"
+#include "../../motorlib/sensors/encoders/ma782_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/moons_encoder.h"

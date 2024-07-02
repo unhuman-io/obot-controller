@@ -40,19 +40,19 @@ class TestMotor(unittest.TestCase):
         time.sleep(0.001)
         self.assertEqual(self.m.read()[0].host_timestamp_received, 1)
 
-    def test_2sleep(self):
-        pass
-        # self.m.set_command_mode(motor.ModeDesired.Sleep)
-        # self.m.write_saved_commands()
-        # time.sleep(1)
-        # try:
-        #     tstart = self.m.read()[0].host_timestamp_received
-        #     self.m.read() # should timeout on first or second try
-        #     self.m.read()
-        #     self.assertTrue(False)
-        # except RuntimeError as e:
-        #     # todo I don't know how constant this text will be
-        #     self.assertTrue(str(e).strip().endswith("Connection timed out"))
+    # sleep is flaky and not important right now
+    # def test_2sleep(self):
+    #     self.m.set_command_mode(motor.ModeDesired.Sleep)
+    #     self.m.write_saved_commands()
+    #     time.sleep(1)
+    #     try:
+    #         tstart = self.m.read()[0].host_timestamp_received
+    #         self.m.read() # should timeout on first or second try
+    #         self.m.read()
+    #         self.assertTrue(False)
+    #     except RuntimeError as e:
+    #         # todo I don't know how constant this text will be
+    #         self.assertTrue(str(e).strip().endswith("Connection timed out"))
 
     def test_3velocity_mode(self):
         t = 10.0
@@ -75,6 +75,26 @@ class TestMotor(unittest.TestCase):
         print("output_diff = " + str(output_diff*n))
         self.assertTrue(abs(pos_diff - t*v) < .1)
         self.assertTrue(abs(output_diff*n - t*v) < 0.16*n)
+
+    def test_ma732_encoder(self):
+        self.m.motors()[0].set_timeout_ms(300)
+        mgt = int(self.m.motors()[0]["jmgt"].get(), base=16)
+        self.m.motors()[0].set_timeout_ms(10)
+        print(f"jmgt = 0x{mgt:04x}")
+        self.assertGreater(mgt, 0x101)
+        self.assertLessEqual(mgt, 0x707)
+        filt = int(self.m.motors()[0]["jfilt"].get())
+        print(f"jfilt = {filt}")
+        self.assertEqual(filt, 0xbb) # 0xbb is the default value (MA730)
+        bct = int(self.m.motors()[0]["jbct"].get()) # check int only
+        print(f"jbct = {bct}")
+        et = int(self.m.motors()[0]["jet"].get()) # check int only
+        print(f"jet = {et}")
+        raw = int(self.m.motors()[0]["jraw"].get()) # check int only
+        print(f"jraw = {raw}")
+        err = int(self.m.motors()[0]["jerr"].get())
+        print(f"jerr = {err}")
+        self.assertEqual(err, 0)
 
     def test_current_bandwidth(self):
         self.m.set_command_current_tuning(motor.TuningMode.Chirp, .3, 200, 0)

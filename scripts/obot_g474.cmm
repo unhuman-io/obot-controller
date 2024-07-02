@@ -1,10 +1,12 @@
-&elf_file="~/obot/obot-controller/obot_g474/build/motor_enc.elf"
+&elf_file="~/obot/obot-controller/obot_g474/build/motor_template.elf"
 
 ;reset
 
 system.cpu stm32g474re
-system.jtagclock 80MHz
+system.jtagclock 40MHz
 SYStem.CONFIG.DEBUGPORTTYPE SWD
+system.Option.EnReset OFF
+system.Option.DUALPORT ON
 system.mode attach
 break
 
@@ -26,8 +28,8 @@ SYStem.Up
 
 ; Some preferred ITM settings
 itm.clock 170MHz
-tpiu.PortSize SWV
-tpiu.SWVPrescaler 1
+tpiu.PortSize 4
+;tpiu.SWVPrescaler 1
 trace.TraceCLOCK 170MHz
 ;itm.InterruptTrace ON
 ;itm.ON
@@ -39,3 +41,14 @@ system.RESetTarget
 ; trace.chart.interrupt
 
 itm.TImeMode.PCSampler
+
+list.auto
+
+;menu.delete.name user.addtool
+menu.addtool "Reset" "R" "system.resettarget"
+
+; trace 4 pin
+tpiu.PortSize 4
+per.set.byname .AHB2ENR.GPIOEEN 1
+PER.Set.field ASD:0x48001000 %Long 0x3FF0 0xEAA
+PER.Set.field ASD:0x48001008 %Long 0x3FF0 0x3FF

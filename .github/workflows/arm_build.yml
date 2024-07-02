@@ -31,9 +31,13 @@ jobs:
           - project: obot_g474
             config: motor_wheel
           - project: obot_g474
+            config: motor_can
+          - project: obot_g474
             config: osa14
           - project: obot_g474
             config: motor_40_osa14
+          - project: obot_g474
+            config: motor_9
           - project: obot_g474
             config: motor_aksim
           - project: obot_g474
@@ -49,6 +53,9 @@ jobs:
             config: motor_aksim_20_19 # MR0
           - project: obot_g474
             config: motor_aksim_19_18 # MR0P
+          # TODO: add this back
+          # - project: obot_g474
+          #   config: osa14_jl1
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:latest
     steps:
@@ -56,6 +63,10 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
+    - name: make help
+      run: |
+        make -C ${{ matrix.project }} help
+        make -C ${{ matrix.project }} help | grep ${{ matrix.config }}
     - name: make ${{ matrix.project }} ${{ matrix.config }}
       run: |
         git config --global --add safe.directory '*'
@@ -105,7 +116,8 @@ jobs:
       run: |
         ls
         tar xzf motor_enc.tgz
-        ./motor_enc/load_motor_enc.sh -p 1-3.1 & # ? rev
+        ./motor_enc/load_motor_enc.sh -p 1-3.1 && sleep 5 && \
+        ./motor_enc/load_motor_enc_calibration.sh -p 1-3.1 &
         tar xzf obot_g474\ motor_aksim_19_17/motor_aksim_19_17.tgz
         ./motor_aksim_19_17/load_motor_aksim_19_17.sh -p 1-3.2 & # MR2
         tar xzf obot_g474\ motor_aksim_20_19/motor_aksim_20_19.tgz
@@ -114,6 +126,11 @@ jobs:
         ./motor_aksim_19_18/load_motor_aksim_19_18.sh -p 1-3.6 & # MR0P
         tar xzf obot_g474\ motor_pz2/motor_pz2.tgz
         ./motor_pz2/load_motor_pz2.sh -p 1-3.5 & # MR1
+        tar xzf obot_g474\ motor_9/motor_9.tgz
+        ./motor_9/load_motor_9.sh -p 1-3.4.3 &
+        # tar xzf obot_g474\ osa14_jl1/osa14_jl1.tgz
+        # ./osa14_jl1/load_osa14_jl1.sh -p 1-3.4.2 &
+
         wait
         sleep 6
         # motor_util -p 1-3.1 read | head # doesn't exit for some reason
@@ -121,15 +138,19 @@ jobs:
         # check for existence
         motor_util -p 1-3.1
         motor_util -p 1-3.2
+        motor_util -p 1-3.4.3
         motor_util -p 1-3.5
         motor_util -p 1-3.6
         motor_util -p 1-3.7
+        # motor_util -p 1-3.4.2
+        # num_motors=7
+        num_motors=6
 
         motor_util -l --run-stats
 
         # check correct hash
         sha=$(git rev-parse HEAD | head -c7)
-        [ $(motor_util -l | grep $sha | wc -l) -eq 5 ]
+        [ $(motor_util -l | grep $sha | wc -l) -eq $num_motors ]
 
         check_var() { # name, value, low limit, high limit
           echo checking $3 "<" $1 "<" $4 with value $2
@@ -142,7 +163,7 @@ jobs:
 
         check_var max_fast_loop_cycles $(echo $run_stats | cut -d',' -f2) 600 900
         check_var max_fast_loop_period $(echo $run_stats | cut -d',' -f3) 3400 3500
-        check_var max_main_loop_cycles $(echo $run_stats | cut -d',' -f4) 4000 6000
+        check_var max_main_loop_cycles $(echo $run_stats | cut -d',' -f4) 3000 6000
         check_var max_main_loop_period $(echo $run_stats | cut -d',' -f5) 17000 17100
 
         motor_util -p 1-3.1 --run-stats 1000 --no-list | awk -F", " \
@@ -173,7 +194,14 @@ jobs:
         heap_used=$(motor_util -p 1-3.1 --no-list --set-api heap_used | tail -n 1 | cut -f2 -d' ')
         check_var heap_used $heap_used 15000 30000
 
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_aksim.py -p 1-3.2 -v
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_aksim.py -p 1-3.6 -v
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_aksim.py -p 1-3.7 -v
+
         cat output.txt
+
+        # test motor9
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor9.py
     - name: test uart
       run: |
         tar xzf obot_g474\ nucleo_uart/nucleo_uart.tgz

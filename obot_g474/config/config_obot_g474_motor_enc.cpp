@@ -3,19 +3,14 @@
 #include "../../motorlib/qep_encoder.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/ma732_encoder.h"
+#include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #define COMMS   COMMS_USB
-
-class OutputEncoder : public MA732Encoder {
- public:
-    OutputEncoder(SPI_TypeDef& s, GPIO& g) : MA732Encoder(s, g) {}
-    // bypass some issue with CI encoder filter setting
-    bool init() { return true; }
-};
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = QEPEncoder;
+using OutputEncoder = MA730Encoder;
 
 struct InitCode {
     InitCode() {
@@ -33,20 +28,14 @@ namespace config {
     QEPEncoder motor_encoder(*TIM2);
     TorqueSensor torque_sensor;
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
-    OutputEncoder output_encoder(*SPI3, motor_encoder_cs);
+    OutputEncoder output_encoder(*SPI3, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3]);
 };
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder.get_bct(); },
-                    [](uint32_t u){ config::output_encoder.set_bct(u); }));
-    System::api.add_api_variable("jet", new APICallbackUint32([](){ return config::output_encoder.get_et(); },
-                    [](uint32_t u){ config::output_encoder.set_et(u); }));
-    System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::output_encoder.set_mgt(u); }));
-    System::api.add_api_variable("jfilt", new APICallbackUint32([](){ return config::output_encoder.get_filt(); }, 
-                [](uint32_t u){ config::output_encoder.set_filt(u); }));
+    MA7XX_SET_DEBUG_VARIABLES("j", System::api, config::output_encoder);
+
     System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
 }
 

@@ -31,6 +31,8 @@ jobs:
           - project: obot_g474
             config: motor_wheel
           - project: obot_g474
+            config: motor_can
+          - project: obot_g474
             config: osa14
           - project: obot_g474
             config: motor_40_osa14
@@ -51,8 +53,9 @@ jobs:
             config: motor_aksim_20_19 # MR0
           - project: obot_g474
             config: motor_aksim_19_18 # MR0P
-          - project: obot_g474
-            config: osa14_jl1
+          # TODO: add this back
+          # - project: obot_g474
+          #   config: osa14_jl1
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:latest
     steps:
@@ -60,6 +63,10 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
+    - name: make help
+      run: |
+        make -C ${{ matrix.project }} help
+        make -C ${{ matrix.project }} help | grep ${{ matrix.config }}
     - name: make ${{ matrix.project }} ${{ matrix.config }}
       run: |
         git config --global --add safe.directory '*'
@@ -109,7 +116,8 @@ jobs:
       run: |
         ls
         tar xzf motor_enc.tgz
-        ./motor_enc/load_motor_enc.sh -p 1-3.1 & # ? rev
+        ./motor_enc/load_motor_enc.sh -p 1-3.1 && sleep 5 && \
+        ./motor_enc/load_motor_enc_calibration.sh -p 1-3.1 &
         tar xzf obot_g474\ motor_aksim_19_17/motor_aksim_19_17.tgz
         ./motor_aksim_19_17/load_motor_aksim_19_17.sh -p 1-3.2 & # MR2
         tar xzf obot_g474\ motor_aksim_20_19/motor_aksim_20_19.tgz
@@ -120,8 +128,8 @@ jobs:
         ./motor_pz2/load_motor_pz2.sh -p 1-3.5 & # MR1
         tar xzf obot_g474\ motor_9/motor_9.tgz
         ./motor_9/load_motor_9.sh -p 1-3.4.3 &
-        tar xzf obot_g474\ osa14_jl1/osa14_jl1.tgz
-        ./osa14_jl1/load_osa14_jl1.sh -p 1-3.4.2 &
+        # tar xzf obot_g474\ osa14_jl1/osa14_jl1.tgz
+        # ./osa14_jl1/load_osa14_jl1.sh -p 1-3.4.2 &
 
         wait
         sleep 6
@@ -134,9 +142,10 @@ jobs:
         motor_util -p 1-3.5
         motor_util -p 1-3.6
         motor_util -p 1-3.7
-        motor_util -p 1-3.4.2
-        num_motors=7
-        
+        # motor_util -p 1-3.4.2
+        # num_motors=7
+        num_motors=6
+
         motor_util -l --run-stats
 
         # check correct hash

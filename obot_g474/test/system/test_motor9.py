@@ -92,6 +92,9 @@ check_var_is_int("mraw")
 check_var_is_hex("mrawh")
 check_var_is_int("mvalue")
 
+check_var_is_int("mlast_error_pos")
+check_var_is_int("mlast_warn_pos")
+
 mdiag  = mot["mdiag"].get()
 print(mdiag)
 assert(re.match(r"^\d{16}$", mdiag))

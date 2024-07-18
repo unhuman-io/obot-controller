@@ -1,4 +1,4 @@
-//dual flex
+//dual flex tony 20240704
 #include "../param/param_obot_g474_osa.h"
 #include "st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
@@ -36,11 +36,11 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    //GPIO motor_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2      TWO ENCODERS
-    GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2        ONE ENCODER
+    GPIO motor_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2      TWO ENCODERS
+    //GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2        ONE ENCODER
     MA782Encoder motor_encoder_direct(*SPI1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
-    //GPIO output_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2     TWO ENCODERS
-    GPIO output_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2       ONE ENCODER
+    GPIO output_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2     TWO ENCODERS
+    //GPIO output_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2       ONE ENCODER
     MA782Encoder output_encoder_direct(*SPI1, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1], 119);
     MotorEncoder motor_encoder(motor_encoder_direct, output_encoder_direct, 0);
     OutputEncoder &output_encoder = motor_encoder.secondary();
@@ -88,13 +88,21 @@ void config_init() {
     System::api.add_api_variable("C4", new const APIUint32(&config::torque_sensor.result4_));
     System::api.add_api_variable("C5", new const APIUint32(&config::torque_sensor.result5_));
 
-    System::api.add_api_variable("offset_A", new const APIInt32(&config::torque_sensor.offset_A));
-    System::api.add_api_variable("offset_B", new const APIInt32(&config::torque_sensor.offset_B));
-    System::api.add_api_variable("offset_C", new const APIInt32(&config::torque_sensor.offset_C));
-    System::api.add_api_variable("gain_A", new const APIInt32(&config::torque_sensor.gain_A));
-    System::api.add_api_variable("gain_B", new const APIInt32(&config::torque_sensor.gain_B));
-    System::api.add_api_variable("gain_C", new const APIInt32(&config::torque_sensor.gain_C));
-    System::api.add_api_variable("gain_T", new const APIInt32(&config::torque_sensor.gain_T));
+    System::api.add_api_variable("RATIO_A", new const APIFloat(&config::torque_sensor.ratio_A_));
+    System::api.add_api_variable("RATIO_B", new const APIFloat(&config::torque_sensor.ratio_B_));
+    System::api.add_api_variable("RATIO_C", new const APIFloat(&config::torque_sensor.ratio_C_));
+
+    System::api.add_api_variable("TORQUE_A", new const APIFloat(&config::torque_sensor.torque_A_));
+    System::api.add_api_variable("TORQUE_B", new const APIFloat(&config::torque_sensor.torque_B_));
+    System::api.add_api_variable("TORQUE_C", new const APIFloat(&config::torque_sensor.torque_C_));
+
+    System::api.add_api_variable("offset_A", new APIFloat(&config::torque_sensor.offset_A));
+    System::api.add_api_variable("offset_B", new APIFloat(&config::torque_sensor.offset_B));
+    System::api.add_api_variable("offset_C", new APIFloat(&config::torque_sensor.offset_C));
+    System::api.add_api_variable("gain_A", new APIFloat(&config::torque_sensor.gain_A));
+    System::api.add_api_variable("gain_B", new APIFloat(&config::torque_sensor.gain_B));
+    System::api.add_api_variable("gain_C", new APIFloat(&config::torque_sensor.gain_C));
+    System::api.add_api_variable("gain_T", new APIFloat(&config::torque_sensor.gain_T));
 
     //System::api.add_api_variable("imu_read", new const APICallback([](){ return config::imu.get_string(); }));
     System::api.add_api_variable("imu_read", new const APICallback([](){ config::imu.read(); return "ok"; }));

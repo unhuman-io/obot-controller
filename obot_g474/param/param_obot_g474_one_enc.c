@@ -46,7 +46,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.position_controller_param.position.velocity_filter_frequency_hz = 400,
     .main_loop_param.position_controller_param.position.command_max = 3,
 
-    .main_loop_param.torque_controller_param.torque.kp = 10,
+    .main_loop_param.torque_controller_param.torque.kp = -0.01,
     .main_loop_param.torque_controller_param.torque.kd = 0,
     .main_loop_param.torque_controller_param.torque.velocity_filter_frequency_hz = 0,
     .main_loop_param.torque_controller_param.torque.output_filter_frequency_hz = 0,
@@ -85,7 +85,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.phase_lock_current = -2,
     .startup_param.phase_lock_duration = 2,
     .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT,
-    .name = "AP",
+    .name = "AP",//LAT   AP
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES
 #endif

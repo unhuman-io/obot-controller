@@ -10,6 +10,8 @@
 #include "../../motorlib/bmi270.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 
+#define DISABLE_CALIBRATION
+
 using TorqueSensor = SPITorque;
 using MotorEncoder = SensorMultiplex<MA782Encoder,MA782Encoder>;
 using OutputEncoder = SensorMultiplex<MA782Encoder, MA782Encoder>::SecondarySensor;

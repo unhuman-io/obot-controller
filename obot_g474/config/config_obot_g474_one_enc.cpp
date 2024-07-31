@@ -39,10 +39,10 @@ namespace config {
     InitCode init_code;
 
     GPIO motor_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2      TWO ENCODERS
-    //GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2        ONE ENCODER
+    // GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2        ONE ENCODER
     MA782Encoder motor_encoder_direct(*SPI1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
     GPIO output_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2     TWO ENCODERS
-    //GPIO output_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2       ONE ENCODER
+    // GPIO output_encoder_cs(*GPIOB, 0, GPIO::OUTPUT);//(*GPIOA, 4, GPIO::OUTPUT) = SPI1_CS1,      (*GPIOB, 0, GPIO::OUTPUT) = SPI1_CS2       ONE ENCODER
     MA782Encoder output_encoder_direct(*SPI1, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1], 119);
     MotorEncoder motor_encoder(motor_encoder_direct, output_encoder_direct, 0);
     OutputEncoder &output_encoder = motor_encoder.secondary();
@@ -61,28 +61,28 @@ namespace config {
 
 void config_init() {
     config::imu.init();
-    
-    
+    // Motor Encoder
     System::api.add_api_variable("mbct", new APICallbackUint32([](){ return config::motor_encoder_direct.get_bct(); },
                     [](uint32_t u){ config::motor_encoder_direct.set_bct(u); }));
     System::api.add_api_variable("met", new APICallbackUint32([](){ return config::motor_encoder_direct.get_et(); },
                     [](uint32_t u){ config::motor_encoder_direct.set_et(u); }));
     System::api.add_api_variable("mmgt", new APICallbackUint32([](){ return config::motor_encoder_direct.get_magnetic_field_strength(); },
                     [](uint32_t u){ config::motor_encoder_direct.set_mgt(u); }));
+    System::api.add_api_variable("m_enc_save", new APICallbackUint32([](){ config::motor_encoder_direct.save_nvm(); return 1;},
+                    [](uint32_t u){ config::motor_encoder_direct.save_nvm(); }));
+    // Joint Encoder
     System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder_direct.get_bct(); },
                     [](uint32_t u){ config::output_encoder_direct.set_bct(u); }));
     System::api.add_api_variable("jet", new APICallbackUint32([](){ return config::output_encoder_direct.get_et(); },
                     [](uint32_t u){ config::output_encoder_direct.set_et(u); }));
     System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
                     [](uint32_t u){ config::output_encoder_direct.set_mgt(u); }));
+    System::api.add_api_variable("j_enc_save", new APICallbackUint32([](){ config::output_encoder_direct.save_nvm(); return 1;},
+                    [](uint32_t u){ config::motor_encoder_direct.save_nvm(); }));
 
-    
-/*     System::api.add_api_variable("CR", new APICallbackUint32([](){ return config::torque_sensor.result0_; },
-                    [](uint32_t u){ config::torque_sensor.reset(u); }));   */
-
+    // TORQUE SENSOR RESET COMAND
     System::api.add_api_variable("CR", new APICallbackUint32([](){ config::torque_sensor.reset(1); return 1; },
-                    [](uint32_t u){ config::torque_sensor.reset(u); }));                                            //TORQUE SENSOR RESET COMAND */
-
+                    [](uint32_t u){ config::torque_sensor.reset(u); }));                                      
     System::api.add_api_variable("C0", new const APIUint32(&config::torque_sensor.result0_));
     System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor.result1_)); 
     System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result2_));
@@ -106,7 +106,6 @@ void config_init() {
     System::api.add_api_variable("gain_C", new APIFloat(&config::torque_sensor.gain_C));
     System::api.add_api_variable("gain_T", new APIFloat(&config::torque_sensor.gain_T));
 
-    //System::api.add_api_variable("imu_read", new const APICallback([](){ return config::imu.get_string(); }));
     System::api.add_api_variable("imu_read", new const APICallback([](){ config::imu.read(); return "ok"; }));
     System::api.add_api_variable("ax", new const APICallbackFloat([](){ return config::imu.data_.acc_x*8./pow(2,15); }));
     System::api.add_api_variable("ay", new const APICallbackFloat([](){ return config::imu.data_.acc_y*8./pow(2,15); }));

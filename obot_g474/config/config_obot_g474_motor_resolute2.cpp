@@ -12,7 +12,7 @@
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = QEPEncoder;
-using OutputEncoder = ResoluteEncoder;
+using OutputEncoder = Resolute2Encoder;
 //using OutputEncoder = Aksim2Encoder<18>;
 
 struct InitCode {
@@ -24,12 +24,10 @@ struct InitCode {
     //   DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
-              GPIO_SETL(C, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0); // main loop scope
+      
+        GPIO_SETL(C, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0); // main loop scope
         GPIO_SETL(C, 1, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0); // fast loop scope
         GPIO_SETL(C, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0); // usb int scope
-
-      GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PA0 TCS on BBS
-      GPIOA->BSRR = GPIO_BSRR_BS0;
     }
 };
 
@@ -42,7 +40,7 @@ namespace config {
     TorqueSensor torque_sensor;
 
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
-    SPIDMA spi1_dma(SPIDMA::SP1, output_encoder_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
+    SPIDMA spi1_dma(*SPI1, output_encoder_cs, *DMA1_Channel3, *DMA1_Channel4, 100, 100, nullptr,
     SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA);
     OutputEncoder output_encoder(spi1_dma);
     //Aksim2Encoder<18> output_encoder(spi1_dma);

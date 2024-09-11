@@ -5,7 +5,6 @@
 #include "../../motorlib/gpio.h"
 
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-//#include "../../motorlib/aksim2_encoder.h"
 #include "../../motorlib/resolute_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_USB
@@ -13,7 +12,6 @@
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = QEPEncoder;
 using OutputEncoder = ResoluteEncoder;
-//using OutputEncoder = Aksim2Encoder<18>;
 
 struct InitCode {
     InitCode() {
@@ -45,8 +43,6 @@ namespace config {
     SPIDMA spi1_dma(SPIDMA::SP1, output_encoder_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
     SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA);
     OutputEncoder output_encoder(spi1_dma);
-    //Aksim2Encoder<18> output_encoder(spi1_dma);
-
 };
 
 #define SPI1_REINIT_CALLBACK
@@ -68,11 +64,7 @@ void config_init() {
     System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
     System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
     System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
-    System::api.add_api_variable("oraw2h", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value2_); }));
-    System::api.add_api_variable("oraw3h", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value3_); }));
-    System::api.add_api_variable("oraw4h", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value4_); }));
    System::api.add_api_variable("olen", new APIUint8(&config::output_encoder.length_));
-    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
     System::api.add_api_variable("oind", new const APIUint8(&config::output_encoder.byte_ind));
     System::api.add_api_variable("ocrc_calc", new const APIUint8(&config::output_encoder.crc_calc_));
     System::api.add_api_variable("ozeros", new const APIUint32(&config::output_encoder.leading_zeros));

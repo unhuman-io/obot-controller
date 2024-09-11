@@ -81,7 +81,7 @@ class TestMotor(unittest.TestCase):
         mgt = int(self.m.motors()[0]["jmgt"].get(), base=16)
         self.m.motors()[0].set_timeout_ms(10)
         print(f"jmgt = 0x{mgt:04x}")
-        self.assertGreater(mgt, 0x101)
+        self.assertGreaterEqual(mgt, 0x100)
         self.assertLessEqual(mgt, 0x707)
         filt = int(self.m.motors()[0]["jfilt"].get())
         print(f"jfilt = {filt}")

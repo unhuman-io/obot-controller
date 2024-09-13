@@ -5,12 +5,13 @@
 #include "../../motorlib/gpio.h"
 
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/resolute_encoder.h"
+#include "../../motorlib/sensors/encoders/resolute_encoder.h"
+#include "../../motorlib/sensors/encoders/stm32g4/resolute_dma_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = ResoluteEncoder;
+using MotorEncoder = ResoluteDMAEncoder;
 using OutputEncoder = ResoluteEncoder;
 
 struct InitCode {
@@ -34,6 +35,16 @@ struct InitCode {
     }
 };
 
+inline void motor_start_cs_trigger() {
+    HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE;
+}
+    
+inline void motor_stop_cs_trigger() {
+    HRTIM1->sTimerxRegs[0].TIMxDIER = 0;
+    // wait for CS high
+    while(!(GPIOD->IDR & 0x4));
+}
+
 namespace config {
     const uint32_t main_loop_frequency = 10000;    
     const uint32_t pwm_frequency = 20000; // max resolute read frequency 30 kHz
@@ -42,7 +53,7 @@ namespace config {
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0, 100, 100,
         SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA);
-    ResoluteEncoder motor_encoder(spi3_dma);
+    ResoluteDMAEncoder motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 2, motor_start_cs_trigger, motor_stop_cs_trigger);
     TorqueSensor torque_sensor;
 
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);

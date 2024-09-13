@@ -10,7 +10,7 @@
 #define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = QEPEncoder;
+using MotorEncoder = ResoluteEncoder;
 using OutputEncoder = ResoluteEncoder;
 
 struct InitCode {
@@ -18,8 +18,8 @@ struct InitCode {
       SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
       // ORDER DEPENDANCE SPE set last
       SPI1->CR1 = SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA;    // baud = clock/32
-    //   DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
-    //   DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
+      DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
+      DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
       DMAMUX1_Channel3->CCR =  DMA_REQUEST_SPI1_RX;
               GPIO_SETL(C, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0); // main loop scope
@@ -28,15 +28,21 @@ struct InitCode {
 
       GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PA0 TCS on BBS
       GPIOA->BSRR = GPIO_BSRR_BS0;
+
+      GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
+      GPIOD->BSRR = GPIO_BSRR_BS2;
     }
 };
 
 namespace config {
     const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 50000;
+    const uint32_t pwm_frequency = 20000; // max resolute read frequency 30 kHz
     InitCode init_code;
 
-    QEPEncoder motor_encoder(*TIM2);
+    GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
+    SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0, 100, 100,
+        SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA);
+    ResoluteEncoder motor_encoder(spi3_dma);
     TorqueSensor torque_sensor;
 
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
@@ -57,19 +63,8 @@ void spi1_reinit_callback() {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
-
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
-   System::api.add_api_variable("olen", new APIUint8(&config::output_encoder.length_));
-    System::api.add_api_variable("oind", new const APIUint8(&config::output_encoder.byte_ind));
-    System::api.add_api_variable("ocrc_calc", new const APIUint8(&config::output_encoder.crc_calc_));
-    System::api.add_api_variable("ozeros", new const APIUint32(&config::output_encoder.leading_zeros));
-    System::api.add_api_variable("odiag", new const APIUint8(&config::output_encoder.diag_raw_.word));
-
+    RESOLUTE_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
+    RESOLUTE_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder);
 }
 
 void config_maintenance() {}

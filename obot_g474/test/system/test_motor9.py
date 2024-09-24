@@ -76,6 +76,7 @@ set_and_check_var("mled_cur", "0")
 check_var_is_float("mai_phase")
 check_var_is_float("mai_scale")
 check_var_is_float("mcos_off")
+check_var_is_float("msin_off")
 check_var_is_float("msc_gain")
 check_var_is_float("msc_phase")
 check_var_is_float("mai_phases")
@@ -97,7 +98,7 @@ check_var_is_int("mlast_warn_pos")
 
 mdiag  = mot["mdiag"].get()
 print(mdiag)
-assert(re.match(r"^\d{16}$", mdiag))
+assert(re.match(r"^\d{16}$", mdiag) or re.match(r"^\d{8}$", mdiag))
 
 
 #"auto_ana"
@@ -107,10 +108,18 @@ set_and_check_var("mran_tol", "4")
 set_and_check_var("mran_tol", "5")
 set_and_check_near("mecc_um", 0, 0.001)
 set_and_check_near("mecc_um", 1, 0.001)
+set_and_check_near("mecc_phase_deg", 50, 0.1)
+set_and_check_near("mecc_phase_deg", -50, 0.1)
+set_and_check_near("mecc_phase_deg", 0, 0.1)
+set_and_check_near("mai_phase", 100, 0.5)
+set_and_check_near("mai_phase", -100, 0.5)
+set_and_check_near("mai_scale", 1.05, 0.01)
+set_and_check_near("mai_scale", 0.95, 0.01)
 set_and_check_var("mlow", "1")
 set_and_check_var("mlow", "0")
 set_and_check_var("mac_count", "1")
 set_and_check_var("mac_count", "8")
+check_var_is_int("mlast_error_pos")
 
 fm = r"[-+]?[0-9]*\.?[0-9]+"
 match_cals = f"^cos_off: {fm}, sin_off: {fm}, sc_gain: {fm}, sc_phase: {fm}, ai_phase: {fm}, ai_scale: {fm}"

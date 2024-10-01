@@ -34,6 +34,10 @@ struct InitCode {
 
       GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
       GPIOD->BSRR = GPIO_BSRR_BS2;
+
+      // Fixed high value on SPI1 MOSI, required by MAX11158, ok for resolute
+      GPIO_SETL(A, 7, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
+      GPIOA->BSRR = GPIO_BSRR_BS7;
     }
 };
 
@@ -65,7 +69,7 @@ namespace config {
 
     GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
     SPIDMA spi1_dma2(SPIDMA::SP1, torque_sensor_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
-        SPI_CR1_MSTR | 7 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
+        SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
     MAX11158 torque_sensor1(spi1_dma2);
 
     TorqueSensor torque_sensor(torque_sensor1, output_encoder1);
@@ -87,6 +91,7 @@ void spi1_reinit_callback() {
 void config_init() {
     RESOLUTE_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
     RESOLUTE_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder1);
+    MAX11158_SET_DEBUG_VARIABLES("t", System::api, config::torque_sensor1);
 }
 
 void config_maintenance() {}

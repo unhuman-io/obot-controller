@@ -5,13 +5,18 @@
 __attribute__ ((init_priority(LOGGER_INIT_PRIORITY))) Logger logger;
 
 extern "C" {
-void board_init() {}
+void SystemClock_Config();
+void board_init() {
+    SystemClock_Config();
+}
 void system_loop_interrupt() {}
 void fast_loop_interrupt() {}
 void main_loop_interrupt() {}
 void usb_interrupt() {}
 void system_init() {}
-void system_run() {}
+void system_run() {
+    IWDG->KR = 0xAAAA;
+}
 void _write(int fd, const char *buf, size_t count) {
     logger.log(std::string_view(buf, count));
 }

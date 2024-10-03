@@ -14,7 +14,7 @@ void system_loop_interrupt() {}
 void fast_loop_interrupt() {}
 void main_loop_interrupt() {}
 void usb_interrupt() {}
-uint32_t gpio_a_bsrr[10] = {2, 2<<16, 0, 2<<16, 0, 0, 2, 0, 0, 2<<16};
+uint32_t gpio_a_bsrr[2] = {2, 2<<16};
 uint8_t dr;
 void system_init() {
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;

@@ -57,7 +57,7 @@ jobs:
           # - project: obot_g474
           #   config: osa14_jl1
     runs-on: ubuntu-latest
-    container: leemagnusson/arm-gcc:latest
+    container: leemagnusson/arm-gcc:13.3
     steps:
     - uses: actions/checkout@master
       with:

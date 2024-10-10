@@ -5,7 +5,7 @@
 #include "../../motorlib/gpio.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#define COMMS   COMMS_CAN_USB
+#define COMMS   COMMS_CAN
 #define CAN_NUM CAN::CAN3
 
 using TorqueSensor = TorqueSensorBase;

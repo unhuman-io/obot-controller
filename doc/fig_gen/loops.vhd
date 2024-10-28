@@ -4,11 +4,13 @@ use ieee.std_logic_1164.all;
 entity Motor is
   port (
     MotorCommand: in std_logic;
+    ASCIICommand: in std_logic;
     CurrentSensor: in std_logic;
     MotorPosition: in std_logic;
     OutputPosition: in std_logic;
     TorqueSensor: in std_logic;
     MotorStatus: out std_logic;
+    ASCIIResponse: out std_logic;
     PWM: out std_logic
   );
 end entity Motor;
@@ -56,6 +58,13 @@ architecture rtl of Motor is
         );
     end component ClockGen;
 
+    component Main is
+        port (
+            ASCIICommand: in std_logic;
+            ASCIIResponse: out std_logic
+        );
+    end component Main;
+
     signal FastLoopCommand: std_logic;
     signal FastLoopStatus: std_logic;
     signal MainLoopStatus: std_logic;
@@ -98,6 +107,12 @@ begin
             clk_1kHz => clk_1kHz,
             clk_10kHz => clk_10kHz,
             clk_40kHz => clk_40kHz
+        );
+
+    main1: component Main
+        port map (
+            ASCIICommand => ASCIICommand,
+            ASCIIResponse => ASCIIResponse
         );
     
     MotorStatus <= MainLoopStatus;
@@ -164,5 +179,18 @@ entity ClockGen is
 end entity ClockGen;
 
 architecture rtl of ClockGen is
+begin
+end architecture rtl;
+
+library ieee;
+use ieee.std_logic_1164.all;
+entity Main is
+    port (
+        ASCIICommand: in std_logic;
+        ASCIIResponse: out std_logic
+    );
+end entity Main;
+
+architecture rtl of Main is
 begin
 end architecture rtl;

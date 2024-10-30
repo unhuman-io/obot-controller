@@ -72,8 +72,22 @@ class TestMotor(unittest.TestCase):
         status = self.m.read()[0]
         self.assertTrue(status.flags.error.bits["invalid_command"])
 
+        self.m.set_command_mode(motor.ModeDesired.Current)
+        self.m.set_command_current([float("inf")])
+        self.m.write_saved_commands()
+        time.sleep(.0001)
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "4")
+        self.m.set_command_current([float("nan")])
+        self.m.write_saved_commands()
+        time.sleep(.0001)
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "5")
+
+
         self.m.set_command_mode(motor.ModeDesired.ClearFaults)
         self.m.write_saved_commands()
+        time.sleep(.0001)
+
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "0")
 
     
 

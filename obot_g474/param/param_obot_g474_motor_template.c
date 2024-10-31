@@ -5,5 +5,6 @@
 // Can be written by external methods, e.g. bootloader
 const Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_default.h"
+#include "param_motor.c"
 .name = "template",
 };

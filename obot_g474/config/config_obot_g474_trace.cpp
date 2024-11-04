@@ -39,7 +39,7 @@ namespace config {
     OutputEncoder output_encoder;
 };
 
-#include "../../motorlib/boards/config_obot_g474_motor.cpp"
+#include "../../motorlib/boards/config_obot_g474_trace.cpp"
 
 void config_init() {}
 

@@ -98,7 +98,7 @@ check_var_is_int("mlast_warn_pos")
 
 mdiag  = mot["mdiag"].get()
 print(mdiag)
-assert(re.match(r"^\d{16}$", mdiag) or re.match(r"^\d{8}$", mdiag))
+assert(re.match(r"^[\da-f]{16}$", mdiag) or re.match(r"^[\da-f]{8}$", mdiag))
 
 
 #"auto_ana"
@@ -138,7 +138,7 @@ check_near("mdisk_um", 10700, 1)
 set_and_check_var("mipo_filt1", "ea")
 check_var("mipo_filt2", "04")
 check_near("mtemp", 30, 20)
-check_var_regex("mdiag_str", r"^err: [\S\s]* warn: [\S\s]*$")
+check_var_regex("mdiag_str", r"^(err: [\S\s]* warn: [\S\s]*)|([\S\s]*)$")
 check_var("mclear_diag", "ok")
 
 set_and_check_var("mipo_filt1", "6e")

@@ -213,7 +213,8 @@ jobs:
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor9.py
 
         tar xzf obot_g474\ motor_9_pzdma/motor_9_pzdma.tgz
-        ./motor_9_pzdma/load_motor_9_pzdma.sh -p 1-3.4.3 &
+        ./motor_9_pzdma/load_motor_9_pzdma.sh -p 1-3.4.3
+        sleep 5
         config=$(motor_util -p 1-3.4.3 --no-list --set-api config | tail -n 1 | cut -f2 -d' ')
         check_var_eq config $config motor_9_pzdma
         

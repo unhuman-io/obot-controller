@@ -16,9 +16,9 @@ using OutputEncoder = EncoderBase;
 #define COMMS  COMMS_USB
 
 void start_cs_trigger() {
-    DMA1_Channel2->CNDTR = 1;
-    DMA1_Channel3->CCR |= DMA_CCR_EN;
-    DMA1_Channel2->CCR |= DMA_CCR_EN;
+    DMA1_Channel5->CNDTR = 1;
+    DMA1_Channel6->CCR |= DMA_CCR_EN;
+    DMA1_Channel5->CCR |= DMA_CCR_EN;
     HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE |  HRTIM_TIMDIER_CMP2DE;
 }
 void stop_cs_trigger_and_wait_cs_high() {
@@ -26,8 +26,8 @@ void stop_cs_trigger_and_wait_cs_high() {
     // wait for CS high
     us_delay(20);
     while(!(GPIOC->IDR & (1 << 13)));
-    DMA1_Channel2->CCR &= ~DMA_CCR_EN;
-    DMA1_Channel3->CCR &= ~DMA_CCR_EN;
+    DMA1_Channel5->CCR &= ~DMA_CCR_EN;
+    DMA1_Channel6->CCR &= ~DMA_CCR_EN;
 }
 
 uint32_t gpio_cs_bsrr_r = {1 << (13+16)};
@@ -56,19 +56,19 @@ struct InitCode {
         HRTIM1->sTimerxRegs[0].PERxR = period; 
         HRTIM1->sTimerxRegs[0].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU | HRTIM_TIMCR_CONT | 2 << HRTIM_TIMCR_CK_PSC_Pos;
 
-        DMAMUX1_Channel2->CCR = 96; // hrtima
-        DMA2_Channel5->CMAR = (uint32_t)&gpio_cs_bsrr_r;
-        DMA2_Channel5->CPAR = (uint32_t)&GPIOC->BSRR;
-        DMA2_Channel5->CNDTR = 1;
-        GPIOD->BSRR = 1;
-        DMA2_Channel5->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+        DMAMUX1_Channel4->CCR = 96; // hrtima
+        DMA1_Channel5->CMAR = (uint32_t)&gpio_cs_bsrr_r;
+        DMA1_Channel5->CPAR = (uint32_t)&GPIOC->BSRR;
+        DMA1_Channel5->CNDTR = 1;
+        GPIOC->BSRR = 1 << 13;
+        DMA1_Channel5->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
 
-        DMAMUX1_Channel3->CCR = 1; // reqgen0
+        DMAMUX1_Channel5->CCR = 1; // reqgen0
         DMAMUX1_RequestGenerator0->RGCR = 1 << DMAMUX_RGxCR_GPOL_Pos | 17 << DMAMUX_RGxCR_SIG_ID_Pos | DMAMUX_RGxCR_GE;
-        DMA2_Channel6->CMAR = (uint32_t)&gpio_cs_bsrr_s;
-        DMA2_Channel6->CPAR = (uint32_t)&GPIOC->BSRR;
-        DMA2_Channel6->CNDTR = 1;
-        DMA2_Channel6->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
+        DMA1_Channel6->CMAR = (uint32_t)&gpio_cs_bsrr_s;
+        DMA1_Channel6->CPAR = (uint32_t)&GPIOC->BSRR;
+        DMA1_Channel6->CNDTR = 1;
+        DMA1_Channel6->CCR = DMA_CCR_CIRC | DMA_CCR_DIR | DMA_CCR_EN | DMA_CCR_MINC | DMA_CCR_MSIZE_1 | DMA_CCR_PSIZE_1;
 
         MASK_SET(SYSCFG->EXTICR[3], SYSCFG_EXTICR4_EXTI13, 2); // EXTI PC13
     }
@@ -81,7 +81,7 @@ namespace config {
 
     GPIO motor_encoder_cs = {*GPIOC, 13, GPIO::OUTPUT};
     SPIDMA spi3_dma = {SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0, 100, 0};
-    ICPZDMA motor_encoder(spi3_dma, *DMAMUX1_Channel2, *DMAMUX1_Channel3, 0, 
+    ICPZDMA motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 13, 
         start_cs_trigger, stop_cs_trigger_and_wait_cs_high, ICPZDMA::PZ03S);
 
     EncoderBase output_encoder;

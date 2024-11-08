@@ -223,13 +223,13 @@ void config_init() {
     // System::api.add_api_variable("tmux_delay", new APICallbackUint16([](){ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
    
     System::api.add_api_variable("mstart", new const APICallback([]
-                                                                 { config::motor_encoder.start_continuous_read(); return "ok"; }));
+                                                                 { config::motor_encoder.start_continuous_read(); return std::string("ok"); }));
     System::api.add_api_variable("mstop", new const APICallback([]
-                                                                { config::motor_encoder.stop_continuous_read(); return "ok"; }));
+                                                                { config::motor_encoder.stop_continuous_read(); return std::string("ok"); }));
     System::api.add_api_variable("ostart", new const APICallback([]
-                                                                 { config::output_encoder.start_continuous_read(); return "ok"; }));
+                                                                 { config::output_encoder.start_continuous_read(); return std::string("ok"); }));
     System::api.add_api_variable("ostop", new const APICallback([]
-                                                                { config::output_encoder.stop_continuous_read(); return "ok"; }));
+                                                                { config::output_encoder.stop_continuous_read(); return std::string("ok"); }));
     // System::api.add_api_variable("5V", new const APIFloat(&v5v));
     // System::api.add_api_variable("V5V", new const APIUint32(&V5V));
     // System::api.add_api_variable("I5V", new const APIUint32(&I5V));

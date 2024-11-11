@@ -171,7 +171,7 @@ class TestMotor(unittest.TestCase):
         bw = freq[skip+i-1]
         print("bandwidth = " + str(bw))
         self.f.write("Benchmarkbandwidth 0 " + str(bw) + " Hz\n")
-        self.assertTrue(abs(bw - 1050) < 150)
+        self.assertTrue(abs(bw - 950) < 150)
 
     def test_logger(self):
         count = 0

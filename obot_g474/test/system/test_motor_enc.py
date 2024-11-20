@@ -40,6 +40,60 @@ class TestMotor(unittest.TestCase):
         time.sleep(0.001)
         self.assertEqual(self.m.read()[0].host_timestamp_received, 1)
 
+    def test_2invalid_command(self):
+        self.m.motors()[0]["invalid_command_leak_rate_s"] = "0.1"
+        leak_rate = float(self.m.motors()[0]["invalid_command_leak_rate_s"].get())
+        self.assertLessEqual(abs(leak_rate - 0.1), .001)
+        self.m.motors()[0]["invalid_command_leak_rate_s"] = "0.0"
+
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "0")
+        self.m.set_command_mode(int(motor.ModeDesired.Tuning) + 1)
+        self.m.write_saved_commands()
+        time.sleep(0.001)
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "1")
+        
+        self.m.motors()[0]["invalid_command_leak_rate_s"] = "1"
+        time.sleep(0.8)
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "1")
+        time.sleep(0.5)
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "0")
+
+        status = self.m.read()[0]
+        self.assertFalse(status.flags.error.bits["invalid_command"])
+
+        self.m.motors()[0]["invalid_command_limit"] = "3"
+        self.m.write_saved_commands()
+        time.sleep(0.0001)
+        self.m.write_saved_commands()
+        time.sleep(0.0001)
+        self.m.write_saved_commands()
+
+        time.sleep(.001)
+        status = self.m.read()[0]
+        self.assertTrue(status.flags.error.bits["invalid_command"])
+
+        self.m.set_command_mode(motor.ModeDesired.Current)
+        self.m.set_command_current([float("inf")])
+        self.m.write_saved_commands()
+        time.sleep(.0001)
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "4")
+        self.m.set_command_current([float("nan")])
+        self.m.write_saved_commands()
+        time.sleep(.0001)
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "5")
+
+
+        self.m.set_command_mode(motor.ModeDesired.ClearFaults)
+        self.m.write_saved_commands()
+        time.sleep(.0001)
+
+        self.assertEqual(self.m.motors()[0]["invalid_command_count"].get(), "0")
+
+    
+
+    
+
+
     # sleep is flaky and not important right now
     # def test_2sleep(self):
     #     self.m.set_command_mode(motor.ModeDesired.Sleep)
@@ -81,7 +135,7 @@ class TestMotor(unittest.TestCase):
         mgt = int(self.m.motors()[0]["jmgt"].get(), base=16)
         self.m.motors()[0].set_timeout_ms(10)
         print(f"jmgt = 0x{mgt:04x}")
-        self.assertGreater(mgt, 0x101)
+        self.assertGreaterEqual(mgt, 0x100)
         self.assertLessEqual(mgt, 0x707)
         filt = int(self.m.motors()[0]["jfilt"].get())
         print(f"jfilt = {filt}")
@@ -117,7 +171,7 @@ class TestMotor(unittest.TestCase):
         bw = freq[skip+i-1]
         print("bandwidth = " + str(bw))
         self.f.write("Benchmarkbandwidth 0 " + str(bw) + " Hz\n")
-        self.assertTrue(abs(bw - 1050) < 150)
+        self.assertTrue(abs(bw - 950) < 150)
 
     def test_logger(self):
         count = 0

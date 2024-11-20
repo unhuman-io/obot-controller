@@ -181,10 +181,8 @@ void system_init()
     /*                                                                   { return config::board_temperature.get_temperature(); })); */
     // System::api.add_api_variable("Tboard", new const APICallbackFloat([]()
     //                                                                   { return (TS_CAL2_TEMP - TS_CAL1_TEMP)/(*(uint16_t*)TS_CAL2_REG - *(uint16_t*)TS_CAL1_REG) * (V_TEMP_DR - *(uint16_t*)TS_CAL1_REG) + 30.0f; }));
-    System::api.add_api_variable("SG1", new const APICallbackFloat([]()
-                                                                      { return V_SG1_DR; }));
-    System::api.add_api_variable("SG2", new const APICallbackFloat([]()
-                                                                      { return V_SG2_DR; }));
+    System::api.add_api_variable("SG1", new const APIUint32(&V_SG1_DR));
+    System::api.add_api_variable("SG2", new const APIUint32(&V_SG2_DR));
     System::api.add_api_variable("index_mod", new APIInt32(&index_mod));
     System::api.add_api_variable("drv_reset", new const APICallback([]()
                                                                     { return config::driver.reset(); }));
@@ -195,7 +193,7 @@ void system_init()
         SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
         PWR->CR1 |= 0b100 << PWR_CR1_LPMS_Pos;
         __WFI();
-        return ""; }));
+        return std::string(); }));
     System::api.add_api_variable("deadtime", new APICallbackUint16([]()
                                                                    { return config::motor_pwm.deadtime_ns_; },
                                                                    [](uint16_t u)

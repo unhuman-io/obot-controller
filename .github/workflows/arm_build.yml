@@ -236,7 +236,7 @@ jobs:
       run: |
         set -x
         tar xzf obot_g474\ nucleo_uart/nucleo_uart.tgz
-        cd nucleo_uart
+        pushd nucleo_uart
         st-flash reset
         sleep 2
         ../scripts/uart_program.sh
@@ -244,6 +244,7 @@ jobs:
         ~/tmp/stm32flash/stm32flash /dev/ttyACM0 -g 0x8000000 -b 4000000 || true
         sleep 2
         motor_util -a /dev/ttyACM0 --uart-raw
+        popd
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_uart_raw.py
     - name: Store benchmark result
       uses: rhysd/github-action-benchmark@v1

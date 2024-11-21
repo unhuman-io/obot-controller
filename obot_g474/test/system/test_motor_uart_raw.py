@@ -29,11 +29,10 @@ class TestMotor(unittest.TestCase):
         self.m.set_command_mode(motor.ModeDesired.Open)
         self.m.write_saved_commands()
 
-    def test_really_long_packet(self):
-        packet = self.m.motors()[0]["really_long_packet"].get()
-        self.assertEqual(len(packet), motor.max_api_packet_size())
-        expected_packet = "0123456789" * (motor.max_api_packet_size() // 10)
-        self.assertEqual(packet, expected_packet)
+    def test_3v3(self):
+        v3v3 = self.m.motors()[0]["3v3"].get()
+        v3v3 = float(v3v3)
+        self.assertAlmostEqual(v3v3, 3.3, delta=0.1)
 
 if __name__ == "__main__":
     unittest.main()

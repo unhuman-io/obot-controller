@@ -34,3 +34,6 @@ class TestMotor(unittest.TestCase):
         self.assertEqual(len(packet), motor.max_api_packet_size())
         expected_packet = "0123456789" * (motor.max_api_packet_size() // 10)
         self.assertEqual(packet, expected_packet)
+
+if __name__ == "__main__":
+    unittest.main()

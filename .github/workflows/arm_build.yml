@@ -231,7 +231,6 @@ jobs:
         # may need ip link set can0 up type can bitrate 2000000 dbitrate 10000000 fd on one-shot on
         [ $(motor_util -f can0:1 --list-names-only) == can_test ]
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_can.py
-        false
         
     - name: test uart
       run: |

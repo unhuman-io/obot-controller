@@ -226,7 +226,7 @@ jobs:
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor9.py
         
     - name: test can
-      continue-on-error: true
+      #continue-on-error: true
       run: |
         set -x
         # firmware loaded above - communicates over usb and can

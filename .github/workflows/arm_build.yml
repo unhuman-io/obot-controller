@@ -232,9 +232,11 @@ jobs:
         # firmware loaded above - communicates over usb and can
         # may need ip link set can0 up type can bitrate 2000000 dbitrate 10000000 fd on one-shot on
         [ $(motor_util -f can0:1 --list-names-only) == can_test ]
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_can.py
         
     - name: test uart
       run: |
+        set -x
         tar xzf obot_g474\ nucleo_uart/nucleo_uart.tgz
         cd nucleo_uart
         st-flash reset
@@ -244,6 +246,7 @@ jobs:
         ~/tmp/stm32flash/stm32flash /dev/ttyACM0 -g 0x8000000 -b 4000000 || true
         sleep 2
         motor_util -a /dev/ttyACM0 --uart-raw
+        PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_uart_raw.py
     - name: Store benchmark result
       uses: rhysd/github-action-benchmark@v1
       with:

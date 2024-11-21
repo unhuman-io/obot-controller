@@ -129,6 +129,12 @@ class TestMotor(unittest.TestCase):
         print("output_diff = " + str(output_diff*n))
         self.assertTrue(abs(pos_diff - t*v) < .1)
         self.assertTrue(abs(output_diff*n - t*v) < 0.16*n)
+    
+    def test_really_long_packet(self):
+        packet = self.m.motors()[0]["really_long_packet"].get()
+        self.assertEqual(len(packet), motor.max_api_packet_size())
+        expected_packet = "0123456789" * (motor.max_api_packet_size() // 10)
+        self.assertEqual(packet, expected_packet)
 
     def test_ma732_encoder(self):
         self.m.motors()[0].set_timeout_ms(300)

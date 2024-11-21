@@ -150,8 +150,6 @@ jobs:
         motor_util -p 1-3.6
         motor_util -p 1-3.7
         motor_util -p 1-2
-        # may need ip link set can0 up type can bitrate 2000000 dbitrate 5000000 fd on one-shot on
-        [ $(motor_util -f can0 --list-names-only) == can_test ]
         # motor_util -p 1-3.4.2
         # num_motors=8
         num_motors=7
@@ -227,7 +225,14 @@ jobs:
         # test motor9_pzdma
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor9.py
         
-
+    - name: test can
+      #continue-on-error: true
+      run: |
+        set -x
+        # firmware loaded above - communicates over usb and can
+        # may need ip link set can0 up type can bitrate 2000000 dbitrate 10000000 fd on one-shot on
+        [ $(motor_util -f can0:1 --list-names-only) == can_test ]
+        
     - name: test uart
       run: |
         tar xzf obot_g474\ nucleo_uart/nucleo_uart.tgz

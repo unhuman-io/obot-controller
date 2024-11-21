@@ -11,7 +11,7 @@ class TestMotor(unittest.TestCase):
     @classmethod
     def connect(cls):
         cls.m = motor.MotorManager()
-        cls.m.get_motors_uart_by_dev_path(["/dev/ttyACM0"], True)
+        cls.m.get_motors_uart_by_devpath(["/dev/ttyACM0"], True)
         cls.m.set_auto_count()
 
     @classmethod

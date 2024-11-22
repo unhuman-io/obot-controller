@@ -249,7 +249,7 @@ void config_init() {
     System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
     System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
     System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
-    System::api.add_api_variable("tmux_delay", new APICallbackUint16([](){ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
+    System::api.add_api_variable("tmux_delay", new APICallbackUint16([]()->uint16_t{ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
 #elif defined(ADS8339_TORQUE_SENSOR)
     System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
     System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));

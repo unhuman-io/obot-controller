@@ -16,9 +16,15 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.pi_q.ki_limit=8,
     .fast_loop_param.foc_param.pi_q.command_max=10,
     .fast_loop_param.foc_param.current_filter_frequency_hz=3000,//35000,
-    .fast_loop_param.foc_param.num_poles = 21,
+    .fast_loop_param.foc_param.num_poles = 20,
+    .main_loop_param.position_controller_param.position.kp = 100,
+    .main_loop_param.position_controller_param.position.kd = 0.5,
+    .main_loop_param.position_controller_param.position.command_max = 4,
     .main_loop_param.output_encoder.cpr = pow(2,32),
     .fast_loop_param.motor_encoder.cpr = pow(2,32)-1,
+    .fast_loop_param.phase_mode = 1,
+    .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
+    .startup_param.motor_encoder_startup = ENCODER_BIAS_FROM_OUTPUT_WITH_MOTOR_CORRECTION,
 
     .fast_loop_param.adc1_gain = -3.3/4096/(.0005*40*1.0),  // A/count, 1.04 is a measured factor
     .fast_loop_param.adc2_gain = -3.3/4096/(.0005*40*1.0),

@@ -81,10 +81,6 @@ void config_init() {
     System::api.add_api_variable("gy", new const APICallbackFloat([](){ return config::imu.data_.gyr_y*2000.*M_PI/180/pow(2,15); }));
     System::api.add_api_variable("gz", new const APICallbackFloat([](){ return config::imu.data_.gyr_z*2000.*M_PI/180/pow(2,15); }));
 
-
-    GPIO_SETL(A, 4, 1, 0, 0);
-    GPIOA->BSRR |= GPIO_BSRR_BS4; // set drv cs
-
     config::imu.init();
 }
 

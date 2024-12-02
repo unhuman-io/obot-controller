@@ -6,7 +6,7 @@
 
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 //#include "../../motorlib/aksim2_encoder.h"
-#include "../../motorlib/resolute_encoder.h"
+#include "../../motorlib/sensors/encoders/resolute_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_USB
 

@@ -56,6 +56,8 @@ jobs:
           - project: obot_g474
             config: motor_aksim_19_18 # MR0P
           - project: obot_g474
+            config: motor_resolute
+          - project: obot_g474
             config: trace
           # TODO: add this back
           # - project: obot_g474

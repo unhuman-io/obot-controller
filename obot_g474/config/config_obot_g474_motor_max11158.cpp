@@ -21,8 +21,6 @@ struct InitCode {
       SPI3->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
            
       SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
-      // ORDER DEPENDANCE SPE set last
-      SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
       DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
       DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
       DMAMUX1_Channel2->CCR =  DMA_REQUEST_SPI1_TX;
@@ -54,26 +52,17 @@ namespace config {
     InitCode init_code;
 
     GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
-    SPIDMA spi1_dma(*SPI1, torque_sensor_cs, *DMA1_Channel3, *DMA1_Channel4);
+    SPIDMA spi1_dma(SPIDMA::SP1, torque_sensor_cs, DMA1_CH3, DMA1_CH4, 0);
     TorqueSensor torque_sensor(spi1_dma);
     EncoderBase motor_encoder;
     OutputEncoder output_encoder;
 };
 
-#define SPI1_REINIT_CALLBACK
-void spi1_reinit_callback() {
-    SPI1->CR1=0;
-    SPI1->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   // 8 bit
-    // ORDER DEPENDANCE SPE set last
-    SPI1->CR1 = SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL;    // baud = clock/64
-    config::spi1_dma.reinit();
-}
-
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 
 void config_init() {
-    config::torque_sensor.set_debug_variables("t", System::api);
+    MAX11158_SET_DEBUG_VARIABLES("t", System::api, config::torque_sensor);
 }
 
 void config_maintenance() {

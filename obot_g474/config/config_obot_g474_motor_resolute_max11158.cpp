@@ -5,14 +5,18 @@
 #include "../../motorlib/gpio.h"
 
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../../motorlib/sensor_multiplex.h"
+#include "../../motorlib/max11158.h"
 #include "../../motorlib/sensors/encoders/resolute_encoder.h"
 #include "../../motorlib/sensors/encoders/stm32g4/resolute_dma_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_USB
 
-using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = ResoluteDMAEncoder;
-using OutputEncoder = ResoluteEncoder;
+using TorqueSensor = TorqueSensorMultiplex<MAX11158, ResoluteEncoder>;
+using MotorEncoder = ResoluteEncoder;
+using OutputEncoder = TorqueSensor::SecondarySensor;
+
+#define ADS8339_TORQUE_SENSOR
 
 struct InitCode {
     InitCode() {
@@ -32,6 +36,10 @@ struct InitCode {
 
       GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);   // PD2-> motor encoder cs
       GPIOD->BSRR = GPIO_BSRR_BS2;
+
+      // Fixed high value on SPI1 MOSI, required by MAX11158, ok for resolute
+      GPIO_SETL(A, 7, GPIO_MODE::OUTPUT, GPIO_SPEED::VERY_HIGH, 0);
+      GPIOA->BSRR = GPIO_BSRR_BS7;
     }
 };
 
@@ -47,19 +55,28 @@ inline void motor_stop_cs_trigger() {
 
 namespace config {
     const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 20000; // max resolute read frequency 30 kHz
+    const uint32_t pwm_frequency = 15000; // max resolute read frequency 30 kHz
     InitCode init_code;
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
     SPIDMA spi3_dma(SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0, 100, 100,
         SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA);
-    ResoluteDMAEncoder motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 2, motor_start_cs_trigger, motor_stop_cs_trigger);
-    TorqueSensor torque_sensor;
+    ResoluteEncoder motor_encoder(spi3_dma);
+    //ResoluteDMAEncoder motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 2, motor_start_cs_trigger, motor_stop_cs_trigger);
 
     GPIO output_encoder_cs(*GPIOC, 3, GPIO::OUTPUT);
     SPIDMA spi1_dma(SPIDMA::SP1, output_encoder_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
     SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA);
-    OutputEncoder output_encoder(spi1_dma);
+    ResoluteEncoder output_encoder1(spi1_dma);
+
+    GPIO torque_sensor_cs(*GPIOA, 0, GPIO::OUTPUT);
+    SPIDMA spi1_dma2(SPIDMA::SP1, torque_sensor_cs, DMA1_CH3, DMA1_CH4, 0, 100, 100,
+        SPI_CR1_MSTR | 6 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM);
+    MAX11158 torque_sensor1(spi1_dma2);
+
+    TorqueSensor torque_sensor(torque_sensor1, output_encoder1);
+    OutputEncoder &output_encoder = torque_sensor.secondary();
+    
 };
 
 #define SPI1_REINIT_CALLBACK
@@ -75,7 +92,8 @@ void spi1_reinit_callback() {
 
 void config_init() {
     RESOLUTE_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
-    RESOLUTE_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder);
+    RESOLUTE_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder1);
+    MAX11158_SET_DEBUG_VARIABLES("t", System::api, config::torque_sensor1);
 }
 
 void config_maintenance() {}

@@ -1,4 +1,4 @@
-#include "param_obot_g474_aksim.h"
+#include "param_obot_g474.h"
 #include "math.h"
 
 
@@ -6,10 +6,11 @@
 const Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_default.h"
 #include "param_motor.c"
-    .main_loop_param.output_encoder.cpr = 1,
-
-    .name = "max11158",
+    .main_loop_param.output_encoder.cpr = pow(2,32),
+    .fast_loop_param.motor_encoder.cpr = pow(2,32),
+    .name = "resolute",
 #ifdef PARAM_OVERRIDES
-#include XSTR(PARAM_OVERRIDES)
+    PARAM_OVERRIDES
 #endif
 };
+

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1733332361069,
+  "lastUpdate": 1733332710631,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -114713,6 +114713,126 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1060.629883,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "47fcca5f9f0c263f22d914b9dcb57f29c3e27b66",
+          "message": "Feature/resolute2 (#277)\n\n* resolute2 encoder start\r\n\r\n* clean up resolute\r\n\r\n* Increase tolerance ma732 test\r\n\r\n* resolute encoder x2\r\n\r\n* wip resolute dma\r\n\r\n* add dyno stuff\r\n\r\n* max resolute\r\n\r\n* resolute3\r\n\r\n* resmax\r\n\r\n---------\r\n\r\nCo-authored-by: Lee Magnusson <lee@unhuman.io>",
+          "timestamp": "2024-12-04T17:12:48Z",
+          "tree_id": "4f94849c4911c27f5ef46b463d22ed2f9a99279e",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/47fcca5f9f0c263f22d914b9dcb57f29c3e27b66"
+        },
+        "date": 1733332709642,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles",
+            "value": 833,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period",
+            "value": 3423,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles",
+            "value": 3486,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period",
+            "value": 17022,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2661.05,
+            "unit": "cycles",
+            "extra": "3486 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3396.05,
+            "unit": "cycles",
+            "extra": "3445 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 826.344,
+            "unit": "cycles",
+            "extra": "833 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000.2,
+            "unit": "cycles",
+            "extra": "17046 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 203888,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 6936,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 204908,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 7960,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 80184,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 3049,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 15196,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1068.309937,
             "unit": "Hz",
             "extra": "0 times"
           }

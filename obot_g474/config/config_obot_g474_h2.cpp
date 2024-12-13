@@ -7,6 +7,7 @@
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/moons_encoder.h"
+#include "../../motorlib/peripheral/stm32g4/rtc.h"
 
 const Param * const param = (const Param * const) 0x8060000;
 const Calibration * const calibration = (const Calibration * const) 0x8070000;

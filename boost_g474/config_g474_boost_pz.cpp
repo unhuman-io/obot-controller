@@ -11,6 +11,7 @@
 #include "param_g474_boost.h"
 #include "../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../motorlib/torque_sensor.h"
+#include "../peripheral/stm32g4/rtc.h"
 
 #include "../motorlib/qep_encoder.h"
 

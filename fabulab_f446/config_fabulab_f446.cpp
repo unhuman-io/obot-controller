@@ -11,6 +11,7 @@ typedef USB_OTG USB1;
 #include "../motorlib/phony_encoder.h"
 #include "../motorlib/torque_sensor.h"
 #include "param_fabulab_f446.h"
+#include "../peripheral/stm32f4/rtc.h"
 
 #include "../motorlib/controller/position_controller.h"
 #include "../motorlib/controller/torque_controller.h"

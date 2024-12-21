@@ -44,16 +44,16 @@ void system_init() {
     us_delay(21);
     BISSBitBang biss(clk, dat, 12);
     bool cds_value;
-    int err = biss.transfer_one(true, cds_value, value);
-    printf("err: %d, cds: %d, value: %lx\n", err, cds_value, value);
-    biss.transfer_one(false, cds_value, value);
-    biss.biss_command();
+    //int err = biss.transfer_one(true, cds_value, value);
+    //printf("err: %d, cds: %d, value: %lx\n", err, cds_value, value);
+    //biss.transfer_one(false, cds_value, value);
+    //biss.biss_command();
     biss.write_register(0x7C, 0x1);
-    biss.write_register(4, 0x1a);
+    biss.write_register(4, 0x3a);
     biss.write_register(7, 0x3);
     
     for(int i = 0; i < 10; i++) {
-        biss.read_register(i);
+      biss.read_register(i);
     }
     
 }

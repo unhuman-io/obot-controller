@@ -20,7 +20,11 @@ struct InitCode {
 
         RCC->APB1ENR1 |= RCC_APB1ENR1_FDCANEN;
 
-        
+      // if defined(INTERFACE_BBS)
+      // PA0 TCS
+      GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); 
+      GPIOA->BSRR = GPIO_BSRR_BS0;
+      GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
         
     }
 };

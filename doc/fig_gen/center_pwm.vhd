@@ -1,7 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.numeric_unsigned.all;
 
 entity center_pwm is port (
   clk: in std_logic;
@@ -12,12 +11,12 @@ entity center_pwm is port (
 end entity center_pwm;
 
 architecture blah of center_pwm is
-  signal cnt: unsigned := (others => '0');
+  signal cnt: unsigned(duty'length-1 downto 0) := (others => '0');
   signal up: std_logic := '1';
   signal adc_trigger: std_logic;
   signal fl_trigger: std_logic;
   signal adc_zero_trigger: std_logic;
-  signal cnt2: unsigned := (others => '0');
+  signal cnt2: unsigned(duty'length-1 downto 0) := (others => '0');
   signal enc_trigger: std_logic;
 begin
     process(clk, rst)
@@ -26,15 +25,17 @@ begin
             cnt <= (others => '0');
         elsif rising_edge(clk) then
             if up = '1' then
-                if cnt = 20 then
+                if cnt = 14 then
                     up <= '0';
                 end if;
                 cnt <= cnt + 1;
             else
                 if cnt = 0 then
                     up <= '1';
+                    cnt <= cnt + 1;
+                else
+                    cnt <= cnt - 1;
                 end if;
-                cnt <= cnt - 1;
             end if;
         end if;
     end process;
@@ -51,10 +52,10 @@ begin
     adc_trigger <= '1' when cnt = 0 else '0';
     fl_trigger <= '1' when cnt = 1 else '0';
 
-    adc_zero_trigger <= '1' when cnt = 20 else '0';
+    adc_zero_trigger <= '1' when cnt = 14 else '0';
     enc_trigger <= '1' when cnt2 = 10 else
                    '1' when cnt2 = 5 else
                    '0';
 
-    --pwm <= '1' when cnt < to_integer(duty) else '0';
+    pwm <= '1' when cnt < unsigned(duty) else '0';
 end architecture;

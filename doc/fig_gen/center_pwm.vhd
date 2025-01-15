@@ -25,17 +25,15 @@ begin
             cnt <= (others => '0');
         elsif rising_edge(clk) then
             if up = '1' then
-                if cnt = 14 then
+                if cnt = 9 then
                     up <= '0';
                 end if;
                 cnt <= cnt + 1;
             else
-                if cnt = 0 then
+                if cnt = 1 then
                     up <= '1';
-                    cnt <= cnt + 1;
-                else
-                    cnt <= cnt - 1;
                 end if;
+                cnt <= cnt - 1;
             end if;
         end if;
     end process;
@@ -57,5 +55,5 @@ begin
                    '1' when cnt2 = 5 else
                    '0';
 
-    pwm <= '1' when cnt < unsigned(duty) else '0';
+    pwm <= '1' when cnt <= unsigned(duty) else '0';
 end architecture;

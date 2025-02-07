@@ -12,7 +12,7 @@ entity adc_seq is
 end entity adc_seq;
 
 architecture blah of adc_seq is
-    type state_t is (IDLE, SMP1, CNV1);
+    type state_t is (IDLE, SMP1, CNV1, SMP2, CNV2, SMP3, CNV3);
     signal state: state_t := IDLE;
     signal cnt: integer range 0 to 32*4 := 0;
 begin
@@ -37,7 +37,35 @@ begin
                         cnt <= cnt + 1;
                     end if;
                 when CNV1 =>
+                    if cnt = 13 then
+                        state <= SMP2;
+                        cnt <= 0;
+                    else
+                        cnt <= cnt + 1;
+                    end if;
+                when SMP2 =>
                     if cnt = 12 then
+                        state <= CNV2;
+                        cnt <= 0;
+                    else
+                        cnt <= cnt + 1;
+                    end if;
+                when CNV2 =>
+                    if cnt = 13 then
+                        state <= SMP3;
+                        cnt <= 0;
+                    else
+                        cnt <= cnt + 1;
+                    end if;
+                when SMP3 =>
+                    if cnt = 12 then
+                        state <= CNV3;
+                        cnt <= 0;
+                    else
+                        cnt <= cnt + 1;
+                    end if;
+                when CNV3 =>
+                    if cnt = 13 then
                         state <= IDLE;
                         cnt <= 0;
                         eos <= '1';

@@ -40,6 +40,15 @@ begin
             trg => adc_trg,
             eos => adc_eos
         );
+
+    uut3: entity work.enc_seq
+        generic map (
+            period => period*2
+        )
+        port map (
+            clk => clk,
+            rst => rst
+        );
     
     process
         constant clk_mult : integer := 32;
@@ -105,7 +114,8 @@ begin
     end process;
 
     process (clk_cpu)
-        variable cnt : integer range 0 to 900 := 0;
+        constant foc_exec_cycles : integer := 1300;
+        variable cnt : integer range 0 to foc_exec_cycles := 0;
     begin
         if rising_edge(clk_cpu) then
             if adc_eos = '1' then
@@ -114,9 +124,11 @@ begin
             end if;
             if foc_exec = RUNNING then
                 cnt := cnt + 1;
-                if cnt = 900 then
-                    foc_exec <= IDLE;
+                if cnt = foc_exec_cycles - 200 then
                     cmp1 <= cmp1 + 10000;
+                end if;
+                if cnt = foc_exec_cycles then
+                    foc_exec <= IDLE;
                 end if;
             end if;
         end if;

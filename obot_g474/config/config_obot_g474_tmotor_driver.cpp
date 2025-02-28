@@ -3,6 +3,8 @@
 #include "../../motorlib/encoder.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_CAN_USB
@@ -10,7 +12,7 @@
 #define CAN_NUM CAN::CAN3
 
 using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = EncoderBase;
+using MotorEncoder = MA732Encoder;
 using OutputEncoder = EncoderBase;
 
 // note can: sudo ip link set can0 up type can bitrate 2000000 dbitrate 10000000 fd on one-shot on restart-ms 100
@@ -36,7 +38,8 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    MotorEncoder motor_encoder;
+    GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
+    MA732Encoder motor_encoder(*SPI3, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3]);
     TorqueSensor torque_sensor;
     OutputEncoder output_encoder;
 };

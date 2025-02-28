@@ -8,4 +8,5 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_motor.c"
 .name = "tmotor_driver",
 .can_id = 0x01,
+.fast_loop_param.motor_encoder.cpr = 65536,
 };

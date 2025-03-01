@@ -10,6 +10,7 @@
 #define COMMS   COMMS_CAN_USB
 #define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_2M, CAN::DataBaudRate::DATA_10M
 #define CAN_NUM CAN::CAN3
+#define TMR0
 
 template<class Encoder>
 class EncoderGearRatio : public EncoderBase {

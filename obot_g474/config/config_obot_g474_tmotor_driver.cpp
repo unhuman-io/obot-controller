@@ -8,7 +8,7 @@
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_CAN_USB
-#define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_2M, CAN::DataBaudRate::DATA_10M
+#define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_1M, CAN::DataBaudRate::DATA_5M
 #define CAN_NUM CAN::CAN3
 #define TMR0
 

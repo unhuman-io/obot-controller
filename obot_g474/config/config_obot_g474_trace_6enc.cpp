@@ -75,6 +75,18 @@ namespace config {
 
 void config_init() {
     MA7XX_SET_DEBUG_VARIABLES("m1", System::api, config::ma782_1);
+    MA7XX_SET_DEBUG_VARIABLES("m2", System::api, config::ma782_2);
+    MA7XX_SET_DEBUG_VARIABLES("m3", System::api, config::ma782_3);
+    MA7XX_SET_DEBUG_VARIABLES("m4", System::api, config::ma782_4);
+    MA7XX_SET_DEBUG_VARIABLES("m5", System::api, config::ma782_5);
+    MA7XX_SET_DEBUG_VARIABLES("m6", System::api, config::ma782_6);
+
+    config::ma782_1.init();
+    config::ma782_2.init();
+    config::ma782_3.init();
+    config::ma782_4.init();
+    config::ma782_5.init();
+    config::ma782_6.init();
 }
 
 void config_maintenance() {}

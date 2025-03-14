@@ -1,0 +1,72 @@
+#define CUSTOM_SENDDATA
+#include <cstdint>
+struct SendData {
+    uint16_t encoder[6];
+};
+
+#include "../param/param_obot_g474.h"
+#include "st_device.h"
+#include "../../motorlib/encoder.h"
+#include "../../motorlib/torque_sensor.h"
+#include "../../motorlib/gpio.h"
+#include <algorithm>
+#include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#include "../../motorlib/sensors/encoders/ma782_encoder.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#define COMMS   COMMS_USB
+
+using TorqueSensor = TorqueSensorBase;
+using MotorEncoder = EncoderBase;
+using OutputEncoder = EncoderBase;
+
+
+
+struct InitCode {
+    InitCode() {
+        // trace pins enable
+        RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
+        GPIO_SETL(E, 2, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
+        GPIO_SETL(E, 3, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
+        GPIO_SETL(E, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
+        GPIO_SETL(E, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
+        GPIO_SETL(E, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
+        //ETM->CR |= ETM_CR_ETMEN;
+        uint32_t *etmcr = (uint32_t *)0xE0041000;
+        *etmcr |= 1 << 11;
+        uint32_t *etmteevr = (uint32_t *)0xE0041020;
+        *etmteevr = 0x000037ef; // ON
+
+        SPI1->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
+        // ORDER DEPENDANCE SPE set last
+        SPI1->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
+        GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+    }
+};
+
+namespace config {
+    const uint32_t main_loop_frequency = 10000;    
+    const uint32_t pwm_frequency = 50000;
+    InitCode init_code;
+
+    MotorEncoder motor_encoder;
+    TorqueSensor torque_sensor;
+    OutputEncoder output_encoder;
+
+    GPIO gpio_cs1(*GPIOA, 0, GPIO::OUTPUT);
+    MA782Encoder ma782_1(*SPI1, gpio_cs1, SPIDMA::spi_pause[SPIDMA::SP1]);
+
+};
+
+#include "../../motorlib/boards/config_obot_g474_trace.cpp"
+
+void config_init() {
+    MA7XX_SET_DEBUG_VARIABLES("m1", System::api, config::ma782_1);
+}
+
+void config_maintenance() {}
+
+void load_send_data(const MainLoop &main_loop, SendData * const data) {
+    config::ma782_1.trigger();
+    data->encoder[0] = config::ma782_1.read();
+    data->encoder[1] = 0xabc;
+}

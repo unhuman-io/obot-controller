@@ -44,7 +44,8 @@ struct InitCode {
         GPIO_SETL(A, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
         GPIO_SETL(A, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
         GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
-        GPIO_SETL(A, 5, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+        GPIO_SETH(A, 8, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+        GPIOA->BSRR = GPIO_BSRR_BR0 | GPIO_BSRR_BR1 | GPIO_BSRR_BR2 | GPIO_BSRR_BR3 | GPIO_BSRR_BR4 | GPIO_BSRR_BR8;
     }
 };
 
@@ -67,7 +68,7 @@ namespace config {
     MA782Encoder ma782_4(*SPI1, gpio_cs4, SPIDMA::spi_pause[SPIDMA::SP1]);
     GPIO gpio_cs5(*GPIOA, 4, GPIO::OUTPUT);
     MA782Encoder ma782_5(*SPI1, gpio_cs5, SPIDMA::spi_pause[SPIDMA::SP1]);
-    GPIO gpio_cs6(*GPIOA, 5, GPIO::OUTPUT);
+    GPIO gpio_cs6(*GPIOA, 8, GPIO::OUTPUT);
     MA782Encoder ma782_6(*SPI1, gpio_cs6, SPIDMA::spi_pause[SPIDMA::SP1]);
 };
 

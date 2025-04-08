@@ -33,10 +33,11 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
 .fast_loop_param.foc_param.pi_q.command_max=10,
 .fast_loop_param.foc_param.current_filter_frequency_hz=40000,
 .fast_loop_param.foc_param.num_poles = 14,
-.fast_loop_param.phase_mode = 0,
-.fast_loop_param.current_direction = 0,
+.fast_loop_param.phase_mode = 1,
+.fast_loop_param.current_direction = 1,
 .fast_loop_param.motor_encoder.dir = -1,
 .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
+.fast_loop_param.motor_encoder.rollover = pow(2,24),
 
 .main_loop_param.position_controller_param.position.kp = 20,
 .main_loop_param.position_controller_param.position.kd = .2,

@@ -5,10 +5,21 @@ import re
 
 with open(sys.argv[1], 'r') as f:
     data = f.read()
-    match = re.findall(r'^\s*api.add_api_variable\(\"(\w+)\", new (const )?(.+?)\);\s*$', data, re.MULTILINE | re.DOTALL)
-    for m in match:
-        print(m)
-    for m in match:
-        print(f"        static {m[1]}api_{m[0]} {m[2]};")
-        print(f"        api.add_api_variable(\"{m[0]}\", &api_{m[0]});")
+    data = re.sub(r'^(\s*)api\.add_api_variable\(\"(\w+)\", new (const )?(API[\w<>]+)([^\{\}]+?)\);\s*$',
+                   r'\1static \3\4 api_\2\5;\n\1api.add_api_variable("\2", &api_\2);', data, flags=re.MULTILINE | re.DOTALL)
+
+    data = re.sub(r'^(\s*)api\.add_api_variable\(\"(\w+)\", new (const )?(API[\w<>]+)(.+?\}.+?)\);\s*$',
+                   r'\1static \3\4 api_\2\5;\n\1api.add_api_variable("\2", &api_\2);', data, flags=re.MULTILINE | re.DOTALL)
+    print(data)
+
+    #match = re.findall(r'^(\s*)api.add_api_variable\(\"(\w+)\", new (const )?(API[\w<>]+)(.+?\{.+?\}.+?)\);\s*$', data, re.MULTILINE | re.DOTALL)
+    # for m in match:
+    #     print(m)
+    # for m in match:
+    #    if m.group('lambda'):
+    #         print(m)
+        #print(f"{m[0]}static {m[2]}{m[3]} api_{m[1]}{m[4]};")
+        #print(f"{m[0]}api.add_api_variable(\"{m[1]}\", &api_{m[1]});")
     
+    #print(match)
+    #print([m.groupdict() for m in match])

@@ -36,7 +36,7 @@ namespace config {
 void config_init() {
     MA7XX_SET_DEBUG_VARIABLES("j", System::api, config::output_encoder);
 
-    System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
+    System::api.add_api_variable<APIUint32>("index_count", &config::motor_encoder.index_count_);
 }
 
 void config_maintenance() {}

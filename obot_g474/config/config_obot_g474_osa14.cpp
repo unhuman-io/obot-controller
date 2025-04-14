@@ -38,21 +38,20 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_osa.cpp"
 
 void config_init() {
-    System::api.add_api_variable("mbct", new APICallbackUint8([](){ return config::motor_encoder.get_bct(); },
-                    [](uint8_t u){ config::motor_encoder.set_bct(u); }));
-    System::api.add_api_variable("met", new APICallbackUint8([](){ return config::motor_encoder.get_et(); },
-                    [](uint8_t u){ config::motor_encoder.set_et(u); }));
-    System::api.add_api_variable("mmgt", new APICallbackHex<uint16_t>([](){ return config::motor_encoder.get_magnetic_field_strength(); },
-                    [](uint16_t u){ config::motor_encoder.set_mgt(u); }));
-    System::api.add_api_variable("jbct", new APICallbackUint8([](){ return config::output_encoder_direct.get_bct(); },
-                    [](uint8_t u){ config::motor_encoder.set_bct(u); }));
-    System::api.add_api_variable("jet", new APICallbackUint8([](){ return config::output_encoder_direct.get_et(); },
-                    [](uint8_t u){ config::motor_encoder.set_et(u); }));
-    System::api.add_api_variable("jmgt", new APICallbackHex<uint16_t>([](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
-                    [](uint16_t u){ config::motor_encoder.set_mgt(u); }));
-
-    System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor_direct.result0_));
-    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor_direct.result1_));     
+    System::api.add_api_variable<APICallbackUint8>("mbct", [](){ return config::motor_encoder.get_bct(); },
+                    [](uint8_t u){ config::motor_encoder.set_bct(u); });
+    System::api.add_api_variable<APICallbackUint8>("met", [](){ return config::motor_encoder.get_et(); },
+                    [](uint8_t u){ config::motor_encoder.set_et(u); });
+    System::api.add_api_variable<APICallbackHex<uint16_t>>("mmgt", [](){ return config::motor_encoder.get_magnetic_field_strength(); },
+                    [](uint16_t u){ config::motor_encoder.set_mgt(u); });
+    System::api.add_api_variable<APICallbackUint8>("jbct", [](){ return config::output_encoder_direct.get_bct(); },
+                    [](uint8_t u){ config::motor_encoder.set_bct(u); });
+    System::api.add_api_variable<APICallbackUint8>("jet", [](){ return config::output_encoder_direct.get_et(); },
+                    [](uint8_t u){ config::motor_encoder.set_et(u); });
+    System::api.add_api_variable<APICallbackHex<uint16_t>>("jmgt", [](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
+                    [](uint16_t u){ config::motor_encoder.set_mgt(u); });
+    System::api.add_api_variable<const APIUint32>("C1", &config::torque_sensor_direct.result0_);
+    System::api.add_api_variable<const APIUint32>("C2", &config::torque_sensor_direct.result1_);
 }
 
 void config_maintenance() {}

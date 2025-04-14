@@ -5,11 +5,11 @@ import re
 
 with open(sys.argv[1], 'r') as f:
     data = f.read()
-    data = re.sub(r'^([\s\w:]*)api\.add_api_variable\(\"(\w+)\", new (const )?(API[\w<>]+)\(([^\{\}]+?)\)\);\s*(\\)$',
-                   r'\1api.add_api_variable<\3\4>("\2", \5);\6', data, flags=re.MULTILINE | re.DOTALL)
+    data = re.sub(r'^([\s\w:]*)api\.add_api_variable\((prefix )?\"(\w+)\", new (const )?(API[\w<>]+)\(([^\{\}]+?)\)\);\s*(\\)?$',
+                   r'\1api.add_api_variable<\4\5>(\2"\3", \6);\7', data, flags=re.MULTILINE | re.DOTALL)
 
-    data = re.sub(r'^([\s\w:]*)api\.add_api_variable\(\"(\w+)\", new (const )?(API[\w<>]+)\((.+?\}.+?)\)+;\s*(\\)$',
-                   r'\1api.add_api_variable<\3\4>("\2", \5);\6', data, flags=re.MULTILINE | re.DOTALL)
+    data = re.sub(r'^([\s\w:]*)api\.add_api_variable\((prefix )?\"(\w+)\", new (const )?(API[\w<>]+)\((.+?\}.+?)\)+;\s*(\\)?$',
+                   r'\1api.add_api_variable<\4\5>(\2"\3", \6);\7', data, flags=re.MULTILINE | re.DOTALL)
     print(data)
 
     #match = re.findall(r'^(\s*)api.add_api_variable\(\"(\w+)\", new (const )?(API[\w<>]+)(.+?\{.+?\}.+?)\);\s*$', data, re.MULTILINE | re.DOTALL)

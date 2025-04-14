@@ -238,10 +238,10 @@ void drv_reset(uint32_t blah) {
 // 
 
 void config_init() {
-    System::api.add_api_variable("spi", new APICallback([](){ return config_items.spi_debug.read(); }, 
-        [](std::string s) { config_items.spi_debug.write(s); }));
-    System::api.add_api_variable("deadtime", new APICallbackUint16([](){ 
-        return config_items.motor_pwm.deadtime_ns_; }, [](uint16_t u) {config_items.motor_pwm.set_deadtime(u); }));
+    System::api.add_api_variable<APICallback>("spi",[](){ return config_items.spi_debug.read(); }, 
+        [](std::string s) { config_items.spi_debug.write(s); });
+    System::api.add_api_variable<APICallbackUint16>("deadtime",[](){ 
+        return config_items.motor_pwm.deadtime_ns_; }, [](uint16_t u) {config_items.motor_pwm.set_deadtime(u); });
 }
 
 void system_init() {
@@ -276,8 +276,8 @@ void system_init() {
     // std::function<uint32_t(void)> get_mgt = std::bind(&MA732Encoder::get_magnetic_field_strength, &config_items.motor_encoder);
     // System::api.add_api_variable("mmgt", new APICallbackUint32(get_mgt, set_mgt));
 
-    System::api.add_api_variable("qepi", new APIUint32((uint32_t *) &TIM5->CCR3));
-    System::api.add_api_variable("drv_err", new APICallbackUint32(get_drv_status, drv_reset));
+    System::api.add_api_variable<APIUint32>("qepi", (uint32_t *) &TIM5->CCR3);
+    System::api.add_api_variable<APICallbackUint32>("drv_err", get_drv_status, drv_reset);
 }
 
 void system_maintenance() {}

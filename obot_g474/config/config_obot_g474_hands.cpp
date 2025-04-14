@@ -222,7 +222,7 @@ void system_init()
         System::log("Torque sensor init failure");
     }
 
-    System::api.add_api_variable("3v3", new APIFloat(&v3v3));
+    System::api.add_api_variable<APIFloat>("3v3", &v3v3);
     /* std::function<float()> get_t = std::bind(&TempSensor::get_value, &config::temp_sensor); */
     /* std::function<void(float)> set_t = std::bind(&TempSensor::set_value, &config::temp_sensor, std::placeholders::_1); */
     /* System::api.add_api_variable("T", new APICallbackFloat(get_t, set_t)); */
@@ -230,24 +230,23 @@ void system_init()
     /*                                                                   { return config::board_temperature.get_temperature(); })); */
     // System::api.add_api_variable("Tboard", new const APICallbackFloat([]()
     //                                                                   { return (TS_CAL2_TEMP - TS_CAL1_TEMP)/(*(uint16_t*)TS_CAL2_REG - *(uint16_t*)TS_CAL1_REG) * (V_TEMP_DR - *(uint16_t*)TS_CAL1_REG) + 30.0f; }));
-    System::api.add_api_variable("SG1", new const APIUint32(&V_SG1_DR));
-    System::api.add_api_variable("SG2", new const APIUint32(&V_SG2_DR));
-    System::api.add_api_variable("index_mod", new APIInt32(&index_mod));
-    System::api.add_api_variable("drv_reset", new const APICallback([]()
-                                                                    { return config::driver.reset(); }));
-    System::api.add_api_variable("shutdown", new const APICallback([]()
+    System::api.add_api_variable<const APIUint32>("SG1", &V_SG1_DR);
+    System::api.add_api_variable<const APIUint32>("SG2", &V_SG2_DR);
+    System::api.add_api_variable<APIInt32>("index_mod", &index_mod);
+    System::api.add_api_variable<const APICallback>("drv_reset",[]()
+                                                                    { return config::driver.reset(); });
+    System::api.add_api_variable<const APICallback>("shutdown",[]()
                                                                    {
         // requires power cycle to return 
         setup_sleep();
         SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
         PWR->CR1 |= 0b100 << PWR_CR1_LPMS_Pos;
         __WFI();
-        return std::string(); }));
-    System::api.add_api_variable("deadtime", new APICallbackUint16([]()
+        return std::string(); });
+    System::api.add_api_variable<APICallbackUint16>("deadtime",[]()
                                                                    { return config::motor_pwm.deadtime_ns_; },
                                                                    [](uint16_t u)
-                                                                   { config::motor_pwm.set_deadtime(u); }));
-
+                                                                   { config::motor_pwm.set_deadtime(u); });
     for (auto regs : std::vector<ADC_TypeDef *>{ADC1, ADC2, ADC3, ADC4, ADC5})
     {
         
@@ -361,17 +360,16 @@ void finish_sleep()
 
 void config_init()
 {
-    System::api.add_api_variable("3v3_bus", new APIUint32(&V_3V3_BUS));
-    System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.status_.word));
-    System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
-    System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));
-    System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.diag_err_count_));
-    System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
-    System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
-    System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
-    System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
-    System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
-
+    System::api.add_api_variable<APIUint32>("3v3_bus", &V_3V3_BUS);
+    System::api.add_api_variable<const APIUint8>("mdiag", &config::motor_encoder.status_.word);
+    System::api.add_api_variable<const APIUint8>("mdiag_raw", &config::motor_encoder.diag_raw_.word);
+    System::api.add_api_variable<const APIUint8>("mcrc", &config::motor_encoder.crc_calc_);
+    System::api.add_api_variable<APIUint32>("merr", &config::motor_encoder.diag_err_count_);
+    System::api.add_api_variable<APIUint32>("mwarn", &config::motor_encoder.diag_warn_count_);
+    System::api.add_api_variable<APIUint32>("mcrc_cnt", &config::motor_encoder.crc_err_count_);
+    System::api.add_api_variable<APIUint32>("mraw", &config::motor_encoder.raw_value_);
+    System::api.add_api_variable<const APICallback>("mrawh",[](){ return u32_to_hex(config::motor_encoder.raw_value_); });
+    System::api.add_api_variable<const APIUint32>("mcrc_latch", &config::motor_encoder.crc_error_raw_latch_);
     // Init SPI protocol
     config::spi_slave.init();
     config::protocol.init();

@@ -211,63 +211,62 @@ bool joint_bias_set = false;
 
 void config_init() {
     config::motor_pwm.set_frequency_multiplier(param->pwm_multiplier);
-    System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
-    System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
-    System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));
-    System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.diag_err_count_));
-    System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
-    System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
-    System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
-    System::api.add_api_variable("mrawh", new const APICallback([](){ return u32_to_hex(config::motor_encoder.raw_value_); }));
-    System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
-    System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
-    System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
-    System::api.add_api_variable("Tambient2", new const APICallbackFloat([](){ return config::ambient_temperature_if.get_temperature(); }));
-    System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
-    System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
+    System::api.add_api_variable<const APIUint8>("mdiag", &config::motor_encoder.diag_.word);
+    System::api.add_api_variable<const APIUint8>("mdiag_raw", &config::motor_encoder.diag_raw_.word);
+    System::api.add_api_variable<const APIUint8>("mcrc", &config::motor_encoder.crc_calc_);
+    System::api.add_api_variable<APIUint32>("merr", &config::motor_encoder.diag_err_count_);
+    System::api.add_api_variable<APIUint32>("mwarn", &config::motor_encoder.diag_warn_count_);
+    System::api.add_api_variable<APIUint32>("mcrc_cnt", &config::motor_encoder.crc_err_count_);
+    System::api.add_api_variable<APIUint32>("mraw", &config::motor_encoder.raw_value_);
+    System::api.add_api_variable<const APICallback>("mrawh",[](){ return u32_to_hex(config::motor_encoder.raw_value_); });
+    System::api.add_api_variable<const APIUint32>("mcrc_latch", &config::motor_encoder.crc_error_raw_latch_);
+    System::api.add_api_variable<const APICallbackFloat>("Tmotor",[](){ return config::motor_temperature.read(); });
+    System::api.add_api_variable<const APICallbackFloat>("Tambient",[](){ return config::ambient_temperature.get_temperature(); });
+    System::api.add_api_variable<const APICallbackFloat>("Tambient2",[](){ return config::ambient_temperature_if.get_temperature(); });
+    System::api.add_api_variable<const APICallbackFloat>("Tambient3",[](){ return config::ambient_temperature_3.get_temperature(); });
+    System::api.add_api_variable<const APICallbackFloat>("Tambient4",[](){ return config::ambient_temperature_4.get_temperature(); });
 #ifdef JOINT_ENCODER_BITS
-    System::api.add_api_variable("jerr", new APIUint32(&config::joint_encoder_direct.diag_err_count_));
-    System::api.add_api_variable("jwarn", new APIUint32(&config::joint_encoder_direct.diag_warn_count_));
-    System::api.add_api_variable("jcrc_cnt", new APIUint32(&config::joint_encoder_direct.crc_err_count_));
-    System::api.add_api_variable("jraw", new APIUint32(&config::joint_encoder_direct.raw_value_));
-    System::api.add_api_variable("jrawh", new const APICallback([](){ return u32_to_hex(config::joint_encoder_direct.raw_value_); }));
-    System::api.add_api_variable("jcrc_latch", new const APIUint32(&config::joint_encoder_direct.crc_error_raw_latch_));
-    System::api.add_api_variable("jbias", new APIFloat(&joint_encoder_bias));
+    System::api.add_api_variable<APIUint32>("jerr", &config::joint_encoder_direct.diag_err_count_);
+    System::api.add_api_variable<APIUint32>("jwarn", &config::joint_encoder_direct.diag_warn_count_);
+    System::api.add_api_variable<APIUint32>("jcrc_cnt", &config::joint_encoder_direct.crc_err_count_);
+    System::api.add_api_variable<APIUint32>("jraw", &config::joint_encoder_direct.raw_value_);
+    System::api.add_api_variable<const APICallback>("jrawh",[](){ return u32_to_hex(config::joint_encoder_direct.raw_value_); });
+    System::api.add_api_variable<const APIUint32>("jcrc_latch", &config::joint_encoder_direct.crc_error_raw_latch_);
+    System::api.add_api_variable<APIFloat>("jbias", &joint_encoder_bias);
 #endif
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder_direct.diag_err_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder_direct.diag_warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder_direct.crc_err_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder_direct.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder_direct.raw_value_); }));
-    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder_direct.crc_error_raw_latch_));
-
-    System::api.add_api_variable("brr", new APIUint32(&LPUART1->BRR));
-    System::api.add_api_variable("cr1", new APIUint32(&LPUART1->CR1));
-    System::api.add_api_variable("isr", new APIUint32(&LPUART1->ISR));
+    System::api.add_api_variable<APIUint32>("oerr", &config::output_encoder_direct.diag_err_count_);
+    System::api.add_api_variable<APIUint32>("owarn", &config::output_encoder_direct.diag_warn_count_);
+    System::api.add_api_variable<APIUint32>("ocrc_cnt", &config::output_encoder_direct.crc_err_count_);
+    System::api.add_api_variable<APIUint32>("oraw", &config::output_encoder_direct.raw_value_);
+    System::api.add_api_variable<const APICallback>("orawh",[](){ return u32_to_hex(config::output_encoder_direct.raw_value_); });
+    System::api.add_api_variable<const APIUint32>("ocrc_latch", &config::output_encoder_direct.crc_error_raw_latch_);
+    System::api.add_api_variable<APIUint32>("brr", &LPUART1->BRR);
+    System::api.add_api_variable<APIUint32>("cr1", &LPUART1->CR1);
+    System::api.add_api_variable<APIUint32>("isr", &LPUART1->ISR);
 #ifdef MAX11254_TORQUE_SENSOR
-    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
-    System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
-    System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
-    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
-    System::api.add_api_variable("tmux_delay", new APICallbackUint16([]()->uint16_t{ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
+    System::api.add_api_variable<const APIUint32>("traw", &config::torque_sensor_direct.raw_value_);
+    System::api.add_api_variable<const APIInt32>("tint", &config::torque_sensor_direct.signed_value_);
+    System::api.add_api_variable<const APIUint32>("ttimeout_error", &config::torque_sensor_direct.timeout_error_);
+    System::api.add_api_variable<const APIUint32>("tread_error", &config::torque_sensor_direct.read_error_);
+    System::api.add_api_variable<APICallbackUint16>("tmux_delay",[]()->uint16_t{ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); });
 #elif defined(ADS8339_TORQUE_SENSOR)
-    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
-    System::api.add_api_variable("tint", new const APIInt32(&config::torque_sensor_direct.signed_value_));
-    System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor_direct.timeout_error_));
-    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
+    System::api.add_api_variable<const APIUint32>("traw", &config::torque_sensor_direct.raw_value_);
+    System::api.add_api_variable<const APIInt32>("tint", &config::torque_sensor_direct.signed_value_);
+    System::api.add_api_variable<const APIUint32>("ttimeout_error", &config::torque_sensor_direct.timeout_error_);
+    System::api.add_api_variable<const APIUint32>("tread_error", &config::torque_sensor_direct.read_error_);
 #else
-    System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor.raw_));
-    System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
-    System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor.read_error_));
-    System::api.add_api_variable("tread_len", new const APIUint32(&config::torque_sensor.read_len_));
-    System::api.add_api_variable("tcrc_error", new const APIUint32(&config::torque_sensor.crc_error_));
-    System::api.add_api_variable("tcrc_calc", new const APIUint8(&config::torque_sensor.crc_calc_));
-    System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
-    System::api.add_api_variable("twait_error", new const APIUint32(&config::torque_sensor.wait_error_));
-    System::api.add_api_variable("ttimeout_error", new const APIUint32(&config::torque_sensor.timeout_error_));
-    System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
-    System::api.add_api_variable("qia_gain", new APICallbackUint8([](){ return config::torque_sensor.get_gain(); },
-        [](uint8_t u){ config::torque_sensor.set_gain(u); }));
+    System::api.add_api_variable<const APIUint32>("traw", &config::torque_sensor.raw_);
+    System::api.add_api_variable<const APIUint32>("twait_error", &config::torque_sensor.wait_error_);
+    System::api.add_api_variable<const APIUint32>("tread_error", &config::torque_sensor.read_error_);
+    System::api.add_api_variable<const APIUint32>("tread_len", &config::torque_sensor.read_len_);
+    System::api.add_api_variable<const APIUint32>("tcrc_error", &config::torque_sensor.crc_error_);
+    System::api.add_api_variable<const APIUint8>("tcrc_calc", &config::torque_sensor.crc_calc_);
+    System::api.add_api_variable<const APIUint8>("tcrc_read", &config::torque_sensor.crc_read_);
+    System::api.add_api_variable<const APIUint32>("twait_error", &config::torque_sensor.wait_error_);
+    System::api.add_api_variable<const APIUint32>("ttimeout_error", &config::torque_sensor.timeout_error_);
+    System::api.add_api_variable<const APIUint32>("tfull_raw", &config::torque_sensor.full_raw_);
+    System::api.add_api_variable<APICallbackUint8>("qia_gain",[](){ return config::torque_sensor.get_gain(); },
+        [](uint8_t u){ config::torque_sensor.set_gain(u); });
 #endif
     // System::api.add_api_variable("5V", new const APIFloat(&v5v));
     // System::api.add_api_variable("V5V", new const APIUint32(&V5V));

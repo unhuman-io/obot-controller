@@ -59,23 +59,21 @@ void spi1_reinit_callback() {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
-
-    System::api.add_api_variable("oerr", new APIUint32(&config::output_encoder.diag_err_count_));
-    System::api.add_api_variable("owarn", new APIUint32(&config::output_encoder.diag_warn_count_));
-    System::api.add_api_variable("ocrc_cnt", new APIUint32(&config::output_encoder.crc_err_count_));
-    System::api.add_api_variable("oraw", new APIUint32(&config::output_encoder.raw_value_));
-    System::api.add_api_variable("orawh", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value_); }));
-    System::api.add_api_variable("oraw2h", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value2_); }));
-    System::api.add_api_variable("oraw3h", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value3_); }));
-    System::api.add_api_variable("oraw4h", new const APICallback([](){ return u32_to_hex(config::output_encoder.raw_value4_); }));
-   System::api.add_api_variable("olen", new APIUint8(&config::output_encoder.length_));
-    System::api.add_api_variable("ocrc_latch", new const APIUint32(&config::output_encoder.crc_error_raw_latch_));
-    System::api.add_api_variable("oind", new const APIUint8(&config::output_encoder.byte_ind));
-    System::api.add_api_variable("ocrc_calc", new const APIUint8(&config::output_encoder.crc_calc_));
-    System::api.add_api_variable("ozeros", new const APIUint32(&config::output_encoder.leading_zeros));
-    System::api.add_api_variable("odiag", new const APIUint8(&config::output_encoder.diag_raw_.word));
-
+    System::api.add_api_variable<APIUint32>("index_count", &config::motor_encoder.index_count_);
+    System::api.add_api_variable<APIUint32>("oerr", &config::output_encoder.diag_err_count_);
+    System::api.add_api_variable<APIUint32>("owarn", &config::output_encoder.diag_warn_count_);
+    System::api.add_api_variable<APIUint32>("ocrc_cnt", &config::output_encoder.crc_err_count_);
+    System::api.add_api_variable<APIUint32>("oraw", &config::output_encoder.raw_value_);
+    System::api.add_api_variable<const APICallback>("orawh",[](){ return u32_to_hex(config::output_encoder.raw_value_); });
+    System::api.add_api_variable<const APICallback>("oraw2h",[](){ return u32_to_hex(config::output_encoder.raw_value2_); });
+    System::api.add_api_variable<const APICallback>("oraw3h",[](){ return u32_to_hex(config::output_encoder.raw_value3_); });
+    System::api.add_api_variable<const APICallback>("oraw4h",[](){ return u32_to_hex(config::output_encoder.raw_value4_); });
+   System::api.add_api_variable<APIUint8>("olen", &config::output_encoder.length_);
+    System::api.add_api_variable<const APIUint32>("ocrc_latch", &config::output_encoder.crc_error_raw_latch_);
+    System::api.add_api_variable<const APIUint8>("oind", &config::output_encoder.byte_ind);
+    System::api.add_api_variable<const APIUint8>("ocrc_calc", &config::output_encoder.crc_calc_);
+    System::api.add_api_variable<const APIUint32>("ozeros", &config::output_encoder.leading_zeros);
+    System::api.add_api_variable<const APIUint8>("odiag", &config::output_encoder.diag_raw_.word);
 }
 
 void config_maintenance() {}

@@ -69,14 +69,14 @@ namespace config {
 };
 
 void config_init() {
-    System::api.add_api_variable("mdiag", new const APIUint8(&config::motor_encoder.diag_.word));
-    System::api.add_api_variable("mdiag_raw", new const APIUint8(&config::motor_encoder.diag_raw_.word));
-    System::api.add_api_variable("mcrc", new const APIUint8(&config::motor_encoder.crc_calc_));
-    System::api.add_api_variable("merr", new APIUint32(&config::motor_encoder.diag_err_count_));
-    System::api.add_api_variable("mwarn", new APIUint32(&config::motor_encoder.diag_warn_count_));
-    System::api.add_api_variable("mcrc_cnt", new APIUint32(&config::motor_encoder.crc_err_count_));
-    System::api.add_api_variable("mraw", new APIUint32(&config::motor_encoder.raw_value_));
-    System::api.add_api_variable("mtemp", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
+    System::api.add_api_variable<const APIUint8>("mdiag", &config::motor_encoder.diag_.word);
+    System::api.add_api_variable<const APIUint8>("mdiag_raw", &config::motor_encoder.diag_raw_.word);
+    System::api.add_api_variable<const APIUint8>("mcrc", &config::motor_encoder.crc_calc_);
+    System::api.add_api_variable<APIUint32>("merr", &config::motor_encoder.diag_err_count_);
+    System::api.add_api_variable<APIUint32>("mwarn", &config::motor_encoder.diag_warn_count_);
+    System::api.add_api_variable<APIUint32>("mcrc_cnt", &config::motor_encoder.crc_err_count_);
+    System::api.add_api_variable<APIUint32>("mraw", &config::motor_encoder.raw_value_);
+    System::api.add_api_variable<const APICallbackFloat>("mtemp",[](){ return config::motor_temperature.read(); });
 }
 
 FrequencyLimiter temp_rate_motor = {10};

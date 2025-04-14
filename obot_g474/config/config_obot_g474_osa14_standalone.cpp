@@ -61,25 +61,23 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_osa.cpp"
 
 void config_init() {
-    System::api.add_api_variable("mbct", new APICallbackUint32([](){ return config::motor_encoder.get_bct(); },
-                    [](uint32_t u){ config::motor_encoder.set_bct(u); }));
-    System::api.add_api_variable("met", new APICallbackUint32([](){ return config::motor_encoder.get_et(); },
-                    [](uint32_t u){ config::motor_encoder.set_et(u); }));
-    System::api.add_api_variable("mmgt", new APICallbackUint32([](){ return config::motor_encoder.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::motor_encoder.set_mgt(u); }));
-    System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder_direct.get_bct(); },
-                    [](uint32_t u){ config::motor_encoder.set_bct(u); }));
-    System::api.add_api_variable("jet", new APICallbackUint32([](){ return config::output_encoder_direct.get_et(); },
-                    [](uint32_t u){ config::motor_encoder.set_et(u); }));
-    System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::motor_encoder.set_mgt(u); }));
-
-    System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor_direct.result0_));
-    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor_direct.result1_));   
-
-    System::api.add_api_variable("gpio", new const APICallback([]() { 
+    System::api.add_api_variable<APICallbackUint32>("mbct",[](){ return config::motor_encoder.get_bct(); },
+                    [](uint32_t u){ config::motor_encoder.set_bct(u); });
+    System::api.add_api_variable<APICallbackUint32>("met",[](){ return config::motor_encoder.get_et(); },
+                    [](uint32_t u){ config::motor_encoder.set_et(u); });
+    System::api.add_api_variable<APICallbackUint32>("mmgt",[](){ return config::motor_encoder.get_magnetic_field_strength(); },
+                    [](uint32_t u){ config::motor_encoder.set_mgt(u); });
+    System::api.add_api_variable<APICallbackUint32>("jbct",[](){ return config::output_encoder_direct.get_bct(); },
+                    [](uint32_t u){ config::motor_encoder.set_bct(u); });
+    System::api.add_api_variable<APICallbackUint32>("jet",[](){ return config::output_encoder_direct.get_et(); },
+                    [](uint32_t u){ config::motor_encoder.set_et(u); });
+    System::api.add_api_variable<APICallbackUint32>("jmgt",[](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
+                    [](uint32_t u){ config::motor_encoder.set_mgt(u); });
+    System::api.add_api_variable<const APIUint32>("C1", &config::torque_sensor_direct.result0_);
+    System::api.add_api_variable<const APIUint32>("C2", &config::torque_sensor_direct.result1_);
+    System::api.add_api_variable<const APICallback>("gpio",[]() { 
         return "gpio 1: " + std::to_string(config::gpio1.is_set()) + "\tgpio 2: " + std::to_string(config::gpio2.is_set());
-    }));
+    });
     TIM3->CR1 = TIM_CR1_CEN; // start TIM3 program      
 }
 
@@ -92,15 +90,15 @@ namespace config {
 
 struct InitCode2 {
     InitCode2() {    
-        System::api.add_api_variable("state", new const APICallback([](){ return config::tension_program.get_state(); }));
-        System::api.add_api_variable("start_velocity", new APIFloat(&config::tension_program.start_velocity));
-        System::api.add_api_variable("low_velocity", new APIFloat(&config::tension_program.low_velocity));
-        System::api.add_api_variable("torque_desired", new APIFloat(&config::tension_program.torque_desired));
-        System::api.add_api_variable("start_torque", new APIFloat(&config::tension_program.start_torque));
-        System::api.add_api_variable("dithering_torque", new APIFloat(&config::tension_program.dithering_torque));
-        System::api.add_api_variable("dithering_frequency_hz", new APIFloat(&config::tension_program.dithering_frequency_hz));
-        System::api.add_api_variable("torque_vs_position_ramp", new APIFloat(&config::tension_program.torque_vs_position_ramp));
-        System::api.add_api_variable("min_torque_desired", new APIFloat(&config::tension_program.min_torque_desired));
+        System::api.add_api_variable<const APICallback>("state",[](){ return config::tension_program.get_state(); });
+        System::api.add_api_variable<APIFloat>("start_velocity", &config::tension_program.start_velocity);
+        System::api.add_api_variable<APIFloat>("low_velocity", &config::tension_program.low_velocity);
+        System::api.add_api_variable<APIFloat>("torque_desired", &config::tension_program.torque_desired);
+        System::api.add_api_variable<APIFloat>("start_torque", &config::tension_program.start_torque);
+        System::api.add_api_variable<APIFloat>("dithering_torque", &config::tension_program.dithering_torque);
+        System::api.add_api_variable<APIFloat>("dithering_frequency_hz", &config::tension_program.dithering_frequency_hz);
+        System::api.add_api_variable<APIFloat>("torque_vs_position_ramp", &config::tension_program.torque_vs_position_ramp);
+        System::api.add_api_variable<APIFloat>("min_torque_desired", &config::tension_program.min_torque_desired);
      }
 };
 

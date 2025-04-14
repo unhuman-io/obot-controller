@@ -31,7 +31,7 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
+    System::api.add_api_variable<APIUint32>("index_count", &config::motor_encoder.index_count_);
 }
 
 void config_maintenance() {}

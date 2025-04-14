@@ -208,12 +208,11 @@ void config_init() {
     ICPZ_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
 
     // System::api.add_api_variable("mcrc_latch", new const APIUint32(&config::motor_encoder.crc_error_raw_latch_));
-    System::api.add_api_variable("Tmotor", new const APICallbackFloat([](){ return config::motor_temperature.read(); }));
-    System::api.add_api_variable("Tambient", new const APICallbackFloat([](){ return config::ambient_temperature.get_temperature(); }));
-    System::api.add_api_variable("Tambient2", new const APICallbackFloat([](){ return config::ambient_temperature_if.get_temperature(); }));
-    System::api.add_api_variable("Tambient3", new const APICallbackFloat([](){ return config::ambient_temperature_3.get_temperature(); }));
-    System::api.add_api_variable("Tambient4", new const APICallbackFloat([](){ return config::ambient_temperature_4.get_temperature(); }));
-
+    System::api.add_api_variable<const APICallbackFloat>("Tmotor",[](){ return config::motor_temperature.read(); });
+    System::api.add_api_variable<const APICallbackFloat>("Tambient",[](){ return config::ambient_temperature.get_temperature(); });
+    System::api.add_api_variable<const APICallbackFloat>("Tambient2",[](){ return config::ambient_temperature_if.get_temperature(); });
+    System::api.add_api_variable<const APICallbackFloat>("Tambient3",[](){ return config::ambient_temperature_3.get_temperature(); });
+    System::api.add_api_variable<const APICallbackFloat>("Tambient4",[](){ return config::ambient_temperature_4.get_temperature(); });
     ICPZ_SET_DEBUG_VARIABLES("o", System::api, config::output_encoder_direct);
 
     // System::api.add_api_variable("traw", new const APIUint32(&config::torque_sensor_direct.raw_value_));
@@ -222,14 +221,14 @@ void config_init() {
     // System::api.add_api_variable("tread_error", new const APIUint32(&config::torque_sensor_direct.read_error_));
     // System::api.add_api_variable("tmux_delay", new APICallbackUint16([](){ return 0; }, [](uint16_t u){ config::torque_sensor_direct.write_reg16(5, u); }));
    
-    System::api.add_api_variable("mstart", new const APICallback([]
-                                                                 { config::motor_encoder.start_continuous_read(); return std::string("ok"); }));
-    System::api.add_api_variable("mstop", new const APICallback([]
-                                                                { config::motor_encoder.stop_continuous_read(); return std::string("ok"); }));
-    System::api.add_api_variable("ostart", new const APICallback([]
-                                                                 { config::output_encoder.start_continuous_read(); return std::string("ok"); }));
-    System::api.add_api_variable("ostop", new const APICallback([]
-                                                                { config::output_encoder.stop_continuous_read(); return std::string("ok"); }));
+    System::api.add_api_variable<const APICallback>("mstart",[]
+                                                                 { config::motor_encoder.start_continuous_read(); return std::string("ok"); });
+    System::api.add_api_variable<const APICallback>("mstop",[]
+                                                                { config::motor_encoder.stop_continuous_read(); return std::string("ok"); });
+    System::api.add_api_variable<const APICallback>("ostart",[]
+                                                                 { config::output_encoder.start_continuous_read(); return std::string("ok"); });
+    System::api.add_api_variable<const APICallback>("ostop",[]
+                                                                { config::output_encoder.stop_continuous_read(); return std::string("ok"); });
     // System::api.add_api_variable("5V", new const APIFloat(&v5v));
     // System::api.add_api_variable("V5V", new const APIUint32(&V5V));
     // System::api.add_api_variable("I5V", new const APIUint32(&I5V));

@@ -64,12 +64,12 @@ namespace config {
 void config_init() {
     System::log("torque_sensor_init: " + std::to_string(config::torque_sensor.init()));
 
-    System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));
-    System::api.add_api_variable("torque2", new const APIFloat(&config::torque_sensor.torque2_));
-    System::api.add_api_variable("decimation", new APIUint16(&config::torque_sensor.decimation_));
-    System::api.add_api_variable("gpio", new const APICallback([]() { 
+    System::api.add_api_variable<const APIFloat>("torque1", &config::torque_sensor.torque1_);
+    System::api.add_api_variable<const APIFloat>("torque2", &config::torque_sensor.torque2_);
+    System::api.add_api_variable<APIUint16>("decimation", &config::torque_sensor.decimation_);
+    System::api.add_api_variable<const APICallback>("gpio",[]() { 
         return "gpio 1: " + std::to_string(config::gpio1.is_set()) + "\tgpio 2: " + std::to_string(config::gpio2.is_set());
-    }));
+    });
     TIM3->CR1 = TIM_CR1_CEN; // start TIM3 program           
 }
 
@@ -82,15 +82,15 @@ namespace config {
 
 struct InitCode2 {
     InitCode2() {    
-        System::api.add_api_variable("state", new const APICallback([](){ return config::tension_program.get_state(); }));
-        System::api.add_api_variable("start_velocity", new APIFloat(&config::tension_program.start_velocity));
-        System::api.add_api_variable("low_velocity", new APIFloat(&config::tension_program.low_velocity));
-        System::api.add_api_variable("torque_desired", new APIFloat(&config::tension_program.torque_desired));
-        System::api.add_api_variable("start_torque", new APIFloat(&config::tension_program.start_torque));
-        System::api.add_api_variable("dithering_torque", new APIFloat(&config::tension_program.dithering_torque));
-        System::api.add_api_variable("dithering_frequency_hz", new APIFloat(&config::tension_program.dithering_frequency_hz));
-        System::api.add_api_variable("torque_vs_position_ramp", new APIFloat(&config::tension_program.torque_vs_position_ramp));
-        System::api.add_api_variable("min_torque_desired", new APIFloat(&config::tension_program.min_torque_desired));
+        System::api.add_api_variable<const APICallback>("state",[](){ return config::tension_program.get_state(); });
+        System::api.add_api_variable<APIFloat>("start_velocity", &config::tension_program.start_velocity);
+        System::api.add_api_variable<APIFloat>("low_velocity", &config::tension_program.low_velocity);
+        System::api.add_api_variable<APIFloat>("torque_desired", &config::tension_program.torque_desired);
+        System::api.add_api_variable<APIFloat>("start_torque", &config::tension_program.start_torque);
+        System::api.add_api_variable<APIFloat>("dithering_torque", &config::tension_program.dithering_torque);
+        System::api.add_api_variable<APIFloat>("dithering_frequency_hz", &config::tension_program.dithering_frequency_hz);
+        System::api.add_api_variable<APIFloat>("torque_vs_position_ramp", &config::tension_program.torque_vs_position_ramp);
+        System::api.add_api_variable<APIFloat>("min_torque_desired", &config::tension_program.min_torque_desired);
      }
 };
 

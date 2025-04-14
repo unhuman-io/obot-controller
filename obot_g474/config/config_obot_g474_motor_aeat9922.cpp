@@ -62,18 +62,18 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("oraw", new const APIUint32(&config::output_encoder.raw_value_));
-    System::api.add_api_variable("oerr_reg", new const APICallbackHex<uint8_t>([](){ return config::output_encoder.get_error_register(); }));
-    System::api.add_api_variable("oerr", new const APIUint32(&config::output_encoder.error_count_));
-    System::api.add_api_variable("ocrc_cnt", new const APIUint32(&config::output_encoder.crc_error_count_));
-    System::api.add_api_variable("odebug_parity", new const APICallback([]() {
+    System::api.add_api_variable<const APIUint32>("oraw", &config::output_encoder.raw_value_);
+    System::api.add_api_variable<const APICallbackHex<uint8_t>>("oerr_reg",[](){ return config::output_encoder.get_error_register(); });
+    System::api.add_api_variable<const APIUint32>("oerr", &config::output_encoder.error_count_);
+    System::api.add_api_variable<const APIUint32>("ocrc_cnt", &config::output_encoder.crc_error_count_);
+    System::api.add_api_variable<const APICallback>("odebug_parity",[]() {
         uint32_t raw = config::output_encoder.raw_value_;
         char c[100];
         c[99] = 0;
         snprintf(c, 99, "raw: %03lx, bit_count: %d, parity: %d", raw, config::output_encoder.bit_sum(raw), config::output_encoder.get_parity(raw));
         std::string s(c);
         return s;
-    }));
+    });
 }
 
 void config_maintenance() {}

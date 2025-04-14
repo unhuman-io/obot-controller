@@ -62,7 +62,7 @@ void config_init() {
     // System::api.add_api_variable("tcrc_calc", new const APIUint8(&config::torque_sensor.crc_calc_));
     // System::api.add_api_variable("tcrc_read", new const APIUint8(&config::torque_sensor.crc_read_));
     // System::api.add_api_variable("tfull_raw", new const APIUint32(&config::torque_sensor.full_raw_));
-    System::api.add_api_variable("traw", new const APICallback([](){ return u32_to_hex(config::torque_sensor.raw_value_); }));
+    System::api.add_api_variable<const APICallback>("traw",[](){ return u32_to_hex(config::torque_sensor.raw_value_); });
 }
 
 void config_maintenance() {

@@ -57,29 +57,27 @@ namespace config {
 void config_init() {
     config::imu.init();
     
-    System::api.add_api_variable("mbct", new APICallbackUint32([](){ return config::motor_encoder_direct.get_bct(); },
-                    [](uint32_t u){ config::motor_encoder_direct.set_bct(u); }));
-    System::api.add_api_variable("met", new APICallbackUint32([](){ return config::motor_encoder_direct.get_et(); },
-                    [](uint32_t u){ config::motor_encoder_direct.set_et(u); }));
-    System::api.add_api_variable("mmgt", new APICallbackUint32([](){ return config::motor_encoder_direct.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::motor_encoder_direct.set_mgt(u); }));
-    System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder_direct.get_bct(); },
-                    [](uint32_t u){ config::output_encoder_direct.set_bct(u); }));
-    System::api.add_api_variable("jet", new APICallbackUint32([](){ return config::output_encoder_direct.get_et(); },
-                    [](uint32_t u){ config::output_encoder_direct.set_et(u); }));
-    System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::output_encoder_direct.set_mgt(u); }));
-
-    System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor.result0_));
-    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor.result1_));
-
-    System::api.add_api_variable("imu_read", new const APICallback([](){ config::imu.read(); return "ok"; }));
-    System::api.add_api_variable("ax", new const APICallbackFloat([](){ return config::imu.data_.acc_x*8./pow(2,15); }));
-    System::api.add_api_variable("ay", new const APICallbackFloat([](){ return config::imu.data_.acc_y*8./pow(2,15); }));
-    System::api.add_api_variable("az", new const APICallbackFloat([](){ return config::imu.data_.acc_z*8./pow(2,15); }));
-    System::api.add_api_variable("gx", new const APICallbackFloat([](){ return config::imu.data_.gyr_x*2000.*M_PI/180/pow(2,15); }));
-    System::api.add_api_variable("gy", new const APICallbackFloat([](){ return config::imu.data_.gyr_y*2000.*M_PI/180/pow(2,15); }));
-    System::api.add_api_variable("gz", new const APICallbackFloat([](){ return config::imu.data_.gyr_z*2000.*M_PI/180/pow(2,15); }));    
+    System::api.add_api_variable<APICallbackUint32>("mbct",[](){ return config::motor_encoder_direct.get_bct(); },
+                    [](uint32_t u){ config::motor_encoder_direct.set_bct(u); });
+    System::api.add_api_variable<APICallbackUint32>("met",[](){ return config::motor_encoder_direct.get_et(); },
+                    [](uint32_t u){ config::motor_encoder_direct.set_et(u); });
+    System::api.add_api_variable<APICallbackUint32>("mmgt",[](){ return config::motor_encoder_direct.get_magnetic_field_strength(); },
+                    [](uint32_t u){ config::motor_encoder_direct.set_mgt(u); });
+    System::api.add_api_variable<APICallbackUint32>("jbct",[](){ return config::output_encoder_direct.get_bct(); },
+                    [](uint32_t u){ config::output_encoder_direct.set_bct(u); });
+    System::api.add_api_variable<APICallbackUint32>("jet",[](){ return config::output_encoder_direct.get_et(); },
+                    [](uint32_t u){ config::output_encoder_direct.set_et(u); });
+    System::api.add_api_variable<APICallbackUint32>("jmgt",[](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
+                    [](uint32_t u){ config::output_encoder_direct.set_mgt(u); });
+    System::api.add_api_variable<const APIUint32>("C1", &config::torque_sensor.result0_);
+    System::api.add_api_variable<const APIUint32>("C2", &config::torque_sensor.result1_);
+    System::api.add_api_variable<const APICallback>("imu_read",[](){ config::imu.read(); return "ok"; });
+    System::api.add_api_variable<const APICallbackFloat>("ax",[](){ return config::imu.data_.acc_x*8./pow(2,15); });
+    System::api.add_api_variable<const APICallbackFloat>("ay",[](){ return config::imu.data_.acc_y*8./pow(2,15); });
+    System::api.add_api_variable<const APICallbackFloat>("az",[](){ return config::imu.data_.acc_z*8./pow(2,15); });
+    System::api.add_api_variable<const APICallbackFloat>("gx",[](){ return config::imu.data_.gyr_x*2000.*M_PI/180/pow(2,15); });
+    System::api.add_api_variable<const APICallbackFloat>("gy",[](){ return config::imu.data_.gyr_y*2000.*M_PI/180/pow(2,15); });
+    System::api.add_api_variable<const APICallbackFloat>("gz",[](){ return config::imu.data_.gyr_z*2000.*M_PI/180/pow(2,15); });
 }
 
 void config_maintenance() {}

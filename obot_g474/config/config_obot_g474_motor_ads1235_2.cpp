@@ -37,9 +37,9 @@ namespace config {
 void config_init() {
     System::log("torque_sensor_init: " + std::to_string(config::torque_sensor.init()));
 
-    System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));
-    System::api.add_api_variable("torque2", new const APIFloat(&config::torque_sensor.torque2_));
-    System::api.add_api_variable("decimation", new APIUint16(&config::torque_sensor.decimation_));
+    System::api.add_api_variable<const APIFloat>("torque1", &config::torque_sensor.torque1_);
+    System::api.add_api_variable<const APIFloat>("torque2", &config::torque_sensor.torque2_);
+    System::api.add_api_variable<APIUint16>("decimation", &config::torque_sensor.decimation_);
 }
 
 void config_maintenance() {}

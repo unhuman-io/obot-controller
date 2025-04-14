@@ -43,8 +43,8 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_motor_40.cpp"
 
 void config_init() {
-    System::api.add_api_variable("spi", new APICallback([](){ return config::spi_debug.read(); }, 
-        [](std::string s) { config::spi_debug.write(s); }));
+    System::api.add_api_variable<APICallback>("spi",[](){ return config::spi_debug.read(); }, 
+        [](std::string s) { config::spi_debug.write(s); });
     ICPZ_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
     
     // System::api.add_api_variable("torque1", new const APIFloat(&config::torque_sensor.torque1_));

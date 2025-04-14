@@ -37,8 +37,8 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("spi", new APICallback([](){ return config::spi_debug.read(); }, 
-        [](std::string s) { config::spi_debug.write(s); }));
+    System::api.add_api_variable<APICallback>("spi",[](){ return config::spi_debug.read(); }, 
+        [](std::string s) { config::spi_debug.write(s); });
 }
 
 void config_maintenance() {}

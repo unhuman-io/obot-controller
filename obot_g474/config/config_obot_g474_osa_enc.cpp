@@ -46,12 +46,12 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_osa.cpp"
 
 void config_init() {
-    System::api.add_api_variable("jbct", new APICallbackUint32([](){ return config::output_encoder.get_bct(); },
-                    [](uint32_t u){ config::output_encoder.set_bct(u); }));
-    System::api.add_api_variable("jet", new APICallbackUint32([](){ return config::output_encoder.get_et(); },
-                    [](uint32_t u){ config::output_encoder.set_et(u); }));
-    System::api.add_api_variable("jmgt", new APICallbackUint32([](){ return config::output_encoder.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::output_encoder.set_mgt(u); }));
+    System::api.add_api_variable<APICallbackUint32>("jbct",[](){ return config::output_encoder.get_bct(); },
+                    [](uint32_t u){ config::output_encoder.set_bct(u); });
+    System::api.add_api_variable<APICallbackUint32>("jet",[](){ return config::output_encoder.get_et(); },
+                    [](uint32_t u){ config::output_encoder.set_et(u); });
+    System::api.add_api_variable<APICallbackUint32>("jmgt",[](){ return config::output_encoder.get_magnetic_field_strength(); },
+                    [](uint32_t u){ config::output_encoder.set_mgt(u); });
 }
 
 void config_maintenance() {}

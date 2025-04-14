@@ -33,12 +33,12 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("mbct", new APICallbackUint32([](){ return config::motor_encoder.get_bct(); },
-                    [](uint32_t u){ config::motor_encoder.set_bct(u); }));
-    System::api.add_api_variable("met", new APICallbackUint32([](){ return config::motor_encoder.get_et(); },
-                    [](uint32_t u){ config::motor_encoder.set_et(u); }));
-    System::api.add_api_variable("mmgt", new APICallbackUint32([](){ return config::motor_encoder.get_magnetic_field_strength(); },
-                    [](uint32_t u){ config::motor_encoder.set_mgt(u); }));
+    System::api.add_api_variable<APICallbackUint32>("mbct",[](){ return config::motor_encoder.get_bct(); },
+                    [](uint32_t u){ config::motor_encoder.set_bct(u); });
+    System::api.add_api_variable<APICallbackUint32>("met",[](){ return config::motor_encoder.get_et(); },
+                    [](uint32_t u){ config::motor_encoder.set_et(u); });
+    System::api.add_api_variable<APICallbackUint32>("mmgt",[](){ return config::motor_encoder.get_magnetic_field_strength(); },
+                    [](uint32_t u){ config::motor_encoder.set_mgt(u); });
 }
 
 void config_maintenance() {}

@@ -205,7 +205,10 @@ jobs:
         check_var stack_used $stack_used 1000 4000
 
         heap_used=$(motor_util -p 1-3.1 --no-list --set-api heap_used | tail -n 1 | cut -f2 -d' ')
-        check_var heap_used $heap_used 10000 30000
+        check_var heap_used $heap_used 1000 16384
+
+        api_used=$(motor_util -p 1-3.1 --no-list --set-api api_memory_used | tail -n 1 | cut -f2 -d' ')
+        check_var api_used $api_used 1000 5000
 
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_enc.py -p 1-3.1 -v
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_aksim.py -p 1-3.2 -v

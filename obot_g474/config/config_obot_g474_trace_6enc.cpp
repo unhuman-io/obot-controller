@@ -1,7 +1,7 @@
 #define CUSTOM_SENDDATA
 #include <cstdint>
 struct SendData {
-    uint16_t encoder[6];
+    uint32_t encoder[6];
 };
 
 #include "../param/param_obot_g474.h"

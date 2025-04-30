@@ -45,12 +45,12 @@ struct InitCode {
         GPIO_SETL(A, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
         GPIO_SETL(A, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
         GPIO_SETH(A, 8, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
-        GPIOA->BSRR = GPIO_BSRR_BR0 | GPIO_BSRR_BR1 | GPIO_BSRR_BR2 | GPIO_BSRR_BR3 | GPIO_BSRR_BR4 | GPIO_BSRR_BR8;
+        GPIOA->BSRR = GPIO_BSRR_BS0 | GPIO_BSRR_BS1 | GPIO_BSRR_BS2 | GPIO_BSRR_BS3 | GPIO_BSRR_BS4 | GPIO_BSRR_BS8;
     }
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 5000;    
+    const uint32_t main_loop_frequency = 1000;    
     const uint32_t pwm_frequency = 12000;
     InitCode init_code;
 
@@ -59,17 +59,17 @@ namespace config {
     OutputEncoder output_encoder;
 
     GPIO gpio_cs1(*GPIOA, 0, GPIO::OUTPUT);
-    MA782Encoder ma782_1(*SPI1, gpio_cs1, SPIDMA::spi_pause[SPIDMA::SP1]);
+    MA782Encoder ma782_1(*SPI1, gpio_cs1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
     GPIO gpio_cs2(*GPIOA, 1, GPIO::OUTPUT);
-    MA782Encoder ma782_2(*SPI1, gpio_cs2, SPIDMA::spi_pause[SPIDMA::SP1]);
+    MA782Encoder ma782_2(*SPI1, gpio_cs2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
     GPIO gpio_cs3(*GPIOA, 2, GPIO::OUTPUT);
-    MA782Encoder ma782_3(*SPI1, gpio_cs3, SPIDMA::spi_pause[SPIDMA::SP1]);
+    MA782Encoder ma782_3(*SPI1, gpio_cs3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
     GPIO gpio_cs4(*GPIOA, 3, GPIO::OUTPUT);
-    MA782Encoder ma782_4(*SPI1, gpio_cs4, SPIDMA::spi_pause[SPIDMA::SP1]);
+    MA782Encoder ma782_4(*SPI1, gpio_cs4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
     GPIO gpio_cs5(*GPIOA, 4, GPIO::OUTPUT);
-    MA782Encoder ma782_5(*SPI1, gpio_cs5, SPIDMA::spi_pause[SPIDMA::SP1]);
+    MA782Encoder ma782_5(*SPI1, gpio_cs5, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
     GPIO gpio_cs6(*GPIOA, 8, GPIO::OUTPUT);
-    MA782Encoder ma782_6(*SPI1, gpio_cs6, SPIDMA::spi_pause[SPIDMA::SP1]);
+    MA782Encoder ma782_6(*SPI1, gpio_cs6, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
@@ -83,10 +83,15 @@ void config_init() {
     MA7XX_SET_DEBUG_VARIABLES("m6", System::api, config::ma782_6);
 
     config::ma782_1.init();
+    IWDG->KR = 0xAAAA;
     config::ma782_2.init();
+    IWDG->KR = 0xAAAA;
     config::ma782_3.init();
+    IWDG->KR = 0xAAAA;
     config::ma782_4.init();
+    IWDG->KR = 0xAAAA;
     config::ma782_5.init();
+    IWDG->KR = 0xAAAA;
     config::ma782_6.init();
 }
 

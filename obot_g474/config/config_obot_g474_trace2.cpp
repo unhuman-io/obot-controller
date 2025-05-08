@@ -15,14 +15,12 @@
 #include "../controller/admittance_controller.h"
 
 
-using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = EncoderBase;
-using OutputEncoder = EncoderBase;
 #include "../../motorlib/logger.h"
 import config_obot_g474_tracec;
 import system2;
 import fast_loop;
 import main_loop;
+import actuator;
 
 const Param * const param = (const Param * const) 0x8060000;
 const Calibration * const calibration = (const Calibration * const) 0x8070000;
@@ -47,7 +45,9 @@ public:
         *etmteevr = 0x000037ef; // ON
     }
 
-
+    using TorqueSensor = TorqueSensorBase;
+    using MotorEncoder = EncoderBase;
+    using OutputEncoder = EncoderBase;
 
     MotorEncoder motor_encoder;
     TorqueSensor torque_sensor;
@@ -103,6 +103,24 @@ extern const char * const name = "obot_g474_trace2";
 extern "C" void usb_interrupt() {
     trace2.usb.interrupt();
 }
+
+Actuator<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
+    MainLoop<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
+        Trace2::Driver,
+        PositionController,
+        TorqueController,
+        ImpedanceController,
+        VelocityController,
+        StateController,
+        JointPositionController,
+        AdmittanceController,
+        Trace2::Communication,
+        Trace2::LED,
+        Trace2::OutputEncoder,
+        Trace2::TorqueSensor>,
+    Calibration>
+     actuator_(trace2.fast_loop, trace2.main_loop, param->startup_param, *calibration);
+
 void config_init() {}
 
 void config_maintenance() {}
@@ -128,3 +146,4 @@ extern "C" void system_log(std::string s) {
 extern "C" void system_loop_interrupt() {
   //  System::system_loop();
 }
+extern "C" void system_init() {}

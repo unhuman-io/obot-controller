@@ -1,4 +1,4 @@
-&elf_file="~/obot/obot-controller/obot_g474/build/motor_template.elf"
+&elf_file="~/obot/obot-controller/obot_g474/build/trace_encoder.elf"
 
 ;reset
 
@@ -12,9 +12,9 @@ break
 
 do ~~/demo/arm/flash/stm32g4xx.cmm PREPAREONLY CPU=STM32G474RE DUALPORT=0
 
-flash.ReProgram all /Erase
+flash.auto all
 data.load.elf &elf_file
-flash.ReProgram off
+flash.auto off
 
 Data.LOAD.elf &elf_file /DIFF
 IF FOUND()
@@ -44,11 +44,3 @@ itm.TImeMode.PCSampler
 
 list.auto
 
-;menu.delete.name user.addtool
-menu.addtool "Reset" "R" "system.resettarget"
-
-; trace 4 pin
-tpiu.PortSize 4
-per.set.byname .AHB2ENR.GPIOEEN 1
-PER.Set.field ASD:0x48001000 %Long 0x3FF0 0xEAA
-PER.Set.field ASD:0x48001008 %Long 0x3FF0 0x3FF

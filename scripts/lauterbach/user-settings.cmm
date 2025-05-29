@@ -1,0 +1,17 @@
+; link to this file in ~/.trace32/
+
+menu.reprogram
+(
+    ADD
+    TOOLBAR
+    (
+        TOOLITEM "Set trace" "Tr"
+        (
+            per.set.byname .RCC_AHB2ENR.GPIOEEN 1
+            PER.Set.field ASD:0x48001000 %Long 0x3FF0 0xEAA
+            PER.Set.field ASD:0x48001008 %Long 0x3FF0 0x3FF  
+        )
+    )
+)
+
+menu.addtool "Reset" "R" "system.resettarget"

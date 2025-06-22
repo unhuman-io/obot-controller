@@ -59,6 +59,8 @@ jobs:
             config: motor_resolute
           - project: obot_g474
             config: trace
+          - project: obot_g474
+            config: trace_6enc
           # TODO: add this back
           # - project: obot_g474
           #   config: osa14_jl1

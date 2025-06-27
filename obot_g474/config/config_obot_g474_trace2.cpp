@@ -53,9 +53,9 @@ public:
     TorqueSensor torque_sensor;
     OutputEncoder output_encoder;
 
-    FastLoop<PWM, MotorEncoder, Calibration> fast_loop = {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, *calibration, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
+    FastLoop<PWM, MotorEncoder, Calibration> fast_loop {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, *calibration, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
 
-    PositionController position_controller = {(float) (1.0/main_loop_frequency)};
+    PositionController position_controller {(float) (1.0/main_loop_frequency)};
     TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
     ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
     VelocityController velocity_controller = {(float) (1.0/main_loop_frequency)};
@@ -75,7 +75,7 @@ public:
         LED,
         OutputEncoder,
         TorqueSensor>
-        main_loop = {main_loop_frequency,
+        main_loop {(int32_t) main_loop_frequency,
             fast_loop,
             position_controller,
             torque_controller,
@@ -119,7 +119,7 @@ Actuator<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
         Trace2::OutputEncoder,
         Trace2::TorqueSensor>,
     Calibration>
-     actuator_(trace2.fast_loop, trace2.main_loop, param->startup_param, *calibration);
+     actuator_{trace2.fast_loop, trace2.main_loop, param->startup_param, *calibration};
 
 void config_init() {}
 

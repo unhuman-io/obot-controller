@@ -13,6 +13,7 @@
 #include "../controller/state_controller.h"
 #include "../controller/joint_position_controller.h"
 #include "../controller/admittance_controller.h"
+#include "../../motorlib/peripheral/stm32g4/rtc.h"
 
 
 #include "../../motorlib/logger.h"
@@ -55,6 +56,7 @@ public:
 
     FastLoop<PWM, MotorEncoder, Calibration> fast_loop {(int32_t) pwm_frequency, motor_pwm, motor_encoder, param->fast_loop_param, *calibration, &I_A_DR, &I_B_DR, &I_C_DR, &V_BUS_DR};
 
+    BoardFun board_fun;
     PositionController position_controller {(float) (1.0/main_loop_frequency)};
     TorqueController torque_controller = {(float) (1.0/main_loop_frequency)};
     ImpedanceController impedance_controller = {(float) (1.0/main_loop_frequency)};
@@ -64,6 +66,7 @@ public:
     AdmittanceController admittance_controller = {1.0/main_loop_frequency};
     MainLoop<FastLoop<PWM, MotorEncoder, Calibration>,
         Driver,
+        BoardFun,
         PositionController,
         TorqueController,
         ImpedanceController,
@@ -77,6 +80,7 @@ public:
         TorqueSensor>
         main_loop {(int32_t) main_loop_frequency,
             fast_loop,
+            board_fun,
             position_controller,
             torque_controller,
             impedance_controller,
@@ -107,6 +111,7 @@ extern "C" void usb_interrupt() {
 Actuator<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
     MainLoop<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
         Trace2::Driver,
+        BoardFun,
         PositionController,
         TorqueController,
         ImpedanceController,
@@ -127,12 +132,25 @@ void config_maintenance() {}
 
 extern "C" void board_init() {}
 
+using Sys = System<Trace2::Communication, decltype(actuator_), RTClock>;
+
+template<>
+uint32_t Sys::count_ = 0;
+template<>
+ParameterAPI Sys::api = {};
+template<>
+uint32_t Sys::current_api_timeout_us_ = 0;
+template<>
+Trace2::Communication Sys::communication_ = trace2.communication;
+template<>
+decltype(actuator_) Sys::actuator_ = actuator_;
+
 extern "C" void system_run() {
-    //System<>::run();
+    Sys::run();
 }
 
 extern "C" void main_loop_interrupt() {
- //   System::main_loop_interrupt();
+    //Sys::main_loop_interrupt();
 }
 
 extern "C" void fast_loop_interrupt() {
@@ -147,3 +165,5 @@ extern "C" void system_loop_interrupt() {
   //  System::system_loop();
 }
 extern "C" void system_init() {}
+
+

@@ -14,6 +14,7 @@
 #include "../controller/joint_position_controller.h"
 #include "../controller/admittance_controller.h"
 #include "../../motorlib/peripheral/stm32g4/rtc.h"
+#include "../../motorlib/round_robin_logger.h"
 
 
 #include "../../motorlib/logger.h"
@@ -144,25 +145,26 @@ template<>
 Trace2::Communication Sys::communication_ = trace2.communication;
 template<>
 decltype(actuator_) Sys::actuator_ = actuator_;
+RoundRobinLogger round_robin_logger;
 
 extern "C" void system_run() {
     Sys::run();
 }
 
 extern "C" void main_loop_interrupt() {
-    //Sys::main_loop_interrupt();
+    Sys::main_loop_interrupt();
 }
 
 extern "C" void fast_loop_interrupt() {
-  //  System::fast_loop_interrupt();
+    Sys::fast_loop_interrupt();
 }
 
 extern "C" void system_log(std::string s) {
- //   System::log(s);
+    Sys::log(s);
 }
 
 extern "C" void system_loop_interrupt() {
-  //  System::system_loop();
+    Sys::system_loop();
 }
 extern "C" void system_init() {}
 

@@ -109,23 +109,23 @@ extern "C" void usb_interrupt() {
     trace2.usb.interrupt();
 }
 
-Actuator<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
-    MainLoop<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
-        Trace2::Driver,
-        BoardFun,
-        PositionController,
-        TorqueController,
-        ImpedanceController,
-        VelocityController,
-        StateController,
-        JointPositionController,
-        AdmittanceController,
-        Trace2::Communication,
-        Trace2::LED,
-        Trace2::OutputEncoder,
-        Trace2::TorqueSensor>,
-    Calibration>
-     actuator_{trace2.fast_loop, trace2.main_loop, param->startup_param, *calibration};
+// Actuator<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
+//     MainLoop<FastLoop<Trace2::PWM, Trace2::MotorEncoder, Calibration>,
+//         Trace2::Driver,
+//         BoardFun,
+//         PositionController,
+//         TorqueController,
+//         ImpedanceController,
+//         VelocityController,
+//         StateController,
+//         JointPositionController,
+//         AdmittanceController,
+//         Trace2::Communication,
+//         Trace2::LED,
+//         Trace2::OutputEncoder,
+//         Trace2::TorqueSensor>,
+//     Calibration>
+   Actuator actuator_(trace2.fast_loop, trace2.main_loop, param->startup_param, *calibration);
 
 void config_init() {}
 

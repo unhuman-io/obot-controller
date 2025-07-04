@@ -61,6 +61,8 @@ jobs:
             config: trace
           - project: obot_g474
             config: trace_6enc
+          - project: obot2
+            build_other: GCC_PATH=
           # TODO: add this back
           # - project: obot_g474
           #   config: osa14_jl1

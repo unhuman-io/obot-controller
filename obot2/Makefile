@@ -1,10 +1,10 @@
 
-GCC_PATH=~/gnu_tools/build-arm-none-eabi-armv7e-m+fp/install/bin
-CC = $(GCC_PATH)/arm-none-eabi-g++
-CP = $(GCC_PATH)/arm-none-eabi-objcopy
+GCC_PATH=~/gnu_tools/build-arm-none-eabi-armv7e-m+fp/install/bin/
+CC = $(GCC_PATH)arm-none-eabi-g++
+CP = $(GCC_PATH)arm-none-eabi-objcopy
 
 C_INCLUDES = -I../motorlib/CMSIS/Include -I../motorlib/device/stm32g4/Include
-CFLAGS = $(C_INCLUDES) -std=c++20 -fmodules
+CFLAGS = $(C_INCLUDES) -std=c++20 -fmodules-ts
 
 headers_location := $(shell $(CC) --print-sysroot)/include/c++/$(shell $(CC) -dumpversion)
 $(info Headers location: $(headers_location))

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1750566829011,
+  "lastUpdate": 1751608924846,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -124355,6 +124355,130 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1185.150024,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "committer": {
+            "email": "lee@unhuman.io",
+            "name": "Lee Magnusson"
+          },
+          "distinct": true,
+          "id": "998efa50a36582b3c7e62348693075d212d3b31b",
+          "message": "a new from scratch item\n\nstill not booting\n\nworking startup code\n\nfill out stm module\n\ntrace board added\n\nuse bit_cast\n\nsomewhat better prereqs\n\nclean build of obot2",
+          "timestamp": "2025-07-03T22:56:39-07:00",
+          "tree_id": "763dbfc7e7ae1e427dd510ca4c0b44a48f65350a",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/998efa50a36582b3c7e62348693075d212d3b31b"
+        },
+        "date": 1751608923727,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles",
+            "value": 846,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period",
+            "value": 3424,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles",
+            "value": 3489,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period",
+            "value": 17019,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2822.89,
+            "unit": "cycles",
+            "extra": "3494 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3396.37,
+            "unit": "cycles",
+            "extra": "3437 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 838.018,
+            "unit": "cycles",
+            "extra": "846 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000.4,
+            "unit": "cycles",
+            "extra": "17045 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 215124,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 6916,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 216120,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 7972,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 86320,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 3097,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 8268,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used",
+            "value": 1505,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1144.150024,
             "unit": "Hz",
             "extra": "0 times"
           }

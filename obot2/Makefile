@@ -66,12 +66,21 @@ clean:
 	@echo "Cleaning up..."
 	rm -rf *.o *.elf *.bin gcm.cache/ *.d
 
-.PHONY: load clean
+help:
+	@echo "Available targets:"
+	@echo "  load    - Load the firmware onto the device via DFU"
+	@echo "  clean   - Clean up generated files"
+	@echo "  help    - Show this help message"
+	@echo "  main.bin - Build the main binary"
+	@echo "  main.elf - Build the main ELF file"
+	@echo "Options:"
+	@echo "  GCC_PATH - Path to the ARM GCC toolchain"
+	@echo "  VERBOSE - Set to '1' to enable verbose output during build"
+
+
+.PHONY: load clean help
 
 .EXTRA_PREREQS += Makefile
-
-# # seems to be overriding the %.d: %.cpp rule with an implicit %.o: %.cpp rule
-# MAKEFLAGS += --no-builtin-rules
 
 -include $(wildcard *.d)
 

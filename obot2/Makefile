@@ -1,5 +1,5 @@
 
-GCC_PATH=~/gnu_tools/build-arm-none-eabi-armv7e-m+fp/install/bin/
+#GCC_PATH=~/gnu_tools/build-arm-none-eabi-armv7e-m+fp/install/bin/
 CC = $(GCC_PATH)arm-none-eabi-g++
 CP = $(GCC_PATH)arm-none-eabi-objcopy
 

@@ -63,7 +63,7 @@ Reset_Handler:
   mov   sp, r0          /* set stack pointer */
 
 /* Call the clock system initialization function.*/
-  //  bl  SystemInit
+  bl  stm32g474_init
 
 /* Copy the data segment initializers from flash to SRAM */
   ldr r0, =_sdata

@@ -6,12 +6,10 @@ CP = $(GCC_PATH)arm-none-eabi-objcopy
 C_INCLUDES = -I../motorlib/CMSIS/Include -I../motorlib/device/stm32g4/Include
 CFLAGS = $(C_INCLUDES) -std=c++20 -fmodules-ts
 
-headers_location := $(shell $(CC) --print-sysroot)/include/c++/$(shell $(CC) -dumpversion)
-$(info Headers location: $(headers_location))
-header_modules := bit
-define add_header_unit_path
-$(1:%=gcm.cache/.$(headers_location)/%.gcm)
-endef
+c++_headers_location := $(shell realpath `$(CC) --print-sysroot`)/include/c++/$(shell $(CC) -dumpversion)
+$(info c++ headers location: $(c++_headers_location))
+c++_header_modules := bit
+c++_header_units := $(addprefix gcm.cache/.$(c++_headers_location)/, $(c++_header_modules:%=%.gcm))
 
 vpath %.cpp ../motorlib/peripheral/stm32g4
 vpath %.h ../motorlib/CMSIS/Include
@@ -26,7 +24,10 @@ main.bin: main.elf
 # manual dependencies for modules
 main.o: stm32g474.o trace_board.o
 
-trace_board.o: stm32g474.o $(call add_header_unit_path,bit)
+trace_board.o: stm32g474.o
+
+stm32g474.o: gcm.cache$(c++_headers_location)/bit.gcm
+
 
 main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 	@echo "  LD    $@"
@@ -50,7 +51,7 @@ main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 # 	$(CC) -c $(CFLAGS) -fmodules-ts -x c++-system-header -c bit
 # 	touch gcm.cache/header_units
 
-gcm.cache/.$(headers_location)/%.gcm:
+gcm.cache$(c++_headers_location)/%.gcm: $(c++_headers_location)/%
 	@echo "  SGCM  $*"
 	$(CC) -c $(CFLAGS) -fmodules-ts -x c++-system-header -c $*
 

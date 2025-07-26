@@ -11,6 +11,8 @@ $(info c++ headers location: $(c++_headers_location))
 c++_header_modules := bit
 c++_header_units := $(addprefix gcm.cache/.$(c++_headers_location)/, $(c++_header_modules:%=%.gcm))
 
+$(info c++ header units: $(c++_header_units))
+
 vpath %.cpp ../motorlib/peripheral/stm32g4
 vpath %.h ../motorlib/CMSIS/Include
 
@@ -26,17 +28,22 @@ main.o: stm32g474.o trace_board.o
 
 trace_board.o: stm32g474.o
 
-stm32g474.o: gcm.cache$(c++_headers_location)/bit.gcm
-
+#stm32g474.o: $(c++_header_units) #gcm.cache$(c++_headers_location)/bit.gcm
 
 main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 	@echo "  LD    $@"
 	$(CC) -specs=nosys.specs -o main.elf main.o -TSTM32G474RETx_FLASH.ld startup_stm32g474xx.o stm32g474.o trace_board.o
 
-# some .cpps do not produce .gcm files, but this is ok
-%.o gcm.cache/%.gcm: %.cpp
+# deletes implicit rule
+#%.o: %.cpp
+
+%.o: %.cpp $(c++_header_units)
 	@echo "  CC    $<"
 	$(CC) -c $(CFLAGS) -MMD -Mno-modules $(<:.d=.cpp) -o $@
+
+# %.o: %.cppm  $(c++_header_units)
+# 	@echo "  CC    $<"
+# 	$(CC) -c $(CFLAGS) -MMD -Mno-modules -x c++ $(<:.d=.cpp) -o $@
 
 # %.d: %.cpp
 # 	$(CC) -c $(CFLAGS) -MM -MG -Mno-modules $< -o $@
@@ -44,20 +51,16 @@ main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 # %.o: %.S
 # 	$(CC) -c -o $@ $<
 
-# gcm.cache/%.gcm: %.cpp
-# 	$(CC) -c $(CFLAGS) -MMD -Mno-modules $< -o $@
 
-# gcm.cache/header_units:
-# 	$(CC) -c $(CFLAGS) -fmodules-ts -x c++-system-header -c bit
-# 	touch gcm.cache/header_units
-
-gcm.cache$(c++_headers_location)/%.gcm: $(c++_headers_location)/%
+gcm.cache$(c++_headers_location)/%.gcm gcm.cache/.$(c++_headers_location)/%.gcm: $(c++_headers_location)/%
 	@echo "  SGCM  $*"
 	$(CC) -c $(CFLAGS) -fmodules-ts -x c++-system-header -c $*
 
 gcm.cache/%.h.gcm: %.h
 	@echo "  GCM   $<"
 	$(CC) -c $(CFLAGS) -fmodules-ts -x c++-user-header -c $<
+
+header_units: $(c++_header_units)
 
 load: main.bin
 	@echo "Loading main.bin via DFU..."
@@ -79,7 +82,7 @@ help:
 	@echo "  VERBOSE - Set to '1' to enable verbose output during build"
 
 
-.PHONY: load clean help
+.PHONY: load clean help header_units
 
 .EXTRA_PREREQS += Makefile
 

@@ -62,7 +62,7 @@ jobs:
           - project: obot_g474
             config: trace_6enc
           - project: obot2
-            build_other: GCC_PATH=
+            build_other: GCC_PATH=/gcc/bin/
           # TODO: add this back
           # - project: obot_g474
           #   config: osa14_jl1
@@ -74,6 +74,7 @@ jobs:
         fetch-depth: 0
         submodules: recursive
     - name: make help
+      if: ${{ matrix.project != 'obot2' }}
       run: |
         make -C ${{ matrix.project }} help
         make -C ${{ matrix.project }} help | grep ${{ matrix.config }}

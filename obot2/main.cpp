@@ -1,5 +1,6 @@
 import stm32g474;
 import trace_board;
+#include <cstdint>
 
 TraceBoard trace_board;
 
@@ -8,13 +9,9 @@ int main() {
     GPIOB->MODER_b.MODER6 = 1;
     while(1) {
         GPIOB->BSRR_b.BS6 = 1;
-        for (int i = 0; i < 1000000; i++) {
-            asm("nop");
-        }
+        cpu::wait_ms(500);
         GPIOB->BSRR_b.BR6 = 1;
-        for (int i = 0; i < 1000000; i++) {
-            asm("nop");
-        }
+        cpu::wait_ms(500);
     }
 }
 
@@ -23,4 +20,6 @@ void _close() {}
 void _lseek() {}
 void _read() {}
 void _write() {}
+void _kill() {}
+void _getpid() {}
 }

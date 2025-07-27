@@ -4,7 +4,7 @@ CC = $(GCC_PATH)arm-none-eabi-g++
 CP = $(GCC_PATH)arm-none-eabi-objcopy
 
 C_INCLUDES = -I../motorlib/CMSIS/Include -I../motorlib/device/stm32g4/Include
-CFLAGS = $(C_INCLUDES) -std=c++20 -fmodules-ts
+CFLAGS = $(C_INCLUDES) -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -std=c++20 -fmodules-ts -g
 
 c++_headers_location := $(shell realpath `$(CC) --print-sysroot`)/include/c++/$(shell $(CC) -dumpversion)
 $(info c++ headers location: $(c++_headers_location))
@@ -32,7 +32,7 @@ trace_board.o: stm32g474.o
 
 main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 	@echo "  LD    $@"
-	$(CC) -specs=nosys.specs -o main.elf main.o -TSTM32G474RETx_FLASH.ld startup_stm32g474xx.o stm32g474.o trace_board.o
+	$(CC) $(CFLAGS) -specs=nosys.specs -o main.elf main.o -TSTM32G474RETx_FLASH.ld startup_stm32g474xx.o stm32g474.o trace_board.o
 
 # deletes implicit rule
 #%.o: %.cpp
@@ -52,6 +52,7 @@ main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 # 	$(CC) -c -o $@ $<
 
 
+# .d files list the dependency as gcm.cache/.$(c++_headers_location)/%.gcm
 gcm.cache$(c++_headers_location)/%.gcm gcm.cache/.$(c++_headers_location)/%.gcm: $(c++_headers_location)/%
 	@echo "  SGCM  $*"
 	$(CC) -c $(CFLAGS) -fmodules-ts -x c++-system-header -c $*
@@ -72,10 +73,11 @@ clean:
 
 help:
 	@echo "Available targets:"
+	@echo "  header_units - Generate C++ header units"
 	@echo "  load    - Load the firmware onto the device via DFU"
 	@echo "  clean   - Clean up generated files"
 	@echo "  help    - Show this help message"
-	@echo "  main.bin - Build the main binary"
+	@echo "  main.bin - Build the main binary (default target)"
 	@echo "  main.elf - Build the main ELF file"
 	@echo "Options:"
 	@echo "  GCC_PATH - Path to the ARM GCC toolchain"

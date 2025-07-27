@@ -1,11 +1,24 @@
 module;
 
+#include <cstdint>
 import stm32g474;
 
 export module trace_board;
 
 export class TraceBoard {
   public:
+    constexpr static uint32_t cpu_frequency = 170'000'000; // 170 MHz
+    constexpr static uint32_t hse_frequency = 24'000'000; // 24 MHz
     TraceBoard() {
     }
 };
+
+export using cpu = stm32g474<TraceBoard::cpu_frequency, TraceBoard::hse_frequency>;
+
+// This is called from the startup code
+extern "C" void stm32g474_init() {
+    cpu::enable_cyccnt();
+    cpu::enable_boost_mode();
+    cpu::set_flash_wait_states();
+    cpu::use_hse();
+}

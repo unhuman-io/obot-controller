@@ -16,7 +16,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.phase_mode = 1,
     .fast_loop_param.motor_encoder.dir = 1,
     .fast_loop_param.motor_encoder.cpr = 4096,
-    .fast_loop_param.motor_encoder.rollover = pow(2,25),
+    .fast_loop_param.motor_encoder.rollover = 0,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
 #elif
     .main_loop_param.output_encoder.cpr = 1,

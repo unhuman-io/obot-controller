@@ -8,6 +8,7 @@
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../../motorlib/gpio.h"
+#include "../../motorlib/sensors/encoders/a17803.h"
 
 #define COMMS   COMMS_USB
 
@@ -52,12 +53,14 @@ namespace config {
     SPIDMA spi_dma {SPIDMA::SP1, cs, DMA1_CH1, DMA1_CH2, 0, 50, 50,
         SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL};
     SPIDebug spi_debug(spi_dma);
+    A17803 encoder(spi_dma);
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
 
 void config_init() {
     SPIDEBUG_SET_DEBUG_API(, System::api, config::spi_debug);
+    A17803_SET_DEBUG_API(, System::api, config::encoder);
 }
 
 void config_maintenance() {}

@@ -41,9 +41,9 @@ main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 	@echo "  CC    $<"
 	$(CC) -c $(CFLAGS) -MMD -Mno-modules $(<:.d=.cpp) -o $@
 
-# %.o: %.cppm  $(c++_header_units)
-# 	@echo "  CC    $<"
-# 	$(CC) -c $(CFLAGS) -MMD -Mno-modules -x c++ $(<:.d=.cpp) -o $@
+%.o: %.cppm  $(c++_header_units)
+	@echo "  CC    $<"
+	$(CC) -c $(CFLAGS) -MMD -Mno-modules -x c++ $(<:.d=.cppm) -o $@
 
 # %.d: %.cpp
 # 	$(CC) -c $(CFLAGS) -MM -MG -Mno-modules $< -o $@

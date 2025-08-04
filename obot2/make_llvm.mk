@@ -7,10 +7,9 @@ C_INCLUDES = -I../motorlib/CMSIS/Include -I../motorlib/device/stm32g4/Include
 CPPFLAGS = --target=thumbv7em-none-eabi -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CFLAGS = $(C_INCLUDES) $(CPPFLAGS)
 CXXFLAGS = $(CFLAGS) -std=c++23 -g -fprebuilt-module-path=.
-CXXMFLAGS = $(CXXFLAGS) -fmodule-output -x c++-module
+CXXMFLAGS = $(CXXFLAGS) -fmodule-output -x c++-module -Wno-experimental-header-units
+LDFLAGS = -nostartfiles
 
-#c++_headers_location := $(shell realpath `$(CXX) --print-sysroot`)/include/c++/$(shell $(CXX) -dumpversion)
-#$(info c++ headers location: $(c++_headers_location))
 c++_header_modules := bit
 c++_header_units := $(c++_header_modules:%=%.pcm)
 
@@ -32,13 +31,16 @@ trace_board.o: stm32g474.o
 
 main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 	@echo "  LD    $@"
-	$(CXX) $(CXXFLAGS) -specs=nosys.specs -o main.elf main.o -TSTM32G474RETx_FLASH.ld startup_stm32g474xx.o stm32g474.o trace_board.o
-
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o main.elf main.o -T../motorlib/peripheral/stm32g4/STM32G474RETx_FLASH.ld startup_stm32g474xx.o stm32g474.o trace_board.o
 
 
 %.o: %.cpp $(c++_header_units)
 	@echo "  CC    $<"
-	$(CXX) -c $(CXXMFLAGS) -MMD $(<:.d=.cpp) -fmodule-file=bit.pcm -o $@
+	$(CXX) -c $(CXXFLAGS) -MMD $(<:.d=.cpp) $(addprefix -fmodule-file=,$(c++_header_units)) -o $@
+
+%.o: %.cppm $(c++_header_units)
+	@echo "  CC    $<"
+	$(CXX) -c $(CXXMFLAGS) -MMD $(<:.d=.cppm) $(addprefix -fmodule-file=,$(c++_header_units)) -o $@
 
 %.o: %.S
 	@echo "  AS    $<"
@@ -73,7 +75,7 @@ help:
 
 .PHONY: load clean help header_units
 
-.EXTRA_PREREQS += Makefile
+.EXTRA_PREREQS += make_llvm.mk
 
 -include $(wildcard *.d)
 

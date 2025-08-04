@@ -33,4 +33,5 @@ void _read() {}
 void _write() {}
 void _kill() {}
 void _getpid() {}
+void _exit() {}
 }

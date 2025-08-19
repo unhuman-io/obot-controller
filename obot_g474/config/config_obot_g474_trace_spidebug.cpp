@@ -8,12 +8,12 @@
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/sensors/encoders/a17803.h"
+#include "../../motorlib/sensors/encoders/stm32g4/a17803.h"
 
 #define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = EncoderBase;
+using MotorEncoder = A17803;
 using OutputEncoder = EncoderBase;
 
 struct InitCode {
@@ -34,6 +34,8 @@ struct InitCode {
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI1_RX;
 
+        RCC->AHB1ENR |= RCC_AHB1ENR_CRCEN; // enable CRC peripheral
+
     }
 };
 
@@ -42,7 +44,6 @@ namespace config {
     const uint32_t pwm_frequency = 50000;
     InitCode init_code;
 
-    MotorEncoder motor_encoder;
     TorqueSensor torque_sensor;
     OutputEncoder output_encoder;
 
@@ -54,6 +55,7 @@ namespace config {
         SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL};
     SPIDebug spi_debug(spi_dma);
     A17803 encoder(spi_dma);
+    MotorEncoder motor_encoder(spi_dma);
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"

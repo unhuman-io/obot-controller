@@ -9,10 +9,11 @@ system.Option.EnReset OFF
 system.Option.DUALPORT ON
 system.mode attach
 break
+system.resettarget
 
 do ~~/demo/arm/flash/stm32g4xx.cmm PREPAREONLY CPU=STM32G474RE DUALPORT=0
 
-flash.ReProgram 0x8000000--0x80001fff
+flash.ReProgram 0x8000000--0x80001fff /Erase
 data.load.elf &elf_file
 flash.ReProgram off
 Data.LOAD.elf &elf_file /DIFF
@@ -50,7 +51,7 @@ system.RESetTarget
 
 itm.TImeMode.PCSampler
 
-TrOnchip.corereset off
+TrOnchip.set.corereset off
 
 list.auto
 

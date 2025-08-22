@@ -14,6 +14,7 @@
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = A17803;
+//using MotorEncoder = EncoderBase;
 using OutputEncoder = EncoderBase;
 
 struct InitCode {
@@ -54,15 +55,16 @@ namespace config {
     SPIDMA spi_dma {SPIDMA::SP1, cs, DMA1_CH1, DMA1_CH2, 0, 50, 50,
         SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL};
     SPIDebug spi_debug(spi_dma);
-    A17803 encoder(spi_dma);
+    //A17803 encoder(spi_dma);
     MotorEncoder motor_encoder(spi_dma);
+    //MotorEncoder motor_encoder;
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
 
 void config_init() {
     SPIDEBUG_SET_DEBUG_API(, System::api, config::spi_debug);
-    A17803_SET_DEBUG_API(, System::api, config::encoder);
+    A17803_SET_DEBUG_API(, System::api, config::motor_encoder);
 }
 
 void config_maintenance() {}

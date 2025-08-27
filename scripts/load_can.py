@@ -25,12 +25,12 @@ class can_loader:
                 write_str = f"08{self.can_id:1x}##101{len(chunk):02x}0000{address_le:08x}" + ''.join(f"{b:02x}" for b in chunk)
                 print(write_str)
                 subprocess.run(['cansend', 'can0', write_str], check=True)
-                if i % 0x1000 == 0:
+                if i % 0x800 == 0:
                     # max erase time 24.47 ms
                     print(f"Waiting for 30 milliseconds after writing {address:02x}...")
                     time.sleep(.03)
                 # write time 32 bytes 320 us
-                time.sleep(.001)
+                time.sleep(.0003)
 
                 
 

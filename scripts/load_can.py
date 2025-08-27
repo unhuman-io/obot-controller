@@ -17,19 +17,22 @@ class can_loader:
             data = f.read()
             
             print(f"Data length to load: {len(data)} bytes")
-            for i in range(0, len(data), 16):
-                chunk = data[i:i+16]
+            for i in range(0, len(data), 32):
+                chunk = data[i:i+32]
                 address = self.address + i
                 print(f"Writing to address {address:02x}: {chunk.hex()}")
                 address_le = struct.unpack('<I', struct.pack('>I', address))[0]
-                write_str = f"08{self.can_id:1x}##001{len(chunk):02x}0000{address_le:08x}" + ''.join(f"{b:02x}" for b in chunk)
+                write_str = f"08{self.can_id:1x}##101{len(chunk):02x}0000{address_le:08x}" + ''.join(f"{b:02x}" for b in chunk)
                 print(write_str)
+                subprocess.run(['cansend', 'can0', write_str], check=True)
                 if i % 0x1000 == 0:
+                    # max erase time 24.47 ms
                     print(f"Waiting for 30 milliseconds after writing {address:02x}...")
                     time.sleep(.03)
+                # write time 32 bytes 320 us
                 time.sleep(.001)
 
-                subprocess.run(['cansend', 'can0', write_str], check=True)
+                
 
 # example usage:
 # ../scripts/load_can.py --can_id 2 --address 0x8002000 --file ../obot_g474/build/tmotor_driver/tmotor_driver_noparam.bin

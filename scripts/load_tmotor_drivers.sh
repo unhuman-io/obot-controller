@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-can_ids=(1)
+can_ids=(1 2 3 4)
 
 cd $(dirname $0)
 

@@ -16,7 +16,7 @@
 using TorqueSensor = TorqueSensorBase;
 //using MotorEncoder = A17803;
 //using MotorEncoder = EncoderBase;
-using MotorEncoder = A17803_DMA;
+using MotorEncoder = A17803_DMA<SPIDMA>;
 using OutputEncoder = EncoderBase;
 
 struct InitCode {
@@ -58,6 +58,15 @@ struct InitCode {
     }
 };
 
+void start_cs_trigger() {
+    HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE |  HRTIM_TIMDIER_CMP2DE |  HRTIM_TIMDIER_CMP3DE ;
+}
+void stop_cs_trigger() {
+    HRTIM1->sTimerxRegs[0].TIMxDIER = 0;
+    // wait for CS high
+    while(!(GPIOA->IDR & 0x0001));
+}
+
 namespace config {
     const uint32_t main_loop_frequency = 10000;    
     const uint32_t pwm_frequency = 30000;
@@ -72,16 +81,16 @@ namespace config {
     // MISO A5
     // MOSI A6
     SPIDMA spi_dma1 {SPIDMA::SP1, cs1, DMA1_CH1, DMA1_CH2, 0, 50, 50,
-        SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL};
+        SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL, 200};
     SPIDMA spi_dma2 {SPIDMA::SP1, cs2, DMA1_CH1, DMA1_CH2, 0, 50, 50,
-        SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL};
+        SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL, 200};
     SPIDebug spi_debug(spi_dma1);
 
     //A17803_DMA a17803_dma(spi_dma1, spi_dma2);
     //A17803 encoder(spi_dma1);
     //MotorEncoder motor_encoder(spi_dma1);
     //MotorEncoder motor_encoder;
-    MotorEncoder motor_encoder(spi_dma1, spi_dma2);
+    MotorEncoder motor_encoder(spi_dma1, spi_dma2, start_cs_trigger, stop_cs_trigger);
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"

@@ -6,7 +6,7 @@
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = pow(2,18),
-    .fast_loop_param.motor_encoder.rollover = pow(2,25),
+    .fast_loop_param.motor_encoder.rollover = 1 << 25,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
     // .main_loop_param.torque_sensor.gain = 1,
     // .main_loop_param.torque_sensor.bias = 0,

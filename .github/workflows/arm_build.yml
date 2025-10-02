@@ -96,8 +96,17 @@ jobs:
     - name: scan build
       run: |
         git config --global --add safe.directory '*'
+        pwd
+        ls
+        ls motorlib
+        echo ----
+        ls motorlib/llvm
+        echo ----
+        ls motorlib/llvm/bin
+        echo ----
+        file ./motorlib/llvm/bin/clang
         scan-build --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
-          --use-analyzer motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
+          --use-analyzer ./motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
           make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
     - name: releaser main
       uses: pyTooling/Actions/releaser@main

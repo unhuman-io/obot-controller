@@ -5,6 +5,9 @@ on:
   pull_request:
     types: [assigned]
 
+env:
+  quiet: "-q"
+
 jobs:
   build:
     timeout-minutes: 10
@@ -69,8 +72,8 @@ jobs:
         submodules: recursive
     - name: install scan-build
       run: |
-        apt-get update -q
-        apt-get install -y -q clang-tools-15
+        apt-get update -qq
+        apt-get install -y -qq clang-tools-15
     - name: make help
       run: |
         git config --global --add safe.directory '*'
@@ -97,11 +100,10 @@ jobs:
     - name: scan build
       run: |
         git config --global --add safe.directory '*'
-        type ./motorlib/llvm/bin/clang
-        # scan-build-15 --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
-        #  --use-analyzer ./motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
-        #  make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
         cd ${{ matrix.project }}
+        scan-build-15 --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
+          --use-analyzer ../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
+          make CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
         scan-build-15 --status-bugs --use-cc ../motorlib/llvm/bin/clang --use-c++ ../motorlib/llvm/bin/clang++ \
           --use-analyzer ../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
           make CONFIG=${{ matrix.config }} -j`nproc` USE_LLVM=1 ${{ matrix.build_other }}

@@ -70,9 +70,10 @@ jobs:
     - name: install scan-build
       run: |
         apt-get update
-        apt-get install -y clang-tools
+        apt-get install -y clang-tools-15
     - name: make help
       run: |
+        git config --global --add safe.directory '*'
         make -C ${{ matrix.project }} help
         make -C ${{ matrix.project }} help | grep ${{ matrix.config }}
     - name: make ${{ matrix.project }} ${{ matrix.config }}
@@ -96,16 +97,8 @@ jobs:
     - name: scan build
       run: |
         git config --global --add safe.directory '*'
-        pwd
-        ls
-        ls motorlib
-        echo ----
-        ls motorlib/llvm
-        echo ----
-        ls motorlib/llvm/bin
-        echo ----
-        file ./motorlib/llvm/bin/clang
-        scan-build --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
+        type ./motorlib/llvm/bin/clang
+        scan-build-15 --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
           --use-analyzer ./motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
           make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
     - name: releaser main

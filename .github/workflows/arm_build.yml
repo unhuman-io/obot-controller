@@ -99,8 +99,8 @@ jobs:
         git config --global --add safe.directory '*'
         type ./motorlib/llvm/bin/clang
         # scan-build-15 --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
-          --use-analyzer ./motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
-          make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
+        #  --use-analyzer ./motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
+        #  make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
         scan-build-15 --status-bugs --use-cc motorlib/llvm/bin/clang --use-c++ motorlib/llvm/bin/clang++ \
           --use-analyzer motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
           make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` USE_LLVM=1 ${{ matrix.build_other }}

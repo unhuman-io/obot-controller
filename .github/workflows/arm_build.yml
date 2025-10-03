@@ -5,6 +5,9 @@ on:
   pull_request:
     types: [assigned]
 
+env:
+  quiet: "-q"
+
 jobs:
   build:
     timeout-minutes: 10
@@ -12,10 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - project: boost_g474
-            config: pz
-          - project: fabulab_f446
-            config: motor
           - project: obot_g474
             config: motor_template
           - project: obot_g474
@@ -71,14 +70,19 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
+    - name: install scan-build
+      run: |
+        apt-get update -qq
+        apt-get install -y -qq clang-tools-15
     - name: make help
       run: |
+        git config --global --add safe.directory '*'
         make -C ${{ matrix.project }} help
         make -C ${{ matrix.project }} help | grep ${{ matrix.config }}
     - name: make ${{ matrix.project }} ${{ matrix.config }}
       run: |
         git config --global --add safe.directory '*'
-        make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j2 GCC_PATH=/gcc/bin ${{ matrix.build_other }}
+        make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@main
       with:
@@ -90,6 +94,19 @@ jobs:
       run: |
         mv ${{ matrix.project }}/build/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
         mv ${{ matrix.project }}/build/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
+    - name: make llvm
+      run: |
+        make USE_LLVM=1 -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` ${{ matrix.build_other }}
+    - name: scan build
+      run: |
+        git config --global --add safe.directory '*'
+        cd ${{ matrix.project }}
+        scan-build-15 --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
+          --use-analyzer ../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
+          make CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
+        scan-build-15 --status-bugs --use-cc ../motorlib/llvm/bin/clang --use-c++ ../motorlib/llvm/bin/clang++ \
+          --use-analyzer ../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
+          make CONFIG=${{ matrix.config }} -j`nproc` USE_LLVM=1 ${{ matrix.build_other }}
     - name: releaser main
       uses: pyTooling/Actions/releaser@main
       if: contains(github.ref, 'develop')

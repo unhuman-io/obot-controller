@@ -69,8 +69,8 @@ jobs:
         submodules: recursive
     - name: install scan-build
       run: |
-        apt-get update
-        apt-get install -y clang-tools-15
+        apt-get update -q
+        apt-get install -y -q clang-tools-15
     - name: make help
       run: |
         git config --global --add safe.directory '*'

@@ -28,40 +28,18 @@ c++_header_modules := bit
 
 $(info c++ header units: $(c++_header_units))
 
-vpath %.S $(SELF_DIR)src
-vpath %.ld $(SELF_DIR)src
-vpath %.cppm $(SELF_DIR)src
-vpath %.cpp $(SELF_DIR)src $(SELF_DIR)../motorlib/peripheral/stm32g4
-vpath %.h $(SELF_DIR)src $(SELF_DIR)../motorlib/CMSIS/Include
-
-main.bin: main.elf
-	$(CP) -O binary main.elf main.bin
-
-
-# main.elf: main.o stm32g474.ld
-# 	$(CC) -specs=nosys.specs -o main.elf main.o stm32g474.o -Tstm32g474.ld
-
-# manual dependencies for modules
-main.o: stm32g474.o trace_board.o
-
-trace_board.o: stm32g474.o
-
-#stm32g474.o: $(c++_header_units) #gcm.cache$(c++_headers_location)/bit.gcm
-
-main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
-	@echo "  LD    $@"
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o main.elf main.o startup_stm32g474xx.o stm32g474.o trace_board.o
+include $(SELF_DIR)src/Makefile
 
 # deletes implicit rule
 #%.o: %.cpp
 
 %.o: %.cpp $(c++_header_units)
 	@echo "  CXX   $<"
-	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -MMD $(<:.d=.cpp) -o $@
+	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -MMD $(<:.d=.cpp) -o $@
 
 %.o: %.cppm  $(c++_header_units)
 	@echo "  CXXM  $<"
-	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@
+	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@
 
 %.o: %.S
 	@echo "  AS    $<"
@@ -84,10 +62,6 @@ gcm.cache/%.h.gcm: %.h
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(filter-out %.pcm,$(CXXFLAGS)) $(CXXMFLAGS) -x c++-system-header -c $*
 
 header_units: $(c++_header_units)
-
-load: main.bin
-	@echo "Loading main.bin via DFU..."
-	dfu-util -a 0 -s 0x8000000:leave -D main.bin
 
 clean:
 	@echo "Cleaning up..."

@@ -22,10 +22,10 @@ $(info c++ headers location: $(c++_headers_location))
 $(info gcc: $(shell which $(CXX)) $(shell $(CXX) -dumpversion))
 endif
 
-C_INCLUDES += -I$(SELF_DIR)../motorlib/CMSIS/Include -I$(SELF_DIR)../motorlib/device/stm32g4/Include
+#C_INCLUDES += -I$(SELF_DIR)../motorlib/CMSIS/Include -I$(SELF_DIR)../motorlib/device/stm32g4/Include
 CPPFLAGS += -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
-CFLAGS += $(C_INCLUDES) -g
+CFLAGS += -g
 CXXFLAGS += -std=c++20
-LDFLAGS += -L$(SELF_DIR)src -TSTM32G474RETx_FLASH.ld
+LDFLAGS += -TSTM32G474RETx_FLASH.ld
 
 .EXTRA_PREREQS := $(.EXTRA_PREREQS) $(lastword $(MAKEFILE_LIST))

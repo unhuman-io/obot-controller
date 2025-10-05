@@ -1,5 +1,4 @@
 ifneq ($(USE_LLVM),)
-$(info LLVM)
 	LLVM_PATH=../../motorlib/llvm/bin/
 	CXX = $(LLVM_PATH)clang++
 	CP = $(LLVM_PATH)llvm-objcopy
@@ -8,8 +7,10 @@ $(info LLVM)
 	CXXMFLAGS += -fmodule-output -x c++-module -Wno-experimental-header-units
 	LDFLAGS += -nostartfiles
 	c++_header_units = $(c++_header_modules:%=%.pcm)
+	c++_multi_dir = $(shell $(CXX) --print-multi-directory $(CPPFLAGS))
+	c++_headers_location = $(LLVM_PATH)../lib/clang-runtimes/$(c++_multi_dir)/include/c++/v1
+$(info clang: $(shell which $(CXX)) $(shell $(CXX) -dumpversion))
 else
-$(info GCC)
 	CXX = $(GCC_PATH)arm-none-eabi-g++
 	CP = $(GCC_PATH)arm-none-eabi-objcopy
 	CXXFLAGS += -fmodules-ts -Mno-modules
@@ -18,6 +19,7 @@ $(info GCC)
 	c++_headers_location := $(shell realpath `$(CXX) --print-sysroot`)/include/c++/$(shell $(CXX) -dumpversion)
 $(info c++ headers location: $(c++_headers_location))
 	c++_header_units = $(addprefix gcm.cache/.$(c++_headers_location)/, $(c++_header_modules:%=%.gcm))
+$(info gcc: $(shell which $(CXX)) $(shell $(CXX) -dumpversion))
 endif
 
 C_INCLUDES += -I$(SELF_DIR)../motorlib/CMSIS/Include -I$(SELF_DIR)../motorlib/device/stm32g4/Include

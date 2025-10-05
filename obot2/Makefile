@@ -8,7 +8,7 @@ endif
 ifneq ($(shell realpath $(BUILD_DIR)), $(CURDIR))
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
-	echo "override BUILD_DIR := .\ninclude ../Makefile" > $(BUILD_DIR)/Makefile
+	echo "override BUILD_DIR := .\nUSE_LLVM := $(USE_LLVM)\ninclude ../Makefile" > $(BUILD_DIR)/Makefile
 	$(MAKE) -C $(BUILD_DIR)
 
 .PHONY: clean $(BUILD_DIR)
@@ -79,7 +79,7 @@ gcm.cache/%.h.gcm: %.h
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -x c++-user-header -c $<
 
 # clang c++20 system header unit modules
-%.pcm:
+%.pcm: $(c++_headers_location)/%
 	@echo "  SPCM  $*"
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(filter-out %.pcm,$(CXXFLAGS)) $(CXXMFLAGS) -x c++-system-header -c $*
 

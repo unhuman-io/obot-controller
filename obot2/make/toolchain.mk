@@ -26,6 +26,5 @@ endif
 CPPFLAGS += -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CFLAGS += -g
 CXXFLAGS += -std=c++20
-LDFLAGS += -TSTM32G474RETx_FLASH.ld
 
 .EXTRA_PREREQS := $(.EXTRA_PREREQS) $(lastword $(MAKEFILE_LIST))

@@ -45,6 +45,14 @@ include $(SELF_DIR)src/Makefile
 	@echo "  AS    $<"
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
+%.elf: %.o
+	@echo "  LD    $@"
+	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $(filter-out %.ld,$^)
+
+%.bin: %.elf
+	@echo "  CP    $@"
+	$(CP) -O binary $< $@
+
 # .d files list the dependency as gcm.cache/.$(c++_headers_location)/%.gcm
 # gcc c++20 system header unit modules
 gcm.cache$(c++_headers_location)/%.gcm gcm.cache/.$(c++_headers_location)/%.gcm: $(c++_headers_location)/%
@@ -80,7 +88,7 @@ help:
 	@echo "  VERBOSE - Set to '1' to enable verbose output during build"
 
 
-.PHONY: load clean help header_units
+.PHONY: clean help header_units
 
 -include $(wildcard $(BUILD_DIR)/*.d)
 

@@ -18,15 +18,13 @@ clean:
 else
 
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-#GCC_PATH=~/gnu_tools/build-arm-none-eabi-armv7e-m+fp/install/bin/
-CC = $(GCC_PATH)arm-none-eabi-g++
-CP = $(GCC_PATH)arm-none-eabi-objcopy
+.EXTRA_PREREQS := $(.EXTRA_PREREQS) Makefile $(lastword $(MAKEFILE_LIST))
+include $(SELF_DIR)make/toolchain.mk
+ifneq ($(VERBOSE),)
+$(info EXTRA_PREREQS: $(.EXTRA_PREREQS))
+endif
 
-C_INCLUDES = -I$(SELF_DIR)../motorlib/CMSIS/Include -I$(SELF_DIR)../motorlib/device/stm32g4/Include
-CFLAGS = $(C_INCLUDES) -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -std=c++20 -fmodules-ts -g
-LDFLAGS = $(CFLAGS) -specs=nosys.specs -L$(SELF_DIR)src -TSTM32G474RETx_FLASH.ld
-
-c++_headers_location := $(shell realpath `$(CC) --print-sysroot`)/include/c++/$(shell $(CC) -dumpversion)
+c++_headers_location := $(shell realpath `$(CXX) --print-sysroot`)/include/c++/$(shell $(CXX) -dumpversion)
 $(info c++ headers location: $(c++_headers_location))
 c++_header_modules := bit
 c++_header_units := $(addprefix gcm.cache/.$(c++_headers_location)/, $(c++_header_modules:%=%.gcm))
@@ -55,18 +53,18 @@ trace_board.o: stm32g474.o
 
 main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 	@echo "  LD    $@"
-	$(CC) $(LDFLAGS) -o main.elf main.o startup_stm32g474xx.o stm32g474.o trace_board.o
+	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o main.elf main.o startup_stm32g474xx.o stm32g474.o trace_board.o
 
 # deletes implicit rule
 #%.o: %.cpp
 
 %.o: %.cpp $(c++_header_units)
-	@echo "  CC    $<"
-	$(CC) -c $(CFLAGS) -MMD -Mno-modules $(<:.d=.cpp) -o $@
+	@echo "  CXX   $<"
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -MMD -Mno-modules $(<:.d=.cpp) -o $@
 
 %.o: %.cppm  $(c++_header_units)
-	@echo "  CC    $<"
-	$(CC) -c $(CFLAGS) -MMD -Mno-modules -x c++ $(<:.d=.cppm) -o $@
+	@echo "  CXXM  $<"
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD -Mno-modules -x c++ $(<:.d=.cppm) -o $@
 
 # %.d: %.cpp
 # 	$(CC) -c $(CFLAGS) -MM -MG -Mno-modules $< -o $@
@@ -78,11 +76,11 @@ main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 # .d files list the dependency as gcm.cache/.$(c++_headers_location)/%.gcm
 gcm.cache$(c++_headers_location)/%.gcm gcm.cache/.$(c++_headers_location)/%.gcm: $(c++_headers_location)/%
 	@echo "  SGCM  $*"
-	$(CC) -c $(CFLAGS) -fmodules-ts -x c++-system-header -c $*
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -x c++-system-header -c $*
 
 gcm.cache/%.h.gcm: %.h
 	@echo "  GCM   $<"
-	$(CC) -c $(CFLAGS) -fmodules-ts -x c++-user-header -c $<
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -x c++-user-header -c $<
 
 header_units: $(c++_header_units)
 
@@ -108,8 +106,6 @@ help:
 
 
 .PHONY: load clean help header_units
-
-.EXTRA_PREREQS := $(.EXTRA_PREREGS) Makefile $(lastword $(MAKEFILE_LIST))
 
 -include $(wildcard $(BUILD_DIR)/*.d)
 

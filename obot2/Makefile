@@ -1,10 +1,25 @@
+BUILD_DIR ?= build
 
+ifneq ($(shell realpath $(BUILD_DIR)), $(CURDIR))
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+	echo "override BUILD_DIR := .\ninclude ../Makefile" > $(BUILD_DIR)/Makefile
+	$(MAKE) -C $(BUILD_DIR)
+
+.PHONY: clean
+
+clean:
+	rm -r $(BUILD_DIR)
+else
+
+SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 #GCC_PATH=~/gnu_tools/build-arm-none-eabi-armv7e-m+fp/install/bin/
 CC = $(GCC_PATH)arm-none-eabi-g++
 CP = $(GCC_PATH)arm-none-eabi-objcopy
 
-C_INCLUDES = -I../motorlib/CMSIS/Include -I../motorlib/device/stm32g4/Include
+C_INCLUDES = -I$(SELF_DIR)../motorlib/CMSIS/Include -I$(SELF_DIR)../motorlib/device/stm32g4/Include
 CFLAGS = $(C_INCLUDES) -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -std=c++20 -fmodules-ts -g
+LDFLAGS = $(CFLAGS) -L$(SELF_DIR)src -TSTM32G474RETx_FLASH.ld
 
 c++_headers_location := $(shell realpath `$(CC) --print-sysroot`)/include/c++/$(shell $(CC) -dumpversion)
 $(info c++ headers location: $(c++_headers_location))
@@ -13,8 +28,11 @@ c++_header_units := $(addprefix gcm.cache/.$(c++_headers_location)/, $(c++_heade
 
 $(info c++ header units: $(c++_header_units))
 
-vpath %.cpp ../motorlib/peripheral/stm32g4
-vpath %.h ../motorlib/CMSIS/Include
+vpath %.S $(SELF_DIR)src
+vpath %.ld $(SELF_DIR)src
+vpath %.cppm $(SELF_DIR)src
+vpath %.cpp $(SELF_DIR)src $(SELF_DIR)../motorlib/peripheral/stm32g4
+vpath %.h $(SELF_DIR)src $(SELF_DIR)../motorlib/CMSIS/Include
 
 main.bin: main.elf
 	$(CP) -O binary main.elf main.bin
@@ -32,7 +50,7 @@ trace_board.o: stm32g474.o
 
 main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 	@echo "  LD    $@"
-	$(CC) $(CFLAGS) -specs=nosys.specs -o main.elf main.o -TSTM32G474RETx_FLASH.ld startup_stm32g474xx.o stm32g474.o trace_board.o
+	$(CC) $(LDFLAGS) -specs=nosys.specs -o main.elf main.o startup_stm32g474xx.o stm32g474.o trace_board.o
 
 # deletes implicit rule
 #%.o: %.cpp
@@ -89,5 +107,7 @@ help:
 .EXTRA_PREREQS += Makefile
 
 -include $(wildcard *.d)
+
+endif # build_dir
 
 $(VERBOSE).SILENT:

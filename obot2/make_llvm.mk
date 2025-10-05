@@ -8,15 +8,18 @@ CPPFLAGS = --target=thumbv7em-none-eabi -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloa
 CFLAGS = $(C_INCLUDES) $(CPPFLAGS)
 CXXFLAGS = $(CFLAGS) -std=c++23 -g -fprebuilt-module-path=.
 CXXMFLAGS = $(CXXFLAGS) -fmodule-output -x c++-module -Wno-experimental-header-units
-LDFLAGS = -nostartfiles
+LDFLAGS = $(CXXFLAGS) -nostartfiles -Lsrc -TSTM32G474RETx_FLASH.ld
 
 c++_header_modules := bit
 c++_header_units := $(c++_header_modules:%=%.pcm)
 
 $(info c++ header units: $(c++_header_units))
 
-vpath %.cpp ../motorlib/peripheral/stm32g4
-vpath %.h ../motorlib/CMSIS/Include
+vpath %.S src
+vpath %.ld src
+vpath %.cppm src
+vpath %.cpp src ../motorlib/peripheral/stm32g4
+vpath %.h src ../motorlib/CMSIS/Include
 
 main.bin: main.elf
 	$(CP) -O binary main.elf main.bin
@@ -31,7 +34,7 @@ trace_board.o: stm32g474.o
 
 main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 	@echo "  LD    $@"
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o main.elf main.o -T../motorlib/peripheral/stm32g4/STM32G474RETx_FLASH.ld startup_stm32g474xx.o stm32g474.o trace_board.o
+	$(CXX) $(LDFLAGS) -o main.elf main.o startup_stm32g474xx.o stm32g474.o trace_board.o
 
 
 %.o: %.cpp $(c++_header_units)

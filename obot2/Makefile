@@ -24,10 +24,7 @@ ifneq ($(VERBOSE),)
 $(info EXTRA_PREREQS: $(.EXTRA_PREREQS))
 endif
 
-c++_headers_location := $(shell realpath `$(CXX) --print-sysroot`)/include/c++/$(shell $(CXX) -dumpversion)
-$(info c++ headers location: $(c++_headers_location))
 c++_header_modules := bit
-c++_header_units := $(addprefix gcm.cache/.$(c++_headers_location)/, $(c++_header_modules:%=%.gcm))
 
 $(info c++ header units: $(c++_header_units))
 
@@ -60,27 +57,31 @@ main.elf: main.o STM32G474RETx_FLASH.ld startup_stm32g474xx.o
 
 %.o: %.cpp $(c++_header_units)
 	@echo "  CXX   $<"
-	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -MMD -Mno-modules $(<:.d=.cpp) -o $@
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -MMD $(<:.d=.cpp) -o $@
 
 %.o: %.cppm  $(c++_header_units)
 	@echo "  CXXM  $<"
-	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD -Mno-modules -x c++ $(<:.d=.cppm) -o $@
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@
 
-# %.d: %.cpp
-# 	$(CC) -c $(CFLAGS) -MM -MG -Mno-modules $< -o $@
-
-# %.o: %.S
-# 	$(CC) -c -o $@ $<
-
+%.o: %.S
+	@echo "  AS    $<"
+	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 # .d files list the dependency as gcm.cache/.$(c++_headers_location)/%.gcm
+# gcc c++20 system header unit modules
 gcm.cache$(c++_headers_location)/%.gcm gcm.cache/.$(c++_headers_location)/%.gcm: $(c++_headers_location)/%
 	@echo "  SGCM  $*"
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -x c++-system-header -c $*
 
+# gcc c++20 user head unit modules
 gcm.cache/%.h.gcm: %.h
 	@echo "  GCM   $<"
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -x c++-user-header -c $<
+
+# clang c++20 system header unit modules
+%.pcm:
+	@echo "  SPCM  $*"
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(filter-out %.pcm,$(CXXFLAGS)) $(CXXMFLAGS) -x c++-system-header -c $*
 
 header_units: $(c++_header_units)
 
@@ -90,7 +91,7 @@ load: main.bin
 
 clean:
 	@echo "Cleaning up..."
-	rm -rf *.o *.elf *.bin gcm.cache/ *.d
+	rm -rf *.o *.elf *.bin gcm.cache/ *.d *.pcm
 
 help:
 	@echo "Available targets:"

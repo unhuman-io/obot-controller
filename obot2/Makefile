@@ -24,7 +24,7 @@ ifneq ($(VERBOSE),)
 $(info EXTRA_PREREQS: $(.EXTRA_PREREQS))
 endif
 
-c++_header_modules := bit
+c++_header_modules := bit cstdint
 
 $(info c++ header units: $(c++_header_units))
 

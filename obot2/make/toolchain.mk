@@ -3,8 +3,8 @@ ifneq ($(USE_LLVM),)
 	CXX = $(LLVM_PATH)clang++
 	CP = $(LLVM_PATH)llvm-objcopy
 	CPPFLAGS += --target=thumbv7em-none-eabi
-	CXXFLAGS += -fprebuilt-module-path=. $(addprefix -fmodule-file=,$(c++_header_units))
-	CXXMFLAGS += -fmodule-output -x c++-module -Wno-experimental-header-units
+	CXXFLAGS += -fprebuilt-module-path=. $(addprefix -fmodule-file=,$(c++_header_units)) -Wno-experimental-header-units
+	CXXMFLAGS += -fmodule-output -x c++-module -Wno-experimental-header-units -Wno-pragma-system-header-outside-header
 	LDFLAGS += -nostartfiles
 	c++_header_units = $(c++_header_modules:%=%.pcm)
 	c++_multi_dir = $(shell $(CXX) --print-multi-directory $(CPPFLAGS))

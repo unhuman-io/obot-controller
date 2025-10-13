@@ -2,6 +2,7 @@ ifneq ($(USE_LLVM),)
 	LLVM_PATH=../../motorlib/llvm/bin/
 	CXX = $(LLVM_PATH)clang++
 	CP = $(LLVM_PATH)llvm-objcopy
+	SZ = $(LLVM_PATH)llvm-size
 	CPPFLAGS += --target=thumbv7em-none-eabi
 	CXXFLAGS += -fprebuilt-module-path=. $(addprefix -fmodule-file=,$(c++_header_units)) -Wno-experimental-header-units
 	CXXMFLAGS += -fmodule-output -x c++-module -Wno-experimental-header-units -Wno-pragma-system-header-outside-header
@@ -13,6 +14,7 @@ $(info clang: $(shell which $(CXX)) $(shell $(CXX) -dumpversion))
 else
 	CXX = $(GCC_PATH)arm-none-eabi-g++
 	CP = $(GCC_PATH)arm-none-eabi-objcopy
+	SZ = $(GCC_PATH)arm-none-eabi-size
 	CXXFLAGS += -fmodules-ts -Mno-modules
 	CXXMFLAGS += -x c++
 	LDFLAGS += -specs=nosys.specs

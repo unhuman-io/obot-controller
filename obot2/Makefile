@@ -56,6 +56,7 @@ include $(SELF_DIR)src/Makefile
 %.bin: %.elf
 	@echo "  CP    $@"
 	$(CP) -O binary $< $@
+	$(SZ) $<
 
 # .d files list the dependency as gcm.cache/.$(c++_headers_location)/%.gcm
 # gcc c++20 system header unit modules

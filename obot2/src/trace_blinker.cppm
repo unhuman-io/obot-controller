@@ -2,10 +2,12 @@ module;
 
 import trace_board;
 import stm32g474;
+import <cstdint>;
 
 export module trace_blinker;
 
-export class TraceBlinker : public TraceBoard {
+export template<uint32_t rate = 1>
+class TraceBlinker : public TraceBoard {
   public:
     TraceBlinker() : TraceBoard() {
         RCC->RCC_AHB2ENR_b.GPIOBEN = 1;
@@ -16,16 +18,16 @@ export class TraceBlinker : public TraceBoard {
 
     void blink() {
         GPIOB->BSRR_b.BS6 = 1;
-        cpu::wait_ms(500);
+        cpu::wait_ms(1'000 / rate);
         GPIOB->BSRR_b.BR6 = 1;
-        cpu::wait_ms(500);
+        cpu::wait_ms(1'000 / rate);
         GPIOB->BSRR_b.BS7 = 1;
-        cpu::wait_ms(500);
+        cpu::wait_ms(1'000 / rate);
         GPIOB->BSRR_b.BR7 = 1;
-        cpu::wait_ms(500);
+        cpu::wait_ms(1'000 / rate);
         GPIOB->BSRR_b.BS8 = 1;
-        cpu::wait_ms(500);
+        cpu::wait_ms(1'000 / rate);
         GPIOB->BSRR_b.BR8 = 1;
-        cpu::wait_ms(500);
+        cpu::wait_ms(1'000 / rate);
     }
 };

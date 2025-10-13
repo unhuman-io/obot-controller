@@ -1,4 +1,8 @@
+ifeq ($(USE_LLVM),1)
+BUILD_DIR ?= build_llvm
+else
 BUILD_DIR ?= build
+endif
 
 ifneq ($(VERBOSE),)
 $(info BUILD_DIR: $(shell realpath $(BUILD_DIR)))

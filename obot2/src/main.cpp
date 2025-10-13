@@ -5,9 +5,7 @@ import trace_blinker;
 TraceBlinker trace_blinker;
 
 int main() {
-    while(1) {
-        trace_blinker.blink();
-    }
+    trace_blinker.run();
 }
 
 extern "C" {

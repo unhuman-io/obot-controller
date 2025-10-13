@@ -30,4 +30,9 @@ class TraceBlinker : public TraceBoard {
         GPIOB->BSRR_b.BR8 = 1;
         cpu::wait_ms(1'000 / rate);
     }
+    void run() {
+        while(1) {
+            blink();
+        }
+    }
 };

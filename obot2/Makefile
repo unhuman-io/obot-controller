@@ -41,7 +41,7 @@ include $(SELF_DIR)src/Makefile
 	@echo "  CXX   $<"
 	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -MMD $(<:.d=.cpp) -o $@
 
-%.o: %.cppm  $(c++_header_units)
+gcm.cache/%.gcm %.pcm %.o: %.cppm  $(c++_header_units)
 	@echo "  CXXM  $<"
 	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@
 

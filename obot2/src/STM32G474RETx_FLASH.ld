@@ -140,19 +140,43 @@ SECTIONS
     _sdata = .;        /* create a global symbol at data start */
     *(.data)           /* .data sections */
     *(.data*)          /* .data* sections */
+  } >RAM AT> FLASH
 
+  .tdata :
+  {
+    . = ALIGN(16);
+    PROVIDE( __tdata_start = ADDR(.tdata));
+    *(.tdata)
+    *(.tdata*)
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
   } >RAM AT> FLASH
+	PROVIDE( __tdata_source = LOADADDR(.tdata) );
+	PROVIDE( __tdata_source_end = LOADADDR(.tdata) + SIZEOF(.tdata) );
+	PROVIDE( __tdata_size = SIZEOF(.tdata) );
+  
+  /* Uninitialized data section */
 
+
+  .tbss :
+  {
+    /* This is used by the startup in order to initialize the .bss secion */
+    _sbss = .;         /* define a global symbol at bss start */
+    __bss_start__ = _sbss;
+    *(.tbss)
+    *(.tbss*)
+    . = ALIGN(4);
+  } >RAM
+  PROVIDE( __tbss_offset = ADDR(.tbss) - ADDR(.tdata) );
+	PROVIDE( __tbss_size = SIZEOF(.tbss) );
+	PROVIDE( __tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)) );
+	PROVIDE( __tls_size_align = (__tls_size + __tls_align - 1) & ~(__tls_align - 1));
+	PROVIDE( __arm32_tls_tcb_offset = MAX(8, __tls_align) );
   
   /* Uninitialized data section */
   . = ALIGN(4);
   .bss :
   {
-    /* This is used by the startup in order to initialize the .bss secion */
-    _sbss = .;         /* define a global symbol at bss start */
-    __bss_start__ = _sbss;
     *(.bss)
     *(.bss*)
     *(COMMON)
@@ -163,7 +187,7 @@ SECTIONS
   } >RAM
 
   /* User_heap_stack section, used to check that there is enough RAM left */
-  ._user_heap_stack :
+  ._user_heap_stack (NOLOAD) :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );

@@ -2,7 +2,7 @@ module;
 
 import trace_board;
 import stm32g474;
-import <cstdint>;
+import obot_std;
 
 export module trace_blinker;
 

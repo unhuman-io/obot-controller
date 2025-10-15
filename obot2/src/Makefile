@@ -30,3 +30,5 @@ load: main.bin
 	dfu-util -a 0 -s 0x8000000:leave -D main.bin
 
 .PHONY: load
+
+.DEFAULT_GOAL := main.bin

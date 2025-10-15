@@ -32,20 +32,20 @@ c++_header_modules := bit cstdint
 
 $(info c++ header units: $(c++_header_units))
 
-include $(SELF_DIR)src/Makefile
-
 # deletes implicit rule
 #%.o: %.cpp
 
-$(obot_std): $(SELF_DIR)../obot_std.cppm $(c++_header_units)
-	echo "  CXXM  $<"
-	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm)
+$(info self dir: $(SELF_DIR))
 
-%.o: %.cpp $(obot_std)
+obot_std.o: $(SELF_DIR)obot_std.cppm $(c++_header_units)
+	echo "  CXXM  $<"
+	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@
+
+%.o: %.cpp obot_std.o
 	@echo "  CXX   $<"
 	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -MMD $(<:.d=.cpp) -o $@
 
-gcm.cache/%.gcm %.pcm %.o: %.cppm $(obot_std)
+gcm.cache/%.gcm %.pcm %.o: %.cppm obot_std.o
 	@echo "  CXXM  $<"
 	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@
 
@@ -99,6 +99,7 @@ help:
 
 .PHONY: clean help header_units
 
+include $(SELF_DIR)src/Makefile
 -include $(wildcard $(BUILD_DIR)/*.d)
 
 endif # build_dir

@@ -1,7 +1,7 @@
 module;
 
 #include "STM32G474.h"
-import <bit>;
+import obot_std;
 
 export module stm32g474;
 

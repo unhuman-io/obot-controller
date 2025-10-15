@@ -1,6 +1,6 @@
 module;
 
-export import <cstdint>;
+import obot_std;
 import stm32g474;
 
 export module trace_board;

@@ -37,11 +37,15 @@ include $(SELF_DIR)src/Makefile
 # deletes implicit rule
 #%.o: %.cpp
 
-%.o: %.cpp $(c++_header_units)
+$(obot_std): $(SELF_DIR)../obot_std.cppm $(c++_header_units)
+	echo "  CXXM  $<"
+	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm)
+
+%.o: %.cpp $(obot_std)
 	@echo "  CXX   $<"
 	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) -MMD $(<:.d=.cpp) -o $@
 
-gcm.cache/%.gcm %.pcm %.o: %.cppm  $(c++_header_units)
+gcm.cache/%.gcm %.pcm %.o: %.cppm $(obot_std)
 	@echo "  CXXM  $<"
 	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@
 

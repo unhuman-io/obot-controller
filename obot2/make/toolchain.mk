@@ -10,6 +10,7 @@ ifneq ($(USE_LLVM),)
 	c++_header_units = $(c++_header_modules:%=%.pcm)
 	c++_multi_dir = $(shell $(CXX) --print-multi-directory $(CPPFLAGS))
 	c++_headers_location = $(LLVM_PATH)../lib/clang-runtimes/$(c++_multi_dir)/include/c++/v1
+	obot_std = obot_std.pcm
 $(info clang: $(shell which $(CXX)) $(shell $(CXX) -dumpversion))
 else
 	CXX = $(GCC_PATH)arm-none-eabi-g++
@@ -22,6 +23,7 @@ else
 $(info c++ headers location: $(c++_headers_location))
 	c++_header_units = $(addprefix gcm.cache/.$(c++_headers_location)/, $(c++_header_modules:%=%.gcm))
 $(info gcc: $(shell which $(CXX)) $(shell $(CXX) -dumpversion))
+	obot_std = gcm.cache/obot_std.gcm
 endif
 
 #C_INCLUDES += -I$(SELF_DIR)../motorlib/CMSIS/Include -I$(SELF_DIR)../motorlib/device/stm32g4/Include

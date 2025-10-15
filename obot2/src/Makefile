@@ -20,7 +20,7 @@ main.o: trace_blinker.o
 trace_board.o: stm32g474.o
 trace_blinker.o: stm32g474.o trace_board.o
 
-main.elf: STM32G474RETx_FLASH.ld startup_stm32g474xx.o startup_stm32g474xx.o stm32g474.o trace_board.o trace_blinker.o
+main.elf: STM32G474RETx_FLASH.ld startup_stm32g474xx.o startup_stm32g474xx.o stm32g474.o trace_board.o trace_blinker.o obot_std.o
 
 
 #stm32g474.o: $(c++_header_units) #gcm.cache$(c++_headers_location)/bit.gcm

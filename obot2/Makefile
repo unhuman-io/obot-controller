@@ -35,8 +35,6 @@ $(info c++ header units: $(c++_header_units))
 # deletes implicit rule
 #%.o: %.cpp
 
-$(info self dir: $(SELF_DIR))
-
 obot_std.o: $(SELF_DIR)obot_std.cppm $(c++_header_units)
 	echo "  CXXM  $<"
 	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@

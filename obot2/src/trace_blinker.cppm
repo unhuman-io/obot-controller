@@ -6,7 +6,7 @@ import obot_std;
 
 export module trace_blinker;
 
-export template<uint32_t rate = 2>
+export template<uint32_t rate = 5>
 class TraceBlinker : public TraceBoard {
   public:
     TraceBlinker() : TraceBoard() {

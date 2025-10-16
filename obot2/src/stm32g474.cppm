@@ -275,6 +275,12 @@ class stm32g474 {
         while((cyccnt() - t_start) < (170'000'000 / 1000 * ms));
     }
 
+    static void set_isr_vector_table() {
+        // Set the interrupt vector table location
+        // We are using the default location at the start of flash (0x08000000)
+        SCB->VTOR = 0x08000000;
+    }
+
 }; // namespace stm32g474_fun
 
 

@@ -46,7 +46,7 @@ class TraceBlinker : public TraceBoard {
     }
     void run() {
         while(1) {
-            blink();
+           // blink();
         }
     }
 };

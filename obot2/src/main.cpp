@@ -34,6 +34,11 @@ extern "C" void TIM2_IRQHandler() {
     TIM2->SR_b.UIF = 0;
 }
 
+extern "C" void TIM3_IRQHandler() {
+    trace_blinker.blink();
+    TIM3->SR_b.UIF = 0;
+}
+
 extern "C" {
 void _close() {}
 void _lseek() {}

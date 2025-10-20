@@ -178,6 +178,60 @@ export {
 
 export {
     using ::IRQn_Type;
+
+    using ::CRC_Type;
+    using ::IWDG_Type;
+    using ::WWDG_Type;
+    using ::I2C1_Type;
+    using ::FLASH_Type;
+    using ::DBGMCU_Type;
+    using ::RCC_Type;
+    using ::PWR_Type;
+    using ::RNG_Type;
+    using ::GPIOA_Type;
+    using ::GPIOB_Type;
+    using ::GPIOC_Type;
+    using ::TIM15_Type;
+    using ::TIM16_Type;
+    using ::TIM1_Type;
+    using ::TIM2_Type;
+    using ::TIM6_Type;
+    using ::LPTIMER1_Type;
+    using ::USART1_Type;
+    using ::UART4_Type;
+    using ::LPUART1_Type;
+    using ::SPI1_Type;
+    using ::SPI4_Type;
+    using ::EXTI_Type;
+    using ::RTC_Type;
+    using ::FMC_Type;
+    using ::DMA1_Type;
+    using ::DMAMUX_Type;
+    using ::SYSCFG_Type;
+    using ::VREFBUF_Type;
+    using ::COMP_Type;
+    using ::OPAMP_Type;
+    using ::HRTIM_Master_Type;
+    using ::HRTIM_TIMA_Type;
+    using ::HRTIM_TIMB_Type;
+    using ::HRTIM_TIMC_Type;
+    using ::HRTIM_TIMD_Type;
+    using ::HRTIM_TIME_Type;
+    using ::HRTIM_TIMF_Type;
+    using ::HRTIM_Common_Type;
+    using ::QUADSPI_Type;
+    using ::DAC1_Type;
+    using ::ADC1_Type;
+    using ::ADC3_Type;
+    using ::ADC12_Common_Type;
+    using ::FMAC_Type;
+    using ::CORDIC_Type;
+    using ::SAI_Type;
+    using ::TAMP_Type;
+    using ::FDCAN_Type;
+    using ::UCPD1_Type;
+    using ::USB_FS_device_Type;
+    using ::CRS_Type;
 }
 
 // from core_cm4.h
@@ -205,6 +259,11 @@ export {
 #undef NVIC_EnableIRQ
     void NVIC_EnableIRQ(IRQn_Type IRQn) {
         __NVIC_EnableIRQ(IRQn);
+    }
+
+#undef NVIC_SystemReset
+    void NVIC_SystemReset() {
+        __NVIC_SystemReset();
     }
 }
 

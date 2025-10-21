@@ -3,6 +3,7 @@ module;
 import trace_board;
 import stm32g474;
 import obot_std;
+import usb;
 
 export module trace_blinker;
 
@@ -47,8 +48,11 @@ class TraceBlinker : public TraceBoard {
         cpu::wait_ms(1'000 / rate);
     }
     void run() {
+        usb.connect();
         while(1) {
            // blink();
         }
     }
+
+    USB usb;
 };

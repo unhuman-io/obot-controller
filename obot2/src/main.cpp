@@ -3,14 +3,17 @@ import trace_blinker;
 //import <cstdint>;
 import stm32g474;
 import trace_board;
+import obot_std;
 
 TraceBlinker trace_blinker;
+// extern uint32_t go_to_bootloader;
 
 namespace cpu = stm32g474;
 
 int main() {
     RCC->RCC_APB2ENR_b.TIM1EN = 1;
     RCC->RCC_APB1ENR1_b.TIM2EN = 1;
+
     TIM1->TIM1_DIER_b.UIE = 1;
     TIM1->TIM1_PSC = 25939/2;
     
@@ -23,6 +26,7 @@ int main() {
     TIM2->TIM2_CR1_b.CEN = 1;
     NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
     NVIC_EnableIRQ(TIM2_IRQn);
+    NVIC_EnableIRQ(USB_LP_IRQn);
     trace_blinker.run();
 }
 
@@ -39,6 +43,12 @@ extern "C" void TIM2_IRQHandler() {
 extern "C" void TIM3_IRQHandler() {
     trace_blinker.blink();
     TIM3->TIM2_SR_b.UIF = 0;
+}
+
+extern "C" void USB_LP_IRQHandler() {
+    asm("":::"memory");
+    trace_blinker.usb.interrupt();
+    asm("":::"memory");
 }
 
 extern "C" {

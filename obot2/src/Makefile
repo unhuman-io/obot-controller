@@ -18,7 +18,7 @@ main.bin:
 # manual dependencies for modules
 main.o: trace_blinker.o
 trace_board.o: stm32g474.o
-trace_blinker.o: stm32g474.o trace_board.o
+trace_blinker.o: stm32g474.o trace_board.o usb.o
 usb.o: stm32g474.o
 #stm32g474.o: 
 

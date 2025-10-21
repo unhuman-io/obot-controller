@@ -336,6 +336,37 @@ export namespace stm32g474 {
         SCB->VTOR = 0x0000000;
     }
 
+    void enable_crs() {
+        RCC->RCC_CRRCR_b.HSI48ON = 1;
+        while (!RCC->RCC_CRRCR_b.HSI48RDY);
+        RCC->RCC_APB1ENR1_b.CRSEN = 1; // enable CRS clock
+        RCC->RCC_APB1SMENR1_b.CRSSMEN = 1; // enable CRS clock in sleep mode
+        CRS->CFGR_b = {
+            .RELOAD = (48'000'000/1'000) - 1, // 1 kHz target
+            .FELIM = 34,
+            .SYNCSRC = 2, //source is USB SOF
+        };
+        CRS->CR_b = {
+            .CEN = 1,
+            .AUTOTRIMEN = 1,
+        };
+    }
+
+    void enable_peripheral_clocks() {
+        RCC->RCC_APB1ENR1_b.USBEN = 1;
+    }
+
+    void enable_fpu() {
+        SCB->CPACR |= ((3UL << (10 * 2)) | (3UL << (11 * 2))); /* set CP10 and CP11 Full Access */
+    }
+
+    void enable_usb_pins() {
+        RCC->RCC_AHB2ENR_b.GPIOAEN = 1;
+        GPIOA->MODER_b.MODER11 = 3; // analog
+        GPIOA->MODER_b.MODER12 = 3; // analog
+        GPIOA->MODER_b.MODER10 = 0; // input
+    }
+
     void wait_ms(uint32_t ms) {
         auto t_start = stm32g474::cyccnt();
         while((stm32g474::cyccnt() - t_start) < (cpu_frequency / 1000 * ms));

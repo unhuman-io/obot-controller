@@ -22,4 +22,8 @@ extern "C" void stm32g474_init() {
     cpu::set_flash_wait_states();
     cpu::use_hse();
     cpu::set_isr_vector_table();
+    cpu::enable_crs();
+    cpu::enable_peripheral_clocks();
+    cpu::enable_fpu();
+    cpu::enable_usb_pins();
 }

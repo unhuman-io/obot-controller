@@ -37,7 +37,7 @@ export {
 #undef TIM5
 #undef TIM6
 #undef TIM7
-#undef LPTIMER1
+#undef LPTIM1
 #undef USART1
 #undef USART2
 #undef USART3
@@ -122,7 +122,7 @@ export {
     TIM2_Type * const TIM5 = (TIM2_Type *) TIM5_BASE;
     TIM6_Type * const TIM6 = (TIM6_Type *) TIM6_BASE;
     TIM6_Type * const TIM7 = (TIM6_Type *) TIM7_BASE;
-    LPTIMER1_Type * const LPTIMER1 = (LPTIMER1_Type *) LPTIMER1_BASE;
+    LPTIM1_Type * const LPTIM1 = (LPTIM1_Type *) LPTIM1_BASE;
     USART1_Type * const USART1 = (USART1_Type *) USART1_BASE;
     USART1_Type * const USART2 = (USART1_Type *) USART2_BASE;
     USART1_Type * const USART3 = (USART1_Type *) USART3_BASE;
@@ -196,7 +196,7 @@ export {
     using ::TIM1_Type;
     using ::TIM2_Type;
     using ::TIM6_Type;
-    using ::LPTIMER1_Type;
+    using ::LPTIM1_Type;
     using ::USART1_Type;
     using ::UART4_Type;
     using ::LPUART1_Type;
@@ -294,7 +294,7 @@ export namespace stm32g474 {
     }
 
     void set_flash_wait_states() {
-        FLASH->ACR_b = {
+        FLASH->FLASH_ACR_b = {
             .LATENCY = 4, // 4 flash wait states for 170 MHz
             .PRFTEN = 1, // enable prefetch
             .ICEN = 1, // enable instruction cache

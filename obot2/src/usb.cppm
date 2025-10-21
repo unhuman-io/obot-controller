@@ -281,7 +281,7 @@ USB::USB() : regs_{*USB_FS_Device} {
 }
 
 void USB::connect() {
-   // regs_.BCDR_b = 1; // device pull up
+    regs_.BCDR_b.DPPU = 1; // device pull up
 }
 
 // true if successful cancel

@@ -439,7 +439,7 @@ void USB::interrupt() {
 
         // enable interrupts
 
-        regs_.DADDR_b.EF = 1; // device address 0 is effective
+        regs_.DADDR_b = { .EF = 1 }; // device address 0 is effective
 
         regs_.ISTR_b.RESET = 0;
     }

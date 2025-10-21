@@ -6,6 +6,8 @@ import obot_std;
 
 export module trace_blinker;
 
+namespace cpu = stm32g474;
+
 export template<uint32_t rate = 5>
 class TraceBlinker : public TraceBoard {
   public:

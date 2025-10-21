@@ -6,6 +6,8 @@ import trace_board;
 
 TraceBlinker trace_blinker;
 
+namespace cpu = stm32g474;
+
 int main() {
     RCC->RCC_APB2ENR_b.TIM1EN = 1;
     RCC->RCC_APB1ENR1_b.TIM2EN = 1;

@@ -267,24 +267,25 @@ export {
     }
 }
 
-export template<uint32_t cpu_frequency = 170'000'000,
-                uint32_t hse_frequency = 24'000'000>
-class stm32g474 {
-  public:
+// export template<uint32_t cpu_frequency1 = 170'000'000,
+//                 uint32_t hse_frequency1 = 24'000'000>
+export namespace stm32g474 {
+    constexpr uint32_t hse_frequency = 24'000'000; // 24 MHz
+    constexpr uint32_t cpu_frequency = 170'000'000; // 170 MHz
 
-    static void enable_cyccnt() {
+    void enable_cyccnt() {
         CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // enable trace
         DWT->CYCCNT = 0; // reset cycle counter
         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk; // enable cycle counter
     }
 
-    static uint32_t cyccnt() {
+    uint32_t cyccnt() {
         return DWT->CYCCNT;
     }
 
     // Enable boost mode for > 150 MHz operation
     // Requires enable_cyccnt() to be called first
-    static void enable_boost_mode() {
+    void enable_boost_mode() {
         PWR->PWR_CR5_b.R1MODE = 0; // R1MODE -> 0 for > 150 MHz operation
         // PWR_CR5_R1MODE change recommends 1 us startup
         // startup clock is at 16 MHz
@@ -292,7 +293,7 @@ class stm32g474 {
         while((cyccnt()-t_start) < (16'000'000/1'000'000));
     }
 
-    static void set_flash_wait_states() {
+    void set_flash_wait_states() {
         FLASH->ACR_b = {
             .LATENCY = 4, // 4 flash wait states for 170 MHz
             .PRFTEN = 1, // enable prefetch
@@ -302,7 +303,7 @@ class stm32g474 {
         };
     }
 
-    static void use_hse() {
+    void use_hse() {
         static_assert(hse_frequency == 24'000'000, "HSE frequency must be 24 MHz");
         static_assert(cpu_frequency/2'000'000*2'000'000 == cpu_frequency, "CPU frequency must be even multiple of 2 MHz");
         RCC->RCC_PLLCFGR_b = {
@@ -329,15 +330,19 @@ class stm32g474 {
         RCC->RCC_CFGR_b.SW = 3; // PLL clock
     }
 
-    static void wait_ms(uint32_t ms) {
-        auto t_start = cyccnt();
-        while((cyccnt() - t_start) < (170'000'000 / 1000 * ms));
-    }
-
-    static void set_isr_vector_table() {
+    void set_isr_vector_table() {
         // Set the interrupt vector table location
         // We are using the default location at the start of flash (0x08000000)
         SCB->VTOR = 0x0000000;
+    }
+
+    void wait_ms(uint32_t ms) {
+        auto t_start = stm32g474::cyccnt();
+        while((stm32g474::cyccnt() - t_start) < (cpu_frequency / 1000 * ms));
+    }
+
+    uint32_t us_to_cyccnt(uint32_t us) {
+        return (cpu_frequency / 1'000'000) * us;
     }
 
 }; // namespace stm32g474_fun

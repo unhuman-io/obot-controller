@@ -9,6 +9,8 @@ export module usb;
 import obot_std;
 import stm32g474;
 
+namespace cpu = stm32g474;
+
 enum class EP_STAT {
     DISABLED = 0,
     STALL = 1,
@@ -266,7 +268,7 @@ struct usb_control_request {
     uint16_t wLength;
 } __attribute__ ((packed));
 
-static void read_pma(uint8_t byte_count, uint16_t * pma_address, uint8_t *buffer_out);
+static void read_pma(uint8_t byte_count, volatile uint16_t * pma_address, uint8_t *buffer_out);
 
 static void _send_data(uint8_t endpoint, const uint8_t *data, uint8_t length);
 
@@ -299,9 +301,9 @@ bool USB::cancel_transfer(uint8_t endpoint, uint32_t timeout_ns) {
     // and checking for CTR_TX
     // timeout of 5000 ns
    // EXTI->PR1 = EXTI_PR1_PIF10;
-    uint32_t t_start = get_clock();
+    uint32_t t_start = cpu::cyccnt();
     uint16_t idle_count = 0;
-    while((get_clock() - t_start) < timeout_ns/(uint16_t) (1e9/CPU_FREQUENCY_HZ)) {
+    while((cpu::cyccnt() - t_start) < timeout_ns/(uint16_t) (1e9/cpu::cpu_frequency)) {
         // if (EXTI->PR1 & EXTI_PR1_PIF10) {
         //     EXTI->PR1 = EXTI_PR1_PIF10;
         //     idle_count = 0;
@@ -324,9 +326,9 @@ bool USB::cancel_transfer(uint8_t endpoint, uint32_t timeout_ns) {
 // Wait will pause until last packet has been received, If wait is false, then a buffered packet
 // will be discarded. For wait being false the maximum transmission is USBD_BULK_SIZE (64) bytes.
 void USB::send_data(uint8_t endpoint, const uint8_t *data, uint16_t length, bool wait, uint32_t wait_timeout_us) {
-    auto t_start_wait = get_clock();
+    auto t_start_wait = cpu::cyccnt();
     while (tx_active(endpoint)) {
-        if (wait && get_clock() - t_start_wait <= US_TO_CPU(wait_timeout_us)) {
+        if (wait && cpu::cyccnt() - t_start_wait <= cpu::us_to_cyccnt(wait_timeout_us)) {
             // it wil force cancel on timeout
             continue;
         } else {
@@ -621,7 +623,7 @@ void USB::interrupt() {
             if ((setup_data->bRequest == 0) && (interface_ == DFU_INTERFACE_NUMBER)) { // dfu detach
                 send_data(0,0,0);
                 while (regs_.EP0R_b.STAT_TX == 3); // wait for packet to go through (3 == ep tx valid)
-                cpu::wait_ms(10);
+                stm32g474::wait_ms(10);
                 go_to_bootloader = 0xB007;
                 NVIC_SystemReset();
             } else {

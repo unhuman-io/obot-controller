@@ -29,7 +29,7 @@ endif
 #C_INCLUDES += -I$(SELF_DIR)../motorlib/CMSIS/Include -I$(SELF_DIR)../motorlib/device/stm32g4/Include
 CPPFLAGS += -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CFLAGS += -g -O3 -flto -ffunction-sections -fdata-sections
-CXXFLAGS += -std=c++20
+CXXFLAGS += -std=c++23
 LDFLAGS += -Wl,-Map=main.map,--gc-sections
 
 .EXTRA_PREREQS := $(.EXTRA_PREREQS) $(lastword $(MAKEFILE_LIST))

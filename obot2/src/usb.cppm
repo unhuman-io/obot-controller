@@ -75,10 +75,6 @@ export class USB {
     friend class System;
     uint32_t reset_count_ = 0;
     USB_FS_device_Type &regs_;
-    uint16_t stuff = 0;
-    uint16_t stuff2 = 0;
-    uint16_t stuff3 = 0;
-    uint16_t stuff4 = 0;
 };
 
 typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 bytes, reception buffers need two additional bytes for CRC
@@ -296,17 +292,19 @@ bool USB::tx_active(uint8_t endpoint) {
 }
 
 USB::USB() : regs_{*USB_FS_Device} {
-    regs_.CNTR_b.PDWN = 0;
-    for (int i=0; i<200; i++) {
-        asm("nop");
-    }
+//     regs_.CNTR_b.PDWN = 0;
+//     for (int i=0; i<200; i++) {
+//         asm("nop");
+//     }
     
-    regs_.CNTR_b = {.FRES = 1, .L1REQM = 1, .RESETM = 1, .WKUPM = 1, .ERRM = 1, .CTRM = 1 };
-   // connect();
-    regs_.CNTR_b.FRES = 0;
-        for (int i=0; i<200; i++) {
-        asm("nop");
-    }
+//     regs_.CNTR_b = {.FRES = 1, .L1REQM = 1, .RESETM = 1, .WKUPM = 1, .ERRM = 1, .CTRM = 1 };
+//    // connect();
+//     regs_.CNTR_b.FRES = 0;
+//         for (int i=0; i<200; i++) {
+//         asm("nop");
+//     }
+    
+    regs_.CNTR_b = { .L1REQM = 1, .RESETM = 1, .WKUPM = 1, .ERRM = 1, .CTRM = 1 };
 }
 
 void USB::connect() {
@@ -385,12 +383,7 @@ void USB::_send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
         pma_address[i] = ((const uint16_t *) data)[i];
     }
     USBPMA->btable[endpoint].COUNT_TX = length;
-    stuff = regs_.EP0R;
     epr_set_stat_tx(endpoint, EP_STAT::VALID);
-    stuff2 = regs_.EP0R;
-    regs_.EP0R;
-    //asm("bkpt #0");
-    //cpu::wait_ms(1);
 }
 
 // todo protect
@@ -419,10 +412,7 @@ void USB::send_string(uint8_t endpoint, const char *str, uint8_t length) {
 }
 
 void USB::send_stall(uint8_t endpoint) {
-    stuff3 = regs_.EP0R;
-    //epr_set_toggle(endpoint, USB_EP_TX_STALL, USB_EPTX_STAT);
     epr_set_stat_tx(endpoint, EP_STAT::STALL);
-    stuff4 = regs_.EP0R;
 }
 
 void read_pma(uint8_t byte_count, volatile uint16_t * pma_address, uint8_t *buffer_out) {
@@ -497,19 +487,14 @@ void USB::interrupt() {
                         handle_setup_packet(reinterpret_cast<usb_control_request *>(buffer));
                     }
                     // clear CTR
-                    stuff2 = regs_.EP0R;
-                    //asm("bkpt #0");
                     regs_.EP0R = (USB_EP_CTR_TX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;
                     // renable rx on ep0
-                    //stuff3 = regs_.EP0R;
                     epr_set_stat_rx(0, EP_STAT::VALID);
-                    stuff3 = regs_.EP0R;
                 }
                 if (regs_.EP0R_b.CTR_TX) {
                     // clear CTR_TX
                     regs_.EP0R = (USB_EP_CTR_RX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_TX;
                 }
-                stuff4 = regs_.EP0R;
                 break;
             case 2:
                 if (istr.DIR) { // RX

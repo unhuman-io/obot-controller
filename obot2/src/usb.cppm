@@ -62,8 +62,8 @@ export class USB {
 
     // special function due to difficulty of toggle bits and clear bits;
     // hopefully hardware doesn't change values during this function
-    void epr_set_stat_rx(uint8_t endpoint, EP_STAT stat, bool toggle = false);
-    void epr_set_stat_tx(uint8_t endpoint, EP_STAT stat, bool toggle = false);
+    void epr_set_stat_rx(uint8_t endpoint, EP_STAT stat);
+    void epr_set_stat_tx(uint8_t endpoint, EP_STAT stat);
 
     uint8_t device_address_ = 0;
     uint16_t interface_ = 0;
@@ -75,20 +75,24 @@ export class USB {
     friend class System;
     uint32_t reset_count_ = 0;
     USB_FS_device_Type &regs_;
+    uint16_t stuff = 0;
+    uint16_t stuff2 = 0;
+    uint16_t stuff3 = 0;
+    uint16_t stuff4 = 0;
 };
 
 typedef struct { // up to 1024 bytes, 16 bit access only, first table is 64 bytes, reception buffers need two additional bytes for CRC
     struct {
-    uint16_t ADDR_TX;
-    uint16_t COUNT_TX;
-    uint16_t ADDR_RX;
-    uint16_t COUNT_RX;
+        volatile uint16_t ADDR_TX;
+        volatile uint16_t COUNT_TX;
+        volatile uint16_t ADDR_RX;
+        volatile uint16_t COUNT_RX;
     } btable[8];
 
     // below buffer is user specified
     struct {
-    uint16_t EP_TX[32];
-    uint16_t EP_RX[48];
+        volatile uint16_t EP_TX[32];
+        volatile uint16_t EP_RX[48];
     } buffer[3];
 } USBPMA_TypeDef;
 #define USBPMA ((USBPMA_TypeDef *) USB_PMAADDR)
@@ -121,7 +125,22 @@ union EPReg {
     };
 };
 
+/* bit positions */
+#define USB_EP_CTR_RX                            ((uint16_t)0x8000U)           /*!<  EndPoint Correct TRansfer RX */
+#define USB_EP_DTOG_RX                           ((uint16_t)0x4000U)           /*!<  EndPoint Data TOGGLE RX */
+#define USB_EPRX_STAT                            ((uint16_t)0x3000U)           /*!<  EndPoint RX STATus bit field */
+#define USB_EP_SETUP                             ((uint16_t)0x0800U)           /*!<  EndPoint SETUP */
+#define USB_EP_T_FIELD                           ((uint16_t)0x0600U)           /*!<  EndPoint TYPE */
+#define USB_EP_KIND                              ((uint16_t)0x0100U)           /*!<  EndPoint KIND */
+#define USB_EP_CTR_TX                            ((uint16_t)0x0080U)           /*!<  EndPoint Correct TRansfer TX */
+#define USB_EP_DTOG_TX                           ((uint16_t)0x0040U)           /*!<  EndPoint Data TOGGLE TX */
+#define USB_EPTX_STAT                            ((uint16_t)0x0030U)           /*!<  EndPoint TX STATus bit field */
+#define USB_EPADDR_FIELD                         ((uint16_t)0x000FU)           /*!<  EndPoint ADDRess FIELD */
 
+/* EndPoint REGister MASK (no toggle fields) */
+#define USB_EPREG_MASK     (USB_EP_CTR_RX|USB_EP_SETUP|USB_EP_T_FIELD|USB_EP_KIND|USB_EP_CTR_TX|USB_EPADDR_FIELD)
+
+#define USB_EP_TX_STALL                          ((uint16_t)0x0010U) 
 
 #define LOBYTE(x)  ((uint8_t)(x & 0x00FF))
 #define HIBYTE(x)  ((uint8_t)((x & 0xFF00) >>8))
@@ -277,7 +296,17 @@ bool USB::tx_active(uint8_t endpoint) {
 }
 
 USB::USB() : regs_{*USB_FS_Device} {
-    regs_.CNTR_b = decltype(USB_FS_device_Type::CNTR_b) { .L1REQM = 1, .RESETM = 1, .WKUPM = 1, .ERRM = 1, .CTRM = 1 };
+    regs_.CNTR_b.PDWN = 0;
+    for (int i=0; i<200; i++) {
+        asm("nop");
+    }
+    
+    regs_.CNTR_b = {.FRES = 1, .L1REQM = 1, .RESETM = 1, .WKUPM = 1, .ERRM = 1, .CTRM = 1 };
+   // connect();
+    regs_.CNTR_b.FRES = 0;
+        for (int i=0; i<200; i++) {
+        asm("nop");
+    }
 }
 
 void USB::connect() {
@@ -356,7 +385,12 @@ void USB::_send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
         pma_address[i] = ((const uint16_t *) data)[i];
     }
     USBPMA->btable[endpoint].COUNT_TX = length;
+    stuff = regs_.EP0R;
     epr_set_stat_tx(endpoint, EP_STAT::VALID);
+    stuff2 = regs_.EP0R;
+    regs_.EP0R;
+    //asm("bkpt #0");
+    //cpu::wait_ms(1);
 }
 
 // todo protect
@@ -385,7 +419,10 @@ void USB::send_string(uint8_t endpoint, const char *str, uint8_t length) {
 }
 
 void USB::send_stall(uint8_t endpoint) {
+    stuff3 = regs_.EP0R;
+    //epr_set_toggle(endpoint, USB_EP_TX_STALL, USB_EPTX_STAT);
     epr_set_stat_tx(endpoint, EP_STAT::STALL);
+    stuff4 = regs_.EP0R;
 }
 
 void read_pma(uint8_t byte_count, volatile uint16_t * pma_address, uint8_t *buffer_out) {
@@ -395,23 +432,25 @@ void read_pma(uint8_t byte_count, volatile uint16_t * pma_address, uint8_t *buff
     }
 }
 
-void USB::epr_set_stat_rx(uint8_t endpoint, EP_STAT stat, bool toggle) {
+void USB::epr_set_stat_rx(uint8_t endpoint, EP_STAT stat) {
     EPReg epr { USBEPR->EP[endpoint] };
     epr.STAT_RX ^= static_cast<uint32_t>(stat);
     epr.STAT_TX = 0; // don't toggle
     epr.CTR_TX = 1; // write 1 to not clear CTR
     epr.CTR_RX = 1;
-    epr.DTOG_RX ^= toggle;
+    epr.DTOG_TX = 0;
+    epr.DTOG_RX = 0;
     USBEPR->EPR[endpoint]= epr.word;
 }
 
-void USB::epr_set_stat_tx(uint8_t endpoint, EP_STAT stat, bool toggle) {
+void USB::epr_set_stat_tx(uint8_t endpoint, EP_STAT stat) {
     EPReg epr { USBEPR->EP[endpoint] };
     epr.STAT_TX ^= static_cast<uint32_t>(stat);
     epr.STAT_RX = 0; // don't toggle
     epr.CTR_TX = 1; // write 1 to not clear CTR
     epr.CTR_RX = 1;
-    epr.DTOG_RX ^= toggle;
+    epr.DTOG_RX = 0;
+    epr.DTOG_TX = 0;
     USBEPR->EPR[endpoint] = epr.word;
 }
 
@@ -423,6 +462,7 @@ void USB::interrupt() {
     {
         reset_count_++;
         error_count_ = 0;
+        connect();
         // todo bring back logger in isr safe way
         // logger.log("usb reset");
         // Set up endpoint 0
@@ -430,11 +470,11 @@ void USB::interrupt() {
         epr.EP_TYPE = static_cast<uint32_t>(EP_TYPE::CONTROL);
         regs_.EP0R = std::bit_cast<decltype(regs_.EP0R)>(epr);
         USBPMA->btable[0].ADDR_TX = offsetof(USBPMA_TypeDef, buffer[0].EP_TX);
-        epr_set_stat_tx(0, EP_STAT::NAK, true);
+        epr_set_stat_tx(0, EP_STAT::NAK);
             // sets the toggle only bits to DIS and clears DTOG, hardware better not change EPR during operation
         USBPMA->btable[0].ADDR_RX = offsetof(USBPMA_TypeDef, buffer[0].EP_RX);
         USBPMA->btable[0].COUNT_RX =  (1 << USB_COUNT_RX_BLSIZE_Pos) | (2 << USB_COUNT_RX_NUM_BLOCK_Pos); // 1:2 -> 96 byte allocation
-        epr_set_stat_rx(0, EP_STAT::VALID, true);
+        epr_set_stat_rx(0, EP_STAT::VALID);
             // similar to above TX
 
         // enable interrupts
@@ -457,14 +497,19 @@ void USB::interrupt() {
                         handle_setup_packet(reinterpret_cast<usb_control_request *>(buffer));
                     }
                     // clear CTR
-                    regs_.EP0R_b.CTR_RX = 0; // = (USB_EP_CTR_TX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;
+                    stuff2 = regs_.EP0R;
+                    //asm("bkpt #0");
+                    regs_.EP0R = (USB_EP_CTR_TX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;
                     // renable rx on ep0
+                    //stuff3 = regs_.EP0R;
                     epr_set_stat_rx(0, EP_STAT::VALID);
+                    stuff3 = regs_.EP0R;
                 }
                 if (regs_.EP0R_b.CTR_TX) {
                     // clear CTR_TX
-                    regs_.EP0R_b.CTR_TX = 0;
+                    regs_.EP0R = (USB_EP_CTR_RX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_TX;
                 }
+                stuff4 = regs_.EP0R;
                 break;
             case 2:
                 if (istr.DIR) { // RX
@@ -569,7 +614,7 @@ void USB::interrupt() {
                     device_address_ = setup_data->wValue;
                     send_data(0,0,0);
                     // set device address after acknowledge
-                    while(regs_.EP0R_b.STAT_TX == 3); // wait for packet to go through (3 == ep tx valid)
+                    while(regs_.EP0R_b.STAT_TX == static_cast<uint32_t>(EP_STAT::VALID)); // wait for packet to go through
                     regs_.DADDR_b.ADD = device_address_;
                     break;
                 case 0x09: // set configuration

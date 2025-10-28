@@ -30,8 +30,7 @@ constexpr uint32_t USB_COUNT_RX_BLSIZE_Pos = 15;
 constexpr uint32_t USB_COUNT_RX_NUM_BLOCK_Pos = 10;
 constexpr uint32_t USB_COUNT_RX_COUNT_RX = 0x3FFul;
 
-// signal to exit
-export uint32_t go_to_bootloader;
+
 struct usb_control_request;
 export class USB {
  public:

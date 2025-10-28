@@ -49,9 +49,9 @@ class TraceBlinker : public TraceBoard {
     }
     void run() {
         usb.connect();
-        while(1) {
-           // blink();
-        }
+        // while(1) {
+        //    // blink();
+        // }
     }
 
     USB usb;

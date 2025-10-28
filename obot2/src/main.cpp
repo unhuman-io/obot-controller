@@ -19,16 +19,20 @@ int main() {
     
 
     TIM2->TIM2_DIER_b.UIE = 1;
-    TIM1->TIM1_SMCR_b.SMS = 0b110;
-    TIM1->TIM1_SMCR_b.TS = 0b110;
-    TIM1->TIM1_CR1_b.CEN = 1;
-    cpu::wait_ms(2000);
-    TIM2->TIM2_CR1_b.CEN = 1;
+    TIM1->TIM1_SMCR_b.SMS = 0b110; // trigger mode
+    TIM1->TIM1_SMCR_b.TS = 0b1; // trigger on tim2
+    //TIM1->TIM1_CR1_b.CEN = 1;
     NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
     NVIC_EnableIRQ(TIM2_IRQn);
     NVIC_EnableIRQ(USB_LP_IRQn);
     trace_blinker.run();
+    cpu::wait_ms(2000);
+    TIM2->TIM2_CR2_b.MMS = 1; // enable is a trigger out
+    TIM2->TIM2_CR1_b.CEN = 1;
 }
+    
+
+    
 
 extern "C" void TIM1_UP_TIM16_IRQHandler() {
     trace_blinker.blink();
@@ -36,7 +40,7 @@ extern "C" void TIM1_UP_TIM16_IRQHandler() {
 }
 
 extern "C" void TIM2_IRQHandler() {
-    trace_blinker.blink();
+    //trace_blinker.blink();
     TIM2->TIM2_SR_b.UIF = 0;
 }
 

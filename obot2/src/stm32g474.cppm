@@ -267,6 +267,8 @@ export {
     }
 }
 
+export volatile uint32_t go_to_bootloader;
+
 // export template<uint32_t cpu_frequency1 = 170'000'000,
 //                 uint32_t hse_frequency1 = 24'000'000>
 export namespace stm32g474 {

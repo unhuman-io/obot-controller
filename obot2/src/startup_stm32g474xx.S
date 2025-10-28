@@ -62,7 +62,7 @@ Reset_Handler:
   ldr r0, =_ZW9stm32g47416go_to_bootloader
   ldr r0, [r0]
   ldr r1, =0xB007
-  cmp r1, r2
+  cmp r0, r1
   beq goto_stm_bootloader
 
   ldr   r0, =_estack
@@ -110,19 +110,8 @@ LoopFillZerobss:
 LoopForever:
     b LoopForever
 
-
-.set RCC_APB2ENR,         0x40021060
-.set SYSCFG_MEMRMP,	      0x40010000
-
-goto_stm_bootloader:
-	ldr r0, =RCC_APB2ENR
-	mov r1, #1
-	str r1, [r0]
-	nop
-	ldr r0, =SYSCFG_MEMRMP
-	//ldr r1, #1
-	str r1, [r0]
-	ldr r0, =0x1FFF0000
+goto_stm_bootloader:	
+	ldr r0, =0x1fff0000
 	ldr sp, [r0]
 	ldr pc, [r0, #4]
 

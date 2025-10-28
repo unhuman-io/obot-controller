@@ -4,12 +4,13 @@ ifneq ($(USE_LLVM),)
 	CP = $(LLVM_PATH)llvm-objcopy
 	SZ = $(LLVM_PATH)llvm-size
 	CPPFLAGS += --target=thumbv7em-none-eabi
-	CXXFLAGS += -fprebuilt-module-path=. $(addprefix -fmodule-file=,$(c++_header_units)) -Wno-experimental-header-units
+	CXXFLAGS += -fprebuilt-module-path=. -Wno-experimental-header-units
 	CXXMFLAGS += -fmodule-output -x c++-module -Wno-experimental-header-units -Wno-pragma-system-header-outside-header
 	LDFLAGS += -nostartfiles
 	c++_header_units = $(c++_header_modules:%=%.pcm)
 	c++_multi_dir = $(shell $(CXX) --print-multi-directory $(CPPFLAGS))
 	c++_headers_location = $(LLVM_PATH)../lib/clang-runtimes/$(c++_multi_dir)/include/c++/v1
+	obot_std_flags = $(addprefix -fmodule-file=,$(c++_header_units))
 #	obot_std = obot_std.pcm
 $(info clang: $(shell which $(CXX)) $(shell $(CXX) -dumpversion))
 else

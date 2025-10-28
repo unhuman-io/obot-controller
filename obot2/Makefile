@@ -28,7 +28,7 @@ ifneq ($(VERBOSE),)
 $(info EXTRA_PREREQS: $(.EXTRA_PREREQS))
 endif
 
-c++_header_modules := bit cstdint
+c++_header_modules := bit cstdint string
 
 $(info c++ header units: $(c++_header_units))
 
@@ -37,7 +37,7 @@ $(info c++ header units: $(c++_header_units))
 
 obot_std.o: $(SELF_DIR)obot_std.cppm $(c++_header_units)
 	echo "  CXXM  $<"
-	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -MMD $(<:.d=.cppm) -o $@
+	$(CXX) -c $(C_INCLUDES) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) $(obot_std_flags) -MMD $(<:.d=.cppm) -o $@ 
 
 %.o: %.cpp obot_std.o
 	@echo "  CXX   $<"
@@ -74,7 +74,7 @@ gcm.cache/%.h.gcm: %.h
 # clang c++20 system header unit modules
 %.pcm: $(c++_headers_location)/%
 	@echo "  SPCM  $*"
-	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(filter-out %.pcm,$(CXXFLAGS)) $(CXXMFLAGS) -x c++-system-header -c $*
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -Wno-user-defined-literals -x c++-system-header -c $*
 
 header_units: $(c++_header_units)
 

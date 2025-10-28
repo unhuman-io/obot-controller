@@ -4,3 +4,4 @@ export module obot_std;
 
 export import <bit>;
 export import <cstdint>;
+export import <string>;

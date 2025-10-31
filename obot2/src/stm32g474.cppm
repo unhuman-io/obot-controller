@@ -265,6 +265,10 @@ export {
     void NVIC_SystemReset() {
         __NVIC_SystemReset();
     }
+
+    void set_nvic_priority(IRQn_Type IRQn, uint32_t priority) {
+        __NVIC_SetPriority(IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), priority, 0));
+    }
 }
 
 export volatile uint32_t go_to_bootloader;

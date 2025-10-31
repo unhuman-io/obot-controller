@@ -47,6 +47,11 @@ class TraceBlinker : public TraceBoard {
         GPIOF->BSRR_b.BR9 = 1;
         cpu::wait_ms(1'000 / rate);
     }
+
+    void set_green() {
+        GPIOB->BSRR_b.BS7 = 1;
+        GPIOC->BSRR_b.BS12 = 1;
+    }
     void run() {
         usb.connect();
         // while(1) {

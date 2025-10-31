@@ -498,7 +498,7 @@ void USB::interrupt() {
             case 2:
                 if (istr.DIR) { // RX
                     // clear CTR_RX
-                    regs_.EP2R_b.CTR_RX = 0;
+                    regs_.EP2R = (USB_EP_CTR_TX | (regs_.EP2R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;
                     count_rx_[2] = (USBPMA->btable[2].COUNT_RX & USB_COUNT_RX_COUNT_RX);
                     read_pma(count_rx_[2], USBPMA->buffer[2].EP_RX, rx_buffer_[2]);
                     new_rx_data_[2] = true;
@@ -507,13 +507,13 @@ void USB::interrupt() {
                 if (regs_.EP2R_b.CTR_TX) {
                     tx_data_ack_[2] = true;
                     // clear CTR_TX
-                    regs_.EP2R_b.CTR_TX = 0;
+                    regs_.EP2R = (USB_EP_CTR_TX | (regs_.EP2R & USB_EPREG_MASK)) & ~USB_EP_CTR_TX;
                 }
                 break;
             case 1:
                 if (istr.DIR) { // RX
                     // clear CTR_RX
-                    regs_.EP1R_b.CTR_RX = 0;
+                    regs_.EP1R = (USB_EP_CTR_TX | (regs_.EP1R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;;
                     count_rx_[1] = (USBPMA->btable[1].COUNT_RX & USB_COUNT_RX_COUNT_RX);
                     read_pma(count_rx_[1], USBPMA->buffer[1].EP_RX, rx_buffer_[1]);
                     new_rx_data_[1] = true;
@@ -522,7 +522,7 @@ void USB::interrupt() {
                 if (regs_.EP1R_b.CTR_TX) {
                     tx_data_ack_[1] = true;
                      // clear CTR_TX
-                    regs_.EP1R_b.CTR_TX = 0;
+                    regs_.EP1R = (USB_EP_CTR_TX | (regs_.EP1R & USB_EPREG_MASK)) & ~USB_EP_CTR_TX;;
                 }
                 break;
         }

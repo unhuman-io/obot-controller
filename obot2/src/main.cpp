@@ -3,6 +3,7 @@ import trace_blinker;
 //import <cstdint>;
 import stm32g474;
 import trace_board;
+#include <cstddef>
 import obot_std;
 
 TraceBlinker trace_blinker;
@@ -34,11 +35,11 @@ int main() {
     TIM2->TIM2_CR1_b.CEN = 1;
     uint8_t i = 0;
     while(1) {
-        char c[14] = "Hello, World!";
-        c[13] = i++;
-        trace_blinker.usb.send_data(2, (uint8_t *) c, 13, true, 10'000'000);
-        c[13] = i++;
-        trace_blinker.usb.send_data(2, (uint8_t *) c, 13, true, 10'000'000);
+        // char c[14] = "Hello, World!";
+        // c[13] = i++;
+        // trace_blinker.usb.send_data(2, (uint8_t *) c, 13, true, 10'000'000);
+        // c[13] = i++;
+        // trace_blinker.usb.send_data(2, (uint8_t *) c, 13, true, 10'000'000);
     }
 }
     
@@ -52,8 +53,10 @@ extern "C" void TIM1_UP_TIM16_IRQHandler() {
 
 extern "C" void TIM2_IRQHandler() {
     //trace_blinker.blink();
+    asm("":::"memory");
     asm("bkpt #0");
     TIM2->TIM2_SR_b.UIF = 0;
+    asm("dsb":::"memory"); // dsb for interrupt near end to not retrigger
 }
 
 extern "C" void TIM3_IRQHandler() {
@@ -68,27 +71,49 @@ extern "C" void USB_LP_IRQHandler() {
 }
 
 
-struct ContextFrame {
+struct ContextState {
     uint32_t r0;
     uint32_t r1;
     uint32_t r2;
     uint32_t r3;
     uint32_t r12;
-    uint32_t lr;
-    uint32_t return_address;
+    uint32_t lr; // r14
+    uint32_t return_address; // pc
     uint32_t psr;
+    float s[16];
+    uint32_t fpscr;
 };
 
-extern "C" __attribute__((used)) void debug_monitor(ContextFrame* frame) {
+struct alignas(8) ContextStateExt {
+    uint32_t r4;
+    uint32_t r5;
+    uint32_t r6;
+    uint32_t r7;
+    uint32_t r8;
+    uint32_t r9;
+    uint32_t r10;
+    uint32_t r11;
+    uint32_t r13; //sp
+};
+
+extern "C" __attribute__((used)) void debug_monitor(ContextState* state, ContextStateExt* ext) {
     trace_blinker.set_green();
     SCB->DFSR = 2; // clear flags
-    frame->return_address += 2; // skip the faulting instruction
+    state->return_address += 2; // skip the faulting instruction
+    trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&state->return_address), 4, true, 10'000'000);
+    asm("add sp, sp, %[size] \n" :: [size] "i" (sizeof(ContextStateExt)));
 }
 
 extern "C" __attribute__((naked)) void DebugMon_Handler() {
-    asm("mrs r0, msp \n"
-        "b debug_monitor");
-    asm("":::"memory");
+    asm("mov r0, sp \n"
+        "sub sp, sp, %[size] \n" // make space for ContextStateExt
+        "mov r1, sp \n"
+        "vmov s0, s0 \n" // ensure floating point state is saved
+        "stm sp, {r4-r11} \n"
+        "mov r2, sp \n"
+        "add r2, r2, %[size] + 0x68 \n" // point original sp position
+        "str r2, [sp, %[r13_offset]] \n" // store original sp position in r13 position of ContextStateExt
+        "b debug_monitor" :: [size] "i" (sizeof(ContextStateExt)), [r13_offset] "i" (offsetof(ContextStateExt, r13)));
 }
 
 extern "C" {

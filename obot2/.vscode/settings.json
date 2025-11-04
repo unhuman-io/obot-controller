@@ -1,0 +1,11 @@
+{
+    "makefile.configureOnOpen": true,
+    "files.associations": {
+        "cstdint": "cpp",
+        "compare": "cpp",
+        "atomic": "cpp"
+    },
+    "clangd.arguments": [
+        "--experimental-modules-support"
+    ]
+}

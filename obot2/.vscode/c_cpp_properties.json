@@ -1,0 +1,42 @@
+{
+    "configurations": [
+        {
+            "name": "STM32G474",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/../motorlib/device/stm32g4/Include",
+                "${workspaceFolder}/../motorlib/CMSIS/Include",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "STM32G474xx",
+                "USE_HAL_DRIVER",
+                "__ARM_ARCH_7EM__",
+                "__ARM_FEATURE_DSP",
+                "__ARM_FP",
+                "__CORTEX_M4",
+                "__FPU_PRESENT"
+            ],
+            "compile_commands": "${workspaceFolder}/.vscode/compile_commands.json",
+            "cStandard": "c17",
+            "cppStandard": "c++23",
+            "intelliSenseMode": "gcc-arm",
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard",
+                "-mthumb",
+                "-fmodules-ts"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "${workspaceFolder}/../motorlib/*"
+                    "${workspaceFolder}/../motorlib/gcc/arm-none-eabi/include/",
+                ],
+                "limitSymbolsToIncludedHeaders": false
+            }
+        }
+    ],
+    "version": 4
+}

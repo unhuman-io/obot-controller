@@ -59,6 +59,12 @@ defined in linker script */
 	.weak	Reset_Handler
 	.type	Reset_Handler, %function
 Reset_Handler:
+  ldr r0, =_ZW9stm32g47416go_to_bootloader
+  ldr r0, [r0]
+  ldr r1, =0xB007
+  cmp r0, r1
+  beq goto_stm_bootloader
+
   ldr   r0, =_estack
   mov   sp, r0          /* set stack pointer */
 
@@ -103,6 +109,11 @@ LoopFillZerobss:
 
 LoopForever:
     b LoopForever
+
+goto_stm_bootloader:	
+	ldr r0, =0x1fff0000
+	ldr sp, [r0]
+	ldr pc, [r0, #4]
 
 .size	Reset_Handler, .-Reset_Handler
 

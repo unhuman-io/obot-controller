@@ -15,3 +15,4 @@ menu.reprogram
 )
 
 menu.addtool "Reset" "R" "system.resettarget"
+menu.addtool "No halt" "NH" "Data.Set ESD:0xE000EDF0 %LE %Long 0xa05f0000"

@@ -3,8 +3,11 @@ module;
 import trace_board;
 import stm32g474;
 import obot_std;
+import usb;
 
 export module trace_blinker;
+
+namespace cpu = stm32g474;
 
 export template<uint32_t rate = 5>
 class TraceBlinker : public TraceBoard {
@@ -44,9 +47,17 @@ class TraceBlinker : public TraceBoard {
         GPIOF->BSRR_b.BR9 = 1;
         cpu::wait_ms(1'000 / rate);
     }
-    void run() {
-        while(1) {
-           // blink();
-        }
+
+    void set_green() {
+        GPIOB->BSRR_b.BS7 = 1;
+        GPIOC->BSRR_b.BS12 = 1;
     }
+    void run() {
+        usb.connect();
+        // while(1) {
+        //    // blink();
+        // }
+    }
+
+    USB usb;
 };

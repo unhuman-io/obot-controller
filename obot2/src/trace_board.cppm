@@ -13,8 +13,8 @@ export class TraceBoard {
     }
 };
 
-export using cpu = stm32g474<TraceBoard::cpu_frequency, TraceBoard::hse_frequency>;
-
+namespace cpu = stm32g474;
+//export using cpu; //<TraceBoard::cpu_frequency, TraceBoard::hse_frequency>;
 // This is called from the startup code
 extern "C" void stm32g474_init() {
     cpu::enable_cyccnt();
@@ -22,4 +22,8 @@ extern "C" void stm32g474_init() {
     cpu::set_flash_wait_states();
     cpu::use_hse();
     cpu::set_isr_vector_table();
+    cpu::enable_crs();
+    cpu::enable_peripheral_clocks();
+    cpu::enable_fpu();
+    cpu::enable_usb_pins();
 }

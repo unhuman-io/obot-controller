@@ -1,0 +1,82 @@
+[
+  {
+    "arguments": [
+      "/home/lee/obot/obot-controller/motorlib/gcc/bin/arm-none-eabi-g++",
+      "-c",
+      "-I../src/../../motorlib/device/stm32g4/Include",
+      "-I../src/../../motorlib/CMSIS/Include",
+      "-mcpu=cortex-m4",
+      "-mfpu=fpv4-sp-d16",
+      "-mfloat-abi=hard",
+      "-g",
+      "-O3",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-std=c++23",
+      "-fmodules-ts",
+      "-Mno-modules",
+      "-o",
+      "main.o",
+      "../src/main.cpp"
+    ],
+    "directory": "/home/lee/obot/obot-controller/obot2/build",
+    "file": "/home/lee/obot/obot-controller/obot2/src/main.cpp",
+    "output": "/home/lee/obot/obot-controller/obot2/build/main.o"
+  },
+  {
+    "arguments": [
+      "/home/lee/obot/obot-controller/motorlib/gcc/bin/arm-none-eabi-g++",
+      "-mcpu=cortex-m4",
+      "-mfpu=fpv4-sp-d16",
+      "-mfloat-abi=hard",
+      "-c",
+      "-o",
+      "startup_stm32g474xx.o",
+      "../src/startup_stm32g474xx.S"
+    ],
+    "directory": "/home/lee/obot/obot-controller/obot2/build",
+    "file": "/home/lee/obot/obot-controller/obot2/src/startup_stm32g474xx.S",
+    "output": "/home/lee/obot/obot-controller/obot2/build/startup_stm32g474xx.o"
+  },
+    {
+    "arguments": [
+      "../../motorlib/llvm/bin/clang++",
+      "-c",
+      "-I../src/../../motorlib/device/stm32g4/Include",
+      "-I../src/../../motorlib/CMSIS/Include",
+      "-mcpu=cortex-m4",
+      "-mfpu=fpv4-sp-d16",
+      "-mfloat-abi=hard",
+      "--target=thumbv7em-none-eabi",
+      "-g",
+      "-O3",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-std=c++23",
+      "-fprebuilt-module-path=.",
+      "-Wno-experimental-header-units",
+      "-o",
+      "main.o",
+      "../src/main.cpp"
+    ],
+    "directory": "/home/lee/obot/obot-controller/obot2/build_llvm",
+    "file": "/home/lee/obot/obot-controller/obot2/src/main.cpp",
+    "output": "/home/lee/obot/obot-controller/obot2/build_llvm/main.o"
+  },
+  {
+    "arguments": [
+      "../../motorlib/llvm/bin/clang++",
+      "-mcpu=cortex-m4",
+      "-mfpu=fpv4-sp-d16",
+      "-mfloat-abi=hard",
+      "--target=thumbv7em-none-eabi",
+      "-c",
+      "-o",
+      "startup_stm32g474xx.o",
+      "../src/startup_stm32g474xx.S"
+    ],
+    "directory": "/home/lee/obot/obot-controller/obot2/build_llvm",
+    "file": "/home/lee/obot/obot-controller/obot2/src/startup_stm32g474xx.S",
+    "output": "/home/lee/obot/obot-controller/obot2/build_llvm/startup_stm32g474xx.o"
+  }
+]

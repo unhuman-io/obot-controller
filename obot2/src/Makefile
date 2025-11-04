@@ -18,9 +18,11 @@ main.bin:
 # manual dependencies for modules
 main.o: trace_blinker.o
 trace_board.o: stm32g474.o
-trace_blinker.o: stm32g474.o trace_board.o
+trace_blinker.o: stm32g474.o trace_board.o usb.o
+usb.o: stm32g474.o
+#stm32g474.o: 
 
-main.elf: STM32G474RETx_FLASH.ld startup_stm32g474xx.o startup_stm32g474xx.o stm32g474.o trace_board.o trace_blinker.o obot_std.o
+main.elf: STM32G474RETx_FLASH.ld startup_stm32g474xx.o startup_stm32g474xx.o stm32g474.o trace_board.o trace_blinker.o usb.o obot_std.o
 
 
 #stm32g474.o: $(c++_header_units) #gcm.cache$(c++_headers_location)/bit.gcm

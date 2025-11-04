@@ -37,7 +37,7 @@ export {
 #undef TIM5
 #undef TIM6
 #undef TIM7
-#undef LPTIMER1
+#undef LPTIM1
 #undef USART1
 #undef USART2
 #undef USART3
@@ -122,7 +122,7 @@ export {
     TIM2_Type * const TIM5 = (TIM2_Type *) TIM5_BASE;
     TIM6_Type * const TIM6 = (TIM6_Type *) TIM6_BASE;
     TIM6_Type * const TIM7 = (TIM6_Type *) TIM7_BASE;
-    LPTIMER1_Type * const LPTIMER1 = (LPTIMER1_Type *) LPTIMER1_BASE;
+    LPTIM1_Type * const LPTIM1 = (LPTIM1_Type *) LPTIM1_BASE;
     USART1_Type * const USART1 = (USART1_Type *) USART1_BASE;
     USART1_Type * const USART2 = (USART1_Type *) USART2_BASE;
     USART1_Type * const USART3 = (USART1_Type *) USART3_BASE;
@@ -178,6 +178,60 @@ export {
 
 export {
     using ::IRQn_Type;
+
+    using ::CRC_Type;
+    using ::IWDG_Type;
+    using ::WWDG_Type;
+    using ::I2C1_Type;
+    using ::FLASH_Type;
+    using ::DBGMCU_Type;
+    using ::RCC_Type;
+    using ::PWR_Type;
+    using ::RNG_Type;
+    using ::GPIOA_Type;
+    using ::GPIOB_Type;
+    using ::GPIOC_Type;
+    using ::TIM15_Type;
+    using ::TIM16_Type;
+    using ::TIM1_Type;
+    using ::TIM2_Type;
+    using ::TIM6_Type;
+    using ::LPTIM1_Type;
+    using ::USART1_Type;
+    using ::UART4_Type;
+    using ::LPUART1_Type;
+    using ::SPI1_Type;
+    using ::SPI4_Type;
+    using ::EXTI_Type;
+    using ::RTC_Type;
+    using ::FMC_Type;
+    using ::DMA1_Type;
+    using ::DMAMUX_Type;
+    using ::SYSCFG_Type;
+    using ::VREFBUF_Type;
+    using ::COMP_Type;
+    using ::OPAMP_Type;
+    using ::HRTIM_Master_Type;
+    using ::HRTIM_TIMA_Type;
+    using ::HRTIM_TIMB_Type;
+    using ::HRTIM_TIMC_Type;
+    using ::HRTIM_TIMD_Type;
+    using ::HRTIM_TIME_Type;
+    using ::HRTIM_TIMF_Type;
+    using ::HRTIM_Common_Type;
+    using ::QUADSPI_Type;
+    using ::DAC1_Type;
+    using ::ADC1_Type;
+    using ::ADC3_Type;
+    using ::ADC12_Common_Type;
+    using ::FMAC_Type;
+    using ::CORDIC_Type;
+    using ::SAI_Type;
+    using ::TAMP_Type;
+    using ::FDCAN_Type;
+    using ::UCPD1_Type;
+    using ::USB_FS_device_Type;
+    using ::CRS_Type;
 }
 
 // from core_cm4.h
@@ -206,26 +260,38 @@ export {
     void NVIC_EnableIRQ(IRQn_Type IRQn) {
         __NVIC_EnableIRQ(IRQn);
     }
+
+#undef NVIC_SystemReset
+    void NVIC_SystemReset() {
+        __NVIC_SystemReset();
+    }
+
+    void set_nvic_priority(IRQn_Type IRQn, uint32_t priority) {
+        __NVIC_SetPriority(IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), priority, 0));
+    }
 }
 
-export template<uint32_t cpu_frequency = 170'000'000,
-                uint32_t hse_frequency = 24'000'000>
-class stm32g474 {
-  public:
+export volatile uint32_t go_to_bootloader;
 
-    static void enable_cyccnt() {
+// export template<uint32_t cpu_frequency1 = 170'000'000,
+//                 uint32_t hse_frequency1 = 24'000'000>
+export namespace stm32g474 {
+    constexpr uint32_t hse_frequency = 24'000'000; // 24 MHz
+    constexpr uint32_t cpu_frequency = 170'000'000; // 170 MHz
+
+    void enable_cyccnt() {
         CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // enable trace
         DWT->CYCCNT = 0; // reset cycle counter
         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk; // enable cycle counter
     }
 
-    static uint32_t cyccnt() {
+    uint32_t cyccnt() {
         return DWT->CYCCNT;
     }
 
     // Enable boost mode for > 150 MHz operation
     // Requires enable_cyccnt() to be called first
-    static void enable_boost_mode() {
+    void enable_boost_mode() {
         PWR->PWR_CR5_b.R1MODE = 0; // R1MODE -> 0 for > 150 MHz operation
         // PWR_CR5_R1MODE change recommends 1 us startup
         // startup clock is at 16 MHz
@@ -233,8 +299,8 @@ class stm32g474 {
         while((cyccnt()-t_start) < (16'000'000/1'000'000));
     }
 
-    static void set_flash_wait_states() {
-        FLASH->ACR_b = {
+    void set_flash_wait_states() {
+        FLASH->FLASH_ACR_b = {
             .LATENCY = 4, // 4 flash wait states for 170 MHz
             .PRFTEN = 1, // enable prefetch
             .ICEN = 1, // enable instruction cache
@@ -243,7 +309,7 @@ class stm32g474 {
         };
     }
 
-    static void use_hse() {
+    void use_hse() {
         static_assert(hse_frequency == 24'000'000, "HSE frequency must be 24 MHz");
         static_assert(cpu_frequency/2'000'000*2'000'000 == cpu_frequency, "CPU frequency must be even multiple of 2 MHz");
         RCC->RCC_PLLCFGR_b = {
@@ -270,15 +336,50 @@ class stm32g474 {
         RCC->RCC_CFGR_b.SW = 3; // PLL clock
     }
 
-    static void wait_ms(uint32_t ms) {
-        auto t_start = cyccnt();
-        while((cyccnt() - t_start) < (170'000'000 / 1000 * ms));
-    }
-
-    static void set_isr_vector_table() {
+    void set_isr_vector_table() {
         // Set the interrupt vector table location
         // We are using the default location at the start of flash (0x08000000)
         SCB->VTOR = 0x0000000;
+    }
+
+    void enable_crs() {
+        RCC->RCC_CRRCR_b.HSI48ON = 1;
+        while (!RCC->RCC_CRRCR_b.HSI48RDY);
+        RCC->RCC_APB1ENR1_b.CRSEN = 1; // enable CRS clock
+        RCC->RCC_APB1SMENR1_b.CRSSMEN = 1; // enable CRS clock in sleep mode
+        CRS->CFGR_b = {
+            .RELOAD = (48'000'000/1'000) - 1, // 1 kHz target
+            .FELIM = 34,
+            .SYNCSRC = 2, //source is USB SOF
+        };
+        CRS->CR_b = {
+            .CEN = 1,
+            .AUTOTRIMEN = 1,
+        };
+    }
+
+    void enable_peripheral_clocks() {
+        RCC->RCC_APB1ENR1_b.USBEN = 1;
+    }
+
+    void enable_fpu() {
+        SCB->CPACR |= ((3UL << (10 * 2)) | (3UL << (11 * 2))); /* set CP10 and CP11 Full Access */
+    }
+
+    void enable_usb_pins() {
+        RCC->RCC_AHB2ENR_b.GPIOAEN = 1;
+        GPIOA->MODER_b.MODER11 = 3; // analog
+        GPIOA->MODER_b.MODER12 = 3; // analog
+        GPIOA->MODER_b.MODER10 = 0; // input
+    }
+
+    void wait_ms(uint32_t ms) {
+        auto t_start = stm32g474::cyccnt();
+        while((stm32g474::cyccnt() - t_start) < (cpu_frequency / 1000 * ms));
+    }
+
+    uint32_t us_to_cyccnt(uint32_t us) {
+        return (cpu_frequency / 1'000'000) * us;
     }
 
 }; // namespace stm32g474_fun

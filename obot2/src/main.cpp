@@ -51,9 +51,12 @@ extern "C" void TIM1_UP_TIM16_IRQHandler() {
     TIM1->TIM1_SR_b.UIF = 0;
 }
 
+uint32_t stuff[2];
+
 extern "C" void TIM2_IRQHandler() {
     //trace_blinker.blink();
     asm("":::"memory");
+    asm("str sp, %[addr] \n" :: [addr] "m" (stuff[0]));
     asm("bkpt #0");
     TIM2->TIM2_SR_b.UIF = 0;
     asm("dsb":::"memory"); // dsb for interrupt near end to not retrigger
@@ -80,8 +83,7 @@ struct ContextState {
     uint32_t lr; // r14
     uint32_t return_address; // pc
     uint32_t psr;
-    float s[16];
-    uint32_t fpscr;
+
 };
 
 struct alignas(8) ContextStateExt {
@@ -94,26 +96,50 @@ struct alignas(8) ContextStateExt {
     uint32_t r10;
     uint32_t r11;
     uint32_t r13; //sp
+    uint32_t lr;
 };
 
-extern "C" __attribute__((used)) void debug_monitor(ContextState* state, ContextStateExt* ext) {
+struct alignas(8) FPUContext {
+    float s[16];
+    uint32_t fpscr;
+};
+
+extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
+        const ContextStateExt* ext, const FPUContext* fpu) {
     trace_blinker.set_green();
     SCB->DFSR = 2; // clear flags
     state->return_address += 2; // skip the faulting instruction
-    trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&state->return_address), 4, true, 10'000'000);
+    struct {
+        std::uintptr_t addr[3];
+        uint32_t sp;
+    } args = {reinterpret_cast<std::uintptr_t>(state), reinterpret_cast<std::uintptr_t>(ext),
+            reinterpret_cast<std::uintptr_t>(fpu), ext->r13};
+    //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
+    trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
     asm("add sp, sp, %[size] \n" :: [size] "i" (sizeof(ContextStateExt)));
 }
 
 extern "C" __attribute__((naked)) void DebugMon_Handler() {
+    asm("str sp, %[addr] \n" :: [addr] "m" (stuff[1]));
     asm("mov r0, sp \n"
         "sub sp, sp, %[size] \n" // make space for ContextStateExt
         "mov r1, sp \n"
         "vmov s0, s0 \n" // ensure floating point state is saved
-        "stm sp, {r4-r11} \n"
         "mov r2, sp \n"
-        "add r2, r2, %[size] + 0x68 \n" // point original sp position
+        "stm r2!, {r4-r11} \n"
+        "str lr, [r2, #4] \n" // store lr
+        "mov r2, r0 \n"
+        "tst lr, #0x10 \n"
+        "ite eq \n"
+        "addeq r2, #0x68 \n" // extended frame
+        "addne r2, #0x20 \n" // basic frame
+        // todo need to test bit to figure out if fpu context is saved to figure out sp offset
         "str r2, [sp, %[r13_offset]] \n" // store original sp position in r13 position of ContextStateExt
-        "b debug_monitor" :: [size] "i" (sizeof(ContextStateExt)), [r13_offset] "i" (offsetof(ContextStateExt, r13)));
+        "mov r2, %[fpcar] \n" // fpcar address
+        "b debug_monitor" :: [size] "i" (sizeof(ContextStateExt)),
+            [r13_offset] "i" (offsetof(ContextStateExt, r13)),
+            [fpcar] "r" (FPU->FPCAR) :
+            "r0", "r1", "r2", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "lr");
 }
 
 extern "C" {

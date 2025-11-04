@@ -72,7 +72,7 @@ gcm.cache/%.h.gcm: %.h
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -x c++-user-header -c $<
 
 # clang c++20 system header unit modules
-%.pcm: $(c++_headers_location)/%
+$(shell realpath $(BUILD_DIR))/%.pcm %.pcm: $(c++_headers_location)/%
 	@echo "  SPCM  $*"
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) $(CXXMFLAGS) -Wno-user-defined-literals -x c++-system-header -c $*
 

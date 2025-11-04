@@ -35,6 +35,13 @@ int main() {
     TIM2->TIM2_CR1_b.CEN = 1;
     uint8_t i = 0;
     while(1) {
+        static uint32_t counter = 0;
+        counter++;
+        cpu::wait_ms(1000);
+        asm("vmov s0, %[val] \n" :: [val] "r" (counter++));
+        std::string s;
+        s = "counter: " + std::to_string(counter) + "\n";
+        volatile char c = s[0];
         // char c[14] = "Hello, World!";
         // c[13] = i++;
         // trace_blinker.usb.send_data(2, (uint8_t *) c, 13, true, 10'000'000);
@@ -149,5 +156,9 @@ void _read() {}
 void _write() {}
 void _kill() {}
 void _getpid() {}
+void _isatty() {}
+void _fstat() {}
+void abort() { while(1);}
 __attribute__((used)) void _exit() {}
+FILE *const stderr = 0;
 }

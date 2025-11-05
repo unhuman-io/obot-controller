@@ -290,7 +290,7 @@ bool USB::tx_active(uint8_t endpoint) {
     return USBEPR->EP[endpoint].STAT_TX == static_cast<uint32_t>(EP_STAT::VALID);
 }
 
-USB::USB() : regs_{*USB_FS_Device} {
+USB::USB() : regs_{*USB_FS_device} {
 //     regs_.CNTR_b.PDWN = 0;
 //     for (int i=0; i<200; i++) {
 //         asm("nop");

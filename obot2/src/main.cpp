@@ -71,7 +71,7 @@ extern "C" void TIM2_IRQHandler() {
 
 extern "C" void TIM3_IRQHandler() {
     trace_blinker.blink();
-    TIM3->TIM2_SR_b.UIF = 0;
+    TIM3->TIM3_SR_b.UIF = 0;
 }
 
 extern "C" void USB_LP_IRQHandler() {

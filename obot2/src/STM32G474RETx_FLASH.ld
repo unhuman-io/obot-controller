@@ -199,8 +199,6 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
 
-  
-
   /* Remove information from the standard libraries */
   /DISCARD/ :
   {
@@ -209,6 +207,8 @@ SECTIONS
     libgcc.a ( * )
   }
 
+  INCLUDE "generated/STM32G474_peripherals.ld"
+  INCLUDE "cortex_m4_peripherals.ld"
 }
 
 

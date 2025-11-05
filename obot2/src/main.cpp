@@ -3,7 +3,7 @@ import trace_blinker;
 //import <cstdint>;
 import stm32g474;
 import trace_board;
-#include <cstddef>
+//#include <cstddef>
 import obot_std;
 
 TraceBlinker trace_blinker;
@@ -38,10 +38,13 @@ int main() {
         static uint32_t counter = 0;
         counter++;
         cpu::wait_ms(1000);
-        asm("vmov s0, %[val] \n" :: [val] "r" (counter++));
+        asm("vmov s0, %[val] \n" :: [val] "r" (counter++) : "s0");
         std::string s;
-        s = "counter: " + std::to_string(counter) + "\n";
-        volatile char c = s[0];
+        asm("":::"memory");
+        //s = "counter: ";// + std::to_string(counter) + "\n";
+        //s += std::to_string(counter);
+        //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t *>(s.c_str()), s.size());
+        //volatile char c = s[0];
         // char c[14] = "Hello, World!";
         // c[13] = i++;
         // trace_blinker.usb.send_data(2, (uint8_t *) c, 13, true, 10'000'000);
@@ -58,7 +61,7 @@ extern "C" void TIM1_UP_TIM16_IRQHandler() {
     TIM1->TIM1_SR_b.UIF = 0;
 }
 
-uint32_t stuff[2];
+uint32_t stuff[4];
 
 extern "C" void TIM2_IRQHandler() {
     //trace_blinker.blink();
@@ -121,16 +124,18 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
         uint32_t sp;
     } args = {reinterpret_cast<std::uintptr_t>(state), reinterpret_cast<std::uintptr_t>(ext),
             reinterpret_cast<std::uintptr_t>(fpu), ext->r13};
-    //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
-    trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
-    asm("add sp, sp, %[size] \n" :: [size] "i" (sizeof(ContextStateExt)));
+    trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
+    //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
+   
 }
 
 extern "C" __attribute__((naked)) void DebugMon_Handler() {
-    asm("str sp, %[addr] \n" :: [addr] "m" (stuff[1]));
-    asm("mov r0, sp \n"
+    //asm("str sp, %[addr] \n" :: [addr] "m" (stuff[1]));
+    ContextState *state;
+    ContextStateExt *ext;
+    asm("mov %[state], sp \n"
         "sub sp, sp, %[size] \n" // make space for ContextStateExt
-        "mov r1, sp \n"
+        "mov %[ext], sp \n"
         "vmov s0, s0 \n" // ensure floating point state is saved
         "mov r2, sp \n"
         "stm r2!, {r4-r11} \n"
@@ -140,13 +145,18 @@ extern "C" __attribute__((naked)) void DebugMon_Handler() {
         "ite eq \n"
         "addeq r2, #0x68 \n" // extended frame
         "addne r2, #0x20 \n" // basic frame
-        // todo need to test bit to figure out if fpu context is saved to figure out sp offset
         "str r2, [sp, %[r13_offset]] \n" // store original sp position in r13 position of ContextStateExt
-        "mov r2, %[fpcar] \n" // fpcar address
-        "b debug_monitor" :: [size] "i" (sizeof(ContextStateExt)),
-            [r13_offset] "i" (offsetof(ContextStateExt, r13)),
-            [fpcar] "r" (FPU->FPCAR) :
-            "r0", "r1", "r2", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "lr");
+        "" : [state] "=r" (state), [ext] "=r" (ext) :
+            [size] "i" (sizeof(ContextStateExt)),
+            [r13_offset] "i" (32) //offsetof(ContextStateExt, r13)),
+            :
+            "r2", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "lr");
+    FPUContext *fpu = reinterpret_cast<FPUContext *>(FPU->FPCAR);
+    asm("push {lr}");
+    debug_monitor(state, ext, fpu);
+    asm("pop {lr}");
+    asm("add sp, sp, %[size] \n" :: [size] "i" (sizeof(ContextStateExt)));
+    asm("bx lr");
 }
 
 extern "C" {
@@ -160,5 +170,5 @@ void _isatty() {}
 void _fstat() {}
 void abort() { while(1);}
 __attribute__((used)) void _exit() {}
-FILE *const stderr = 0;
+//FILE *const stderr = 0;
 }

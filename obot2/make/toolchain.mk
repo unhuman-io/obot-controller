@@ -1,5 +1,5 @@
 CPPFLAGS += -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
-CFLAGS += -g -O3  -ffunction-sections -fdata-sections
+CFLAGS += -g -O3 -flto -ffunction-sections -fdata-sections
 CXXFLAGS += -std=c++23 # -fno-rtti -fno-exceptions #-fno-rtti-fno-unwind-tables -fno-use-cxa-atexit
 LDFLAGS += -Wl,-Map=main.map,--gc-sections
 

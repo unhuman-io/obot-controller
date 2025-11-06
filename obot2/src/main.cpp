@@ -3,7 +3,7 @@ import trace_blinker;
 //import <cstdint>;
 import stm32g474;
 import trace_board;
-//#include <cstddef>
+#include <cstddef>
 import obot_std;
 
 TraceBlinker trace_blinker;
@@ -124,39 +124,48 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
         uint32_t sp;
     } args = {reinterpret_cast<std::uintptr_t>(state), reinterpret_cast<std::uintptr_t>(ext),
             reinterpret_cast<std::uintptr_t>(fpu), ext->r13};
-    trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
-    //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
+    //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
+    trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
    
 }
 
+
+// below assembly uses hardcoded offsets - static asserts to ensure they are correct
+static_assert(alignof(ContextStateExt) == 8);
+static_assert(offsetof(ContextStateExt, r4) == 0);
+static_assert(offsetof(ContextStateExt, r5) == 4);
+static_assert(offsetof(ContextStateExt, r6) == 8);
+static_assert(offsetof(ContextStateExt, r7) == 12);
+static_assert(offsetof(ContextStateExt, r8) == 16);
+static_assert(offsetof(ContextStateExt, r9) == 20);
+static_assert(offsetof(ContextStateExt, r10) == 24);
+static_assert(offsetof(ContextStateExt, r11) == 28);
+static_assert(offsetof(ContextStateExt, r13) == 32);
+static_assert(offsetof(ContextStateExt, lr) == 36);
+static_assert(sizeof(ContextStateExt) == 40);
+//static_assert(&FPU->FPCAR == (std::uintptr_t) 0xE000EF38);
+
 extern "C" __attribute__((naked)) void DebugMon_Handler() {
-    //asm("str sp, %[addr] \n" :: [addr] "m" (stuff[1]));
-    ContextState *state;
-    ContextStateExt *ext;
-    asm("mov %[state], sp \n"
-        "sub sp, sp, %[size] \n" // make space for ContextStateExt
-        "mov %[ext], sp \n"
+    asm("mov r0, sp \n" // ContextState pointer in r0
+        "sub sp, sp, #40 \n" // make space for ContextStateExt
+        "mov r1, sp \n" // ContextStateExt pointer in r1
         "vmov s0, s0 \n" // ensure floating point state is saved
         "mov r2, sp \n"
-        "stm r2!, {r4-r11} \n"
-        "str lr, [r2, #4] \n" // store lr
+        "stm r2!, {r4-r11} \n" // store r4-r11
+        "str lr, [r2, #4] \n"  // store lr
         "mov r2, r0 \n"
-        "tst lr, #0x10 \n"
+        "tst lr, #0x10 \n"     // check EXC_RETURN bit 4 for extended frame
         "ite eq \n"
-        "addeq r2, #0x68 \n" // extended frame
-        "addne r2, #0x20 \n" // basic frame
-        "str r2, [sp, %[r13_offset]] \n" // store original sp position in r13 position of ContextStateExt
-        "" : [state] "=r" (state), [ext] "=r" (ext) :
-            [size] "i" (sizeof(ContextStateExt)),
-            [r13_offset] "i" (32) //offsetof(ContextStateExt, r13)),
-            :
-            "r2", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "lr");
-    FPUContext *fpu = reinterpret_cast<FPUContext *>(FPU->FPCAR);
-    asm("push {lr}");
-    debug_monitor(state, ext, fpu);
-    asm("pop {lr}");
-    asm("add sp, sp, %[size] \n" :: [size] "i" (sizeof(ContextStateExt)));
-    asm("bx lr");
+        "addeq r2, #0x68 \n"   // extended frame
+        "addne r2, #0x20 \n"   // basic frame
+        "str r2, [sp, 32] \n"  // store original sp position in r13 position of ContextStateExt
+        "ldr r2, =0xE000EF38 \n" 
+        "ldr r2, [r2] \n"      // FPCAR address in r2
+        "push {lr} \n"
+        "bl debug_monitor \n"
+        "pop {lr} \n"
+        "add sp, sp, #40 \n"
+        "bx lr \n");
 }
 
 extern "C" {
@@ -168,7 +177,7 @@ void _kill() {}
 void _getpid() {}
 void _isatty() {}
 void _fstat() {}
-void abort() { while(1);}
+__attribute__((used)) void abort() { while(1);}
 __attribute__((used)) void _exit() {}
 //FILE *const stderr = 0;
 }

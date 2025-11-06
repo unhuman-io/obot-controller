@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762383937587,
+  "lastUpdate": 1762470100271,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -130355,6 +130355,132 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1164.650024,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee.magnusson@figure.ai",
+            "name": "Lee Magnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "lee.magnusson@figure.ai",
+            "name": "Lee Magnusson",
+            "username": "leemagnusson"
+          },
+          "distinct": true,
+          "id": "27099f8a2b5b6995ee8ccc782c57fbaf6bfb34f9",
+          "message": "remove some warnings",
+          "timestamp": "2025-11-06T14:55:55-08:00",
+          "tree_id": "30725f4ecc52ee6156fa11ceeb046863fa82f1c0",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/27099f8a2b5b6995ee8ccc782c57fbaf6bfb34f9"
+        },
+        "date": 1762470099297,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles",
+            "value": 846,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period",
+            "value": 3425,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles",
+            "value": 3511,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period",
+            "value": 17022,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2764.75,
+            "unit": "cycles",
+            "extra": "3511 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3394.39,
+            "unit": "cycles",
+            "extra": "3434 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 835.028,
+            "unit": "cycles",
+            "extra": "846 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000.6,
+            "unit": "cycles",
+            "extra": "17041 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 214016,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 6916,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 214588,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 8428,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 86288,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 3153,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 7260,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used",
+            "value": 1505,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1067.27002,
             "unit": "Hz",
             "extra": "0 times"
           }

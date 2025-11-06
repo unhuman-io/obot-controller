@@ -119,7 +119,7 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
     trace_blinker.set_green();
     SCB->DFSR = 2; // clear flags
     state->return_address += 2; // skip the faulting instruction
-    struct {
+    [[maybe_unused]] struct {
         std::uintptr_t addr[3];
         uint32_t sp;
     } args = {reinterpret_cast<std::uintptr_t>(state), reinterpret_cast<std::uintptr_t>(ext),

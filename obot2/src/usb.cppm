@@ -379,7 +379,7 @@ void USB::_send_data(uint8_t endpoint, const uint8_t *data, uint8_t length) {
     uint8_t length16 = (length+1)>>1;
     volatile uint16_t * pma_address = USBPMA->buffer[endpoint].EP_TX;
     for(int i=0; i<length16; i++) {
-        pma_address[i] = ((const uint16_t *) data)[i];
+        pma_address[i] = data[2*i] | data[2*i+1] << 8;
     }
     USBPMA->btable[endpoint].COUNT_TX = length;
     epr_set_stat_tx(endpoint, EP_STAT::VALID);
@@ -417,7 +417,7 @@ void USB::send_stall(uint8_t endpoint) {
 void read_pma(uint8_t byte_count, volatile uint16_t * pma_address, uint8_t *buffer_out) {
     int count_received_16 = (byte_count + 1) >> 1;
     for(int i=0; i<count_received_16; i++) {
-        ((uint16_t *) buffer_out)[i] = pma_address[i];
+        std::memcpy(&buffer_out[2*i], (const void*) &pma_address[i], sizeof(uint16_t));
     }
 }
 
@@ -480,10 +480,11 @@ void USB::interrupt() {
             case 0:
                 if (istr.DIR) { // RX
                     if (regs_.EP0R_b.SETUP) {
-                        uint8_t buffer[64];
+                        uint8_t buffer[sizeof(usb_control_request)];
                         uint8_t byte_count = USBPMA->btable[0].COUNT_RX & USB_COUNT_RX_COUNT_RX;
                         read_pma(byte_count, USBPMA->buffer[0].EP_RX, buffer);
-                        handle_setup_packet(reinterpret_cast<usb_control_request *>(buffer));
+                        usb_control_request setup_packet = std::bit_cast<usb_control_request>(buffer);
+                        handle_setup_packet(&setup_packet);
                     }
                     // clear CTR
                     regs_.EP0R = (USB_EP_CTR_TX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;

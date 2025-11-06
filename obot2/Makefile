@@ -103,3 +103,7 @@ include $(SELF_DIR)src/Makefile
 endif # build_dir
 
 $(VERBOSE).SILENT:
+
+# scan build
+# scan-build --use-cc ../../motorlib/gcc/bin/arm-none-eabi-gcc --use-c++ ../../motorlib/gcc/bin/arm-none-eabi-g++ --use-analyzer ../../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi make
+# scan-build --use-cc ../../motorlib/llvm/bin/clang --use-c++ ../../motorlib/llvm/bin/clang++ --use-analyzer ../../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi make

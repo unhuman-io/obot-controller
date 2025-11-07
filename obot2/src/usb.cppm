@@ -133,7 +133,7 @@ union EPReg {
 #define USB_EPADDR_FIELD                         ((uint16_t)0x000FU)           /*!<  EndPoint ADDRess FIELD */
 
 /* EndPoint REGister MASK (no toggle fields) */
-#define USB_EPREG_MASK     (USB_EP_CTR_RX|USB_EP_SETUP|USB_EP_T_FIELD|USB_EP_KIND|USB_EP_CTR_TX|USB_EPADDR_FIELD)
+#define USB_EPREG_MASK    ((uint16_t) (USB_EP_CTR_RX|USB_EP_SETUP|USB_EP_T_FIELD|USB_EP_KIND|USB_EP_CTR_TX|USB_EPADDR_FIELD))
 
 #define USB_EP_TX_STALL                          ((uint16_t)0x0010U) 
 
@@ -417,7 +417,8 @@ void USB::send_stall(uint8_t endpoint) {
 void read_pma(uint8_t byte_count, volatile uint16_t * pma_address, uint8_t *buffer_out) {
     int count_received_16 = (byte_count + 1) >> 1;
     for(int i=0; i<count_received_16; i++) {
-        std::memcpy(&buffer_out[2*i], (const void*) &pma_address[i], sizeof(uint16_t));
+        uint16_t val = pma_address[i];
+        std::memcpy(&buffer_out[2*i], &val, sizeof(uint16_t));
     }
 }
 
@@ -480,26 +481,27 @@ void USB::interrupt() {
             case 0:
                 if (istr.DIR) { // RX
                     if (regs_.EP0R_b.SETUP) {
-                        uint8_t buffer[sizeof(usb_control_request)];
+                        usb_control_request setup_packet = {};
                         uint8_t byte_count = USBPMA->btable[0].COUNT_RX & USB_COUNT_RX_COUNT_RX;
-                        read_pma(byte_count, USBPMA->buffer[0].EP_RX, buffer);
-                        usb_control_request setup_packet = std::bit_cast<usb_control_request>(buffer);
-                        handle_setup_packet(&setup_packet);
+                        read_pma(byte_count, USBPMA->buffer[0].EP_RX, reinterpret_cast<uint8_t *>(&setup_packet));
+                        if (byte_count > 0) {
+                            handle_setup_packet(&setup_packet);
+                        }
                     }
                     // clear CTR
-                    regs_.EP0R = (USB_EP_CTR_TX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;
+                    regs_.EP0R = static_cast<uint16_t>(USB_EP_CTR_TX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;
                     // renable rx on ep0
                     epr_set_stat_rx(0, EP_STAT::VALID);
                 }
                 if (regs_.EP0R_b.CTR_TX) {
                     // clear CTR_TX
-                    regs_.EP0R = (USB_EP_CTR_RX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_TX;
+                    regs_.EP0R = static_cast<uint16_t>(USB_EP_CTR_RX | (regs_.EP0R & USB_EPREG_MASK)) & ~USB_EP_CTR_TX;
                 }
                 break;
             case 2:
                 if (istr.DIR) { // RX
                     // clear CTR_RX
-                    regs_.EP2R = (USB_EP_CTR_TX | (regs_.EP2R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;
+                    regs_.EP2R = static_cast<uint16_t>(USB_EP_CTR_TX | (regs_.EP2R & USB_EPREG_MASK)) & ~USB_EP_CTR_RX;
                     count_rx_[2] = (USBPMA->btable[2].COUNT_RX & USB_COUNT_RX_COUNT_RX);
                     read_pma(count_rx_[2], USBPMA->buffer[2].EP_RX, rx_buffer_[2]);
                     new_rx_data_[2] = true;

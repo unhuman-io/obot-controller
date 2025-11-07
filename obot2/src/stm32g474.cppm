@@ -128,7 +128,11 @@ export namespace stm32g474 {
             .PLLON = 1 // enable PLL
         });
         while(!RCC->RCC_CR_b.PLLRDY); // wait for PLL ready
+        RCC->RCC_CFGR_b.HPRE = 1; // AHB prescaler /2
         RCC->RCC_CFGR_b.SW = 3; // PLL clock
+        auto t_start = cyccnt();
+        while((cyccnt()-t_start) < (85'000'000/1'000'000));
+        RCC->RCC_CFGR_b.HPRE = 0; // AHB prescaler /1
     }
 
     void set_isr_vector_table() {

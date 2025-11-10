@@ -423,7 +423,13 @@ void read_pma(uint8_t byte_count, volatile uint16_t * pma_address, uint8_t *buff
 }
 
 void USB::epr_set_stat_rx(uint8_t endpoint, EP_STAT stat) {
+#ifdef __clang__
+    decltype(USB_FS_device_Type::EP0R_b) tmp = USBEPR->EP[endpoint];
+    asm("" : "=m" (tmp));
+    EPReg epr { tmp };
+#else
     EPReg epr { USBEPR->EP[endpoint] };
+#endif
     epr.STAT_RX ^= static_cast<uint32_t>(stat);
     epr.STAT_TX = 0; // don't toggle
     epr.CTR_TX = 1; // write 1 to not clear CTR
@@ -434,7 +440,13 @@ void USB::epr_set_stat_rx(uint8_t endpoint, EP_STAT stat) {
 }
 
 void USB::epr_set_stat_tx(uint8_t endpoint, EP_STAT stat) {
+#ifdef __clang__
+    decltype(USB_FS_device_Type::EP0R_b) tmp = USBEPR->EP[endpoint];
+    asm("" : "=m" (tmp));
+    EPReg epr { tmp };
+#else
     EPReg epr { USBEPR->EP[endpoint] };
+#endif
     epr.STAT_TX ^= static_cast<uint32_t>(stat);
     epr.STAT_RX = 0; // don't toggle
     epr.CTR_TX = 1; // write 1 to not clear CTR

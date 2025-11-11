@@ -24,10 +24,12 @@ int main() {
     TIM1->TIM1_SMCR_b.TS = 0b1; // trigger on tim2
     //TIM1->TIM1_CR1_b.CEN = 1;
     NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
+    set_nvic_priority(TIM1_UP_TIM16_IRQn, 2);
     NVIC_EnableIRQ(TIM2_IRQn);
-    set_nvic_priority(TIM2_IRQn, 1);
+    set_nvic_priority(TIM2_IRQn, 3);
     NVIC_EnableIRQ(USB_LP_IRQn);
     CoreDebug->DEMCR |= 1 << 16;
+    set_nvic_priority(DebugMonitor_IRQn, 1);
     NVIC_EnableIRQ(DebugMonitor_IRQn);
     trace_blinker.run();
     cpu::wait_ms(2000);

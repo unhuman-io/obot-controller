@@ -570,7 +570,7 @@ void USB::interrupt() {
                         case 0x03:  // string descriptor
                             switch (setup_data->wValue & 0xFF) {
                                 case 0x00: // language descriptor
-                                    send_data(0, reinterpret_cast<const uint8_t *>("\x4\x3\x9\x4"), 4); // english
+                                    send_data(0, reinterpret_cast<const uint8_t *>("\x4\x3\x9\x4"), std::min(static_cast<size_t>(setup_data->wLength), 4u)); // english
                                     break;
                                 // case 0x01:
                                 //     send_string(0, MANUFACTURER_STRING, std::strlen(MANUFACTURER_STRING));
@@ -586,9 +586,12 @@ void USB::interrupt() {
                                 // case 0x04:
                                 //     send_string(0, OBOT_VERSION " " BUILD_DATETIME, std::strlen(OBOT_VERSION " " BUILD_DATETIME));
                                 //     break;
-                                // case 0x05:
-                                //     send_string(0, const_cast<const char*>(name), std::strlen(const_cast<const char*>(name)));
-                                //     break;
+                                case 0x05:
+                                    {
+                                    const char *name = "usb1";
+                                    send_string(0, const_cast<const char*>(name), std::strlen(const_cast<const char*>(name)));
+                                    }
+                                    break;
                                 case 0x06:
                                     send_string(0, "ST DFU mode", std::strlen("ST DFU mode"));
                                     break;

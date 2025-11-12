@@ -122,7 +122,7 @@ std::string_view parse(const std::string_view str) {
                 int length_hex = 0;
                 {
                     auto length_str = str.substr(comma_pos + 1);
-                    auto [_, ec] = std::from_chars(length_str.data(), length_str.data() + length_str.size(), length_hex, 10);
+                    auto [_, ec] = std::from_chars(length_str.data(), length_str.data() + length_str.size(), length_hex, 16);
                     if (ec != std::errc()) {
                         return std::string_view("bad len");
                         break;

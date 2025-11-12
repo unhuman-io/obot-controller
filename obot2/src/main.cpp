@@ -3,7 +3,7 @@ import trace_blinker;
 //import <cstdint>;
 import stm32g474;
 import trace_board;
-#include <cstddef>
+import <cstddef>;
 import obot_std;
 
 TraceBlinker trace_blinker;
@@ -79,12 +79,80 @@ extern "C" void TIM3_IRQHandler() {
     TIM3->TIM3_SR_b.UIF = 0;
 }
 
+std::string_view parse(const std::string_view data);
+
+__attribute__((used)) std::string_view last;
+
 extern "C" void USB_LP_IRQHandler() {
     asm("":::"memory");
     trace_blinker.usb.interrupt();
+    if (trace_blinker.usb.new_rx_data(1)) {
+        uint8_t buffer[64];
+        int len = trace_blinker.usb.receive_data(1, buffer, sizeof(buffer));
+        std::string_view s_in = std::string_view(reinterpret_cast<const char *>(buffer), len);
+        // echo back
+
+        std::string_view s_out = parse(s_in);
+        last = s_out;
+        trace_blinker.usb.send_data(1, reinterpret_cast<const uint8_t *>(s_out.data()), s_out.size(), false);
+    }
     asm("":::"memory");
 }
+uint8_t buffer[63] = "default";
+std::string_view parse(const std::string_view str) {
+    int length = 20;
+    if (str.size() > 1 && str[0] == '$') {
+        switch (str[1]) {
+            case 'm':
+            {
+                auto comma_pos = str.rfind(',');
+                if (comma_pos == std::string_view::npos) {
+                    return std::string_view("no comma");
+                    break;
+                }
+                auto addr_str = str.substr(2, comma_pos - 2);
+                uintptr_t addr = 0;
+                {
+                    auto [_, ec] = std::from_chars(addr_str.data(), addr_str.data() + addr_str.size(), addr, 16);
+                    if (ec != std::errc()) {
+                        return std::string_view("bad addr");
+                        break;
+                    }
+                }
+                int length_hex = 0;
+                {
+                    auto length_str = str.substr(comma_pos + 1);
+                    auto [_, ec] = std::from_chars(length_str.data(), length_str.data() + length_str.size(), length_hex, 10);
+                    if (ec != std::errc()) {
+                        return std::string_view("bad len");
+                        break;
+                    }
+                }
+                if (length_hex > sizeof(buffer)/2) {
+                    length_hex = sizeof(buffer)/2;
+                }
+                length = length_hex*2;
+                for (size_t i = 0; i < length_hex; i++) {
+                    uint8_t *ptr = reinterpret_cast<uint8_t *>(addr + i);
+                    if (*ptr == 0) {
+                        buffer[i*2] = '0';
+                        buffer[i*2 + 1] = '0';
+                    } else if (*ptr < 16) {
+                        buffer[i*2] = '0';
+                        std::to_chars(reinterpret_cast<char *>(buffer + i*2 + 1), reinterpret_cast<char *>(buffer + i*2 + 2), *ptr, 16);
+                    } else {
+                        std::to_chars(reinterpret_cast<char *>(buffer + i*2), reinterpret_cast<char *>(buffer + i*2) + 2, *ptr, 16);
+                    }
+                }
+                break;
+            }
+            default:
+                return std::string_view();
+        }
+    }
 
+    return std::string_view(reinterpret_cast<const char *>(buffer), length);
+}
 
 struct ContextState {
     uint32_t r0;

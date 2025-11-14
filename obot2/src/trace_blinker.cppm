@@ -4,6 +4,7 @@ import trace_board;
 import stm32g474;
 import obot_std;
 import usb;
+import stm32g474_gpio_trace_blinker;
 
 export module trace_blinker;
 
@@ -13,6 +14,7 @@ export template<uint32_t rate = 5>
 class TraceBlinker : public TraceBoard {
   public:
     TraceBlinker() : TraceBoard() {
+        cpu::init_gpio(gpio_settings);
         // r0
         RCC->RCC_AHB2ENR_b.GPIOBEN = 1;
         GPIOB->MODER_b.MODER6 = 1;

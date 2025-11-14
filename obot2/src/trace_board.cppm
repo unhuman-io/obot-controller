@@ -25,5 +25,4 @@ extern "C" void stm32g474_init() {
     cpu::enable_crs();
     cpu::enable_peripheral_clocks();
     cpu::enable_fpu();
-    cpu::enable_usb_pins();
 }

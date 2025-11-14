@@ -5,6 +5,8 @@ import obot_std;
 
 export module stm32g474;
 
+export import stm32g474_gpio_init;
+
 export {
 #include "generated/STM32G474_peripherals.cppm.gen"
 }
@@ -159,17 +161,11 @@ export namespace stm32g474 {
 
     void enable_peripheral_clocks() {
         RCC->RCC_APB1ENR1_b.USBEN = 1;
+        RCC->RCC_AHB2ENR_b.GPIOAEN = 1;
     }
 
     void enable_fpu() {
         SCB->CPACR |= ((3UL << (10 * 2)) | (3UL << (11 * 2))); /* set CP10 and CP11 Full Access */
-    }
-
-    void enable_usb_pins() {
-        RCC->RCC_AHB2ENR_b.GPIOAEN = 1;
-        GPIOA->MODER_b.MODER11 = 3; // analog
-        GPIOA->MODER_b.MODER12 = 3; // analog
-        GPIOA->MODER_b.MODER10 = 0; // input
     }
 
     void wait_ms(uint32_t ms) {
@@ -181,6 +177,9 @@ export namespace stm32g474 {
         return (cpu_frequency / 1'000'000) * us;
     }
 
+    constexpr void init_gpio(const GPIOInit& g) {
+        init_gpio_regs(GPIOA, g.a);
+    }
 }; // namespace stm32g474_fun
 
 

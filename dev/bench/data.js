@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1763048381551,
+  "lastUpdate": 1763141560247,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -130985,6 +130985,132 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1231.269897,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee.magnusson@figure.ai",
+            "name": "Lee Magnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "lee.magnusson@figure.ai",
+            "name": "Lee Magnusson",
+            "username": "leemagnusson"
+          },
+          "distinct": true,
+          "id": "a47e1d8f64aff6d68c4262de92a9655be6de5144",
+          "message": "pin config start",
+          "timestamp": "2025-11-14T09:26:57-08:00",
+          "tree_id": "05da4dfa7986ffef2ca2cc46fd98ae0ef655d016",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/a47e1d8f64aff6d68c4262de92a9655be6de5144"
+        },
+        "date": 1763141559287,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles",
+            "value": 846,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period",
+            "value": 3420,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles",
+            "value": 3518,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period",
+            "value": 17024,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2824.81,
+            "unit": "cycles",
+            "extra": "3525 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3395.98,
+            "unit": "cycles",
+            "extra": "3425 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 834.664,
+            "unit": "cycles",
+            "extra": "846 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17001.1,
+            "unit": "cycles",
+            "extra": "17045 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 214016,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 6916,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 214588,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 8428,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 86288,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 3153,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 7260,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used",
+            "value": 1505,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1190.269775,
             "unit": "Hz",
             "extra": "0 times"
           }

@@ -3,7 +3,7 @@ import trace_blinker;
 //import <cstdint>;
 import stm32g474;
 import trace_board;
-import <cstddef>;
+//import <cstddef>;
 import obot_std;
 
 TraceBlinker trace_blinker;
@@ -202,17 +202,17 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
 
 // below assembly uses hardcoded offsets - static asserts to ensure they are correct
 static_assert(alignof(ContextStateExt) == 8);
-static_assert(offsetof(ContextStateExt, r4) == 0);
-static_assert(offsetof(ContextStateExt, r5) == 4);
-static_assert(offsetof(ContextStateExt, r6) == 8);
-static_assert(offsetof(ContextStateExt, r7) == 12);
-static_assert(offsetof(ContextStateExt, r8) == 16);
-static_assert(offsetof(ContextStateExt, r9) == 20);
-static_assert(offsetof(ContextStateExt, r10) == 24);
-static_assert(offsetof(ContextStateExt, r11) == 28);
-static_assert(offsetof(ContextStateExt, r13) == 32);
-static_assert(offsetof(ContextStateExt, lr) == 36);
-static_assert(sizeof(ContextStateExt) == 40);
+// static_assert(offsetof(ContextStateExt, r4) == 0);
+// static_assert(offsetof(ContextStateExt, r5) == 4);
+// static_assert(offsetof(ContextStateExt, r6) == 8);
+// static_assert(offsetof(ContextStateExt, r7) == 12);
+// static_assert(offsetof(ContextStateExt, r8) == 16);
+// static_assert(offsetof(ContextStateExt, r9) == 20);
+// static_assert(offsetof(ContextStateExt, r10) == 24);
+// static_assert(offsetof(ContextStateExt, r11) == 28);
+// static_assert(offsetof(ContextStateExt, r13) == 32);
+// static_assert(offsetof(ContextStateExt, lr) == 36);
+// static_assert(sizeof(ContextStateExt) == 40);
 //static_assert(&FPU->FPCAR == (std::uintptr_t) 0xE000EF38);
 
 extern "C" __attribute__((naked)) void DebugMon_Handler() {

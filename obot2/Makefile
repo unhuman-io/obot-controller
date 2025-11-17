@@ -28,7 +28,7 @@ ifneq ($(VERBOSE),)
 $(info EXTRA_PREREQS: $(.EXTRA_PREREQS))
 endif
 
-c++_header_modules := bit cstdint string string_view charconv cstring cstddef
+c++_header_modules := #bit cstdint string string_view charconv cstring cstddef
 
 $(info c++ header units: $(c++_header_units))
 
@@ -80,7 +80,7 @@ header_units: $(c++_header_units)
 
 clean:
 	@echo "Cleaning up..."
-	rm -rf *.o *.elf *.bin gcm.cache/ *.d *.pcm
+	rm -rf *.o *.elf *.bin gcm.cache/ *.d *.pcm *.map
 
 help:
 	@echo "Available targets:"

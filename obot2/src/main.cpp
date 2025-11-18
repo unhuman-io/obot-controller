@@ -40,6 +40,7 @@ int main() {
     TIM2->TIM2_CR2_b.MMS = 1; // enable is a trigger out
     TIM2->TIM2_CR1_b.CEN = 1;
     uint8_t i = 0;
+    asm("bkpt #0");
     while(1) {
         static uint32_t counter = 0;
         counter++;
@@ -84,8 +85,52 @@ extern "C" void TIM3_IRQHandler() {
 }
 
 std::string_view parse(const std::string_view data);
+volatile bool mon_continue = false;
+void set_monitor_continue() {
+    mon_continue = true;
+}
+bool monitor_continue() {
+    if (mon_continue) {
+        mon_continue = false;
+        return true;
+    }
+    return false;
+}
+
+volatile bool mon_step = false;
+void set_monitor_step() {
+    mon_step = true;
+}
+bool monitor_step() {
+    if (mon_step) {
+        mon_step = false;
+        return true;
+    }
+    return false;
+}
+
 
 __attribute__((used)) std::string_view last;
+
+int to_hex(int length_buffer, void *address, int length_bytes, uint8_t *buffer) {
+    if (length_bytes > length_buffer/2) {
+        length_bytes = length_buffer/2;
+    }
+    auto *src = static_cast<const uint8_t*>(address);
+    static constexpr char hex[] = "0123456789abcdef";
+    for (int i = 0; i < length_bytes; ++i) {
+        uint8_t v = src[i];
+        buffer[2*i]     = hex[v >> 4];
+        buffer[2*i + 1] = hex[v & 0x0F];
+    }
+    int out_len = length_bytes * 2;
+    return out_len;
+}
+
+struct GDBRegs {
+    uint32_t r0, r1, r2, r3, r4, r5, r6, r7,
+             r8, r9, r10, r11, r12, sp, lr, pc;
+} gregs;
 
 uint8_t buffer[63] = "default";
 std::string_view parse(const std::string_view str) {
@@ -108,43 +153,65 @@ std::string_view parse(const std::string_view str) {
                         break;
                     }
                 }
-                int length_hex = 0;
+                int length_bytes = 0;
                 {
                     auto length_str = str.substr(comma_pos + 1);
-                    auto [_, ec] = std::from_chars(length_str.data(), length_str.data() + length_str.size(), length_hex, 16);
+                    auto [_, ec] = std::from_chars(length_str.data(), length_str.data() + length_str.size(), length_bytes, 16);
                     if (ec != std::errc()) {
                         return std::string_view("bad len");
                         break;
                     }
                 }
-                if (length_hex > sizeof(buffer)/2) {
-                    length_hex = sizeof(buffer)/2;
-                }
-                length = length_hex*2;
-                for (size_t i = 0; i < length_hex; i++) {
-                    uint8_t *ptr = reinterpret_cast<uint8_t *>(addr + i);
-                    if (*ptr == 0) {
-                        buffer[i*2] = '0';
-                        buffer[i*2 + 1] = '0';
-                    } else if (*ptr < 16) {
-                        buffer[i*2] = '0';
-                        std::to_chars(reinterpret_cast<char *>(buffer + i*2 + 1), reinterpret_cast<char *>(buffer + i*2 + 2), *ptr, 16);
-                    } else {
-                        std::to_chars(reinterpret_cast<char *>(buffer + i*2), reinterpret_cast<char *>(buffer + i*2) + 2, *ptr, 16);
-                    }
-                }
+                length = to_hex(sizeof(buffer), reinterpret_cast<void *>(addr), length_bytes, buffer);
+
                 break;
             }
             case 'b':
                 return std::string_view("break");
             case 'P':
                 return std::string_view("OK");
+            case 'c':
+                set_monitor_continue();
+                return std::string_view("continue");
+            case 's':
+                monitor_step();
+                return std::string_view("step");
+            case 'g':
+                length = to_hex(sizeof(buffer), &gregs, 6*4, buffer);
+                break;
+            case 'p':
+            {
+                int reg_num = 0;
+                {
+                    auto reg_num_str = str.substr(2);
+                    auto [_, ec] = std::from_chars(reg_num_str.data(), reg_num_str.data() + reg_num_str.size(), reg_num, 16);
+                    if (ec != std::errc()) {
+                        return std::string_view("bad reg num");
+                        break;
+                    }
+                }
+                length = to_hex(sizeof(buffer), (&gregs.r0) + reg_num, 4, buffer);
+                break;
+            }
             default:
                 return std::string_view();
         }
     }
 
     return std::string_view(reinterpret_cast<const char *>(buffer), length);
+}
+
+void set_breakpoint(uint32_t address) {
+    constexpr size_t max_breakpoints = 6;
+    FPB->CTRL |= 0x3;
+    for (size_t i = 0; i < max_breakpoints; i++) {
+        if ((FPB->COMP[i] & 1) == 0) {
+            // not enabled
+            uint32_t replace = address & 2 ? 2 : 1;
+            FPB->COMP[i] = replace << 30 | (address & ~3) | 1;
+            break;
+        }
+    }
 }
 
 struct ContextState {
@@ -187,14 +254,59 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
         uint32_t sp;
     } args = {reinterpret_cast<std::uintptr_t>(state), reinterpret_cast<std::uintptr_t>(ext),
             reinterpret_cast<std::uintptr_t>(fpu), ext->r13};
+    gregs = {.r0 = state->r0,
+             .r1 = state->r1,
+             .r2 = state->r2,
+             .r3 = state->r3,
+             .r4 = ext->r4,
+             .r5 = ext->r5,
+             .r6 = ext->r6,
+             .r7 = ext->r7,
+             .r8 = ext->r8,
+             .r9 = ext->r9,
+             .r10 = ext->r10,
+             .r11 = ext->r11,
+             .r12 = state->r12,
+             .sp = ext->r13,
+             .lr = state->lr,
+             .pc = state->return_address};
+    asm("":::"memory");
     //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
     //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
     while (1) {
-        // if (continue_debugging) {
-        //     break;
-        // }
+        if (monitor_continue()) {
+            CoreDebug->DEMCR &= ~(1 << 18);
+            FPB->CTRL = 2; // disable all breakpoints
+            FPB->COMP[0] = 0; // clear first breakpoint
+            if (reinterpret_cast<uint8_t *>(state->return_address)[1] == 0xbe) {
+                // breakpoint instruction
+                state->return_address += 2;
+            }
+            break;
+        } else if ( monitor_step() ) {
+            FPB->CTRL = 2; // disable all breakpoints
+            FPB->COMP[0] = 0; // clear first breakpoint
+
+            CoreDebug->DEMCR |= 1 << 18;
+            // // set a temporary breakpoint at the next instruction
+            // uint8_t instruction_byte = reinterpret_cast<uint8_t *>(state->return_address)[1];
+            // if (instruction_byte == 0xbe) {
+            //     // breakpoint instruction
+            //     state->return_address += 2;
+            //     instruction_byte = reinterpret_cast<uint8_t *>(state->return_address)[1];
+            // }
+            // uint8_t high_5bit = instruction_byte >> 3;
+            // if ( high_5bit == 0b11110 || high_5bit == 0b11111 || high_5bit == 0b11101 ) {
+            //     // 32 bit instruction
+            //     set_breakpoint(state->return_address + 4);
+            // } else {
+            //     // 16 bit instruction
+            //     set_breakpoint(state->return_address + 2);
+            // }
+            break;
+        }
     }
-    SCB->DFSR = 2; // clear flags
+    SCB->DFSR = 3; // clear flags
     
 }
 
@@ -237,17 +349,13 @@ extern "C" __attribute__((naked)) void DebugMon_Handler() {
         "bx lr \n");
 }
 
-void set_breakpoint(uint32_t address) {
-    constexpr size_t max_breakpoints = 6;
-    FPB->CTRL |= 0x3;
-    for (size_t i = 0; i < max_breakpoints; i++) {
-        if ((FPB->COMP[i] & 1) == 0) {
-            // not enabled
-            uint32_t replace = address & 2 ? 2 : 1;
-            FPB->COMP[i] = replace << 30 | (address & ~3) | 1;
-        }
-    }
-}
+
+
+// void monitor_step() {
+//     // mask ints with priority lower than whatever called the breakpoint
+//     // the interrupt that called the breakpoint will have priority in bits 7-4 of the IPSR
+//     CoreDebug->DEMCR |= 1 << 18;
+// }
 
 extern "C" __attribute__((used)) void usb_interrupt(ContextState *state) {
     asm("":::"memory");
@@ -260,7 +368,11 @@ extern "C" __attribute__((used)) void usb_interrupt(ContextState *state) {
 
         std::string_view s_out = parse(s_in);
         if (s_out == "break") {
+            s_out = " break at " + std::to_string(state->return_address);
             set_breakpoint(state->return_address);
+        } else if (s_out == "step") {
+            s_out = " step at " + std::to_string(gregs.pc);
+            set_monitor_step();
         }
         last = s_out;
         trace_blinker.usb.send_data(1, reinterpret_cast<const uint8_t *>(s_out.data()), s_out.size(), false);

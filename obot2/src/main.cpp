@@ -11,6 +11,10 @@ TraceBlinker trace_blinker;
 
 namespace cpu = stm32g474;
 
+__attribute__((used)) float square(float x) {
+    return x * x;
+}
+
 int main() {
     RCC->RCC_APB2ENR_b.TIM1EN = 1;
     RCC->RCC_APB1ENR1_b.TIM2EN = 1;
@@ -69,7 +73,7 @@ extern "C" void TIM2_IRQHandler() {
     //trace_blinker.blink();
     asm("":::"memory");
     asm("str sp, %[addr] \n" :: [addr] "m" (stuff[0]));
-    asm("bkpt #0");
+    //asm("bkpt #0");
     TIM2->TIM2_SR_b.UIF = 0;
     asm("dsb":::"memory"); // dsb for interrupt near end to not retrigger
 }
@@ -83,21 +87,6 @@ std::string_view parse(const std::string_view data);
 
 __attribute__((used)) std::string_view last;
 
-extern "C" void USB_LP_IRQHandler() {
-    asm("":::"memory");
-    trace_blinker.usb.interrupt();
-    if (trace_blinker.usb.new_rx_data(1)) {
-        uint8_t buffer[64];
-        int len = trace_blinker.usb.receive_data(1, buffer, sizeof(buffer));
-        std::string_view s_in = std::string_view(reinterpret_cast<const char *>(buffer), len);
-        // echo back
-
-        std::string_view s_out = parse(s_in);
-        last = s_out;
-        trace_blinker.usb.send_data(1, reinterpret_cast<const uint8_t *>(s_out.data()), s_out.size(), false);
-    }
-    asm("":::"memory");
-}
 uint8_t buffer[63] = "default";
 std::string_view parse(const std::string_view str) {
     int length = 20;
@@ -146,6 +135,10 @@ std::string_view parse(const std::string_view str) {
                 }
                 break;
             }
+            case 'b':
+                return std::string_view("break");
+            case 'P':
+                return std::string_view("OK");
             default:
                 return std::string_view();
         }
@@ -187,16 +180,22 @@ struct alignas(8) FPUContext {
 extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
         const ContextStateExt* ext, const FPUContext* fpu) {
     trace_blinker.set_green();
-    SCB->DFSR = 2; // clear flags
-    state->return_address += 2; // skip the faulting instruction
+    //SCB->DFSR = 2; // clear flags
+    //state->return_address += 2; // skip the faulting instruction
     [[maybe_unused]] struct {
         std::uintptr_t addr[3];
         uint32_t sp;
     } args = {reinterpret_cast<std::uintptr_t>(state), reinterpret_cast<std::uintptr_t>(ext),
             reinterpret_cast<std::uintptr_t>(fpu), ext->r13};
     //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
-    trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
-   
+    //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
+    while (1) {
+        // if (continue_debugging) {
+        //     break;
+        // }
+    }
+    SCB->DFSR = 2; // clear flags
+    
 }
 
 
@@ -236,6 +235,44 @@ extern "C" __attribute__((naked)) void DebugMon_Handler() {
         "pop {lr} \n"
         "add sp, sp, #40 \n"
         "bx lr \n");
+}
+
+void set_breakpoint(uint32_t address) {
+    constexpr size_t max_breakpoints = 6;
+    FPB->CTRL |= 0x3;
+    for (size_t i = 0; i < max_breakpoints; i++) {
+        if ((FPB->COMP[i] & 1) == 0) {
+            // not enabled
+            uint32_t replace = address & 2 ? 2 : 1;
+            FPB->COMP[i] = replace << 30 | (address & ~3) | 1;
+        }
+    }
+}
+
+extern "C" __attribute__((used)) void usb_interrupt(ContextState *state) {
+    asm("":::"memory");
+    trace_blinker.usb.interrupt();
+    if (trace_blinker.usb.new_rx_data(1)) {
+        uint8_t buffer[64];
+        int len = trace_blinker.usb.receive_data(1, buffer, sizeof(buffer));
+        std::string_view s_in = std::string_view(reinterpret_cast<const char *>(buffer), len);
+        // echo back
+
+        std::string_view s_out = parse(s_in);
+        if (s_out == "break") {
+            set_breakpoint(state->return_address);
+        }
+        last = s_out;
+        trace_blinker.usb.send_data(1, reinterpret_cast<const uint8_t *>(s_out.data()), s_out.size(), false);
+    }
+    asm("":::"memory");
+}
+
+extern "C" __attribute__((naked)) void USB_LP_IRQHandler() {
+    asm("mov r0, sp \n" // ContextState pointer in r0
+        "push {lr} \n"
+        "bl usb_interrupt \n"
+        "pop {pc} \n");
 }
 
 extern "C" {

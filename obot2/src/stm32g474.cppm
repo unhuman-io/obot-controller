@@ -64,6 +64,17 @@ constexpr FPU_Type * const FPU { &FPU_address };
     void set_nvic_priority(IRQn_Type IRQn, uint32_t priority) {
         __NVIC_SetPriority(IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), priority, 0));
     }
+
+// FPB not in svd generated peripherals
+typedef struct {
+    __IO uint32_t CTRL;   // FPB Control Register
+    __IO uint32_t REMAP;  // FPB Remap Register
+    __IO uint32_t COMP[8]; // Array of Comparator Registers (number of comps varies)
+} FPB_Type;
+
+extern "C" FPB_Type FPB_address;
+extern "C" FPB_Type * const FPB { &FPB_address };
+
 }
 
 export volatile uint32_t go_to_bootloader;

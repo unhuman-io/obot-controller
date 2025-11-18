@@ -209,6 +209,8 @@ SECTIONS
 
   INCLUDE "generated/STM32G474_peripherals.ld"
   INCLUDE "cortex_m4_peripherals.ld"
+  /* FPB not in generated peripherals */
+  PROVIDE( FPB_address = 0xE0002000 );
 }
 
 

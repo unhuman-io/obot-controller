@@ -130,6 +130,12 @@ SECTIONS
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
 
+  .debug_fun :
+  {
+    KEEP (*(.debug_fun))
+    KEEP (*(.debug_fun*))
+  } >FLASH
+
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
 

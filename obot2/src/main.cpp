@@ -11,7 +11,11 @@ TraceBlinker trace_blinker;
 
 namespace cpu = stm32g474;
 
-__attribute__((used)) float square(float x) {
+__attribute__((used, section(".debug_fun"))) float square(float x) {
+    return x * x;
+}
+
+__attribute__((used, section(".debug_fun"))) int squarei(int x) {
     return x * x;
 }
 
@@ -22,6 +26,8 @@ int main() {
     TIM1->TIM1_DIER_b.UIE = 1;
     TIM1->TIM1_PSC = 25939/2;
     
+    volatile float f = 2;
+    f = square(f);
 
     TIM2->TIM2_DIER_b.UIE = 1;
     TIM1->TIM1_SMCR_b.SMS = 0b110; // trigger mode
@@ -40,6 +46,7 @@ int main() {
     TIM2->TIM2_CR2_b.MMS = 1; // enable is a trigger out
     TIM2->TIM2_CR1_b.CEN = 1;
     uint8_t i = 0;
+    asm("vldr s16, =0x12345678");
     asm("bkpt #0");
     while(1) {
         static uint32_t counter = 0;
@@ -130,7 +137,23 @@ int to_hex(int length_buffer, void *address, int length_bytes, uint8_t *buffer) 
 struct GDBRegs {
     uint32_t r0, r1, r2, r3, r4, r5, r6, r7,
              r8, r9, r10, r11, r12, sp, lr, pc;
+    uint32_t psr, msp, psp, primask, basepri, faultmask, control;
+    float s[32];
+    uint32_t fpscr;
 } gregs;
+
+void set_breakpoint(uint32_t address) {
+    constexpr size_t max_breakpoints = 6;
+    FPB->CTRL |= 0x3;
+    for (size_t i = 0; i < max_breakpoints; i++) {
+        if ((FPB->COMP[i] & 1) == 0) {
+            // not enabled
+            uint32_t replace = address & 2 ? 2 : 1;
+            FPB->COMP[i] = replace << 30 | (address & ~3) | 1;
+            break;
+        }
+    }
+}
 
 uint8_t buffer[63] = "default";
 std::string_view parse(const std::string_view str) {
@@ -166,10 +189,82 @@ std::string_view parse(const std::string_view str) {
 
                 break;
             }
+            case 'M':
+            {
+                auto comma_pos = str.find(',');
+                if (comma_pos == std::string_view::npos) {
+                    return std::string_view("no comma");
+                    break;
+                }
+                auto colon_pos = str.find(':', comma_pos + 1);
+                if (colon_pos == std::string_view::npos) {
+                    return std::string_view("no colon pos");
+                    break;
+                }
+                auto addr_str = str.substr(2, comma_pos - 2);
+                uintptr_t addr = 0;
+                {
+                    auto [_, ec] = std::from_chars(addr_str.data(), addr_str.data() + addr_str.size(), addr, 16);
+                    if (ec != std::errc()) {
+                        return std::string_view("bad addr");
+                        break;
+                    }
+                }
+                int length_bytes = 0;
+                {
+                    auto length_str = str.substr(comma_pos + 1, colon_pos - comma_pos - 1);
+                    auto [_, ec] = std::from_chars(length_str.data(), length_str.data() + length_str.size(), length_bytes, 16);
+                    if (ec != std::errc()) {
+                        return std::string_view("bad len");
+                        break;
+                    }
+                }
+                auto data_str = str.substr(colon_pos + 1);
+                if (data_str.size() < static_cast<size_t>(length_bytes * 2)) {
+                    return std::string_view("data too short");
+                    break;
+                }
+                for (int i = 0; i < length_bytes; ++i) {
+                    char c1 = data_str[2*i];
+                    char c2 = data_str[2*i + 1];
+                    uint8_t v1 = (c1 >= 'a') ? (c1 - 'a' + 10) : (c1 >= 'A' ? (c1 - 'A' + 10) : (c1 - '0'));
+                    uint8_t v2 = (c2 >= 'a') ? (c2 - 'a' + 10) : (c2 >= 'A' ? (c2 - 'A' + 10) : (c2 - '0'));
+                    uint8_t v = (v1 << 4) | v2;
+                    reinterpret_cast<uint8_t *>(addr)[i] = v;
+                }
+                return std::string_view("OK");
+                break;
+            }
             case 'b':
                 return std::string_view("break");
             case 'P':
+            {
+                int reg_num = 0;
+                {
+                    auto reg_num_str = str.substr(2);
+                    auto [_, ec] = std::from_chars(reg_num_str.data(), reg_num_str.data() + reg_num_str.size(), reg_num, 16);
+                    if (ec != std::errc()) {
+                        return std::string_view("bad reg num");
+                        break;
+                    }
+                }
+                unsigned int value = 0;
+                {
+                    auto equal_pos = str.find('=');
+                    if (equal_pos == std::string_view::npos) {
+                        return std::string_view("no equal");
+                        break;
+                    }
+                    auto value_str = str.substr(equal_pos + 1);
+                    auto [_, ec] = std::from_chars(value_str.data(), value_str.data() + value_str.size(), value, 16);
+                    if (ec != std::errc()) {
+                        return std::string_view("bad value");
+                        break;
+                    }
+                }
+                (&gregs.r0)[reg_num] = __builtin_bswap32(value);
                 return std::string_view("OK");
+            } 
             case 'c':
                 set_monitor_continue();
                 return std::string_view("continue");
@@ -193,25 +288,32 @@ std::string_view parse(const std::string_view str) {
                 length = to_hex(sizeof(buffer), (&gregs.r0) + reg_num, 4, buffer);
                 break;
             }
+            case 'z':
+                return std::string_view("remove breakpoint not implemented");
+            case 'Z':
+            {
+                auto comma_pos = str.find(',');
+                if (comma_pos == std::string_view::npos) {
+                    return std::string_view("no comma");
+                    break;
+                }
+                auto addr_str = str.substr(comma_pos + 1);
+                uintptr_t addr = 0;
+                auto [_, ec] = std::from_chars(addr_str.data(), addr_str.data() + addr_str.size(), addr, 16);
+                if (ec != std::errc()) {
+                    return std::string_view("bad addr");
+                    break;
+                }
+                set_breakpoint(addr);
+                return std::string_view("OK");
+            }
+
             default:
                 return std::string_view();
         }
     }
 
     return std::string_view(reinterpret_cast<const char *>(buffer), length);
-}
-
-void set_breakpoint(uint32_t address) {
-    constexpr size_t max_breakpoints = 6;
-    FPB->CTRL |= 0x3;
-    for (size_t i = 0; i < max_breakpoints; i++) {
-        if ((FPB->COMP[i] & 1) == 0) {
-            // not enabled
-            uint32_t replace = address & 2 ? 2 : 1;
-            FPB->COMP[i] = replace << 30 | (address & ~3) | 1;
-            break;
-        }
-    }
 }
 
 struct ContextState {
@@ -237,6 +339,13 @@ struct alignas(8) ContextStateExt {
     uint32_t r11;
     uint32_t r13; //sp
     uint32_t lr;
+    uint32_t msp; // 0x11
+    uint32_t psp; // 0x12
+    uint32_t primask; // 0x13
+    uint32_t basepri; // 0x14
+    uint32_t faultmask; // 0x15
+    uint32_t control;   // 0x16
+    float s2[16];   // 0x109 - 0x10f as doubles
 };
 
 struct alignas(8) FPUContext {
@@ -245,7 +354,7 @@ struct alignas(8) FPUContext {
 };
 
 extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
-        const ContextStateExt* ext, const FPUContext* fpu) {
+        ContextStateExt* ext, FPUContext* fpu) {
     trace_blinker.set_green();
     //SCB->DFSR = 2; // clear flags
     //state->return_address += 2; // skip the faulting instruction
@@ -269,7 +378,24 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
              .r12 = state->r12,
              .sp = ext->r13,
              .lr = state->lr,
-             .pc = state->return_address};
+             .pc = state->return_address,
+             .psr = state->psr,
+             .msp = ext->msp,
+             .psp = ext->psp,
+             .primask = ext->primask,
+             .basepri = ext->basepri,
+             .faultmask = ext->faultmask,
+             .control = ext->control,
+             .s = {fpu->s[0], fpu->s[1], fpu->s[2], fpu->s[3],
+                    fpu->s[4], fpu->s[5], fpu->s[6], fpu->s[7],
+                    fpu->s[8], fpu->s[9], fpu->s[10], fpu->s[11],
+                    fpu->s[12], fpu->s[13], fpu->s[14], fpu->s[15],
+                    ext->s2[0], ext->s2[1], ext->s2[2], ext->s2[3],
+                    ext->s2[4], ext->s2[5], ext->s2[6], ext->s2[7],
+                    ext->s2[8], ext->s2[9], ext->s2[10], ext->s2[11],
+                    ext->s2[12], ext->s2[13], ext->s2[14], ext->s2[15]},
+             .fpscr = fpu->fpscr
+            };
     asm("":::"memory");
     //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
     //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
@@ -306,6 +432,31 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
             break;
         }
     }
+    state->r0 = gregs.r0;
+    state->r1 = gregs.r1;
+    state->r2 = gregs.r2;
+    state->r3 = gregs.r3;
+    state->r12 = gregs.r12;
+    state->lr = gregs.lr;
+    state->return_address = gregs.pc;
+    // todo use all these regs and add the rest
+    ext->r4 = gregs.r4;
+    ext->r5 = gregs.r5;
+    ext->r6 = gregs.r6;
+    ext->r7 = gregs.r7;
+    ext->r8 = gregs.r8;
+    ext->r9 = gregs.r9;
+    ext->r10 = gregs.r10;
+    ext->r11 = gregs.r11;
+    ext->r13 = gregs.sp;
+    for (int i = 0; i < 16; ++i) {
+        fpu->s[i] = gregs.s[i];
+    }
+    for (int i = 0; i < 16; ++i) {
+        ext->s2[i] = gregs.s[16 + i];
+    }
+    fpu->fpscr = gregs.fpscr;
+    asm("":::"memory");
     SCB->DFSR = 3; // clear flags
     
 }
@@ -323,29 +474,46 @@ static_assert(alignof(ContextStateExt) == 8);
 // static_assert(offsetof(ContextStateExt, r11) == 28);
 // static_assert(offsetof(ContextStateExt, r13) == 32);
 // static_assert(offsetof(ContextStateExt, lr) == 36);
-// static_assert(sizeof(ContextStateExt) == 40);
+static_assert(sizeof(ContextStateExt) == 128);
 //static_assert(&FPU->FPCAR == (std::uintptr_t) 0xE000EF38);
 
 extern "C" __attribute__((naked)) void DebugMon_Handler() {
     asm("mov r0, sp \n" // ContextState pointer in r0
-        "sub sp, sp, #40 \n" // make space for ContextStateExt
+        "sub sp, sp, #128 \n" // make space for ContextStateExt
         "mov r1, sp \n" // ContextStateExt pointer in r1
         "vmov s0, s0 \n" // ensure floating point state is saved
         "mov r2, sp \n"
         "stm r2!, {r4-r11} \n" // store r4-r11
-        "str lr, [r2, #4] \n"  // store lr
+        //"str lr, [r2] \n"  // store lr
+        // "mrs r4, msp \n"
+        // "mrs r5, psp \n"
+        "mov r4, r0 \n"
+        "mov r5, lr \n"
+        "mov r6, r0 \n"
+        "mov r7, #0 \n"
+        "mrs r8, primask \n"
+        "mrs r9, basepri \n"
+        "mrs r10, faultmask \n"
+        "mrs r11, control \n"
+        "stm r2!, {r4-r11} \n"
+        "vstm r2!, {s16-s31} \n" // store s16-s31
         "mov r2, r0 \n"
         "tst lr, #0x10 \n"     // check EXC_RETURN bit 4 for extended frame
         "ite eq \n"
         "addeq r2, #0x68 \n"   // extended frame
         "addne r2, #0x20 \n"   // basic frame
-        "str r2, [sp, 32] \n"  // store original sp position in r13 position of ContextStateExt
         "ldr r2, =0xE000EF38 \n" 
         "ldr r2, [r2] \n"      // FPCAR address in r2
         "push {lr} \n"
         "bl debug_monitor \n"
         "pop {lr} \n"
-        "add sp, sp, #40 \n"
+        "mov r0, sp \n" // ContextStateExt pointer in r0
+        "ldm r0!, {r4-r11} \n" // load r4-r11
+        "add r0, r0, #8 \n" // skip sp
+        "ldm r0, {lr} \n" // load lr
+        "add r0, r0, #24 \n" // skip to fp regs
+        "vldm r0!, {s16-s31} \n" // load s16-s31
+        "add sp, sp, #128 \n"
         "bx lr \n");
 }
 

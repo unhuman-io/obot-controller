@@ -46,14 +46,14 @@ int main() {
     TIM2->TIM2_CR2_b.MMS = 1; // enable is a trigger out
     TIM2->TIM2_CR1_b.CEN = 1;
     uint8_t i = 0;
-    asm("vldr s16, =0x12345678");
+    asm("vldr.f32 s16, =0x12345678");
     asm("bkpt #0");
     while(1) {
         static uint32_t counter = 0;
         counter++;
         cpu::wait_ms(1000);
         asm("vmov s0, %[val] \n" :: [val] "r" (counter++) : "s0");
-        std::string s;
+        //std::string s;
         asm("":::"memory");
         //s = "counter: ";// + std::to_string(counter) + "\n";
         //s += std::to_string(counter);
@@ -401,6 +401,7 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
     //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
     while (1) {
         if (monitor_continue()) {
+            //asm("bkpt #3");
             CoreDebug->DEMCR &= ~(1 << 18);
             FPB->CTRL = 2; // disable all breakpoints
             FPB->COMP[0] = 0; // clear first breakpoint
@@ -408,6 +409,7 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
                 // breakpoint instruction
                 state->return_address += 2;
             }
+            //asm("":::"memory");
             break;
         } else if ( monitor_step() ) {
             FPB->CTRL = 2; // disable all breakpoints
@@ -438,7 +440,7 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
     state->r3 = gregs.r3;
     state->r12 = gregs.r12;
     state->lr = gregs.lr;
-    state->return_address = gregs.pc;
+    //state->return_address = gregs.pc;
     // todo use all these regs and add the rest
     ext->r4 = gregs.r4;
     ext->r5 = gregs.r5;
@@ -487,9 +489,9 @@ extern "C" __attribute__((naked)) void DebugMon_Handler() {
         //"str lr, [r2] \n"  // store lr
         // "mrs r4, msp \n"
         // "mrs r5, psp \n"
-        "mov r4, r0 \n"
+        "mov r4, r0 \n" // overwritten
         "mov r5, lr \n"
-        "mov r6, r0 \n"
+        "mov r6, r0 \n" // overwritten
         "mov r7, #0 \n"
         "mrs r8, primask \n"
         "mrs r9, basepri \n"
@@ -502,15 +504,18 @@ extern "C" __attribute__((naked)) void DebugMon_Handler() {
         "ite eq \n"
         "addeq r2, #0x68 \n"   // extended frame
         "addne r2, #0x20 \n"   // basic frame
+        "str r2, [sp, #32] \n" // store sp at offset sp and msp
+        "str r2, [sp, #40] \n"
         "ldr r2, =0xE000EF38 \n" 
         "ldr r2, [r2] \n"      // FPCAR address in r2
         "push {lr} \n"
         "bl debug_monitor \n"
+       // "bkpt #2 \n"
         "pop {lr} \n"
         "mov r0, sp \n" // ContextStateExt pointer in r0
         "ldm r0!, {r4-r11} \n" // load r4-r11
         "add r0, r0, #8 \n" // skip sp
-        "ldm r0, {lr} \n" // load lr
+        ////"ldm r0, {lr} \n" // load lr
         "add r0, r0, #24 \n" // skip to fp regs
         "vldm r0!, {s16-s31} \n" // load s16-s31
         "add sp, sp, #128 \n"
@@ -536,10 +541,14 @@ extern "C" __attribute__((used)) void usb_interrupt(ContextState *state) {
 
         std::string_view s_out = parse(s_in);
         if (s_out == "break") {
-            s_out = " break at " + std::to_string(state->return_address);
+            s_out = "break at ";// + std::to_string(state->return_address);
+            //std::memcpy(buffer, s_out.data(), std::min(s_out.size(), sizeof(buffer)));
+            //s_out = std::string_view(reinterpret_cast<const char *>(buffer), std::min(s_out.size(), sizeof(buffer)));
             set_breakpoint(state->return_address);
         } else if (s_out == "step") {
-            s_out = " step at " + std::to_string(gregs.pc);
+            s_out = "step at ";// + std::to_string(gregs.pc);
+            //std::memcpy(buffer, s_out.data(), std::min(s_out.size(), sizeof(buffer)));
+            //s_out = std::string_view(reinterpret_cast<const char *>(buffer), std::min(s_out.size(), sizeof(buffer)));
             set_monitor_step();
         }
         last = s_out;

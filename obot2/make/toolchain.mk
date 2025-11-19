@@ -25,7 +25,7 @@ else
 	SZ = $(GCC_PATH)arm-none-eabi-size
 	CXXFLAGS += -fmodules-ts -Mno-modules
 	CXXMFLAGS += -x c++
-	LDFLAGS += -specs=nosys.specs -specs=nano.specs
+	LDFLAGS += -specs=nosys.specs #-specs=nano.specs
 	c++_headers_location := $(shell realpath `$(CXX) --print-sysroot`)/include/c++/$(shell $(CXX) -dumpversion)
 $(info c++ headers location: $(c++_headers_location))
 	c++_header_units = $(addprefix gcm.cache/.$(c++_headers_location)/, $(c++_header_modules:%=%.gcm))

@@ -103,8 +103,10 @@ extern "C" void TIM3_IRQHandler() {
 
 std::string_view parse(const std::string_view data);
 volatile bool mon_continue = false;
+volatile bool continued = false;
 void set_monitor_continue() {
     mon_continue = true;
+    continued = true;
 }
 bool monitor_continue() {
     if (mon_continue) {
@@ -152,19 +154,27 @@ struct GDBRegs {
     uint32_t fpscr;
 } gregs;
 
+bool set_breakpoint(uint32_t address, int num) {
+    FPB->CTRL |= 0x3;
+    if ((FPB->COMP[num] & 1) == 0) {
+        // not enabled
+        uint32_t replace = address & 2 ? 2 : 1;
+        FPB->COMP[num] = replace << 30 | (address & ~3) | 1;
+        return true;
+    }
+    return false;
+}
+
 void set_breakpoint(uint32_t address) {
     constexpr size_t max_breakpoints = 6;
-    FPB->CTRL |= 0x3;
-    for (size_t i = 0; i < max_breakpoints; i++) {
-        if ((FPB->COMP[i] & 1) == 0) {
-            // not enabled
-            uint32_t replace = address & 2 ? 2 : 1;
-            FPB->COMP[i] = replace << 30 | (address & ~3) | 1;
+    for (size_t i = 1; i < max_breakpoints; i++) {
+        if (set_breakpoint(address, i)) {
             break;
         }
     }
 }
-
+volatile bool trap_continue = false;
+volatile bool trap_breakpoint = true;
 uint8_t buffer[63] = "default";
 std::string_view parse(const std::string_view str) {
     int length = 20;
@@ -314,9 +324,22 @@ std::string_view parse(const std::string_view str) {
                     return std::string_view("bad addr");
                     break;
                 }
+                
                 set_breakpoint(addr);
+                asm("mov r4, r3" :::"r4");
+                volatile uint32_t reg = FPB->COMP[1];
+                //while(trap_breakpoint);
+                trap_continue = true;
                 return std::string_view("OK");
             }
+
+            case 'y':
+                if (continued) {
+                    return std::string_view("continued");
+                } else {
+                    return std::string_view("not continued");
+                }
+                break;
 
             default:
                 return std::string_view();
@@ -409,21 +432,26 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
     asm("":::"memory");
     //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(&args), sizeof(args), false);
     //trace_blinker.usb.send_data(2, reinterpret_cast<const uint8_t*>(fpu), 64, false);
+    continued = false;
     while (1) {
+        
         if (monitor_continue()) {
             //asm("bkpt #3");
+            volatile uint32_t reg = FPB->COMP[1];
+            //while(trap_continue);
             CoreDebug->DEMCR &= ~(1 << 18);
-            FPB->CTRL = 2; // disable all breakpoints
-            FPB->COMP[0] = 0; // clear first breakpoint
+            //FPB->CTRL = 2; // disable all breakpoints
+            //FPB->COMP[0] = 0; // clear first breakpoint
             if (reinterpret_cast<uint8_t *>(gregs.pc)[1] == 0xbe) {
                 // breakpoint instruction
                 gregs.pc += 2;
             }
             //asm("":::"memory");
+            
             break;
         } else if ( monitor_step() ) {
-            FPB->CTRL = 2; // disable all breakpoints
-            FPB->COMP[0] = 0; // clear first breakpoint
+            //FPB->CTRL = 2; // disable all breakpoints
+            //FPB->COMP[0] = 0; // clear first breakpoint
 
             CoreDebug->DEMCR |= 1 << 18;
             // // set a temporary breakpoint at the next instruction
@@ -444,6 +472,7 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
             break;
         }
     }
+    FPB->COMP[0] = 0; // clear first breakpoint
     state->r0 = gregs.r0;
     state->r1 = gregs.r1;
     state->r2 = gregs.r2;
@@ -554,7 +583,7 @@ extern "C" __attribute__((used)) void usb_interrupt(ContextState *state) {
             s_out = "break at ";// + std::to_string(state->return_address);
             //std::memcpy(buffer, s_out.data(), std::min(s_out.size(), sizeof(buffer)));
             //s_out = std::string_view(reinterpret_cast<const char *>(buffer), std::min(s_out.size(), sizeof(buffer)));
-            set_breakpoint(state->return_address);
+            set_breakpoint(state->return_address, 0);
         } else if (s_out == "step") {
             s_out = "step at ";// + std::to_string(gregs.pc);
             //std::memcpy(buffer, s_out.data(), std::min(s_out.size(), sizeof(buffer)));

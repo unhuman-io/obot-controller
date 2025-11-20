@@ -22,9 +22,10 @@ __attribute__((used, section(".debug_fun"))) int squarei(int x) {
 int main() {
     RCC->RCC_APB2ENR_b.TIM1EN = 1;
     RCC->RCC_APB1ENR1_b.TIM2EN = 1;
+    RCC->RCC_APB1ENR1_b.TIM3EN = 1;
 
     TIM1->TIM1_DIER_b.UIE = 1;
-    TIM1->TIM1_PSC = 25939/2;
+    TIM1->TIM1_PSC = 500;//25939/2;
     
     volatile float f = 2;
     f = square(f);
@@ -32,11 +33,16 @@ int main() {
     TIM2->TIM2_DIER_b.UIE = 1;
     TIM1->TIM1_SMCR_b.SMS = 0b110; // trigger mode
     TIM1->TIM1_SMCR_b.TS = 0b1; // trigger on tim2
+
+    TIM3->TIM3_DIER_b.UIE = 1;
+    TIM3->TIM3_PSC = 800;
     //TIM1->TIM1_CR1_b.CEN = 1;
     NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
     set_nvic_priority(TIM1_UP_TIM16_IRQn, 2);
     NVIC_EnableIRQ(TIM2_IRQn);
     set_nvic_priority(TIM2_IRQn, 3);
+    NVIC_EnableIRQ(TIM3_IRQn);
+    set_nvic_priority(TIM3_IRQn, 0);
     NVIC_EnableIRQ(USB_LP_IRQn);
     CoreDebug->DEMCR |= 1 << 16;
     set_nvic_priority(DebugMonitor_IRQn, 1);
@@ -45,6 +51,7 @@ int main() {
     cpu::wait_ms(2000);
     TIM2->TIM2_CR2_b.MMS = 1; // enable is a trigger out
     TIM2->TIM2_CR1_b.CEN = 1;
+    TIM3->TIM3_CR1_b.CEN = 1;
     uint8_t i = 0;
     asm("vldr.f32 s16, =0x12345678");
     asm("bkpt #0");
@@ -71,8 +78,10 @@ int main() {
     
 
 extern "C" void TIM1_UP_TIM16_IRQHandler() {
-    trace_blinker.blink();
+    trace_blinker.toggle_red();
     TIM1->TIM1_SR_b.UIF = 0;
+     asm("dsb":::"memory");
+
 }
 
 uint32_t stuff[4];
@@ -87,8 +96,9 @@ extern "C" void TIM2_IRQHandler() {
 }
 
 extern "C" void TIM3_IRQHandler() {
-    trace_blinker.blink();
+    trace_blinker.toggle_blue();
     TIM3->TIM3_SR_b.UIF = 0;
+     asm("dsb":::"memory");
 }
 
 std::string_view parse(const std::string_view data);
@@ -460,7 +470,7 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
     fpu->fpscr = gregs.fpscr;
     asm("":::"memory");
     SCB->DFSR = 3; // clear flags
-    
+    trace_blinker.clear_green();
 }
 
 

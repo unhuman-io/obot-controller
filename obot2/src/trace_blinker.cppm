@@ -48,9 +48,24 @@ class TraceBlinker : public TraceBoard {
         cpu::wait_ms(1'000 / rate);
     }
 
+    void toggle_red() {
+        GPIOB->ODR_b.ODR2 ^= 1;
+        GPIOB->ODR_b.ODR6 ^= 1;
+    }
+
+    void toggle_blue() {
+        GPIOB->ODR_b.ODR8 ^= 1;
+        GPIOF->ODR_b.ODR9 ^= 1;
+    }   
+
     void set_green() {
         GPIOB->BSRR_b.BS7 = 1;
         GPIOC->BSRR_b.BS12 = 1;
+    }
+
+    void clear_green() {
+        GPIOB->BSRR_b.BR7 = 1;
+        GPIOC->BSRR_b.BR12 = 1;
     }
     void run() {
         usb.connect();

@@ -19,6 +19,18 @@ __attribute__((used, section(".debug_fun"))) int squarei(int x) {
     return x * x;
 }
 
+class blah {
+     __attribute__((used, section(".debug_fun.funny"))) int set_red() {
+        static int i = 0;
+        GPIOB->ODR_b.ODR2 ^= 1;
+        GPIOB->ODR_b.ODR6 ^= 1;
+        i++;
+        return i;
+    }
+};
+
+__attribute__((used)) blah blah_instance;
+
 int main() {
     RCC->RCC_APB2ENR_b.TIM1EN = 1;
     RCC->RCC_APB1ENR1_b.TIM2EN = 1;
@@ -78,7 +90,7 @@ int main() {
     
 
 extern "C" void TIM1_UP_TIM16_IRQHandler() {
-    trace_blinker.toggle_red();
+    //trace_blinker.toggle_red();
     TIM1->TIM1_SR_b.UIF = 0;
      asm("dsb":::"memory");
 

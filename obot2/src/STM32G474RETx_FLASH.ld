@@ -185,6 +185,7 @@ SECTIONS
   {
     *(.bss)
     *(.bss*)
+    KEEP (*(.debug_bss*))
     *(COMMON)
 
     . = ALIGN(4);

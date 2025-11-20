@@ -25,7 +25,7 @@ int main() {
     RCC->RCC_APB1ENR1_b.TIM3EN = 1;
 
     TIM1->TIM1_DIER_b.UIE = 1;
-    TIM1->TIM1_PSC = 500;//25939/2;
+    TIM1->TIM1_PSC = 4000;//25939/2;
     
     volatile float f = 2;
     f = square(f);
@@ -35,7 +35,7 @@ int main() {
     TIM1->TIM1_SMCR_b.TS = 0b1; // trigger on tim2
 
     TIM3->TIM3_DIER_b.UIE = 1;
-    TIM3->TIM3_PSC = 800;
+    TIM3->TIM3_PSC = 1000;
     //TIM1->TIM1_CR1_b.CEN = 1;
     NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
     set_nvic_priority(TIM1_UP_TIM16_IRQn, 2);
@@ -415,9 +415,9 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
             CoreDebug->DEMCR &= ~(1 << 18);
             FPB->CTRL = 2; // disable all breakpoints
             FPB->COMP[0] = 0; // clear first breakpoint
-            if (reinterpret_cast<uint8_t *>(state->return_address)[1] == 0xbe) {
+            if (reinterpret_cast<uint8_t *>(gregs.pc)[1] == 0xbe) {
                 // breakpoint instruction
-                state->return_address += 2;
+                gregs.pc += 2;
             }
             //asm("":::"memory");
             break;
@@ -450,7 +450,7 @@ extern "C" __attribute__((used)) void debug_monitor(ContextState* state,
     state->r3 = gregs.r3;
     state->r12 = gregs.r12;
     state->lr = gregs.lr;
-    //state->return_address = gregs.pc;
+    state->return_address = gregs.pc;
     // todo use all these regs and add the rest
     ext->r4 = gregs.r4;
     ext->r5 = gregs.r5;

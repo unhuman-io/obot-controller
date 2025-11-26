@@ -61,6 +61,7 @@ export struct GPIOInit {
     struct {
         std::string_view name;
         std::string_view function;
+        std::string_view pin;
         GPIOMode mode;
         GPIOOType otype;
         GPIOSpeed speed;

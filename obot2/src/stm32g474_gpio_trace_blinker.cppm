@@ -10,7 +10,7 @@ using enum GPIOSet;
 using enum GPIOLock;
 using enum GPIOAF;
 
-export constexpr const GPIOInit gpio_settings {
+constexpr const GPIOInit gpio_settings {
   .a = {
     {.name = "A0", .function = "gpio", .mode = ANALOG, .otype = PUSH_PULL, .speed = LOW, .pullupd = NO_PULL, .bsrr = NO_SET, .lck = NO_LOCK, .af = AF0},
     {.name = "A1", .function = "gpio", .mode = ANALOG, .otype = PUSH_PULL, .speed = LOW, .pullupd = NO_PULL, .bsrr = NO_SET, .lck = NO_LOCK, .af = AF0},
@@ -138,3 +138,5 @@ export constexpr const GPIOInit gpio_settings {
     {.name = "G15", .function = "gpio", .mode = ANALOG, .otype = PUSH_PULL, .speed = LOW, .pullupd = NO_PULL, .bsrr = NO_SET, .lck = NO_LOCK, .af = AF0}
   },
 };
+
+export constinit auto gpio_regs_init = get_gpio_regs_init(gpio_settings);

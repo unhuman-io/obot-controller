@@ -177,9 +177,16 @@ export namespace stm32g474 {
         return (cpu_frequency / 1'000'000) * us;
     }
 
-    constexpr void init_gpio(const GPIOInit& g) {
+    constexpr void init_gpio(const GPIORegsInit& g) {
         init_gpio_regs(GPIOA, g.a);
+        init_gpio_regs(GPIOB, g.b);
+        init_gpio_regs(GPIOC, g.c);
+        init_gpio_regs(GPIOD, g.d);
+        init_gpio_regs(GPIOE, g.e);
+        init_gpio_regs(GPIOF, g.f);
+        init_gpio_regs(GPIOG, g.g);
     }
+
 }; // namespace stm32g474_fun
 
 

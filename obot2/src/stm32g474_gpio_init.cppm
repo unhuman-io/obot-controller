@@ -84,55 +84,88 @@ concept GPIORegs = requires(Regs &regs) {
     { regs->AFRH } -> std::same_as<volatile uint32_t&>;
 };
 
-export constexpr void init_gpio_regs(GPIORegs auto regs, const decltype(GPIOInit::a) &g) {
-    uint32_t moder = 0;
-    for (int i = 0; i < 16; i++) {
-        moder |= static_cast<uint32_t>(g[i].mode) << 2*i;
-    }
-    regs->MODER = moder;
 
-    uint32_t otyper = 0;
-    for (int i = 0; i < 16; i++) {
-        otyper |= static_cast<uint32_t>(g[i].otype) << i;
-    }
-    regs->OTYPER = otyper;
+export struct GPIORegsInit {
+  struct Regs {
+    uint32_t moder;
+    uint32_t otyper;
+    uint32_t ospeedr;
+    uint32_t pupdr;
+    uint32_t bsrr;
+    uint32_t lckr;
+    uint32_t afr[2];
+  } a, b, c, d, e, f, g;
+};
 
-    uint32_t ospeedr = 0;
-    for (int i = 0; i < 16; i++) {
-        ospeedr |= static_cast<uint32_t>(g[i].speed) << 2*i;
-    }
-    regs->OSPEEDR = ospeedr;
+export consteval const GPIORegsInit::Regs get_gpio_regs_init(const decltype(GPIOInit::a)& g) {
+  GPIORegsInit::Regs init{};
+  uint32_t moder = 0;
+  for (int i = 0; i < 16; i++) {
+    moder |= static_cast<uint32_t>(g[i].mode) << 2 * i;
+  }
+  init.moder = moder;
 
-    uint32_t pupdr = 0;
-    for (int i = 0; i < 16; i++) {
-        pupdr |= static_cast<uint32_t>(g[i].pullupd) << 2*i;
-    }
-    regs->PUPDR = pupdr;
+  uint32_t otyper = 0;
+  for (int i = 0; i < 16; i++) {
+    otyper |= static_cast<uint32_t>(g[i].otype) << i;
+  }
+  init.otyper = otyper;
 
-    uint32_t af1 = 0;
-    for (int i = 0; i < 8; i++) {
-        af1 |= static_cast<uint32_t>(g[i].af) << 4*i;
-    }
-    regs->AFRL = af1;
+  uint32_t ospeedr = 0;
+  for (int i = 0; i < 16; i++) {
+    ospeedr |= static_cast<uint32_t>(g[i].speed) << 2 * i;
+  }
+  init.ospeedr = ospeedr;
 
-    uint32_t af2 = 0;
-    for (int i = 0; i < 8; i++) {
-        af2 |= static_cast<uint32_t>(g[i+8].af) << 4*i;
-    }
-    regs->AFRH = af2;
+  uint32_t pupdr = 0;
+  for (int i = 0; i < 16; i++) {
+    pupdr |= static_cast<uint32_t>(g[i].pullupd) << 2 * i;
+  }
+  init.pupdr = pupdr;
 
-    uint32_t bsrr = 0;
-    for (int i = 0; i < 16; i++ ) {
-        if (g[i].bsrr == GPIOSet::SET) {
-            bsrr |= 1 << i;
-        } else if (g[i].bsrr == GPIOSet::RESET) {
-            bsrr |= 1 << (16 + i);
-        }
-    }
-    regs->BSRR = bsrr;
+  uint32_t af1 = 0;
+  for (int i = 0; i < 8; i++) {
+    af1 |= static_cast<uint32_t>(g[i].af) << 4 * i;
+  }
+  init.afr[0] = af1;
 
-    uint32_t lckr1 = 0;
-    uint32_t lckr2 = 0;
+  uint32_t af2 = 0;
+  for (int i = 0; i < 8; i++) {
+    af2 |= static_cast<uint32_t>(g[i + 8].af) << 4 * i;
+  }
+  init.afr[1] = af2;
+  uint32_t bsrr = 0;
+  for (int i = 0; i < 16; i++) {
+    if (g[i].bsrr == GPIOSet::SET) {
+      bsrr |= 1 << i;
+    } else if (g[i].bsrr == GPIOSet::RESET) {
+      bsrr |= 1 << (16 + i);
+    }
+  }
+  init.bsrr = bsrr;
+  // todo lckr
+  return init;
 }
 
+export consteval const GPIORegsInit get_gpio_regs_init(const GPIOInit& g) {
+  GPIORegsInit init{};
+  init.a = get_gpio_regs_init(g.a);
+  init.b = get_gpio_regs_init(g.b);
+  init.c = get_gpio_regs_init(g.c);
+  init.d = get_gpio_regs_init(g.d);
+  init.e = get_gpio_regs_init(g.e);
+  init.f = get_gpio_regs_init(g.f);
+  init.g = get_gpio_regs_init(g.g);
+  return init;
+}
 
+export constexpr void init_gpio_regs(GPIORegs auto regs, const GPIORegsInit::Regs& g) {
+  regs->MODER = g.moder;
+  regs->OTYPER = g.otyper;
+  regs->OSPEEDR = g.ospeedr;
+  regs->PUPDR = g.pupdr;
+  regs->BSRR = g.bsrr;
+  regs->LCKR = g.lckr;
+  regs->AFRL = g.afr[0];
+  regs->AFRH = g.afr[1];
+}

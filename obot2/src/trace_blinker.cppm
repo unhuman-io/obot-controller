@@ -14,7 +14,7 @@ export template<uint32_t rate = 5>
 class TraceBlinker : public TraceBoard {
   public:
     TraceBlinker() : TraceBoard() {
-        cpu::init_gpio(gpio_settings);
+        cpu::init_gpio(gpio_regs_init);
         // r0
         RCC->RCC_AHB2ENR_b.GPIOBEN = 1;
         GPIOB->MODER_b.MODER6 = 1;

@@ -28,6 +28,9 @@ main.elf: STM32G474RETx_FLASH.ld startup_stm32g474xx.o startup_stm32g474xx.o \
 	stm32g474.o trace_board.o trace_blinker.o usb.o stm32g474_gpio_init.o \
 	stm32g474_gpio_trace_blinker.o obot_std.o
 
+# add dependency to ensure that unused default settings compile correctly
+main.elf: | stm32g474_gpio_default.o stm32g474_adc_default.o
+
 
 #stm32g474.o: $(c++_header_units) #gcm.cache$(c++_headers_location)/bit.gcm
 

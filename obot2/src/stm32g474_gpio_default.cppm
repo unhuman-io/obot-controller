@@ -1,4 +1,4 @@
-eexport module stm32g474_gpio_default;
+export module stm32g474_gpio_default;
 
 import stm32g474_gpio_init;
 
@@ -269,3 +269,5 @@ export constexpr const GPIOInit gpio_settings_me81 {
     {.name = "G15", .function = "n/a", .mode = ANALOG, .otype = PUSH_PULL, .speed = LOW, .pullupd = NO_PULL, .bsrr = NO_SET, .lck = NO_LOCK, .af = AF0}
   },
 };
+
+export constinit auto gpio_regs_init = get_gpio_regs_init(gpio_settings);

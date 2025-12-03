@@ -23,6 +23,7 @@ usb.o: stm32g474.o
 stm32g474.o: stm32g474_gpio_init.o
 stm32g474_gpio_default.o: stm32g474_gpio_init.o
 stm32g474_gpio_trace_blinker.o: stm32g474_gpio_init.o
+stm32g474_adc_default.o: stm32g474_adc_init.o
 
 main.elf: STM32G474RETx_FLASH.ld startup_stm32g474xx.o startup_stm32g474xx.o \
 	stm32g474.o trace_board.o trace_blinker.o usb.o stm32g474_gpio_init.o \

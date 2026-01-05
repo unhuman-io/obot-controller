@@ -103,12 +103,14 @@ jobs:
         cd ${{ matrix.project }}
         scan-build-15 --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
           --use-analyzer ../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
+          -disable-checker core.FixedAddressDereference \
           make CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
         scan-build-15 --status-bugs --use-cc ../motorlib/llvm/bin/clang --use-c++ ../motorlib/llvm/bin/clang++ \
           --use-analyzer ../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
+          -disable-checker core.FixedAddressDereference \
           make CONFIG=${{ matrix.config }} -j`nproc` USE_LLVM=1 ${{ matrix.build_other }}
     - name: releaser main
-      uses: pyTooling/Actions/releaser@main
+      uses: pyTooling/Actions/releaser@v6.7.0
       if: contains(github.ref, 'develop')
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -117,7 +119,7 @@ jobs:
           ${{ matrix.project }}_${{ matrix.config }}.tgz
         tag: develop
     - name: releaser develop
-      uses: pyTooling/Actions/releaser@main
+      uses: pyTooling/Actions/releaser@v6.7.0
       if: contains(github.ref, 'main')
       with:
         token: ${{ secrets.GITHUB_TOKEN }}

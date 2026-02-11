@@ -37,9 +37,9 @@ SYStem.Up
 
 ; Some preferred ITM settings
 itm.clock 170MHz
-tpiu.PortSize 4
-;tpiu.SWVPrescaler 1
-trace.TraceCLOCK 170MHz
+tpiu.PortSize SWV
+tpiu.SWVPrescaler 4.
+trace.TraceCLOCK 42.5MHz
 ;itm.InterruptTrace ON
 ;itm.ON
 

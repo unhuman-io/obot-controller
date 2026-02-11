@@ -11,8 +11,8 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_default.h"
     .name = "test",
     .main_loop_param.output_encoder.cpr = 1,
-    .fast_loop_param.motor_encoder.cpr = pow(2,16),
-    .fast_loop_param.motor_encoder.rollover = pow(2,25),
+    .fast_loop_param.motor_encoder.cpr = 1 << 16,
+    .fast_loop_param.motor_encoder.rollover = 1 << 25,
     /* .fast_loop_param.vbus_gain = 3.3/4096*(100+6.34)/6.34, */
     .fast_loop_param.vbus_gain = 1.0/4096*(100+6.34)/6.34,
 #if CS_GAIN_MOD

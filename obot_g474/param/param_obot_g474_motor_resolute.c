@@ -6,8 +6,8 @@
 const Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_default.h"
 #include "param_motor.c"
-    .fast_loop_param.motor_encoder.cpr = pow(2,32),
-    .main_loop_param.output_encoder.cpr = pow(2,32),
+    .fast_loop_param.motor_encoder.cpr = 1 << 32,
+    .main_loop_param.output_encoder.cpr = 1 << 32,
     .fast_loop_param.foc_param.pi_d.kp=5,
     .fast_loop_param.foc_param.pi_d.ki=.3,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd

@@ -3,7 +3,7 @@
 #define MOTOR_ENCODER_BITS 19
 .main_loop_param.error_mask.all = ERROR_MASK_ALL & ~ERROR_MASK_MOTOR_TEMPERATURE &  ~ERROR_MASK_MOTOR_ENCODER,
 .fast_loop_param.motor_encoder.cpr = pow(2,19),
-.fast_loop_param.motor_encoder.rollover = pow(2,25),
+.fast_loop_param.motor_encoder.rollover = 1 << 25,
 .main_loop_param.output_encoder.cpr = -pow(2,17),
 .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
 .main_loop_param.output_encoder.bias = 1.273, 

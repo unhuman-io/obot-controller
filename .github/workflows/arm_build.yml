@@ -60,6 +60,8 @@ jobs:
             config: trace
           - project: obot_g474
             config: trace_6enc
+          - project: obot_g474
+            config: tmotor_driver
           # TODO: add this back
           # - project: obot_g474
           #   config: osa14_jl1

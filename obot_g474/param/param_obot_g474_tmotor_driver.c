@@ -65,6 +65,10 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
 .startup_param.motor_encoder_startup = ENCODER_VALUE,
 .startup_param.output_encoder_rollover = M_PI,
 .name = "tmotor_driver",
+#ifndef CAN_ID
 .can_id = 0x01,
+#else
+.can_id = CAN_ID,
+#endif
 .fast_loop_param.motor_encoder.cpr = 65536,
 };

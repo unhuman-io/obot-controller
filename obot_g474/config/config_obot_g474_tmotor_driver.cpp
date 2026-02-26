@@ -8,7 +8,7 @@
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #define COMMS   COMMS_CAN_USB
-#define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_1M, CAN::DataBaudRate::DATA_5M
+#define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_1M, CAN::DataBaudRate::DATA_8M
 #define CAN_NUM CAN::CAN3
 #define TMR0
 
@@ -68,6 +68,9 @@ namespace config {
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
-void config_init() {}
+void config_init() {
+    System::api.add_api_variable("can_send_decimation", new APICallbackUint16([](){ return can_communication.get_send_decimation(); },
+        [](uint16_t decimation){ can_communication.set_send_decimation(decimation); }));
+}
 
 void config_maintenance() {}

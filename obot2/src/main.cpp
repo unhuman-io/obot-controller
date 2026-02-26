@@ -85,8 +85,23 @@ int main() {
         // trace_blinker.usb.send_data(2, (uint8_t *) c, 13, true, 10'000'000);
     }
 }
-    
 
+template<typename T>
+concept UpdateFun = requires(T t) {
+    t.update();
+};
+
+template<UpdateFun... Funs>
+void update(Funs ... funs) {
+    (funs, ...).update();
+}
+
+class Blink1 {
+  public:
+    void update() {
+        trace_blinker.toggle_blue();
+    }
+} blink1;
     
 
 extern "C" void TIM1_UP_TIM16_IRQHandler() {
@@ -108,7 +123,8 @@ extern "C" void TIM2_IRQHandler() {
 }
 
 extern "C" void TIM3_IRQHandler() {
-    trace_blinker.toggle_blue();
+    //trace_blinker.toggle_blue();
+    update(blink1);
     TIM3->TIM3_SR_b.UIF = 0;
      asm("dsb":::"memory");
 }

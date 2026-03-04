@@ -5,7 +5,7 @@
 #include "../../motorlib/gpio.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma_usart.h"
 #include "../../motorlib/peripheral/stm32g4/spi_debug.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/sensors/encoders/stm32g4/a17803.h"
@@ -16,7 +16,7 @@
 using TorqueSensor = TorqueSensorBase;
 //using MotorEncoder = A17803;
 //using MotorEncoder = EncoderBase;
-using MotorEncoder = A17803_DMA<SPIDMA>;
+using MotorEncoder = A17803_DMA<SPIDMA_USART>;
 using OutputEncoder = EncoderBase;
 
 struct InitCode {
@@ -34,8 +34,15 @@ struct InitCode {
         uint32_t *etmteevr = (uint32_t *)0xE0041020;
         *etmteevr = 0x000037ef; // ON
 
-        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;
-        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI1_RX;
+        DMAMUX1_Channel0->CCR = 25;// DMA_REQUEST_USART1_TX;
+        DMAMUX1_Channel1->CCR = 24;// DMA_REQUEST_USART1_RX;
+
+        // usart1
+        RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+        GPIO_SETH(A, 8, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 7); // CK
+        GPIO_SETH(A, 9, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 7); // TX
+        GPIO_SETL(C, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 7); // RX
+
 
         GPIO_SETL(A, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // CS2
         GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); // dummy
@@ -80,11 +87,11 @@ namespace config {
     // CLK A4
     // MISO A5
     // MOSI A6
-    SPIDMA spi_dma1 {SPIDMA::SP1, cs1, DMA1_CH1, DMA1_CH2, 0, 50, 50,
-        SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL, 200};
-    SPIDMA spi_dma2 {SPIDMA::SP1, cs2, DMA1_CH1, DMA1_CH2, 0, 50, 50,
-        SPI_CR1_MSTR | (4 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPHA | SPI_CR1_CPOL, 200};
-    SPIDebug spi_debug(spi_dma1);
+    SPIDMA_USART spi_dma1 {SPIDMA_USART::SPI_USART1, cs1, DMA1_CH1, DMA1_CH2, 5'000'000, 50, 50,
+        true, true, 200};
+    SPIDMA_USART spi_dma2 {SPIDMA_USART::SPI_USART1, cs2, DMA1_CH1, DMA1_CH2, 5'000'000, 50, 50,
+        true, true, 200};
+    //SPIDebug spi_debug(spi_dma1);
 
     //A17803_DMA a17803_dma(spi_dma1, spi_dma2);
     //A17803 encoder(spi_dma1);
@@ -96,7 +103,7 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
 
 void config_init() {
-    SPIDEBUG_SET_DEBUG_API(, System::api, config::spi_debug);
+  //  SPIDEBUG_SET_DEBUG_API(, System::api, config::spi_debug);
     A17803_DMA_SET_DEBUG_API(, System::api, config::motor_encoder);
 }
 

@@ -36,6 +36,9 @@ struct InitCode {
         uint32_t *etmteevr = (uint32_t *)0xE0041020;
         *etmteevr = 0x000037ef; // ON
 
+        RCC->APB1ENR1 |= RCC_APB1ENR1_SPI2EN | RCC_APB1ENR1_SPI3EN;
+        RCC->APB2ENR |= RCC_APB2ENR_SPI4EN;
+
         SPI1->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
         // ORDER DEPENDANCE SPE set last
         SPI1->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
@@ -188,7 +191,7 @@ void config_init() {
     // config::ma782_e3.init();
     // IWDG->KR = 0xAAAA;
 
-    System::communication_.set_send_decimation(100);
+    System::communication_.set_send_decimation(10);
 }
 
 void config_maintenance() {}

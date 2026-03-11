@@ -1,7 +1,8 @@
 #define CUSTOM_SENDDATA
 #include <cstdint>
+#include <array>
 struct SendData {
-    uint32_t encoder[13];
+    std::array<uint32_t, 16> encoder;
 };
 
 #include "../param/param_obot_g474_can.h"
@@ -22,8 +23,6 @@ using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = EncoderBase;
 using OutputEncoder = EncoderBase;
 
-
-
 struct InitCode {
     InitCode() {
         // trace pins enable
@@ -39,7 +38,7 @@ struct InitCode {
         uint32_t *etmteevr = (uint32_t *)0xE0041020;
         *etmteevr = 0x000037ef; // ON
 
-        RCC->APB1ENR1 |= RCC_APB1ENR1_SPI2EN | RCC_APB1ENR1_SPI3EN;
+        RCC->APB1ENR1 |= RCC_APB1ENR1_SPI2EN | RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_USART2EN;
         RCC->APB2ENR |= RCC_APB2ENR_SPI4EN;
 
         SPI1->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
@@ -83,6 +82,17 @@ struct InitCode {
         GPIO_SETH(E, 13, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);   // miso
         GPIO_SETH(E, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);   // mosi
         GPIOE->BSRR = GPIO_BSRR_BS9 | GPIO_BSRR_BS10 | GPIO_BSRR_BS11;
+
+        USART2->CR2 = 1 << USART_CR2_STOP_Pos | USART_CR2_CLKEN | USART_CR2_LBCL | USART_CR2_MSBFIRST;
+        USART2->CR3 = 1 << USART_CR3_RXFTCFG_Pos;
+        USART2->BRR = CPU_FREQUENCY_HZ/10'000'000;
+        USART2->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
+        GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+        GPIO_SETL(D, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+        GPIO_SETL(D, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+        GPIO_SETL(D, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 7);   // mosi
+        GPIO_SETL(D, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 7);   // miso
+        GPIO_SETL(D, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 7);   // clk
     }
 };
 

@@ -7,6 +7,7 @@
 #include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#include "../../motorlib/peripheral/stm32g4/spi.h"
 #define COMMS   COMMS_CAN_USB
 #define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_1M, CAN::DataBaudRate::DATA_8M
 #define CAN_NUM CAN::CAN3
@@ -34,7 +35,7 @@ class EncoderGearRatio : public EncoderBase {
 };
 
 using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = MA732Encoder;
+using MotorEncoder = MA732Encoder<SPI>;
 using OutputEncoder = EncoderGearRatio<MotorEncoder>;
 
 // note can: sudo ip link set can0 up type can bitrate 2000000 dbitrate 10000000 fd on one-shot on restart-ms 100
@@ -61,7 +62,8 @@ namespace config {
     InitCode init_code;
 
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
-    MA732Encoder motor_encoder(*SPI3, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3]);
+    SPI spi3 {*SPI3};
+    MA732Encoder motor_encoder(spi3, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3]);
     TorqueSensor torque_sensor;
     OutputEncoder output_encoder(motor_encoder, 6);
 };

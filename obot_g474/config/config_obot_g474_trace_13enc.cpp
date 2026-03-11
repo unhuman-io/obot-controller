@@ -13,6 +13,9 @@ struct SendData {
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/sensors/encoders/ma782_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma_usart.h"
+#include "../../motorlib/peripheral/stm32g4/spi.h"
+#include "../../motorlib/peripheral/stm32g4/usart_spi.h"
 #define COMMS   COMMS_CAN
 
 using TorqueSensor = TorqueSensorBase;
@@ -92,42 +95,48 @@ namespace config {
     TorqueSensor torque_sensor;
     OutputEncoder output_encoder;
 
+    SPI spi1 {*SPI1};
+    SPI spi2 {*SPI2};
+    SPI spi3 {*SPI3};
+    SPI spi4 {*SPI4};
+    USART_SPI usart_spi2 {*USART2};
+
     GPIO gpio_cs_a1(*GPIOA, 1, GPIO::OUTPUT);
-    MA782Encoder ma782_a1(*SPI1, gpio_cs_a1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_a1(spi1, gpio_cs_a1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_a2(*GPIOA, 2, GPIO::OUTPUT);
-    MA782Encoder ma782_a2(*SPI1, gpio_cs_a2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_a2(spi1, gpio_cs_a2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_a3(*GPIOA, 3, GPIO::OUTPUT);
-    MA782Encoder ma782_a3(*SPI1, gpio_cs_a3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_a3(spi1, gpio_cs_a3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_a4(*GPIOA, 4, GPIO::OUTPUT);
-    MA782Encoder ma782_a4(*SPI1, gpio_cs_a4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_a4(spi1, gpio_cs_a4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
 
     GPIO gpio_cs_b1(*GPIOE, 9, GPIO::OUTPUT);
-    MA782Encoder ma782_b1(*SPI4, gpio_cs_b1, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder::_4096);
+    MA782Encoder ma782_b1(spi4, gpio_cs_b1, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_b2(*GPIOE, 10, GPIO::OUTPUT);
-    MA782Encoder ma782_b2(*SPI4, gpio_cs_b2, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder::_4096);
+    MA782Encoder ma782_b2(spi4, gpio_cs_b2, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_b3(*GPIOE, 11, GPIO::OUTPUT);
-    MA782Encoder ma782_b3(*SPI4, gpio_cs_b3, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder::_4096);
+    MA782Encoder ma782_b3(spi4, gpio_cs_b3, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
 
     GPIO gpio_cs_c1(*GPIOB, 10, GPIO::OUTPUT);
-    MA782Encoder ma782_c1(*SPI2, gpio_cs_c1, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder::_4096);
+    MA782Encoder ma782_c1(spi2, gpio_cs_c1, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_c2(*GPIOB, 11, GPIO::OUTPUT);
-    MA782Encoder ma782_c2(*SPI2, gpio_cs_c2, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder::_4096);
+    MA782Encoder ma782_c2(spi2, gpio_cs_c2, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_c3(*GPIOB, 12, GPIO::OUTPUT);
-    MA782Encoder ma782_c3(*SPI2, gpio_cs_c3, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder::_4096);
+    MA782Encoder ma782_c3(spi2, gpio_cs_c3, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
 
     GPIO gpio_cs_d1(*GPIOC, 7, GPIO::OUTPUT);
-    MA782Encoder ma782_d1(*SPI3, gpio_cs_d1, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder::_4096);
+    MA782Encoder ma782_d1(spi3, gpio_cs_d1, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_d2(*GPIOC, 8, GPIO::OUTPUT);
-    MA782Encoder ma782_d2(*SPI3, gpio_cs_d2, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder::_4096);
+    MA782Encoder ma782_d2(spi3, gpio_cs_d2, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs_d3(*GPIOC, 9, GPIO::OUTPUT);
-    MA782Encoder ma782_d3(*SPI3, gpio_cs_d3, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder::_4096);
+    MA782Encoder ma782_d3(spi3, gpio_cs_d3, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
 
-    // GPIO gpio_cs_e1(*GPIOD, 2, GPIO::OUTPUT);
-    // MA782Encoder ma782_e1(*SPI1, gpio_cs_e1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
-    // GPIO gpio_cs_e2(*GPIOD, 3, GPIO::OUTPUT);
-    // MA782Encoder ma782_e2(*SPI1, gpio_cs_e2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
-    // GPIO gpio_cs_e3(*GPIOD, 4, GPIO::OUTPUT);
-    // MA782Encoder ma782_e3(*SPI1, gpio_cs_e3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    GPIO gpio_cs_e1(*GPIOD, 2, GPIO::OUTPUT);
+    MA782Encoder ma782_e1(usart_spi2, gpio_cs_e1, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
+    GPIO gpio_cs_e2(*GPIOD, 3, GPIO::OUTPUT);
+    MA782Encoder ma782_e2(usart_spi2, gpio_cs_e2, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
+    GPIO gpio_cs_e3(*GPIOD, 4, GPIO::OUTPUT);
+    MA782Encoder ma782_e3(usart_spi2, gpio_cs_e3, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
@@ -150,9 +159,9 @@ void config_init() {
     MA7XX_SET_DEBUG_VARIABLES("md2", System::api, config::ma782_d2);
     MA7XX_SET_DEBUG_VARIABLES("md3", System::api, config::ma782_d3);
 
-    // MA7XX_SET_DEBUG_VARIABLES("me1", System::api, config::ma782_e1);
-    // MA7XX_SET_DEBUG_VARIABLES("me2", System::api, config::ma782_e2);
-    // MA7XX_SET_DEBUG_VARIABLES("me3", System::api, config::ma782_e3);
+    MA7XX_SET_DEBUG_VARIABLES("me1", System::api, config::ma782_e1);
+    MA7XX_SET_DEBUG_VARIABLES("me2", System::api, config::ma782_e2);
+    MA7XX_SET_DEBUG_VARIABLES("me3", System::api, config::ma782_e3);
 
     config::ma782_a1.init();
     IWDG->KR = 0xAAAA;
@@ -184,12 +193,12 @@ void config_init() {
     config::ma782_d3.init();
     IWDG->KR = 0xAAAA;
 
-    // config::ma782_e1.init();
-    // IWDG->KR = 0xAAAA;
-    // config::ma782_e2.init();
-    // IWDG->KR = 0xAAAA;
-    // config::ma782_e3.init();
-    // IWDG->KR = 0xAAAA;
+    config::ma782_e1.init();
+    IWDG->KR = 0xAAAA;
+    config::ma782_e2.init();
+    IWDG->KR = 0xAAAA;
+    config::ma782_e3.init();
+    IWDG->KR = 0xAAAA;
 
     System::communication_.set_send_decimation(10);
 }
@@ -201,37 +210,37 @@ void load_send_data(const MainLoop &main_loop, SendData * const data) {
     config::ma782_b1.trigger();
     config::ma782_c1.trigger();
     config::ma782_d1.trigger();
-  //  config::ma782_e1.trigger();
+    config::ma782_e1.trigger();
 
     data->encoder[0] = config::ma782_a1.read();
     data->encoder[4] = config::ma782_b1.read();
     data->encoder[7] = config::ma782_c1.read();
     data->encoder[10] = config::ma782_d1.read();
-  //  data->encoder[13] = config::ma782_e1.read();
+    data->encoder[13] = config::ma782_e1.read();
 
     config::ma782_a2.trigger();
     config::ma782_b2.trigger();
     config::ma782_c2.trigger();
     config::ma782_d2.trigger();
- //   config::ma782_e2.trigger();
+    config::ma782_e2.trigger();
 
     data->encoder[1] = config::ma782_a2.read();
     data->encoder[5] = config::ma782_b2.read();
     data->encoder[8] = config::ma782_c2.read();
     data->encoder[11] = config::ma782_d2.read();
-  //  data->encoder[14] = config::ma782_e2.read();
+    data->encoder[14] = config::ma782_e2.read();
 
     config::ma782_a3.trigger();
     config::ma782_b3.trigger();
     config::ma782_c3.trigger();
     config::ma782_d3.trigger();
-  //  config::ma782_e3.trigger();
+    config::ma782_e3.trigger();
 
     data->encoder[2] = config::ma782_a3.read();
     data->encoder[6] = config::ma782_b3.read();
     data->encoder[9] = config::ma782_c3.read();
     data->encoder[12] = config::ma782_d3.read();
- //   data->encoder[15] = config::ma782_e3.read();
+    data->encoder[15] = config::ma782_e3.read();
 
     config::ma782_a4.trigger();
     data->encoder[3] = config::ma782_a4.read();

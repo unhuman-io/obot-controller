@@ -100,6 +100,10 @@ jobs:
       run: |
         mv ${{ matrix.project }}/build/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
         mv ${{ matrix.project }}/build/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz || true
+    - name: install llvm
+      if: ${{ matrix.project == 'obot2' }}
+      run: |
+        motorlib/scripts/install_llvm.sh
     - name: make llvm
       run: |
         make USE_LLVM=1 -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` ${{ matrix.build_other }}

@@ -62,7 +62,7 @@ jobs:
             config: trace_6enc
           - project: obot2
             config: main
-            build_other: GCC_PATH=/gcc/bin/
+            build_other: GCC_PATH=
           - project: obot_g474
             config: tmotor_driver
           # TODO: add this back
@@ -100,10 +100,11 @@ jobs:
       run: |
         mv ${{ matrix.project }}/build/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
         mv ${{ matrix.project }}/build/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz || true
-    - name: install llvm
+    - name: install llvm and gcc
       if: ${{ matrix.project == 'obot2' }}
       run: |
         motorlib/scripts/install_llvm.sh
+        motorlib/scripts/install_gcc.sh
     - name: make llvm
       run: |
         make USE_LLVM=1 -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` ${{ matrix.build_other }}

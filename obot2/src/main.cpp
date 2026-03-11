@@ -65,7 +65,11 @@ int main() {
     TIM2->TIM2_CR1_b.CEN = 1;
     TIM3->TIM3_CR1_b.CEN = 1;
     uint8_t i = 0;
-    asm("vldr.f32 s16, =0x12345678");
+    asm volatile (
+        "ldr r0, =0x12345678 \n"
+        "vmov s16, r0        \n"
+        : : : "r0", "s16"
+    );
     asm("bkpt #0");
     while(1) {
         static uint32_t counter = 0;

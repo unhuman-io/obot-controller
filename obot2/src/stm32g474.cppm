@@ -10,7 +10,7 @@ export {
 }
 
 export {
-    using ::IRQn_Type;
+    using enum ::IRQn_Type;
 }
 
 // from core_cm4.h

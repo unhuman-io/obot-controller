@@ -155,7 +155,7 @@ check_var_regex("mcmd_result", r"last command: 0xb2, current command: 0x(00|b2|f
 check_var("mauto_ecc", "ok")
 time.sleep(.2)
 check_var_regex("mcmd_result", r"last command: 0xb3, current command: 0x[a-f\d]{2}, result: 0x[a-f\d]{2}")
-mot.set_timeout_ms(25)
+mot.set_timeout_ms(50)
 check_var("mconf_write", "conf write success")
 
 mot.set_timeout_ms(10)

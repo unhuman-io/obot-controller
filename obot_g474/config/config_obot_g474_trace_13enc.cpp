@@ -98,7 +98,7 @@ struct InitCode {
 
 namespace config {
     const uint32_t main_loop_frequency = 1000;    
-    const uint32_t pwm_frequency = 12000;
+    const uint32_t pwm_frequency = 20000;
     InitCode init_code;
 
     MotorEncoder motor_encoder;

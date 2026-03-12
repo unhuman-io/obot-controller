@@ -64,9 +64,9 @@ struct InitCode {
         SPI3->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
         // ORDER DEPENDANCE SPE set last
         SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;    // baud = clock/16
-        GPIO_SETL(B, 7, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
-        GPIO_SETH(B, 8, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
-        GPIO_SETH(B, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+        GPIO_SETL(C, 7, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+        GPIO_SETH(C, 8, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
+        GPIO_SETH(C, 9, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
         GPIO_SETH(C, 10, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 6);   // clk
         GPIO_SETH(C, 11, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 6);   // miso
         GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 6);   // mosi
@@ -83,16 +83,18 @@ struct InitCode {
         GPIO_SETH(E, 14, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 5);   // mosi
         GPIOE->BSRR = GPIO_BSRR_BS9 | GPIO_BSRR_BS10 | GPIO_BSRR_BS11;
 
-        USART2->CR2 = 1 << USART_CR2_STOP_Pos | USART_CR2_CLKEN | USART_CR2_LBCL | USART_CR2_MSBFIRST;
+        USART2->CR2 = 0 << USART_CR2_STOP_Pos | USART_CR2_CLKEN | USART_CR2_LBCL | USART_CR2_MSBFIRST;
+        // note stop = 1 seems to have issues with receive
         USART2->CR3 = 1 << USART_CR3_RXFTCFG_Pos;
         USART2->BRR = CPU_FREQUENCY_HZ/10'000'000;
         USART2->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
         GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
         GPIO_SETL(D, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
         GPIO_SETL(D, 4, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
-        GPIO_SETL(D, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 7);   // mosi
-        GPIO_SETL(D, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 7);   // miso
-        GPIO_SETL(D, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::LOW, 7);   // clk
+        GPIO_SETL(D, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 7);   // mosi
+        GPIO_SETL(D, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 7);   // miso
+        GPIO_SETL(D, 7, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 7);   // clk
+        GPIOD->BSRR = GPIO_BSRR_BS2 | GPIO_BSRR_BS3 | GPIO_BSRR_BS4;
     }
 };
 
@@ -210,7 +212,7 @@ void config_init() {
     config::ma782_e3.init();
     IWDG->KR = 0xAAAA;
 
-    System::communication_.set_send_decimation(10);
+    System::communication_.set_send_decimation(2);
 }
 
 void config_maintenance() {}
@@ -222,11 +224,11 @@ void load_send_data(const MainLoop &main_loop, SendData * const data) {
     config::ma782_d1.trigger();
     config::ma782_e1.trigger();
 
-    data->encoder[0] = config::ma782_a1.read();
-    data->encoder[4] = config::ma782_b1.read();
-    data->encoder[7] = config::ma782_c1.read();
-    data->encoder[10] = config::ma782_d1.read();
-    data->encoder[13] = config::ma782_e1.read();
+    data->encoder[3] = config::ma782_a1.read();
+    data->encoder[6] = config::ma782_b1.read();
+    data->encoder[9] = config::ma782_c1.read();
+    data->encoder[12] = config::ma782_d1.read();
+    data->encoder[15] = config::ma782_e1.read();
 
     config::ma782_a2.trigger();
     config::ma782_b2.trigger();
@@ -234,7 +236,7 @@ void load_send_data(const MainLoop &main_loop, SendData * const data) {
     config::ma782_d2.trigger();
     config::ma782_e2.trigger();
 
-    data->encoder[1] = config::ma782_a2.read();
+    data->encoder[2] = config::ma782_a2.read();
     data->encoder[5] = config::ma782_b2.read();
     data->encoder[8] = config::ma782_c2.read();
     data->encoder[11] = config::ma782_d2.read();
@@ -246,13 +248,13 @@ void load_send_data(const MainLoop &main_loop, SendData * const data) {
     config::ma782_d3.trigger();
     config::ma782_e3.trigger();
 
-    data->encoder[2] = config::ma782_a3.read();
-    data->encoder[6] = config::ma782_b3.read();
-    data->encoder[9] = config::ma782_c3.read();
-    data->encoder[12] = config::ma782_d3.read();
-    data->encoder[15] = config::ma782_e3.read();
+    data->encoder[1] = config::ma782_a3.read();
+    data->encoder[4] = config::ma782_b3.read();
+    data->encoder[7] = config::ma782_c3.read();
+    data->encoder[10] = config::ma782_d3.read();
+    data->encoder[13] = config::ma782_e3.read();
 
     config::ma782_a4.trigger();
-    data->encoder[3] = config::ma782_a4.read();
+    data->encoder[0] = config::ma782_a4.read();
 
 }

@@ -154,26 +154,26 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
 
 void config_init() {
-    MA7XX_SET_DEBUG_VARIABLES("ma1", System::api, config::ma782_a1);
-    MA7XX_SET_DEBUG_VARIABLES("ma2", System::api, config::ma782_a2);
-    MA7XX_SET_DEBUG_VARIABLES("ma3", System::api, config::ma782_a3);
-    MA7XX_SET_DEBUG_VARIABLES("ma4", System::api, config::ma782_a4);
+    config::ma782_a1.add_debug_variables<"ma1">(System::api, System::communication_);
+    config::ma782_a2.add_debug_variables<"ma2">(System::api, System::communication_);
+    config::ma782_a3.add_debug_variables<"ma3">(System::api, System::communication_);
+    config::ma782_a4.add_debug_variables<"ma4">(System::api, System::communication_);
 
-    MA7XX_SET_DEBUG_VARIABLES("mb1", System::api, config::ma782_b1);
-    MA7XX_SET_DEBUG_VARIABLES("mb2", System::api, config::ma782_b2);
-    MA7XX_SET_DEBUG_VARIABLES("mb3", System::api, config::ma782_b3);
+    config::ma782_b1.add_debug_variables<"mb1">(System::api, System::communication_);
+    config::ma782_b2.add_debug_variables<"mb2">(System::api, System::communication_);
+    config::ma782_b3.add_debug_variables<"mb3">(System::api, System::communication_);
 
-    MA7XX_SET_DEBUG_VARIABLES("mc1", System::api, config::ma782_c1);
-    MA7XX_SET_DEBUG_VARIABLES("mc2", System::api, config::ma782_c2);
-    MA7XX_SET_DEBUG_VARIABLES("mc3", System::api, config::ma782_c3);
+    config::ma782_c1.add_debug_variables<"mc1">(System::api, System::communication_);
+    config::ma782_c2.add_debug_variables<"mc2">(System::api, System::communication_);
+    config::ma782_c3.add_debug_variables<"mc3">(System::api, System::communication_);
 
-    MA7XX_SET_DEBUG_VARIABLES("md1", System::api, config::ma782_d1);
-    MA7XX_SET_DEBUG_VARIABLES("md2", System::api, config::ma782_d2);
-    MA7XX_SET_DEBUG_VARIABLES("md3", System::api, config::ma782_d3);
+    config::ma782_d1.add_debug_variables<"md1">(System::api, System::communication_);
+    config::ma782_d2.add_debug_variables<"md2">(System::api, System::communication_);
+    config::ma782_d3.add_debug_variables<"md3">(System::api, System::communication_);
 
-    MA7XX_SET_DEBUG_VARIABLES("me1", System::api, config::ma782_e1);
-    MA7XX_SET_DEBUG_VARIABLES("me2", System::api, config::ma782_e2);
-    MA7XX_SET_DEBUG_VARIABLES("me3", System::api, config::ma782_e3);
+    config::ma782_e1.add_debug_variables<"me1">(System::api, System::communication_);
+    config::ma782_e2.add_debug_variables<"me2">(System::api, System::communication_);
+    config::ma782_e3.add_debug_variables<"me3">(System::api, System::communication_);
 
     config::ma782_a1.init();
     IWDG->KR = 0xAAAA;

@@ -77,12 +77,12 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
 
 void config_init() {
-    MA7XX_SET_DEBUG_VARIABLES("m1", System::api, config::ma782_1);
-    MA7XX_SET_DEBUG_VARIABLES("m2", System::api, config::ma782_2);
-    MA7XX_SET_DEBUG_VARIABLES("m3", System::api, config::ma782_3);
-    MA7XX_SET_DEBUG_VARIABLES("m4", System::api, config::ma782_4);
-    MA7XX_SET_DEBUG_VARIABLES("m5", System::api, config::ma782_5);
-    MA7XX_SET_DEBUG_VARIABLES("m6", System::api, config::ma782_6);
+    config::ma782_1.add_debug_variables<"m1">(System::api, System::communication_);
+    config::ma782_2.add_debug_variables<"m2">(System::api, System::communication_);
+    config::ma782_3.add_debug_variables<"m3">(System::api, System::communication_);
+    config::ma782_4.add_debug_variables<"m4">(System::api, System::communication_);
+    config::ma782_5.add_debug_variables<"m5">(System::api, System::communication_);
+    config::ma782_6.add_debug_variables<"m6">(System::api, System::communication_);
 
     config::ma782_1.init();
     IWDG->KR = 0xAAAA;

@@ -6,10 +6,11 @@
 #include "../../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/sensor_multiplex.h"
+#include "../../motorlib/peripheral/stm32g4/spi.h"
 
-using TorqueSensor = TorqueSensorMultiplex<SPITorque, MA782Encoder>;
-using MotorEncoder = MA782Encoder;
-using OutputEncoder = TorqueSensorMultiplex<SPITorque, MA782Encoder>::SecondarySensor;
+using TorqueSensor = TorqueSensorMultiplex<SPITorque, MA782Encoder<SPI>>;
+using MotorEncoder = MA782Encoder<SPI>;
+using OutputEncoder = TorqueSensorMultiplex<SPITorque, MA782Encoder<SPI>>::SecondarySensor;
 
 struct InitCode {
     InitCode() {
@@ -25,13 +26,15 @@ namespace config {
     InitCode init_code;
 
     GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
-    MA782Encoder motor_encoder(*SPI1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
+    SPI spi1 {*SPI1};
+    MA782Encoder motor_encoder(spi1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
     GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT); // spi3 cs1
     SPITorque torque_sensor_direct(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2,  
         SPIDMA::spi_pause[SPIDMA::SP3], 0);
     GPIO output_encoder_cs(*GPIOB, 4, GPIO::OUTPUT); // spi3 cs2
-    MA782Encoder output_encoder_direct(*SPI3, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3], 119);
-    TorqueSensorMultiplex<SPITorque, MA782Encoder> torque_sensor(torque_sensor_direct, output_encoder_direct, 5);
+    SPI spi3 {*SPI3};
+    MA782Encoder output_encoder_direct(spi3, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3], 119);
+    TorqueSensorMultiplex<SPITorque, MA782Encoder<SPI>> torque_sensor(torque_sensor_direct, output_encoder_direct, 5);
     OutputEncoder &output_encoder = torque_sensor.secondary();
 };
 

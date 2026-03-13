@@ -13,6 +13,7 @@ struct SendData {
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/sensors/encoders/ma782_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../../motorlib/peripheral/stm32g4/spi.h"
 #define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
@@ -59,17 +60,18 @@ namespace config {
     OutputEncoder output_encoder;
 
     GPIO gpio_cs1(*GPIOA, 0, GPIO::OUTPUT);
-    MA782Encoder ma782_1(*SPI1, gpio_cs1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    SPI spi1 {*SPI1};
+    MA782Encoder ma782_1(spi1, gpio_cs1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs2(*GPIOA, 1, GPIO::OUTPUT);
-    MA782Encoder ma782_2(*SPI1, gpio_cs2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_2(spi1, gpio_cs2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs3(*GPIOA, 2, GPIO::OUTPUT);
-    MA782Encoder ma782_3(*SPI1, gpio_cs3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_3(spi1, gpio_cs3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs4(*GPIOA, 3, GPIO::OUTPUT);
-    MA782Encoder ma782_4(*SPI1, gpio_cs4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_4(spi1, gpio_cs4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs5(*GPIOA, 4, GPIO::OUTPUT);
-    MA782Encoder ma782_5(*SPI1, gpio_cs5, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_5(spi1, gpio_cs5, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
     GPIO gpio_cs6(*GPIOA, 8, GPIO::OUTPUT);
-    MA782Encoder ma782_6(*SPI1, gpio_cs6, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder::_4096);
+    MA782Encoder ma782_6(spi1, gpio_cs6, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"

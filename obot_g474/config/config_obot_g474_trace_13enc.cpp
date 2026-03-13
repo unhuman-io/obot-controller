@@ -12,11 +12,14 @@ struct SendData {
 #include "../../motorlib/gpio.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#include "../../motorlib/sensors/encoders/ma782_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma_usart.h"
 #include "../../motorlib/peripheral/stm32g4/spi.h"
 #include "../../motorlib/peripheral/stm32g4/usart_spi.h"
+#include "../../motorlib/parameter_api.h"
+
+import ma782_encoder;
+
 #define COMMS   COMMS_CAN
 
 using TorqueSensor = TorqueSensorBase;

@@ -4,10 +4,13 @@
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/spi.h"
+#include "../../motorlib/parameter_api.h"
+
+import ma7xx_encoder;
+
 #define COMMS   COMMS_CAN_USB
 #define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_1M, CAN::DataBaudRate::DATA_8M
 #define CAN_NUM CAN::CAN3

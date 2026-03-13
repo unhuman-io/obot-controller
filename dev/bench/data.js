@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773439230230,
+  "lastUpdate": 1773440531769,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -134927,6 +134927,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarktotal_uptime",
             "value": 11231053,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1067.27002,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f30065f19c99ab747f1b4fffb9d90ef22d0248c1",
+          "message": "update projects for ma7xx debug (#337)",
+          "timestamp": "2026-03-13T15:12:00-07:00",
+          "tree_id": "6722e9fa754e8e5d567ec45d95cc47e28b68be53",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/f30065f19c99ab747f1b4fffb9d90ef22d0248c1"
+        },
+        "date": 1773440530488,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles",
+            "value": 874,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period",
+            "value": 3425,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles",
+            "value": 3503,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period",
+            "value": 17020,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 3047.96,
+            "unit": "cycles",
+            "extra": "3519 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3398.94,
+            "unit": "cycles",
+            "extra": "3433 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 869.466,
+            "unit": "cycles",
+            "extra": "874 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17001.3,
+            "unit": "cycles",
+            "extra": "17024 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 219044,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 6916,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 219628,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 8424,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 86504,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 3281,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 7260,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used",
+            "value": 1505,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime",
+            "value": 11232314,
             "unit": "bytes",
             "extra": "0 times"
           },

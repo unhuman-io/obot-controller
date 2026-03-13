@@ -36,7 +36,7 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    MA7XX_SET_DEBUG_VARIABLES("j", System::api, config::output_encoder);
+    config::output_encoder.add_debug_variables<"j">(System::api, System::communication_);
 
     System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
 }

@@ -9,3 +9,8 @@ build/
 boost_g474/.vscode/
 
 package/
+
+gcm.cache/
+
+# lauterbach
+*.bak

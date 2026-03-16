@@ -1,12 +1,13 @@
 #include "../param/param_obot_g474_osa.h"
 #include "st_device.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-#include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
-#include "../../motorlib/sensors/encoders/ma782_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/spi_torque.h"
 #include "../../motorlib/gpio.h"
 #include "../../motorlib/sensor_multiplex.h"
 #include "../../motorlib/peripheral/stm32g4/spi.h"
+#include "../../motorlib/parameter_api.h"
+
+import ma782_encoder;
 
 using TorqueSensor = TorqueSensorMultiplex<SPITorque, MA782Encoder<SPI>>;
 using MotorEncoder = MA782Encoder<SPI>;

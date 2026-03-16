@@ -25,3 +25,4 @@ TARGET_MCU := stm32g474
 
 include ../motorlib/make/main.mk
 
+include config/Makefile

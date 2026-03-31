@@ -90,8 +90,6 @@ using Driver = DriverMPS;
 #include "../../motorlib/peripheral/protocol.h"
 #include "../../motorlib/spi_communication.h"
 
-HardwareBrakeBase MainLoop::no_brake_;
-
 namespace config
 {
     static_assert(((double)CPU_FREQUENCY_HZ * 8 / 2) / pwm_frequency < 65535); // check pwm frequency

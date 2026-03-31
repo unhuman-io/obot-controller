@@ -107,8 +107,6 @@ using Driver = DriverMPS;
 #include "../../motorlib/peripheral/stm32g4/temp_sensor.h"
 #include "../../motorlib/peripheral/stm32g4/max31875.h"
 
-HardwareBrakeBase MainLoop::no_brake_;
-
 namespace config
 {
     static_assert(((double)CPU_FREQUENCY_HZ * 8 / 2) / pwm_frequency < 65535); // check pwm frequency

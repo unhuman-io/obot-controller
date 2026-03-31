@@ -18,9 +18,15 @@
       "description": "Configures the project using a custom ARM toolchain",
       "inherits": "base",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/motorlib/cmake/gcc_toolchain.cmake"
       }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "arm-cross-compile",
+      "configurePreset": "arm-cross-compile"
     }
   ]
 }

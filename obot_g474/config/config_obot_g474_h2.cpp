@@ -10,7 +10,7 @@
 
 const Param * const param = (const Param * const) 0x8060000;
 const Calibration * const calibration = (const Calibration * const) 0x8070000;
-const char * name = param->name;
+extern const char * const name = param->name;
 
 #ifndef MOTOR_ENCODER_BITS
 #define MOTOR_ENCODER_BITS 12

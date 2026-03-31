@@ -13,20 +13,32 @@
       "binaryDir": "${sourceDir}/build/${presetName}"
     },
     {
-      "name": "arm-cross-compile",
-      "displayName": "ARM Cross-Compile Toolchain",
-      "description": "Configures the project using a custom ARM toolchain",
+      "name": "gcc",
+      "displayName": "GCC Cross-Compile Toolchain",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/motorlib/cmake/gcc_toolchain.cmake"
       }
+    },
+    {
+      "name": "llvm",
+      "displayName": "LLVM Cross-Compile Toolchain",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/motorlib/cmake/llvm_toolchain.cmake"
+      }
     }
   ],
   "buildPresets": [
     {
-      "name": "arm-cross-compile",
-      "configurePreset": "arm-cross-compile"
+      "name": "gcc",
+      "configurePreset": "gcc"
+    },
+        {
+      "name": "llvm",
+      "configurePreset": "llvm"
     }
   ]
 }

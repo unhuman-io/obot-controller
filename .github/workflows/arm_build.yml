@@ -74,10 +74,11 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
-    - name: install scan-build
+    - name: install dependencies
       run: |
         apt-get update -qq
         apt-get install -y -qq clang-tools-20 cmake ninja-build
+        ./motorlib/scripts/install_llvm.sh
     - name: cmake ${{ matrix.project }} ${{ matrix.config }}
       run: |
         git config --global --add safe.directory '*'

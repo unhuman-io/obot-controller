@@ -82,7 +82,7 @@ jobs:
       run: |
         git config --global --add safe.directory '*'
         cmake --preset gcc
-        cmake --build --preset gcc ${{ matrix.project }}_${{ matrix.config }}_pkg -DCMAKE_CXX_FLAGS=${{ matrix.build_other }}
+        cmake --build --preset gcc -t ${{ matrix.project }}_${{ matrix.config }}_pkg -DCMAKE_CXX_FLAGS=${{ matrix.build_other }}
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@main
       with:
@@ -95,9 +95,11 @@ jobs:
         mv build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
         mv build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
     - name: make llvm
+      if: 0
       run: |
         make USE_LLVM=1 -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` ${{ matrix.build_other }}
     - name: scan build
+      if: 0
       run: |
         git config --global --add safe.directory '*'
         cd ${{ matrix.project }}

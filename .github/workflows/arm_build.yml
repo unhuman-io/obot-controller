@@ -21,12 +21,12 @@ jobs:
             config: nucleo_uart
           - project: obot_g474
             config: nucleo_uart_obot
-            build_other: C_DEFS="-DCOMMS_UART_OBOT"
+            build_other: -DCMAKE_CXX_FLAGS="-DCOMMS_UART_OBOT"
           - project: obot_g474
             config: nucleo_spi
           - project: obot_g474
             config: motor_enc
-            build_other: CALIBRATION_FILE=../calibration/obot_g474/motor_enc/cal.c
+            build_other: #CALIBRATION_FILE=../calibration/obot_g474/motor_enc/cal.c
           - project: obot_g474
             config: motor_wheel
           - project: obot_g474
@@ -43,7 +43,7 @@ jobs:
             config: motor_aksim
           - project: obot_g474
             config: motor_aksim_19_17
-            build_other: C_DEFS="-DMAX11254_TORQUE_SENSOR" # MR2
+            build_other: -DCMAKE_CXX_FLAGS="-DMAX11254_TORQUE_SENSOR" # MR2
           - project: obot_g474
             config: motor_pz2 # MR1
           - project: obot_g474
@@ -82,7 +82,7 @@ jobs:
       run: |
         git config --global --add safe.directory '*'
         cmake --preset gcc
-        cmake --build --preset gcc -t ${{ matrix.project }}_${{ matrix.config }}_pkg -DCMAKE_CXX_FLAGS=${{ matrix.build_other }}
+        cmake --build --preset gcc -t ${{ matrix.project }}_${{ matrix.config }}_pkg ${{ matrix.build_other }}
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@main
       with:
@@ -94,10 +94,10 @@ jobs:
       run: |
         mv build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
         mv build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
-    - name: make llvm
-      if: 0
+    - name: cmake llvm
       run: |
-        make USE_LLVM=1 -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` ${{ matrix.build_other }}
+        cmake --preset llvm
+        cmake --build --preset llvm -t ${{ matrix.project }}_${{ matrix.config }}_pkg ${{ matrix.build_other }}
     - name: scan build
       if: 0
       run: |

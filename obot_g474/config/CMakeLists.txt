@@ -23,8 +23,29 @@ set(OBOT_CONFIGS
    # motor_max11270
    # motor_pz2_2
     motor_pz2
+   # motor_qia128_spi
+    motor_resolute_max11158
+    motor_resolute
+   # motor_resolute2
+    motor_resolute3
+    motor_timing
+    motor_wheel
+    nucleo_spi
+    nucleo_uart
+    nucleo_uart_obot
+    #osa_enc
+    #osa14_jl1
+    #osa14_standalone
+    #template
+    tmotor_driver
+    trace_6enc
+    trace_13enc
+    trace_can
+    trace_spidebug
+    #trace_test
+    trace_usartdebug
+    trace
 
-    
 )
 
 # foreach(cfg IN LISTS OBOT_CONFIGS)
@@ -101,7 +122,7 @@ foreach(cfg IN LISTS OBOT_CONFIGS)
     )
 
     # 5. Final Targets
-    add_custom_target(${cfg}_pkg DEPENDS ${tgz_file})
+    add_custom_target(obot_g474_${cfg}_pkg DEPENDS ${tgz_file})
 
     add_custom_target(load_${cfg}
         COMMAND ${load_script}
@@ -111,6 +132,10 @@ foreach(cfg IN LISTS OBOT_CONFIGS)
 
 endforeach()
 
+# 1. Prepend the family name
+list(TRANSFORM OBOT_CONFIGS PREPEND "obot_g474_")
+
+# 2. Append the target suffix and output to the new variable
 list(TRANSFORM OBOT_CONFIGS APPEND "_pkg" OUTPUT_VARIABLE ALL_OBOT_PKGS)
 
 # 2. Feed that list directly into the master target

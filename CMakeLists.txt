@@ -4,6 +4,9 @@ project(obot CXX C ASM)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
 
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g3 -DNDEBUG")
+
 # Turning off extensions avoids an issue with the clang 16 compiler
 # clang 17 and greater can avoid this setting
 #set(CMAKE_CXX_EXTENSIONS OFF)

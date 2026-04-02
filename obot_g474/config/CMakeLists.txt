@@ -48,23 +48,44 @@ set(OBOT_CONFIGS
 
 )
 
-# foreach(cfg IN LISTS OBOT_CONFIGS)
-#     add_executable(${cfg}.elf config_obot_g474_${cfg}.cpp ../param/param_obot_g474_${cfg}.c)
-#     target_link_libraries(${cfg}.elf PRIVATE motorlib)
-#     target_compile_definitions(${cfg}.elf
-#         PRIVATE
-#             CONFIG=\"${cfg}\"
-#     )
-# 
-#     add_custom_command(OUTPUT ${cfg}.binp
-#         DEPENDS ${cfg}.elf
-#         COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${cfg}.elf> $<TARGET_FILE_DIR:${cfg}.elf>/${cfg}.bin
-#         COMMENT "Generating ${cfg}.bin..."
-#     )
-#     add_custom_target(${cfg}_generate_bin ALL
-#         DEPENDS ${cfg}.bin
-#     )
-# endforeach()
+function(add_obot_param_target SOURCE_FILE)
+    # Get the filename without extension (e.g., "motor_resolute")
+    get_filename_component(FILE_BASE ${SOURCE_FILE} NAME_WLE)
+    message(INFO ${SOURCE_FILE} ${FILE_BASE})
+    
+    set(TGT_NAME "${FILE_BASE}")
+    set(BIN_OUT  "${CMAKE_CURRENT_BINARY_DIR}/${FILE_BASE}.bin")
+    
+    # 1. Create the data-only executable
+    add_executable(${TGT_NAME} EXCLUDE_FROM_ALL ${SOURCE_FILE})
+    target_compile_definitions(${TGT_NAME}
+        PUBLIC
+            OBOT_HASH=\"${OBOT_HASH}\"
+    )
+    # 3. Strip LTO and disable standard startup
+    set_target_properties(${TGT_NAME} PROPERTIES 
+        INTERPROCEDURAL_OPTIMIZATION FALSE
+        INTERPROCEDURAL_OPTIMIZATION_RELEASE FALSE
+        INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO FALSE
+        INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL FALSE
+    )
+
+    target_link_options(${TGT_NAME} PRIVATE 
+        "-nostartfiles" 
+        "-nodefaultlibs" 
+        "-Wl,--entry=0"
+    )
+
+    # 4. Binary Extraction
+    add_custom_command(
+        TARGET ${TGT_NAME} POST_BUILD
+        COMMAND ${CMAKE_OBJCOPY} -O binary -S -j flash_param $<TARGET_FILE:${TGT_NAME}> ${BIN_OUT}
+        COMMENT "Generated Parameter Binary: ${BIN_OUT}"
+        VERBATIM
+    )
+endfunction()
+
+
 foreach(cfg IN LISTS OBOT_CONFIGS)
     set(tgt ${cfg}.elf)
     
@@ -78,10 +99,12 @@ foreach(cfg IN LISTS OBOT_CONFIGS)
     add_executable(${tgt} EXCLUDE_FROM_ALL config_obot_g474_${cfg}.cpp ../param/param_obot_g474_${cfg}.c)
     target_link_libraries(${tgt} PRIVATE motorlib)
     target_compile_definitions(${tgt} PRIVATE CONFIG=\"${cfg}\")
+
     set_source_files_properties(
         ../param/param_obot_g474_${cfg}.c
-        PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE
+        PROPERTIES COMPILE_OPTIONS "-fno-lto"
     )
+    add_obot_param_target(../param/param_obot_g474_${cfg}.c)
 
     # 3. Generate binary variations
     add_custom_command(OUTPUT ${bin_full} ${bin_no_param}

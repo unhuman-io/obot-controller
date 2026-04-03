@@ -26,7 +26,7 @@ jobs:
             config: nucleo_spi
           - project: obot_g474
             config: motor_enc
-            build_other: #CALIBRATION_FILE=../calibration/obot_g474/motor_enc/cal.c
+            build_other: -DCALIBRATION_FILE=../calibration/obot_g474/motor_enc/cal.c
           - project: obot_g474
             config: motor_wheel
           - project: obot_g474
@@ -82,8 +82,8 @@ jobs:
     - name: cmake ${{ matrix.project }} ${{ matrix.config }}
       run: |
         git config --global --add safe.directory '*'
-        cmake --preset gcc
-        cmake --build --preset gcc -t ${{ matrix.project }}_${{ matrix.config }}_pkg ${{ matrix.build_other }}
+        cmake --preset gcc ${{ matrix.build_other }}
+        cmake --build --preset gcc -t ${{ matrix.project }}_${{ matrix.config }}_pkg
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@main
       with:
@@ -97,8 +97,8 @@ jobs:
         mv build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
     - name: cmake llvm
       run: |
-        cmake --preset llvm
-        cmake --build --preset llvm -t ${{ matrix.project }}_${{ matrix.config }}_pkg ${{ matrix.build_other }}
+        cmake --preset llvm ${{ matrix.build_other }}
+        cmake --build --preset llvm -t ${{ matrix.project }}_${{ matrix.config }}_pkg
     - name: scan build
       if: 0
       run: |

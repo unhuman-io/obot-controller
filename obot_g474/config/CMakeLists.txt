@@ -28,6 +28,7 @@ set(OBOT_CONFIGS
     motor_resolute
    # motor_resolute2
     motor_resolute3
+    motor_template
     motor_timing
     motor_wheel
     nucleo_spi
@@ -36,6 +37,7 @@ set(OBOT_CONFIGS
     #osa_enc
     #osa14_jl1
     #osa14_standalone
+    osa14
     #template
     tmotor_driver
     trace_6enc
@@ -51,7 +53,6 @@ set(OBOT_CONFIGS
 function(add_obot_param_target SOURCE_FILE)
     # Get the filename without extension (e.g., "motor_resolute")
     get_filename_component(FILE_BASE ${SOURCE_FILE} NAME_WLE)
-    message(INFO ${SOURCE_FILE} ${FILE_BASE})
     
     set(TGT_NAME "${FILE_BASE}")
     set(BIN_OUT  "${CMAKE_CURRENT_BINARY_DIR}/${FILE_BASE}.bin")
@@ -96,12 +97,13 @@ foreach(cfg IN LISTS OBOT_CONFIGS)
     set(tgz_file ${CMAKE_CURRENT_BINARY_DIR}/${cfg}.tgz)
 
     # 2. Define the target FIRST
-    add_executable(${tgt} EXCLUDE_FROM_ALL config_obot_g474_${cfg}.cpp ../param/param_obot_g474_${cfg}.c)
+    add_executable(${tgt} EXCLUDE_FROM_ALL config_obot_g474_${cfg}.cpp ../param/param_obot_g474_${cfg}.c ${CALIBRATION_FILE})
     target_link_libraries(${tgt} PRIVATE motorlib)
     target_compile_definitions(${tgt} PRIVATE CONFIG=\"${cfg}\")
 
     set_source_files_properties(
         ../param/param_obot_g474_${cfg}.c
+        ${CALIBRATION_FILE}
         PROPERTIES COMPILE_OPTIONS "-fno-lto"
     )
     add_obot_param_target(../param/param_obot_g474_${cfg}.c)

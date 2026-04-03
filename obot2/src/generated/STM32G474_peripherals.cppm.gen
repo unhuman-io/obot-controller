@@ -1,0 +1,415 @@
+#undef CRC
+extern "C" CRC_Type CRC_address;
+constexpr CRC_Type * const CRC { &CRC_address };
+using ::CRC_Type;
+
+#undef IWDG
+extern "C" IWDG_Type IWDG_address;
+constexpr IWDG_Type * const IWDG { &IWDG_address };
+using ::IWDG_Type;
+
+#undef WWDG
+extern "C" WWDG_Type WWDG_address;
+constexpr WWDG_Type * const WWDG { &WWDG_address };
+using ::WWDG_Type;
+
+#undef I2C1
+extern "C" I2C1_Type I2C1_address;
+constexpr I2C1_Type * const I2C1 { &I2C1_address };
+using ::I2C1_Type;
+
+#undef I2C2
+extern "C" I2C1_Type I2C2_address;
+constexpr I2C1_Type * const I2C2 { &I2C2_address };
+using ::I2C1_Type;
+
+#undef I2C3
+extern "C" I2C1_Type I2C3_address;
+constexpr I2C1_Type * const I2C3 { &I2C3_address };
+using ::I2C1_Type;
+
+#undef I2C4
+extern "C" I2C1_Type I2C4_address;
+constexpr I2C1_Type * const I2C4 { &I2C4_address };
+using ::I2C1_Type;
+
+#undef FLASH
+extern "C" FLASH_Type FLASH_address;
+constexpr FLASH_Type * const FLASH { &FLASH_address };
+using ::FLASH_Type;
+
+#undef DBGMCU
+extern "C" DBGMCU_Type DBGMCU_address;
+constexpr DBGMCU_Type * const DBGMCU { &DBGMCU_address };
+using ::DBGMCU_Type;
+
+#undef RCC
+extern "C" RCC_Type RCC_address;
+constexpr RCC_Type * const RCC { &RCC_address };
+using ::RCC_Type;
+
+#undef PWR
+extern "C" PWR_Type PWR_address;
+constexpr PWR_Type * const PWR { &PWR_address };
+using ::PWR_Type;
+
+#undef RNG
+extern "C" RNG_Type RNG_address;
+constexpr RNG_Type * const RNG { &RNG_address };
+using ::RNG_Type;
+
+#undef GPIOA
+extern "C" GPIOA_Type GPIOA_address;
+constexpr GPIOA_Type * const GPIOA { &GPIOA_address };
+using ::GPIOA_Type;
+
+#undef GPIOB
+extern "C" GPIOB_Type GPIOB_address;
+constexpr GPIOB_Type * const GPIOB { &GPIOB_address };
+using ::GPIOB_Type;
+
+#undef GPIOC
+extern "C" GPIOC_Type GPIOC_address;
+constexpr GPIOC_Type * const GPIOC { &GPIOC_address };
+using ::GPIOC_Type;
+
+#undef GPIOD
+extern "C" GPIOC_Type GPIOD_address;
+constexpr GPIOC_Type * const GPIOD { &GPIOD_address };
+using ::GPIOC_Type;
+
+#undef GPIOE
+extern "C" GPIOC_Type GPIOE_address;
+constexpr GPIOC_Type * const GPIOE { &GPIOE_address };
+using ::GPIOC_Type;
+
+#undef GPIOF
+extern "C" GPIOC_Type GPIOF_address;
+constexpr GPIOC_Type * const GPIOF { &GPIOF_address };
+using ::GPIOC_Type;
+
+#undef GPIOG
+extern "C" GPIOC_Type GPIOG_address;
+constexpr GPIOC_Type * const GPIOG { &GPIOG_address };
+using ::GPIOC_Type;
+
+#undef TIM15
+extern "C" TIM15_Type TIM15_address;
+constexpr TIM15_Type * const TIM15 { &TIM15_address };
+using ::TIM15_Type;
+
+#undef TIM16
+extern "C" TIM16_Type TIM16_address;
+constexpr TIM16_Type * const TIM16 { &TIM16_address };
+using ::TIM16_Type;
+
+#undef TIM17
+extern "C" TIM16_Type TIM17_address;
+constexpr TIM16_Type * const TIM17 { &TIM17_address };
+using ::TIM16_Type;
+
+#undef TIM1
+extern "C" TIM1_Type TIM1_address;
+constexpr TIM1_Type * const TIM1 { &TIM1_address };
+using ::TIM1_Type;
+
+#undef TIM20
+extern "C" TIM1_Type TIM20_address;
+constexpr TIM1_Type * const TIM20 { &TIM20_address };
+using ::TIM1_Type;
+
+#undef TIM8
+extern "C" TIM1_Type TIM8_address;
+constexpr TIM1_Type * const TIM8 { &TIM8_address };
+using ::TIM1_Type;
+
+#undef TIM2
+extern "C" TIM2_Type TIM2_address;
+constexpr TIM2_Type * const TIM2 { &TIM2_address };
+using ::TIM2_Type;
+
+#undef TIM5
+extern "C" TIM2_Type TIM5_address;
+constexpr TIM2_Type * const TIM5 { &TIM5_address };
+using ::TIM2_Type;
+
+#undef TIM3
+extern "C" TIM3_Type TIM3_address;
+constexpr TIM3_Type * const TIM3 { &TIM3_address };
+using ::TIM3_Type;
+
+#undef TIM4
+extern "C" TIM3_Type TIM4_address;
+constexpr TIM3_Type * const TIM4 { &TIM4_address };
+using ::TIM3_Type;
+
+#undef TIM6
+extern "C" TIM6_Type TIM6_address;
+constexpr TIM6_Type * const TIM6 { &TIM6_address };
+using ::TIM6_Type;
+
+#undef TIM7
+extern "C" TIM6_Type TIM7_address;
+constexpr TIM6_Type * const TIM7 { &TIM7_address };
+using ::TIM6_Type;
+
+#undef LPTIM1
+extern "C" LPTIM1_Type LPTIM1_address;
+constexpr LPTIM1_Type * const LPTIM1 { &LPTIM1_address };
+using ::LPTIM1_Type;
+
+#undef USART1
+extern "C" USART1_Type USART1_address;
+constexpr USART1_Type * const USART1 { &USART1_address };
+using ::USART1_Type;
+
+#undef USART2
+extern "C" USART1_Type USART2_address;
+constexpr USART1_Type * const USART2 { &USART2_address };
+using ::USART1_Type;
+
+#undef USART3
+extern "C" USART1_Type USART3_address;
+constexpr USART1_Type * const USART3 { &USART3_address };
+using ::USART1_Type;
+
+#undef UART4
+extern "C" UART4_Type UART4_address;
+constexpr UART4_Type * const UART4 { &UART4_address };
+using ::UART4_Type;
+
+#undef UART5
+extern "C" UART4_Type UART5_address;
+constexpr UART4_Type * const UART5 { &UART5_address };
+using ::UART4_Type;
+
+#undef LPUART1
+extern "C" LPUART1_Type LPUART1_address;
+constexpr LPUART1_Type * const LPUART1 { &LPUART1_address };
+using ::LPUART1_Type;
+
+#undef SPI1
+extern "C" SPI1_Type SPI1_address;
+constexpr SPI1_Type * const SPI1 { &SPI1_address };
+using ::SPI1_Type;
+
+#undef SPI4
+extern "C" SPI4_Type SPI4_address;
+constexpr SPI4_Type * const SPI4 { &SPI4_address };
+using ::SPI4_Type;
+
+#undef SPI3
+extern "C" SPI4_Type SPI3_address;
+constexpr SPI4_Type * const SPI3 { &SPI3_address };
+using ::SPI4_Type;
+
+#undef SPI2
+extern "C" SPI4_Type SPI2_address;
+constexpr SPI4_Type * const SPI2 { &SPI2_address };
+using ::SPI4_Type;
+
+#undef EXTI
+extern "C" EXTI_Type EXTI_address;
+constexpr EXTI_Type * const EXTI { &EXTI_address };
+using ::EXTI_Type;
+
+#undef RTC
+extern "C" RTC_Type RTC_address;
+constexpr RTC_Type * const RTC { &RTC_address };
+using ::RTC_Type;
+
+#undef FMC
+extern "C" FMC_Type FMC_address;
+constexpr FMC_Type * const FMC { &FMC_address };
+using ::FMC_Type;
+
+#undef DMA1
+extern "C" DMA1_Type DMA1_address;
+constexpr DMA1_Type * const DMA1 { &DMA1_address };
+using ::DMA1_Type;
+
+#undef DMA2
+extern "C" DMA1_Type DMA2_address;
+constexpr DMA1_Type * const DMA2 { &DMA2_address };
+using ::DMA1_Type;
+
+#undef DMAMUX
+extern "C" DMAMUX_Type DMAMUX_address;
+constexpr DMAMUX_Type * const DMAMUX { &DMAMUX_address };
+using ::DMAMUX_Type;
+
+#undef SYSCFG
+extern "C" SYSCFG_Type SYSCFG_address;
+constexpr SYSCFG_Type * const SYSCFG { &SYSCFG_address };
+using ::SYSCFG_Type;
+
+#undef VREFBUF
+extern "C" VREFBUF_Type VREFBUF_address;
+constexpr VREFBUF_Type * const VREFBUF { &VREFBUF_address };
+using ::VREFBUF_Type;
+
+#undef COMP
+extern "C" COMP_Type COMP_address;
+constexpr COMP_Type * const COMP { &COMP_address };
+using ::COMP_Type;
+
+#undef OPAMP
+extern "C" OPAMP_Type OPAMP_address;
+constexpr OPAMP_Type * const OPAMP { &OPAMP_address };
+using ::OPAMP_Type;
+
+#undef HRTIM_Master
+extern "C" HRTIM_Master_Type HRTIM_Master_address;
+constexpr HRTIM_Master_Type * const HRTIM_Master { &HRTIM_Master_address };
+using ::HRTIM_Master_Type;
+
+#undef HRTIM_TIMA
+extern "C" HRTIM_TIMA_Type HRTIM_TIMA_address;
+constexpr HRTIM_TIMA_Type * const HRTIM_TIMA { &HRTIM_TIMA_address };
+using ::HRTIM_TIMA_Type;
+
+#undef HRTIM_TIMB
+extern "C" HRTIM_TIMB_Type HRTIM_TIMB_address;
+constexpr HRTIM_TIMB_Type * const HRTIM_TIMB { &HRTIM_TIMB_address };
+using ::HRTIM_TIMB_Type;
+
+#undef HRTIM_TIMC
+extern "C" HRTIM_TIMC_Type HRTIM_TIMC_address;
+constexpr HRTIM_TIMC_Type * const HRTIM_TIMC { &HRTIM_TIMC_address };
+using ::HRTIM_TIMC_Type;
+
+#undef HRTIM_TIMD
+extern "C" HRTIM_TIMD_Type HRTIM_TIMD_address;
+constexpr HRTIM_TIMD_Type * const HRTIM_TIMD { &HRTIM_TIMD_address };
+using ::HRTIM_TIMD_Type;
+
+#undef HRTIM_TIME
+extern "C" HRTIM_TIME_Type HRTIM_TIME_address;
+constexpr HRTIM_TIME_Type * const HRTIM_TIME { &HRTIM_TIME_address };
+using ::HRTIM_TIME_Type;
+
+#undef HRTIM_TIMF
+extern "C" HRTIM_TIMF_Type HRTIM_TIMF_address;
+constexpr HRTIM_TIMF_Type * const HRTIM_TIMF { &HRTIM_TIMF_address };
+using ::HRTIM_TIMF_Type;
+
+#undef HRTIM_Common
+extern "C" HRTIM_Common_Type HRTIM_Common_address;
+constexpr HRTIM_Common_Type * const HRTIM_Common { &HRTIM_Common_address };
+using ::HRTIM_Common_Type;
+
+#undef QUADSPI
+extern "C" QUADSPI_Type QUADSPI_address;
+constexpr QUADSPI_Type * const QUADSPI { &QUADSPI_address };
+using ::QUADSPI_Type;
+
+#undef DAC1
+extern "C" DAC1_Type DAC1_address;
+constexpr DAC1_Type * const DAC1 { &DAC1_address };
+using ::DAC1_Type;
+
+#undef DAC2
+extern "C" DAC1_Type DAC2_address;
+constexpr DAC1_Type * const DAC2 { &DAC2_address };
+using ::DAC1_Type;
+
+#undef DAC3
+extern "C" DAC1_Type DAC3_address;
+constexpr DAC1_Type * const DAC3 { &DAC3_address };
+using ::DAC1_Type;
+
+#undef DAC4
+extern "C" DAC1_Type DAC4_address;
+constexpr DAC1_Type * const DAC4 { &DAC4_address };
+using ::DAC1_Type;
+
+#undef ADC1
+extern "C" ADC1_Type ADC1_address;
+constexpr ADC1_Type * const ADC1 { &ADC1_address };
+using ::ADC1_Type;
+
+#undef ADC2
+extern "C" ADC1_Type ADC2_address;
+constexpr ADC1_Type * const ADC2 { &ADC2_address };
+using ::ADC1_Type;
+
+#undef ADC3
+extern "C" ADC3_Type ADC3_address;
+constexpr ADC3_Type * const ADC3 { &ADC3_address };
+using ::ADC3_Type;
+
+#undef ADC4
+extern "C" ADC1_Type ADC4_address;
+constexpr ADC1_Type * const ADC4 { &ADC4_address };
+using ::ADC1_Type;
+
+#undef ADC5
+extern "C" ADC3_Type ADC5_address;
+constexpr ADC3_Type * const ADC5 { &ADC5_address };
+using ::ADC3_Type;
+
+#undef ADC12_Common
+extern "C" ADC12_Common_Type ADC12_Common_address;
+constexpr ADC12_Common_Type * const ADC12_Common { &ADC12_Common_address };
+using ::ADC12_Common_Type;
+
+#undef ADC345_Common
+extern "C" ADC12_Common_Type ADC345_Common_address;
+constexpr ADC12_Common_Type * const ADC345_Common { &ADC345_Common_address };
+using ::ADC12_Common_Type;
+
+#undef FMAC
+extern "C" FMAC_Type FMAC_address;
+constexpr FMAC_Type * const FMAC { &FMAC_address };
+using ::FMAC_Type;
+
+#undef CORDIC
+extern "C" CORDIC_Type CORDIC_address;
+constexpr CORDIC_Type * const CORDIC { &CORDIC_address };
+using ::CORDIC_Type;
+
+#undef SAI
+extern "C" SAI_Type SAI_address;
+constexpr SAI_Type * const SAI { &SAI_address };
+using ::SAI_Type;
+
+#undef TAMP
+extern "C" TAMP_Type TAMP_address;
+constexpr TAMP_Type * const TAMP { &TAMP_address };
+using ::TAMP_Type;
+
+#undef FDCAN
+extern "C" FDCAN_Type FDCAN_address;
+constexpr FDCAN_Type * const FDCAN { &FDCAN_address };
+using ::FDCAN_Type;
+
+#undef FDCAN1
+extern "C" FDCAN_Type FDCAN1_address;
+constexpr FDCAN_Type * const FDCAN1 { &FDCAN1_address };
+using ::FDCAN_Type;
+
+#undef FDCAN2
+extern "C" FDCAN_Type FDCAN2_address;
+constexpr FDCAN_Type * const FDCAN2 { &FDCAN2_address };
+using ::FDCAN_Type;
+
+#undef FDCAN3
+extern "C" FDCAN_Type FDCAN3_address;
+constexpr FDCAN_Type * const FDCAN3 { &FDCAN3_address };
+using ::FDCAN_Type;
+
+#undef UCPD1
+extern "C" UCPD1_Type UCPD1_address;
+constexpr UCPD1_Type * const UCPD1 { &UCPD1_address };
+using ::UCPD1_Type;
+
+#undef USB_FS_device
+extern "C" USB_FS_device_Type USB_FS_device_address;
+constexpr USB_FS_device_Type * const USB_FS_device { &USB_FS_device_address };
+using ::USB_FS_device_Type;
+
+#undef CRS
+extern "C" CRS_Type CRS_address;
+constexpr CRS_Type * const CRS { &CRS_address };
+using ::CRS_Type;
+

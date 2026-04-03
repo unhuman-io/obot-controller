@@ -60,6 +60,9 @@ jobs:
             config: trace
           - project: obot_g474
             config: trace_6enc
+          - project: obot2
+            config: main
+            build_other: GCC_PATH=
           - project: obot_g474
             config: tmotor_driver
           - project: obot_g474
@@ -79,6 +82,7 @@ jobs:
         apt-get update -qq
         apt-get install -y -qq clang-tools-15
     - name: make help
+      if: ${{ matrix.project != 'obot2' }}
       run: |
         git config --global --add safe.directory '*'
         make -C ${{ matrix.project }} help
@@ -97,7 +101,12 @@ jobs:
     - name: rename
       run: |
         mv ${{ matrix.project }}/build/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
-        mv ${{ matrix.project }}/build/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
+        mv ${{ matrix.project }}/build/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz || true
+    - name: install llvm and gcc
+      if: ${{ matrix.project == 'obot2' }}
+      run: |
+        motorlib/scripts/install_llvm.sh
+        motorlib/scripts/install_gcc.sh
     - name: make llvm
       run: |
         make USE_LLVM=1 -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` ${{ matrix.build_other }}
@@ -115,7 +124,7 @@ jobs:
           make CONFIG=${{ matrix.config }} -j`nproc` USE_LLVM=1 ${{ matrix.build_other }}
     - name: releaser main
       uses: pyTooling/Actions/releaser@v6.7.0
-      if: contains(github.ref, 'develop')
+      if: contains(github.ref, 'develop') and ${{ matrix.project != 'obot2' }}
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
@@ -124,7 +133,7 @@ jobs:
         tag: develop
     - name: releaser develop
       uses: pyTooling/Actions/releaser@v6.7.0
-      if: contains(github.ref, 'main')
+      if: contains(github.ref, 'main') and ${{ matrix.project != 'obot2' }}
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |

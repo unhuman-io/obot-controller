@@ -120,7 +120,7 @@ function(add_obot_firmware_target obot_config)
     )
 
     # 4. Create the TGZ package
-    set(pkg_dir ${CMAKE_CURRENT_BINARY_DIR}/pkg_${obot_config})
+    set(pkg_dir ${CMAKE_CURRENT_BINARY_DIR}/${obot_config})
     set(load_script ${pkg_dir}/load_${obot_config}.sh)
 
     add_custom_command(OUTPUT ${tgz_file}
@@ -138,7 +138,7 @@ function(add_obot_firmware_target obot_config)
         COMMAND chmod +x ${load_script}
         
         # 3. Packaging
-        COMMAND ${CMAKE_COMMAND} -E chdir ${pkg_dir} ${CMAKE_COMMAND} -E tar czf ${tgz_file} --format=gnutar . 
+        COMMAND ${CMAKE_COMMAND} -E tar czf ${tgz_file} --format=gnutar ${pkg_dir}/
         
         # CRITICAL: This ensures the shell receives the quotes correctly
         VERBATIM 

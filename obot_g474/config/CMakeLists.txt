@@ -86,27 +86,26 @@ function(add_obot_param_target SOURCE_FILE)
     )
 endfunction()
 
-
-foreach(cfg IN LISTS OBOT_CONFIGS)
-    set(tgt ${cfg}.elf)
+function(add_obot_firmware_target obot_config)
+   set(tgt ${obot_config}.elf)
     
     # 1. Use standard variables for the OUTPUT paths
     # This puts the bins in your build folder where CMake can track them
-    set(bin_full ${CMAKE_CURRENT_BINARY_DIR}/${cfg}.bin)
-    set(bin_no_param ${CMAKE_CURRENT_BINARY_DIR}/${cfg}_noparam.bin)
-    set(tgz_file ${CMAKE_CURRENT_BINARY_DIR}/${cfg}.tgz)
+    set(bin_full ${CMAKE_CURRENT_BINARY_DIR}/${obot_config}.bin)
+    set(bin_no_param ${CMAKE_CURRENT_BINARY_DIR}/${obot_config}_noparam.bin)
+    set(tgz_file ${CMAKE_CURRENT_BINARY_DIR}/${obot_config}.tgz)
 
     # 2. Define the target FIRST
-    add_executable(${tgt} EXCLUDE_FROM_ALL config_obot_g474_${cfg}.cpp ../param/param_obot_g474_${cfg}.c ${CALIBRATION_FILE})
+    add_executable(${tgt} EXCLUDE_FROM_ALL config_obot_g474_${obot_config}.cpp ../param/param_obot_g474_${obot_config}.c ${CALIBRATION_FILE})
     target_link_libraries(${tgt} PRIVATE motorlib)
-    target_compile_definitions(${tgt} PRIVATE CONFIG=\"${cfg}\")
+    target_compile_definitions(${tgt} PRIVATE CONFIG=\"${obot_config}\")
 
     set_source_files_properties(
-        ../param/param_obot_g474_${cfg}.c
+        ../param/param_obot_g474_${obot_config}.c
         ${CALIBRATION_FILE}
         PROPERTIES COMPILE_OPTIONS "-fno-lto"
     )
-    add_obot_param_target(../param/param_obot_g474_${cfg}.c)
+    add_obot_param_target(../param/param_obot_g474_${obot_config}.c)
 
     # 3. Generate binary variations
     add_custom_command(OUTPUT ${bin_full} ${bin_no_param}
@@ -117,12 +116,12 @@ foreach(cfg IN LISTS OBOT_CONFIGS)
                 --remove-section flash_param 
                 --remove-section calibration_data 
                 ${bin_no_param}
-        COMMENT "Generating bin variations for ${cfg}..."
+        COMMENT "Generating bin variations for ${obot_config}..."
     )
 
     # 4. Create the TGZ package
-    set(pkg_dir ${CMAKE_CURRENT_BINARY_DIR}/pkg_${cfg})
-    set(load_script ${pkg_dir}/load_${cfg}.sh)
+    set(pkg_dir ${CMAKE_CURRENT_BINARY_DIR}/pkg_${obot_config})
+    set(load_script ${pkg_dir}/load_${obot_config}.sh)
 
     add_custom_command(OUTPUT ${tgz_file}
         DEPENDS ${bin_no_param}
@@ -134,7 +133,7 @@ foreach(cfg IN LISTS OBOT_CONFIGS)
         
         # 2. Script Generation (Using quotes to protect the #)
         COMMAND ${CMAKE_COMMAND} -E echo "#!/bin/bash -e" > ${load_script}
-        COMMAND ${CMAKE_COMMAND} -E echo "dfu-util -a0 -s 0x8000000 -D ${cfg}_noparam.bin" >> ${load_script}
+        COMMAND ${CMAKE_COMMAND} -E echo "dfu-util -a0 -s 0x8000000 -D ${obot_config}_noparam.bin" >> ${load_script}
         COMMAND ${CMAKE_COMMAND} -E echo "dfu-util -a0 -s 0x8000000:8:leave -U /tmp/dfu_tmp || true" >> ${load_script}
         COMMAND chmod +x ${load_script}
         
@@ -143,18 +142,22 @@ foreach(cfg IN LISTS OBOT_CONFIGS)
         
         # CRITICAL: This ensures the shell receives the quotes correctly
         VERBATIM 
-        COMMENT "Packaging ${cfg} into tarball..."
+        COMMENT "Packaging ${obot_config} into tarball..."
     )
 
     # 5. Final Targets
-    add_custom_target(obot_g474_${cfg}_pkg DEPENDS ${tgz_file})
+    add_custom_target(obot_g474_${obot_config}_pkg DEPENDS ${tgz_file})
 
-    add_custom_target(load_${cfg}
+    add_custom_target(load_${obot_config}
         COMMAND ${load_script}
         DEPENDS ${tgz_file}
-        COMMENT "Flashing ${cfg}..."
+        COMMENT "Flashing ${obot_config}..."
     )
+endfunction()
 
+
+foreach(cfg IN LISTS OBOT_CONFIGS)
+    add_obot_firmware_target(${cfg})
 endforeach()
 
 # 1. Prepend the family name

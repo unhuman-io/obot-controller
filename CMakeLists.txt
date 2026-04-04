@@ -12,6 +12,9 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g3 -DNDEBUG")
 
+add_compile_options(${MCU_FLAGS})
+add_link_options(${MCU_FLAGS})
+add_compile_options("-fsingle-precision-constant")
 add_compile_options("-fdata-sections" "-ffunction-sections")
 add_link_options("-Wl,--gc-sections")
 

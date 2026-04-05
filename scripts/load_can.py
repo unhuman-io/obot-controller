@@ -43,7 +43,7 @@ class can_loader:
 
 # example usage:
 # ../scripts/load_can.py --can_id 2 --address 0x8002000 --file ../obot_g474/build/tmotor_driver/tmotor_driver_noparam.bin
-# ../scripts/load_can.py --can_id 2 --address 0x8060000 --file ../obot_g474/build/tmotor_driver/tmotor_driver_param_only.bin
+# ../scripts/load_can.py --can_id 2 --address 0x8060000 --file ../obot_g474/build/tmotor_driver/tmotor_driver_param.bin
 
 
 if __name__ == "__main__":

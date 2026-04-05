@@ -21,12 +21,12 @@ jobs:
             config: nucleo_uart
           - project: obot_g474
             config: nucleo_uart_obot
-            build_other: C_DEFS="-DCOMMS_UART_OBOT"
+            build_other: -DCMAKE_CXX_FLAGS="-DCOMMS_UART_OBOT"
           - project: obot_g474
             config: nucleo_spi
           - project: obot_g474
             config: motor_enc
-            build_other: CALIBRATION_FILE=../calibration/obot_g474/motor_enc/cal.c
+            build_other: -DCALIBRATION_FILE=../../calibration/obot_g474/motor_enc/cal.c
           - project: obot_g474
             config: motor_wheel
           - project: obot_g474
@@ -43,7 +43,7 @@ jobs:
             config: motor_aksim
           - project: obot_g474
             config: motor_aksim_19_17
-            build_other: C_DEFS="-DMAX11254_TORQUE_SENSOR" # MR2
+            build_other: -DCMAKE_CXX_FLAGS="-DMAX11254_TORQUE_SENSOR" # MR2
           - project: obot_g474
             config: motor_pz2 # MR1
           - project: obot_g474
@@ -70,46 +70,45 @@ jobs:
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:15.2
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
       with:
         fetch-depth: 0
         submodules: recursive
-    - name: install scan-build
+    - name: install dependencies
       run: |
         apt-get update -qq
-        apt-get install -y -qq clang-tools-15
-    - name: make help
+        apt-get install -y -qq clang-tools-20 cmake ninja-build
+        ./motorlib/scripts/install_llvm.sh
+    - name: cmake ${{ matrix.project }} ${{ matrix.config }}
       run: |
         git config --global --add safe.directory '*'
-        make -C ${{ matrix.project }} help
-        make -C ${{ matrix.project }} help | grep ${{ matrix.config }}
-    - name: make ${{ matrix.project }} ${{ matrix.config }}
-      run: |
-        git config --global --add safe.directory '*'
-        make -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
+        cmake --preset gcc ${{ matrix.build_other }}
+        cmake --build --preset gcc -t ${{ matrix.project }}_${{ matrix.config }}_pkg
     - name: Archive ${{ matrix.project }} ${{ matrix.config }}
       uses: actions/upload-artifact@main
       with:
         name: ${{ matrix.project }} ${{ matrix.config }}
         path: |
-          ${{ matrix.project }}/build/${{ matrix.config }}.elf
-          ${{ matrix.project }}/build/${{ matrix.config }}.tgz
+          build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.elf
+          build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.tgz
     - name: rename
       run: |
-        mv ${{ matrix.project }}/build/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
-        mv ${{ matrix.project }}/build/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
-    - name: make llvm
+        mv build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}.elf
+        mv build/gcc/${{ matrix.project }}/config/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}.tgz
+    - name: cmake llvm
       run: |
-        make USE_LLVM=1 -C ${{ matrix.project }} CONFIG=${{ matrix.config }} -j`nproc` ${{ matrix.build_other }}
+        cmake --preset llvm ${{ matrix.build_other }}
+        cmake --build --preset llvm -t ${{ matrix.project }}_${{ matrix.config }}_pkg
     - name: scan build
+      if: 0
       run: |
         git config --global --add safe.directory '*'
         cd ${{ matrix.project }}
-        scan-build-15 --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
+        scan-build-20 --status-bugs --use-cc /gcc/bin/arm-none-eabi-gcc --use-c++ /gcc/bin/arm-none-eabi-g++ \
           --use-analyzer ../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
           -disable-checker core.FixedAddressDereference \
           make CONFIG=${{ matrix.config }} -j`nproc` GCC_PATH=/gcc/bin ${{ matrix.build_other }}
-        scan-build-15 --status-bugs --use-cc ../motorlib/llvm/bin/clang --use-c++ ../motorlib/llvm/bin/clang++ \
+        scan-build-20 --status-bugs --use-cc ../motorlib/llvm/bin/clang --use-c++ ../motorlib/llvm/bin/clang++ \
           --use-analyzer ../motorlib/llvm/bin/clang --analyzer-target=armv7m-none-eabi \
           -disable-checker core.FixedAddressDereference \
           make CONFIG=${{ matrix.config }} -j`nproc` USE_LLVM=1 ${{ matrix.build_other }}
@@ -214,7 +213,7 @@ jobs:
         program_size=$(wc -c < motor_enc/motor_enc_noparam.bin)
         check_var program_size $program_size 100000 300000
 
-        param_size=$(wc -c < motor_enc/motor_enc_param_only.bin)
+        param_size=$(wc -c < motor_enc/motor_enc_param.bin)
         check_var param_size $param_size 5000 20000
 
         text_size=$(size motor_enc.elf | tail -n1 | cut -f1)

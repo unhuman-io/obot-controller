@@ -213,7 +213,7 @@ jobs:
         program_size=$(wc -c < motor_enc/motor_enc_noparam.bin)
         check_var program_size $program_size 100000 300000
 
-        param_size=$(wc -c < motor_enc/motor_enc_param_only.bin)
+        param_size=$(wc -c < motor_enc/motor_enc_param.bin)
         check_var param_size $param_size 5000 20000
 
         text_size=$(size motor_enc.elf | tail -n1 | cut -f1)

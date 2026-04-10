@@ -10,7 +10,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_motor.c"
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
-    .fast_loop_param.motor_encoder.cpr = pow(2,18),
+    .fast_loop_param.motor_encoder.cpr = powf(2,18),
     .fast_loop_param.motor_encoder.rollover = 1 << 25,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
     .main_loop_param.torque_sensor.gain = 242,
@@ -26,7 +26,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.velocity_controller_param.velocity.output_filter_frequency_hz = 1000,
     .main_loop_param.velocity_controller_param.velocity.command_max = 10,
     .main_loop_param.velocity_controller_param.acceleration_limit = 1000,
-    .main_loop_param.output_encoder.cpr = pow(2,18),
+    .main_loop_param.output_encoder.cpr = powf(2,18),
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = OPEN,
     .startup_param.do_phase_lock = 0,

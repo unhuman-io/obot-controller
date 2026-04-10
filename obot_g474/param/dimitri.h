@@ -2,7 +2,7 @@
 #include "sn/2054397F4630.h"
 #define MOTOR_ENCODER_BITS 19
 .main_loop_param.error_mask.all = ERROR_MASK_ALL & ~ERROR_MASK_OUTPUT_ENCODER,
-.fast_loop_param.motor_encoder.cpr = pow(2,19),
+.fast_loop_param.motor_encoder.cpr = powf(2,19),
 .fast_loop_param.motor_encoder.rollover = 1 << 25,
 .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 1,
 .main_loop_param.encoder_limits.output_hard_max = 0,

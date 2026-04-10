@@ -381,7 +381,7 @@ void config_init()
 
 void config_maintenance() {
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
-        config::motor_encoder.diag_warn_count_ > pow(2,31)) {
+        config::motor_encoder.diag_warn_count_ > powf(2,31)) {
             config::main_loop.status_.error.motor_encoder = true;
     }
     round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_err_count_);

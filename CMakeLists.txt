@@ -13,7 +13,13 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g3 -DNDEBUG" CACHE STRING "Custom RelWith
 
 add_compile_options(${MCU_FLAGS})
 add_link_options(${MCU_FLAGS})
-add_compile_options("-fsingle-precision-constant")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_compile_options("-fsingle-precision-constant")
+endif()
+if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wno-c99-designator -Wno-c23-extensions)
+endif()
+add_compile_options("-Werror")
 add_compile_options("-fdata-sections" "-ffunction-sections")
 add_link_options("-Wl,--gc-sections")
 

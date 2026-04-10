@@ -15,59 +15,32 @@ jobs:
       fail-fast: false
       matrix:
         toolchain: [gcc, llvm]
-        include:
-          - project: obot_g474
-            config: motor_template
-          - project: obot_g474
-            config: nucleo_uart
-          - project: obot_g474
-            config: nucleo_uart_obot
-            build_other: -DCMAKE_CXX_FLAGS="-DCOMMS_UART_OBOT"
-          - project: obot_g474
-            config: nucleo_spi
-          - project: obot_g474
-            config: motor_enc
-            build_other: -DCALIBRATION_FILE=../../calibration/obot_g474/motor_enc/cal.c
-          - project: obot_g474
-            config: motor_wheel
-          - project: obot_g474
-            config: motor_can
-          - project: obot_g474
-            config: osa14
-          - project: obot_g474
-            config: motor_40_osa14
-          - project: obot_g474
-            config: motor_9
-          - project: obot_g474
-            config: motor_9_pzdma
-          - project: obot_g474
-            config: motor_aksim
-          - project: obot_g474
-            config: motor_aksim_19_17
-            build_other: -DCMAKE_CXX_FLAGS="-DMAX11254_TORQUE_SENSOR" # MR2
-          - project: obot_g474
-            config: motor_pz2 # MR1
-          - project: obot_g474
-            config: h2
-          - project: obot_g474
-            config: hands
-          - project: obot_g474
-            config: motor_aksim_20_19 # MR0
-          - project: obot_g474
-            config: motor_aksim_19_18 # MR0P
-          - project: obot_g474
-            config: motor_resolute
-          - project: obot_g474
-            config: trace
-          - project: obot_g474
-            config: trace_6enc
-          - project: obot_g474
-            config: tmotor_driver
-          - project: obot_g474
-            config: trace_13enc
+        target:
+          - { project: obot_g474, config: motor_template }
+          - { project: obot_g474, config: nucleo_uart }
+          - { project: obot_g474, config: nucleo_uart_obot, build_other: '-DCMAKE_CXX_FLAGS="-DCOMMS_UART_OBOT"' }
+          - { project: obot_g474, config: nucleo_spi }
+          - { project: obot_g474, config: motor_enc, build_other: '-DCALIBRATION_FILE=../../calibration/obot_g474/motor_enc/cal.c' }
+          - { project: obot_g474, config: motor_wheel }
+          - { project: obot_g474, config: motor_can }
+          - { project: obot_g474, config: osa14 }
+          - { project: obot_g474, config: motor_40_osa14 }
+          - { project: obot_g474, config: motor_9 }
+          - { project: obot_g474, config: motor_9_pzdma }
+          - { project: obot_g474, config: motor_aksim }
+          - { project: obot_g474, config: motor_aksim_19_17, build_other: '-DCMAKE_CXX_FLAGS="-DMAX11254_TORQUE_SENSOR"' } # MR2
+          - { project: obot_g474, config: motor_pz2 } # MR1
+          - { project: obot_g474, config: h2 }
+          - { project: obot_g474, config: hands }
+          - { project: obot_g474, config: motor_aksim_20_19 } # MR0
+          - { project: obot_g474, config: motor_aksim_19_18 } # MR0P
+          - { project: obot_g474, config: motor_resolute }
+          - { project: obot_g474, config: trace }
+          - { project: obot_g474, config: trace_6enc }
+          - { project: obot_g474, config: tmotor_driver }
+          - { project: obot_g474, config: trace_13enc }
           # TODO: add this back
-          # - project: obot_g474
-          #   config: osa14_jl1
+          # - { project: obot_g474, config: osa14_jl1 }
     runs-on: ubuntu-latest
     container: leemagnusson/arm-gcc:15.2
     steps:
@@ -80,30 +53,30 @@ jobs:
         apt-get update -qq
         apt-get install -y -qq clang-tools-20 cmake ninja-build
         ./motorlib/scripts/install_llvm.sh
-    - name: cmake ${{ matrix.project }} ${{ matrix.config }} ${{ matrix.toolchain }}
+    - name: cmake ${{ matrix.target.project }} ${{ matrix.target.config }} ${{ matrix.toolchain }}
       run: |
         git config --global --add safe.directory '*'
-        cmake --preset ${{ matrix.toolchain }} ${{ matrix.build_other }}
-        cmake --build --preset ${{ matrix.toolchain }} -t ${{ matrix.project }}_${{ matrix.config }}_pkg
-    - name: Archive ${{ matrix.project }} ${{ matrix.config }} ${{ matrix.toolchain }}
+        cmake --preset ${{ matrix.toolchain }} ${{ matrix.target.build_other }}
+        cmake --build --preset ${{ matrix.toolchain }} -t ${{ matrix.target.project }}_${{ matrix.target.config }}_pkg
+    - name: Archive ${{ matrix.target.project }} ${{ matrix.target.config }} ${{ matrix.toolchain }}
       uses: actions/upload-artifact@main
       with:
-        name: ${{ matrix.project }} ${{ matrix.config }} ${{ matrix.toolchain }}
+        name: ${{ matrix.target.project }} ${{ matrix.target.config }} ${{ matrix.toolchain }}
         path: |
-          build/${{ matrix.toolchain }}/${{ matrix.project }}/config/${{ matrix.config }}.elf
-          build/${{ matrix.toolchain }}/${{ matrix.project }}/config/${{ matrix.config }}.tgz
+          build/${{ matrix.toolchain }}/${{ matrix.target.project }}/config/${{ matrix.target.config }}.elf
+          build/${{ matrix.toolchain }}/${{ matrix.target.project }}/config/${{ matrix.target.config }}.tgz
     - name: rename
       run: |
-        mv build/${{ matrix.toolchain }}/${{ matrix.project }}/config/${{ matrix.config }}.elf ${{ matrix.project }}_${{ matrix.config }}_${{ matrix.toolchain }}.elf
-        mv build/${{ matrix.toolchain }}/${{ matrix.project }}/config/${{ matrix.config }}.tgz ${{ matrix.project }}_${{ matrix.config }}_${{ matrix.toolchain }}.tgz
+        mv build/${{ matrix.toolchain }}/${{ matrix.target.project }}/config/${{ matrix.target.config }}.elf ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.elf
+        mv build/${{ matrix.toolchain }}/${{ matrix.target.project }}/config/${{ matrix.target.config }}.tgz ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.tgz
     - name: releaser main
       uses: pyTooling/Actions/releaser@v6.7.0
       if: contains(github.ref, 'develop')
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
-          ${{ matrix.project }}_${{ matrix.config }}_${{ matrix.toolchain }}.elf
-          ${{ matrix.project }}_${{ matrix.config }}_${{ matrix.toolchain }}.tgz
+          ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.elf
+          ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.tgz
         tag: develop
     - name: releaser develop
       uses: pyTooling/Actions/releaser@v6.7.0
@@ -111,8 +84,8 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
-          ${{ matrix.project }}_${{ matrix.config }}_${{ matrix.toolchain }}.elf
-          ${{ matrix.project }}_${{ matrix.config }}_${{ matrix.toolchain }}.tgz
+          ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.elf
+          ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.tgz
         tag: main
 
   test:

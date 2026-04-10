@@ -149,7 +149,7 @@ namespace config {
     GPIO joint_encoder_cs(*GPIOC, 2, GPIO::OUTPUT);
     SPIDMA spi1_dma2(SPIDMA::SP1, joint_encoder_cs,  DMA1_CH3, DMA1_CH4, 100, 100, 
         SPI_CR1_MSTR | (5 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL);
-    Aksim2Encoder joint_encoder_direct(spi1_dma2, pow(2,18));
+    Aksim2Encoder joint_encoder_direct(spi1_dma2, powf(2,18));
     OutputEncoder1 output_encoder1(output_encoder_direct, joint_encoder_direct);
     JointEncoder &joint_encoder = output_encoder1.secondary();
 #else
@@ -310,14 +310,14 @@ void config_maintenance() {
 
     }
     if(config::motor_encoder.crc_err_count_ > 100 || config::motor_encoder.diag_err_count_ > 100 ||
-        config::motor_encoder.diag_warn_count_ > pow(2,31)) {
+        config::motor_encoder.diag_warn_count_ > powf(2,31)) {
             config::main_loop.status_.error.motor_encoder = true;
     }
     round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder.crc_err_count_);
     round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder.diag_err_count_);
     round_robin_logger.log_data(MOTOR_ENCODER_WARNING_INDEX, config::motor_encoder.diag_warn_count_);
 #ifdef NO_OCRC_FAULT
-    uint32_t crc_fault_max =  pow(2,31);
+    uint32_t crc_fault_max =  powf(2,31);
 #else
     uint32_t crc_fault_max = 100;
 #endif
@@ -326,18 +326,18 @@ void config_maintenance() {
         if (config::joint_encoder_direct.get_value() != 0) {
             joint_bias_set = true;
             joint_encoder_bias = param->joint_encoder_bias;
-            float joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
+            float joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/powf(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
             if (joint_position > param->joint_encoder_rollover) {
                 joint_encoder_bias -= 2*M_PI;
             } else if (joint_position < -param->joint_encoder_rollover) {
                 joint_encoder_bias += 2*M_PI;
             }
-            logger.log_printf("joint encoder raw: %f, joint encoder bias: %f", (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS), joint_encoder_bias);
+            logger.log_printf("joint encoder raw: %f, joint encoder bias: %f", (double) (config::joint_encoder_direct.get_value()*2*(float)M_PI/powf(2,JOINT_ENCODER_BITS)), (double)joint_encoder_bias);
         }
     }
 
     if(config::joint_encoder_direct.crc_err_count_ > crc_fault_max || config::joint_encoder_direct.diag_err_count_ > 100 ||
-        config::joint_encoder_direct.diag_warn_count_ > pow(2,31)) {
+        config::joint_encoder_direct.diag_warn_count_ > powf(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
     round_robin_logger.log_data(JOINT_ENCODER_CRC_INDEX, config::joint_encoder_direct.crc_err_count_);
@@ -349,7 +349,7 @@ void config_maintenance() {
     }
 #endif
     if(config::output_encoder_direct.crc_err_count_ > crc_fault_max || config::output_encoder_direct.diag_err_count_ > 100 ||
-        config::output_encoder_direct.diag_warn_count_ > pow(2,31)) {
+        config::output_encoder_direct.diag_warn_count_ > powf(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
     round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder_direct.crc_err_count_);
@@ -385,7 +385,7 @@ void load_send_data(const MainLoop &main_loop, SendData * const data) {
     data->motor_velocity = main_loop.status_.motor_velocity_filtered;
     
     data->torque = main_loop.status_.torque_filtered;
-    float joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/pow(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
+    float joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/powf(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
     data->joint_position = joint_position_filter.update(joint_position);
     data->joint_velocity = joint_velocity_filter.update(joint_position);
     data->torque = main_loop.status_.torque;

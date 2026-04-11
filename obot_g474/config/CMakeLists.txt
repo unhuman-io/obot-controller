@@ -52,6 +52,7 @@ set(OBOT_CONFIGS
 
 foreach(cfg IN LISTS OBOT_CONFIGS)
     add_obot_firmware_target(${cfg})
+    target_sources(${cfg}.elf PRIVATE ../memopt.c)
 endforeach()
 
 # 1. Prepend the family name

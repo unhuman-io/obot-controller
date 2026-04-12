@@ -52,7 +52,9 @@ set(OBOT_CONFIGS
 
 foreach(cfg IN LISTS OBOT_CONFIGS)
     add_obot_firmware_target(${cfg})
-    target_sources(${cfg}.elf PRIVATE ../memopt.c)
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        target_sources(${cfg}.elf PRIVATE ../memopt.c)
+    endif()
 endforeach()
 
 # 1. Prepend the family name

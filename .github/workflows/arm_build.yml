@@ -88,7 +88,7 @@ jobs:
           ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.tgz
         tag: main
 
-  test:
+  test-builds:
     timeout-minutes: 10
     needs: [build]
     strategy:
@@ -250,3 +250,12 @@ jobs:
         output-file-path: output.txt
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: true
+
+  test:
+    runs-on: ubuntu-latest
+    needs: test-builds
+    if: always()
+    steps:
+      - name: check test-build
+        if: ${{ needs.test-builds.result != 'success' }}
+        run: exit 1

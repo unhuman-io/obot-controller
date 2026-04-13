@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776083826815,
+  "lastUpdate": 1776083995269,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -140603,6 +140603,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1219.209839,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee.magnusson@figure.ai",
+            "name": "Lee Magnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "lee.magnusson@figure.ai",
+            "name": "Lee Magnusson",
+            "username": "leemagnusson"
+          },
+          "distinct": true,
+          "id": "34661e63ed8b177c682afcb82a9b9e4cc9653f42",
+          "message": "assembler with cpp",
+          "timestamp": "2026-04-13T05:29:35-07:00",
+          "tree_id": "6975d910f6acf51f49ac760f3c49322c366ef476",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/34661e63ed8b177c682afcb82a9b9e4cc9653f42"
+        },
+        "date": 1776083994357,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles_llvm",
+            "value": 812,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period_llvm",
+            "value": 3426,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles_llvm",
+            "value": 3822,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period_llvm",
+            "value": 17021,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles_llvm",
+            "value": 3516.78,
+            "unit": "cycles",
+            "extra": "3847 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period_llvm",
+            "value": 3396.9,
+            "unit": "cycles",
+            "extra": "3442 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles_llvm",
+            "value": 797.336,
+            "unit": "cycles",
+            "extra": "812 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17028 times"
+          },
+          {
+            "name": "Benchmarkprogram_size_llvm",
+            "value": 210884,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size_llvm",
+            "value": 6924,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size_llvm",
+            "value": 213516,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size_llvm",
+            "value": 6376,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size_llvm",
+            "value": 86676,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used_llvm",
+            "value": 2519,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used_llvm",
+            "value": 5958,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used_llvm",
+            "value": 1512,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime_llvm",
+            "value": 13700504,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1114.72522,
             "unit": "Hz",
             "extra": "0 times"
           }

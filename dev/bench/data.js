@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776085917938,
+  "lastUpdate": 1776086506561,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -141263,6 +141263,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1378.078003,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5c41832e584fe843f0bfdedbed31ae3436bc5114",
+          "message": "test both gcc and llvm (#347)\n\n* test both gcc and llvm\n\n* update\n\n* llvm full lto\n\n* memopt for clang\n\n* compiler string\n\n* clang only memopt.c\n\n* use -u printf_float\n\n* ifdef clang\n\n* ifdef clang\n\n* comment version\n\n* gcc constructor loop\n\n* assembler with cpp\n\n* motorlib to develop",
+          "timestamp": "2026-04-13T13:12:10Z",
+          "tree_id": "0bd426fa57d2f6f167c223c1de991a67a86d7a97",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/5c41832e584fe843f0bfdedbed31ae3436bc5114"
+        },
+        "date": 1776086505614,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles_llvm",
+            "value": 812,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period_llvm",
+            "value": 3409,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles_llvm",
+            "value": 3846,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period_llvm",
+            "value": 17020,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles_llvm",
+            "value": 3533.05,
+            "unit": "cycles",
+            "extra": "3846 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period_llvm",
+            "value": 3397.22,
+            "unit": "cycles",
+            "extra": "3437 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles_llvm",
+            "value": 788.144,
+            "unit": "cycles",
+            "extra": "812 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period_llvm",
+            "value": 16999.8,
+            "unit": "cycles",
+            "extra": "17023 times"
+          },
+          {
+            "name": "Benchmarkprogram_size_llvm",
+            "value": 210868,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size_llvm",
+            "value": 6924,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size_llvm",
+            "value": 213500,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size_llvm",
+            "value": 6376,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size_llvm",
+            "value": 86676,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used_llvm",
+            "value": 2543,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used_llvm",
+            "value": 5958,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used_llvm",
+            "value": 1512,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime_llvm",
+            "value": 13702776,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1230.982544,
             "unit": "Hz",
             "extra": "0 times"
           }

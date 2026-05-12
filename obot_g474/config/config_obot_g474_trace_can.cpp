@@ -28,14 +28,14 @@ namespace config {
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
 
 
-Task init_sensor(CycleScheduler& sched) {
+Task<> init_sensor(CycleScheduler& sched) {
     co_await sched.async_delay_us(500);
     logger.log("sensor mid");
     co_await sched.async_delay_us(500);
     logger.log("sensor done");
 }
 
-Task init_adc(CycleScheduler& sched) {
+Task<> init_adc(CycleScheduler& sched) {
     co_await sched.async_delay_us(1200); 
     logger.log("adc done");
 }
@@ -43,8 +43,8 @@ Task init_adc(CycleScheduler& sched) {
 void config_init() {
     CycleScheduler init_scheduler;
 
-    Task sensor_task = init_sensor(init_scheduler);
-    Task adc_task = init_adc(init_scheduler);
+    auto sensor_task = init_sensor(init_scheduler);
+    auto adc_task = init_adc(init_scheduler);
 
     logger.log("init start");
     while (!sensor_task.is_done() || !adc_task.is_done()) {

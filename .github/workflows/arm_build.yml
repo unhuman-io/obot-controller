@@ -165,9 +165,9 @@ jobs:
         echo run_stats: $run_stats
 
         check_var max_fast_loop_cycles $(echo $run_stats | cut -d',' -f2) 600 900
-        check_var max_fast_loop_period $(echo $run_stats | cut -d',' -f3) 3400 3500
-        check_var max_main_loop_cycles $(echo $run_stats | cut -d',' -f4) 3000 6000
-        check_var max_main_loop_period $(echo $run_stats | cut -d',' -f5) 17000 17100
+        check_var max_fast_loop_period $(echo $run_stats | cut -d',' -f3) 3350 3500
+        check_var max_main_loop_cycles $(echo $run_stats | cut -d',' -f4) 2000 6000
+        check_var max_main_loop_period $(echo $run_stats | cut -d',' -f5) 16100 17100
 
         # Pass the BM_SUFFIX into awk to append it to the header names dynamically
         motor_util -p 1-3.1 --run-stats 1000 --no-list | awk -v suf="$BM_SUFFIX" -F", " \

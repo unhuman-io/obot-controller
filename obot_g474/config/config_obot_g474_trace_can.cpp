@@ -4,6 +4,7 @@
 #include "../../motorlib/torque_sensor.h"
 #include <coroutine>
 #include "task.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma_new.h"
 
 #define COMMS   COMMS_CAN
 
@@ -12,7 +13,11 @@ using MotorEncoder = EncoderBase;
 using OutputEncoder = EncoderBase;
 
 struct InitCode {
-    InitCode() {}
+    InitCode() {
+        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;
+        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI1_RX;
+
+    }
 };
 
 namespace config {
@@ -27,15 +32,28 @@ namespace config {
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"
 
-
 Task<> init_sensor(CycleScheduler& sched) {
+    logger.log("sensor start");
     co_await sched.async_delay_us(500);
-    logger.log("sensor mid");
+
+    SPIDMANew<SPIConfig {
+        .inst = SPIConfig::SP1,
+        .cs_port = SPIConfig::A,
+        .cs_pin = 4,
+        .tx_channel = DMA1_CH1,
+        .rx_channel = DMA1_CH2,
+        .regs_cr1 = SPI_CR1_MSTR | (7 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM
+    }> spi1;
+    uint8_t data_out[16], data_in[16];
+    logger.log("sensor mid1");
+    bool success = co_await spi1.readwrite_async(sched, data_out, data_in, 16);
+    logger.log_printf("sensor mid2, %d", success);
     co_await sched.async_delay_us(500);
     logger.log("sensor done");
 }
 
 Task<> init_adc(CycleScheduler& sched) {
+    logger.log("adc start");
     co_await sched.async_delay_us(1200); 
     logger.log("adc done");
 }

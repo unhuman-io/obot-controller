@@ -4,10 +4,7 @@
 #include "../../motorlib/torque_sensor.h"
 #include <coroutine>
 #include "task.h"
-<<<<<<< HEAD
-#include "../../motorlib/peripheral/stm32g4/spi_dma.h"
-=======
->>>>>>> origin/develop
+#include "../../motorlib/peripheral/stm32g4/spi_dma_new.h"
 
 #define COMMS   COMMS_CAN
 
@@ -38,8 +35,15 @@ namespace config {
 Task<> init_sensor(CycleScheduler& sched) {
     logger.log("sensor start");
     co_await sched.async_delay_us(500);
-    GPIO cs1 {*GPIOA, 4, GPIO::OUTPUT};
-    SPIDMA spi1 {SPIDMA::SP1, cs1, DMA1_CH1, DMA1_CH2, 0, 50, 50, SPI_CR1_MSTR | (7 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM};
+
+    SPIDMANew<SPIConfig {
+        .inst = SPIConfig::SP1,
+        .cs_port = SPIConfig::A,
+        .cs_pin = 4,
+        .tx_channel = DMA1_CH1,
+        .rx_channel = DMA1_CH2,
+        .regs_cr1 = SPI_CR1_MSTR | (7 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM
+    }> spi1;
     uint8_t data_out[16], data_in[16];
     logger.log("sensor mid1");
     bool success = co_await spi1.readwrite_async(sched, data_out, data_in, 16);

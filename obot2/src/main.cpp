@@ -579,10 +579,10 @@ extern "C" __attribute__((naked)) void DebugMon_Handler() {
         "str r2, [sp, #40] \n"
         "ldr r2, =0xE000EF38 \n" 
         "ldr r2, [r2] \n"      // FPCAR address in r2
-        "push {lr} \n"
+        "push {r3, lr} \n"     // r3 just to maintain 8 byte stack alignment
         "bl debug_monitor \n"
        // "bkpt #2 \n"
-        "pop {lr} \n"
+        "pop {r3, lr} \n"
         "mov r0, sp \n" // ContextStateExt pointer in r0
         "ldm r0!, {r4-r11} \n" // load r4-r11
         "add r0, r0, #8 \n" // skip sp

@@ -1,4 +1,4 @@
-&elf_file="~/obot/obot-controller/obot_g474/build/trace.elf"
+&elf_file="~/obot/obot-controller/build/gcc/obot_g474/config/trace.elf"
 
 ;reset
 

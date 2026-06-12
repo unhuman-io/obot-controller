@@ -5,6 +5,7 @@
 #include <coroutine>
 #include "task.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma_new.h"
+#include "../peripheral/stm32g4/pin_config.h"
 
 #define COMMS   COMMS_CAN
 
@@ -16,7 +17,10 @@ struct InitCode {
     InitCode() {
         DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;
         DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI1_RX;
-
+        RCC->AHB2ENR |= RCC_AHB2ENR_DAC1EN;
+        ms_delay(1);
+        GPIO_SETL(A, 4, GPIO_MODE::INPUT,  GPIO_SPEED::MEDIUM, 0);  
+        DAC1->CR = DAC_CR_EN1;
     }
 };
 

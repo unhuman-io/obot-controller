@@ -1,9 +1,8 @@
-#define CUSTOM_SENDDATA
 #include <cstdint>
 #include <array>
-struct SendData {
-    std::array<uint32_t, 16> encoder;
-};
+// struct SendData {
+//     std::array<uint32_t, 16> encoder;
+// };
 
 #include "../param/param_obot_g474_can.h"
 #include "st_device.h"
@@ -220,44 +219,44 @@ void config_init() {
 
 void config_maintenance() {}
 
-void load_send_data(const MainLoop &main_loop, SendData * const data) {
-    config::ma782_a1.trigger();
-    config::ma782_b1.trigger();
-    config::ma782_c1.trigger();
-    config::ma782_d1.trigger();
-    config::ma782_e1.trigger();
+// void load_send_data(const MainLoop &main_loop, SendData * const data) {
+//     config::ma782_a1.trigger();
+//     config::ma782_b1.trigger();
+//     config::ma782_c1.trigger();
+//     config::ma782_d1.trigger();
+//     config::ma782_e1.trigger();
 
-    data->encoder[3] = config::ma782_a1.read();
-    data->encoder[6] = config::ma782_b1.read();
-    data->encoder[9] = config::ma782_c1.read();
-    data->encoder[12] = config::ma782_d1.read();
-    data->encoder[15] = config::ma782_e1.read();
+//     data->encoder[3] = config::ma782_a1.read();
+//     data->encoder[6] = config::ma782_b1.read();
+//     data->encoder[9] = config::ma782_c1.read();
+//     data->encoder[12] = config::ma782_d1.read();
+//     data->encoder[15] = config::ma782_e1.read();
 
-    config::ma782_a2.trigger();
-    config::ma782_b2.trigger();
-    config::ma782_c2.trigger();
-    config::ma782_d2.trigger();
-    config::ma782_e2.trigger();
+//     config::ma782_a2.trigger();
+//     config::ma782_b2.trigger();
+//     config::ma782_c2.trigger();
+//     config::ma782_d2.trigger();
+//     config::ma782_e2.trigger();
 
-    data->encoder[2] = config::ma782_a2.read();
-    data->encoder[5] = config::ma782_b2.read();
-    data->encoder[8] = config::ma782_c2.read();
-    data->encoder[11] = config::ma782_d2.read();
-    data->encoder[14] = config::ma782_e2.read();
+//     data->encoder[2] = config::ma782_a2.read();
+//     data->encoder[5] = config::ma782_b2.read();
+//     data->encoder[8] = config::ma782_c2.read();
+//     data->encoder[11] = config::ma782_d2.read();
+//     data->encoder[14] = config::ma782_e2.read();
 
-    config::ma782_a3.trigger();
-    config::ma782_b3.trigger();
-    config::ma782_c3.trigger();
-    config::ma782_d3.trigger();
-    config::ma782_e3.trigger();
+//     config::ma782_a3.trigger();
+//     config::ma782_b3.trigger();
+//     config::ma782_c3.trigger();
+//     config::ma782_d3.trigger();
+//     config::ma782_e3.trigger();
 
-    data->encoder[1] = config::ma782_a3.read();
-    data->encoder[4] = config::ma782_b3.read();
-    data->encoder[7] = config::ma782_c3.read();
-    data->encoder[10] = config::ma782_d3.read();
-    data->encoder[13] = config::ma782_e3.read();
+//     data->encoder[1] = config::ma782_a3.read();
+//     data->encoder[4] = config::ma782_b3.read();
+//     data->encoder[7] = config::ma782_c3.read();
+//     data->encoder[10] = config::ma782_d3.read();
+//     data->encoder[13] = config::ma782_e3.read();
 
-    config::ma782_a4.trigger();
-    data->encoder[0] = config::ma782_a4.read();
+//     config::ma782_a4.trigger();
+//     data->encoder[0] = config::ma782_a4.read();
 
-}
+// }

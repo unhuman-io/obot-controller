@@ -30,8 +30,6 @@ jobs:
           - { project: obot_g474, config: motor_aksim }
           - { project: obot_g474, config: motor_aksim_19_17, build_other: '-DCMAKE_CXX_FLAGS="-DMAX11254_TORQUE_SENSOR"' } # MR2
           - { project: obot_g474, config: motor_pz2 } # MR1
-          - { project: obot_g474, config: h2 }
-          - { project: obot_g474, config: hands }
           - { project: obot_g474, config: motor_aksim_20_19 } # MR0
           - { project: obot_g474, config: motor_aksim_19_18 } # MR0P
           - { project: obot_g474, config: motor_resolute }

@@ -326,13 +326,13 @@ void config_maintenance() {
         if (config::joint_encoder_direct.get_value() != 0) {
             joint_bias_set = true;
             joint_encoder_bias = param->joint_encoder_bias;
-            float joint_position = (float) config::joint_encoder_direct.get_value()*2*M_PI/powf(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
+            float joint_position = (float) config::joint_encoder_direct.get_value()*2*std::numbers::pi_v<float>/powf(2,JOINT_ENCODER_BITS) + joint_encoder_bias;
             if (joint_position > param->joint_encoder_rollover) {
-                joint_encoder_bias -= 2*M_PI;
+                joint_encoder_bias -= 2*std::numbers::pi_v<float>;
             } else if (joint_position < -param->joint_encoder_rollover) {
-                joint_encoder_bias += 2*M_PI;
+                joint_encoder_bias += 2*std::numbers::pi_v<float>;
             }
-            logger.log_printf("joint encoder raw: %f, joint encoder bias: %f", (double) (config::joint_encoder_direct.get_value()*2*(float)M_PI/powf(2,JOINT_ENCODER_BITS)), (double)joint_encoder_bias);
+            logger.log_printf("joint encoder raw: %f, joint encoder bias: %f", (double) (config::joint_encoder_direct.get_value()*2*(float)std::numbers::pi_v<float>/powf(2,JOINT_ENCODER_BITS)), (double)joint_encoder_bias);
         }
     }
 

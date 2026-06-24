@@ -1,6 +1,4 @@
 set(OBOT_CONFIGS
-    h2
-    hands
     motor_9_pzdma
     motor_9
     motor_40_osa14

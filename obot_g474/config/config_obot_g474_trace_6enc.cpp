@@ -1,8 +1,7 @@
-#define CUSTOM_SENDDATA
 #include <cstdint>
-struct SendData {
-    uint32_t encoder[6];
-};
+// struct SendData {
+//     uint32_t encoder[6];
+// };
 
 #include "../param/param_obot_g474.h"
 #include "st_device.h"
@@ -102,17 +101,17 @@ void config_init() {
 
 void config_maintenance() {}
 
-void load_send_data(const MainLoop &main_loop, SendData * const data) {
-    config::ma782_1.trigger();
-    data->encoder[0] = config::ma782_1.read();
-    config::ma782_2.trigger();
-    data->encoder[1] = config::ma782_2.read();
-    config::ma782_3.trigger();
-    data->encoder[2] = config::ma782_3.read();
-    config::ma782_4.trigger();
-    data->encoder[3] = config::ma782_4.read();
-    config::ma782_5.trigger();
-    data->encoder[4] = config::ma782_5.read();
-    config::ma782_6.trigger();
-    data->encoder[5] = config::ma782_6.read();
-}
+// void load_send_data(const MainLoop &main_loop, SendData * const data) {
+//     config::ma782_1.trigger();
+//     data->encoder[0] = config::ma782_1.read();
+//     config::ma782_2.trigger();
+//     data->encoder[1] = config::ma782_2.read();
+//     config::ma782_3.trigger();
+//     data->encoder[2] = config::ma782_3.read();
+//     config::ma782_4.trigger();
+//     data->encoder[3] = config::ma782_4.read();
+//     config::ma782_5.trigger();
+//     data->encoder[4] = config::ma782_5.read();
+//     config::ma782_6.trigger();
+//     data->encoder[5] = config::ma782_6.read();
+// }

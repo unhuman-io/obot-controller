@@ -1,6 +1,7 @@
 [submodule "motorlib"]
   path = motorlib
   url = ../motorlib
+	branch = .
 [submodule "calibration"]
   path = calibration
   url = ../calibration

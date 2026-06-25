@@ -5,6 +5,7 @@
 #include "../../motorlib/gpio.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
+#include "../../motorlib/boards/param_obot_g474_trace.h"
 #define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;

@@ -5,11 +5,8 @@
 #include "../../motorlib/gpio.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#define COMMS   COMMS_USB
-
-using TorqueSensor = TorqueSensorBase;
-using MotorEncoder = EncoderBase;
-using OutputEncoder = EncoderBase;
+#include "../../motorlib/boards/param_obot_g474_trace.h"
+#include "../../motorlib/boards/config_obot_g474_trace_board.h"
 
 struct InitCode {
     InitCode() {
@@ -25,21 +22,25 @@ struct InitCode {
         *etmcr |= 1 << 11;
         uint32_t *etmteevr = (uint32_t *)0xE0041020;
         *etmteevr = 0x000037ef; // ON
-
     }
 };
 
-namespace config {
-    const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 50000;
-    InitCode init_code;
+InitCode init_code;
 
+struct Config {
+    static constexpr uint32_t main_loop_frequency = 10000;    
+    static constexpr uint32_t pwm_frequency = 50000;
+    static constexpr uint32_t system_loop_frequency =  1000;
+    using TorqueSensor = TorqueSensorBase;
+    using MotorEncoder = EncoderBase;
+    using OutputEncoder = EncoderBase;
     MotorEncoder motor_encoder;
     TorqueSensor torque_sensor;
     OutputEncoder output_encoder;
 };
 
-#include "../../motorlib/boards/config_obot_g474_trace.cpp"
+struct TraceProject : TraceBoard<TraceConfig> {
+} trace_project;
 
 void config_init() {}
 

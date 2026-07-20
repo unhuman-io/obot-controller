@@ -29,3 +29,4 @@ add_link_options("-Wl,--gc-sections")
 
 add_subdirectory(motorlib)
 add_subdirectory(obot_g474/config)
+add_subdirectory(obot3)

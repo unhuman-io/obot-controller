@@ -1,3 +1,12 @@
-#include "basic_config.h"
+#include "../config1_default.h"
 
-struct Config : BasicConfig<> {};
+struct SpecialEncoder {
+    void read() {}
+};
+
+struct Config1 : DefaultConfig1 {
+    using MotorEncoderType = SpecialEncoder;
+    int special_parameter = 11;
+};
+
+

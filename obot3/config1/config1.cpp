@@ -2,7 +2,13 @@
 #include <atomic>
 #include "config1.h"
 
-using MySystem = System<Config>;
+template<auto config = Config1{}>
+struct Config : BasicConfig<config> {
+    int another_special_parameter = 12;
+    volatile float voltage_sensor;
+};
+
+using MySystem = System<Config<>>;
 
 void tim1_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);

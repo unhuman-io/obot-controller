@@ -19,8 +19,10 @@ template <typename System, IsFastLoopConfig auto config>
 struct FastLoop {
     using Controller = typename decltype(config)::ControllerType;
     static inline Controller controller{config.kp};
+    static inline typename decltype(config)::EncoderType encoder;
     static void update() {
         System::MainLoop::get_command();
+        encoder.read();
         controller.update();
     }
     static void get_status() {}

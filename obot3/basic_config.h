@@ -3,15 +3,15 @@
 
 struct EncoderBase {};
 
-struct EmptySensorPolicy {
-    void update() {}
+struct DefaultSensorPolicy {
+    int update() { return 0; }
 };
 
 struct BasicDefaultConfig {
     int fast_loop_frequency = 100'000;
     int main_loop_frequency = 10'000;
     using MotorEncoderType = EncoderBase;
-    using MainLoopSensorPolicy = EmptySensorPolicy;
+    using MainLoopSensorPolicy = DefaultSensorPolicy;
 };
 
 template<auto config = BasicDefaultConfig{}>

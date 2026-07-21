@@ -6,9 +6,10 @@ struct MainLoop {
     //using DiagnosticPolicy = typename decltype(config)::DiagnosticPolicy;
     //using ControllerPolicy = typename decltype(config)::ControllerPolicy;
     static inline SensorPolicy sensors;
+    using SensorStatus = decltype(sensors.update());
     static void update() {
         System::FastLoop::get_status();
-        sensors.update();
+        SensorStatus sensor_status = sensors.update();
       //  DiagnosticPolicy::update();
       //  ControllerPolicy::update();
     }

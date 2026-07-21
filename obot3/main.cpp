@@ -1,53 +1,6 @@
 #include <concepts>
-
-struct BasicFOCController {
-    static void update() {}
-};
-
-template <typename System, typename Config>
-struct MainLoop {
-    static void update() {
-        System::FastLoop::get_status();
-    }
-    static void get_command() {}
-};
-
-
-template <typename T>
-concept IsFastLoopConfig = requires(T config) {
-    { config.frequency } -> std::convertible_to<int>;
-    { config.controller.update() };
-};
-
-template <typename System, IsFastLoopConfig auto config>
-struct FastLoop {
-    static void update() {
-        System::MainLoop::get_command();
-        config.controller.update();
-    }
-    static void get_status() {}
-};
-
-struct Config {
-    static constexpr int fast_loop_frequency = 1000;
-    static constexpr int main_loop_frequency = 100;
-    
-    struct MainLoopConfig {
-        static constexpr int frequency = main_loop_frequency;
-    };
-    
-    template <typename System>
-    using MainLoopType = MainLoop<System, MainLoopConfig>;
-
-    struct FastLoopConfig {
-        static constexpr int frequency = fast_loop_frequency;
-        BasicFOCController controller;
-    };
-    
-    template <typename System>
-    using FastLoopType = FastLoop<System, FastLoopConfig{}>;
-
-};
+#include <atomic>
+#include "config1.h"
 
 
 template<typename Cfg>
@@ -61,6 +14,7 @@ using MySystem = System<Config>;
 int main() {
 
     while(1) {
+        std::atomic_signal_fence(std::memory_order_acq_rel);
         MySystem::FastLoop::update();
         MySystem::MainLoop::update();
     }

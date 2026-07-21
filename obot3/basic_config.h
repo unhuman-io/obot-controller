@@ -7,11 +7,17 @@ struct DefaultSensorPolicy {
     int update() { return 0; }
 };
 
+struct DefaultControllerPolicy {
+    template<typename Status>
+    typename Status::ExpectedCommand update(const Status &status) { return {}; }
+};
+
 struct BasicDefaultConfig {
     int fast_loop_frequency = 100'000;
     int main_loop_frequency = 10'000;
     using MotorEncoderType = EncoderBase;
     using MainLoopSensorPolicy = DefaultSensorPolicy;
+    using MainLoopControllerPolicy = DefaultControllerPolicy;
 };
 
 template<auto config = BasicDefaultConfig{}>
@@ -22,6 +28,7 @@ struct BasicConfig {
     struct MainLoopConfig {
         static constexpr int frequency = main_loop_frequency;
         using SensorPolicy = decltype(config)::MainLoopSensorPolicy;
+        using ControllerPolicy = decltype(config)::MainLoopControllerPolicy;
     };
     
     template <typename System>

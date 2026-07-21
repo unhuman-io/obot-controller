@@ -1,3 +1,5 @@
+#include <concepts>
+
 template <typename System, typename Config>
 struct MainLoop {
     static void update() {

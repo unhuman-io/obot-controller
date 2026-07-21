@@ -1,22 +1,16 @@
-#include <concepts>
-#include <atomic>
-#include "config1.h"
 
 
-template<typename Cfg>
-struct System {
-    using MainLoop = typename Cfg::MainLoopType<System>;
-    using FastLoop = typename Cfg::FastLoopType<System>;
-};
 
-using MySystem = System<Config>;
+
+
+
+
 
 int main() {
 
     while(1) {
-        std::atomic_signal_fence(std::memory_order_acq_rel);
-        MySystem::FastLoop::update();
-        MySystem::MainLoop::update();
+
+        //MySystem::MainLoop::update();
     }
     return 0;
 }

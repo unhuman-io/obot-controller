@@ -1,3 +1,8 @@
+#include <concepts>
+
+struct BasicFOCController {
+    static void update() {}
+};
 
 template <typename System, typename Config>
 struct MainLoop {
@@ -7,10 +12,18 @@ struct MainLoop {
     static void get_command() {}
 };
 
-template <typename System, typename Config>
+
+template <typename T>
+concept IsFastLoopConfig = requires(T config) {
+    { config.frequency } -> std::convertible_to<int>;
+    { config.controller.update() };
+};
+
+template <typename System, IsFastLoopConfig auto config>
 struct FastLoop {
     static void update() {
         System::MainLoop::get_command();
+        config.controller.update();
     }
     static void get_status() {}
 };
@@ -28,10 +41,11 @@ struct Config {
 
     struct FastLoopConfig {
         static constexpr int frequency = fast_loop_frequency;
+        BasicFOCController controller;
     };
     
     template <typename System>
-    using FastLoopType = FastLoop<System, FastLoopConfig>;
+    using FastLoopType = FastLoop<System, FastLoopConfig{}>;
 
 };
 

@@ -1,9 +1,16 @@
 #include <concepts>
 
-template <typename System, typename Config>
+template <typename System, auto config>
 struct MainLoop {
+    using SensorPolicy = typename decltype(config)::SensorPolicy;
+    //using DiagnosticPolicy = typename decltype(config)::DiagnosticPolicy;
+    //using ControllerPolicy = typename decltype(config)::ControllerPolicy;
+    static inline SensorPolicy sensors;
     static void update() {
         System::FastLoop::get_status();
+        sensors.update();
+      //  DiagnosticPolicy::update();
+      //  ControllerPolicy::update();
     }
     static void get_command() {}
 };

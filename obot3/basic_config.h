@@ -3,10 +3,15 @@
 
 struct EncoderBase {};
 
+struct EmptySensorPolicy {
+    void update() {}
+};
+
 struct BasicDefaultConfig {
     int fast_loop_frequency = 100'000;
     int main_loop_frequency = 10'000;
     using MotorEncoderType = EncoderBase;
+    using MainLoopSensorPolicy = EmptySensorPolicy;
 };
 
 template<auto config = BasicDefaultConfig{}>
@@ -16,10 +21,11 @@ struct BasicConfig {
     
     struct MainLoopConfig {
         static constexpr int frequency = main_loop_frequency;
+        using SensorPolicy = decltype(config)::MainLoopSensorPolicy;
     };
     
     template <typename System>
-    using MainLoopType = MainLoop<System, MainLoopConfig>;
+    using MainLoopType = MainLoop<System, MainLoopConfig{}>;
 
     struct FastLoopConfig {
         static constexpr int frequency = fast_loop_frequency;

@@ -9,7 +9,8 @@ struct DefaultSensorPolicy {
 
 struct DefaultControllerPolicy {
     template<typename Status>
-    typename Status::ExpectedCommand update(const Status &status) { return {}; }
+    typename Status::ExpectedCommand update(const Status &status) { count++; return {}; }
+    int count = 0;
 };
 
 struct BasicDefaultConfig {

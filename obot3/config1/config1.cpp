@@ -19,3 +19,13 @@ void tim2_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
     MySystem::MainLoop::update();
 }
+
+constexpr auto get_gpio_init = [](){
+    GPIOInit init{}; 
+    init.a[2].mode = GPIOMode::ALTERNATE;
+    return init;
+};
+
+void pin_config() {
+    g474_pin_config<get_gpio_init()>();
+}

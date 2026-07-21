@@ -19,4 +19,6 @@ struct Config1 : DefaultConfig1 {
     int special_parameter = 11;
 };
 
-
+struct Config1Pins : TracePins {
+    static constexpr int gpio_a_moder = 0x1234;
+};

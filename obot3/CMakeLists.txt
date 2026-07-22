@@ -8,3 +8,14 @@ target_link_options(config1-1.elf PRIVATE
 set_target_properties(config1-1.elf PROPERTIES
     LINK_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/g474.ld
 )
+target_compile_options(config1-1.elf PRIVATE
+    -fno-use-cxa-atexit
+)
+target_link_options(config1-1.elf PRIVATE
+    -nostartfiles       # <-- Drops crt0.o completely
+)
+target_compile_options(config1-1.elf PRIVATE
+    -fno-exceptions
+    -fno-rtti
+    -fno-unwind-tables
+)

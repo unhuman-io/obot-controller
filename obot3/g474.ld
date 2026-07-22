@@ -10,6 +10,7 @@ MEMORY
 
 /* Define the top of the stack (End of RAM) */
 _estack = ORIGIN(RAM) + LENGTH(RAM);
+__stack = ORIGIN(RAM) + LENGTH(RAM);
 
 SECTIONS
 {
@@ -32,6 +33,20 @@ SECTIONS
         . = ALIGN(4);
     } > FLASH
 
+    _sidata = LOADADDR(.data);
+
+    .data :
+    {
+        . = ALIGN(4);
+        _sdata = .;        /* Start of .data in RAM */
+
+        *(.data)           /* Initialized variables */
+        *(.data.*)
+
+        . = ALIGN(4);
+        _edata = .;        /* End of .data in RAM */
+    } > RAM AT> FLASH      /* <--- The crucial part */
+
     .bss :
     {
         . = ALIGN(4);
@@ -47,4 +62,27 @@ SECTIONS
         /* If you have ST-style symbols like _sbss and _ebss already here,
            you can leave them alone. Just add the two lines above. */
     } > RAM
+
+    .init_array :
+    {
+        . = ALIGN(4);
+        PROVIDE_HIDDEN (__init_array_start = .);
+        KEEP (*(SORT(.init_array.*)))
+        KEEP (*(.init_array*))
+        PROVIDE_HIDDEN (__init_array_end = .);
+        . = ALIGN(4);
+    } > FLASH
+
+    /* Required for C++ Exception Unwinding */
+    .ARM.extab : 
+    { 
+        *(.ARM.extab* .gnu.linkonce.armextab.*) 
+    } > FLASH
+    
+    .ARM.exidx :
+    {
+        __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
+    } > FLASH
 }

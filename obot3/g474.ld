@@ -1,5 +1,5 @@
 /* linker.ld */
-
+ENTRY(Reset_Handler)
 /* Define the memory map for your specific MCU */
 /* Check your MCU datasheet for exact ORIGIN and LENGTH */
 MEMORY

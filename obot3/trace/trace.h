@@ -1,5 +1,8 @@
-#include "g474_pins.h"
+#pragma once
+#include "g474_gpio_init.h"
 
-struct TracePins : G474Pins {
-    static constexpr int gpio_a_moder = 0x5678;
+constexpr auto trace_gpio_init = [](){
+    GPIOInit init = get_default_gpio_init();
+    init.a[2].mode = GPIOMode::ALTERNATE;
+    return init;
 };

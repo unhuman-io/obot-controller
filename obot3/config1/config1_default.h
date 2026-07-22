@@ -1,3 +1,4 @@
+#pragma once
 #include "basic_config.h"
 #include "../trace/trace.h"
 
@@ -11,6 +12,8 @@ struct DefaultConfig1 : BasicDefaultConfig {
     using MainLoopSensorPolicy = Config1SensorPolicy;
 };
 
-struct DefaultConfig1Pins : TracePins {
-    static constexpr int gpio_a_moder = 0x1234;
+constexpr auto config1_default_gpio_init = [](){
+    GPIOInit init = trace_gpio_init();
+    init.a[2].mode = GPIOMode::ALTERNATE;
+    return init;
 };

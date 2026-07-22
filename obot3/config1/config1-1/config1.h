@@ -1,3 +1,4 @@
+#pragma once
 #include "../config1_default.h"
 
 struct SpecialEncoder {
@@ -19,6 +20,8 @@ struct Config1 : DefaultConfig1 {
     int special_parameter = 11;
 };
 
-struct Config1Pins : TracePins {
-    static constexpr int gpio_a_moder = 0x1234;
+constexpr auto config1_gpio_init = [](){
+    GPIOInit init = config1_default_gpio_init();
+    init.a[2].mode = GPIOMode::ALTERNATE;
+    return init;
 };

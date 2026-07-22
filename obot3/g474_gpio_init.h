@@ -197,3 +197,12 @@ inline constexpr void init_gpio(const GPIORegsInit& g) {
   init_gpio_regs(GPIOF, g.f);
   init_gpio_regs(GPIOG, g.g);
 }
+
+template<GPIOInit gpio_init>
+inline constexpr void g474_pin_config() {
+    // set_g474_pins({
+    //     .a_moder = Pins::gpio_a_moder,
+    // });
+    
+    init_gpio(get_gpio_regs_init(gpio_init));
+}

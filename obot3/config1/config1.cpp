@@ -21,7 +21,7 @@ void tim2_isr() {
 }
 
 constexpr auto get_gpio_init = [](){
-    GPIOInit init{}; 
+    GPIOInit init = get_default_gpio_init();
     init.a[2].mode = GPIOMode::ALTERNATE;
     return init;
 };

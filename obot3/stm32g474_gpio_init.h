@@ -66,15 +66,30 @@ struct GPIOInit {
     const char* net;
     const char* function;
     const char* pin;
-    GPIOMode mode;
-    GPIOOType otype;
-    GPIOSpeed speed;
-    GPIOPullUpD pullupd;
-    GPIOSet bsrr;
-    GPIOLock lck;
-    GPIOAF af;
+    GPIOMode mode = GPIOMode::ANALOG;
+    GPIOOType otype = GPIOOType::PUSH_PULL;
+    GPIOSpeed speed = GPIOSpeed::LOW;
+    GPIOPullUpD pullupd = GPIOPullUpD::NO_PULL;
+    GPIOSet bsrr = GPIOSet::NO_SET;
+    GPIOLock lck = GPIOLock::NO_LOCK;
+    GPIOAF af = GPIOAF::AF0;
   } a[16], b[16], c[16], d[16], e[16], f[16], g[16];
 };
+
+inline constexpr GPIOInit get_default_gpio_init() {
+    GPIOInit init {};
+    init.a[13].mode = GPIOMode::ALTERNATE;
+    init.a[14].mode = GPIOMode::ALTERNATE;
+    init.a[15].mode = GPIOMode::ALTERNATE;
+    init.b[3].mode = GPIOMode::ALTERNATE;
+    init.b[4].mode = GPIOMode::ALTERNATE;
+    init.a[13].speed = GPIOSpeed::VERY_HIGH;
+    init.a[13].pullupd = GPIOPullUpD::PULL_UP;
+    init.a[14].pullupd = GPIOPullUpD::PULL_DOWN;
+    init.a[15].pullupd = GPIOPullUpD::PULL_UP;
+    init.b[4].pullupd = GPIOPullUpD::PULL_UP;
+    return init;
+}
 
 template <typename Regs>
 concept GPIORegs = requires(Regs& regs) {

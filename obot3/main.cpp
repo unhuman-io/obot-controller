@@ -3,8 +3,9 @@
 void pin_config();
 
 int main() {
+    pin_config();
     while(1) {
-        pin_config();
+        
         //MySystem::MainLoop::update();
     }
     return 0;

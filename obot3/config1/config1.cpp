@@ -12,13 +12,11 @@ using MySystem = System<Config<>>;
 
 void tim1_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
-    asm("bkpt #3");
     MySystem::FastLoop::update();
 }
 
 void tim2_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
-    asm("bkpt #4");
     MySystem::MainLoop::update();
 }
 

@@ -11,7 +11,7 @@ struct Config1_1SensorStatus {
 
 struct Config1_1SensorPolicy : Config1SensorPolicy {
     Config1_1SensorStatus update() { Config1SensorPolicy::update(); count += 2; return {adc_reading}; }
-    volatile int adc_reading;
+    volatile int adc_reading = 0;
 };
 
 struct Config1 : DefaultConfig1 {

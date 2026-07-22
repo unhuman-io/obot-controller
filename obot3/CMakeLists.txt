@@ -10,9 +10,11 @@ set_target_properties(config1-1.elf PROPERTIES
 )
 target_compile_options(config1-1.elf PRIVATE
     -fno-use-cxa-atexit
+    -fno-threadsafe-statics
 )
 target_link_options(config1-1.elf PRIVATE
     -nostartfiles       # <-- Drops crt0.o completely
+    "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/config1-1.map"
 )
 target_compile_options(config1-1.elf PRIVATE
     -fno-exceptions

@@ -3,7 +3,7 @@
 template <typename System, auto config>
 struct MainLoop {
     using SensorPolicy = typename decltype(config)::SensorPolicy;
-    static inline SensorPolicy sensors;
+    static inline constinit SensorPolicy sensors;
     using SensorStatus = decltype(sensors.update());
     using FastLoopCommand = System::FastLoop::FastLoopCommand;
     using FastLoopStatus = System::FastLoop::FastLoopStatus;

@@ -12,12 +12,12 @@ using MySystem = System<Config<>>;
 
 void tim1_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
-    MySystem::FastLoop::update();
+    MySystem::fast_loop.update();
 }
 
 void tim2_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
-    MySystem::MainLoop::update();
+    MySystem::main_loop.update();
 }
 
 void pin_config() {

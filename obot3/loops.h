@@ -3,7 +3,7 @@
 template <typename System, auto config>
 struct MainLoop {
     using SensorPolicy = typename decltype(config)::SensorPolicy;
-    static inline constinit SensorPolicy sensors;
+    SensorPolicy sensors;
     using SensorStatus = decltype(sensors.update());
     using FastLoopCommand = System::FastLoop::FastLoopCommand;
     using FastLoopStatus = System::FastLoop::FastLoopStatus;
@@ -14,17 +14,17 @@ struct MainLoop {
     };
     //using DiagnosticPolicy = typename decltype(config)::DiagnosticPolicy;
     using ControllerPolicy = typename decltype(config)::ControllerPolicy;
-    static inline ControllerPolicy controller;
+    ControllerPolicy controller;
 
-    static inline FastLoopCommand fast_loop_command {};
-    static inline MainLoopStatus status {};
-    static void update() {
-        status.fast_loop = System::FastLoop::get_status();
+    FastLoopCommand fast_loop_command {};
+    MainLoopStatus status {};
+    void update() {
+        status.fast_loop = System::fast_loop.get_status();
         status.sensors = sensors.update();
       //  DiagnosticPolicy::update();
         fast_loop_command = controller.update(status);
     }
-    static FastLoopCommand get_command() { return fast_loop_command; }
+    FastLoopCommand get_command() { return fast_loop_command; }
 };
 
 
@@ -37,18 +37,18 @@ concept IsFastLoopConfig = requires(T config) {
 template <typename System, IsFastLoopConfig auto config>
 struct FastLoop {
     using Controller = typename decltype(config)::ControllerType;
-    static inline Controller controller{config.kp};
-    static inline typename decltype(config)::EncoderType encoder;
+    Controller controller{config.kp};
+    typename decltype(config)::EncoderType encoder;
     struct FastLoopStatus {
         int encoder_value;
     };
     struct FastLoopCommand {
         Controller::Command foc;
     };
-    static void update() {
-        FastLoopCommand command = System::MainLoop::get_command();
+    void update() {
+        FastLoopCommand command = System::main_loop.get_command();
         encoder.read();
         controller.update(command.foc);
     }
-    static FastLoopStatus get_status() { return {}; }
+    FastLoopStatus get_status() { return {}; }
 };

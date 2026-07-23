@@ -49,12 +49,14 @@ void (*const vector_table[])(void) = {
 
 void tim2_isr();
 void tim1_isr();
+void os_loop();
 
 int main() {
     pin_config();
     while(1) {
         tim2_isr();
         tim1_isr();
+        os_loop();
         //MySystem::MainLoop::update();
     }
     return 0;

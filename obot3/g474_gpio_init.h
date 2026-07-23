@@ -177,32 +177,31 @@ inline consteval const GPIORegsInit get_gpio_regs_init(const GPIOInit& g) {
   return init;
 }
 
-inline constexpr void init_gpio_regs(GPIORegs auto regs, const GPIORegsInit::Regs& g) {
-  regs->MODER = g.moder;
-  regs->OTYPER = g.otyper;
-  regs->OSPEEDR = g.ospeedr;
-  regs->PUPDR = g.pupdr;
-  regs->BSRR = g.bsrr;
-  regs->LCKR = g.lckr;
-  regs->AFR[0] = g.afr[0];
-  regs->AFR[1] = g.afr[1];
+template<const GPIORegsInit::Regs g, const GPIORegsInit::Regs g_default>
+inline constexpr void init_gpio_regs(GPIORegs auto regs) {
+  if constexpr (g.moder != g_default.moder) regs->MODER = g.moder;
+  if constexpr (g.otyper != g_default.otyper) regs->OTYPER = g.otyper;
+  if constexpr (g.ospeedr != g_default.ospeedr) regs->OSPEEDR = g.ospeedr;
+  if constexpr (g.pupdr != g_default.pupdr) regs->PUPDR = g.pupdr;
+  if constexpr (g.bsrr != g_default.bsrr) regs->BSRR = g.bsrr;
+  if constexpr (g.lckr != g_default.lckr) regs->LCKR = g.lckr;
+  if constexpr (g.afr[0] != g_default.afr[0]) regs->AFR[0] = g.afr[0];
+  if constexpr (g.afr[1] != g_default.afr[1]) regs->AFR[1] = g.afr[1];
 }
 
-inline constexpr void init_gpio(const GPIORegsInit& g) {
-  init_gpio_regs(GPIOA, g.a);
-  init_gpio_regs(GPIOB, g.b);
-  init_gpio_regs(GPIOC, g.c);
-  init_gpio_regs(GPIOD, g.d);
-  init_gpio_regs(GPIOE, g.e);
-  init_gpio_regs(GPIOF, g.f);
-  init_gpio_regs(GPIOG, g.g);
+template<const GPIORegsInit g>
+inline constexpr void init_gpio() {
+  constexpr GPIORegsInit g_default = get_gpio_regs_init(get_default_gpio_init());
+  init_gpio_regs<g.a , g_default.a>(GPIOA);
+  init_gpio_regs<g.b , g_default.b>(GPIOB);
+  init_gpio_regs<g.c , g_default.c>(GPIOC);
+  init_gpio_regs<g.d , g_default.d>(GPIOD);
+  init_gpio_regs<g.e , g_default.e>(GPIOE);
+  init_gpio_regs<g.f , g_default.f>(GPIOF);
+  init_gpio_regs<g.g , g_default.g>(GPIOG);
 }
 
 template<GPIOInit gpio_init>
-inline constexpr void g474_pin_config() {
-    // set_g474_pins({
-    //     .a_moder = Pins::gpio_a_moder,
-    // });
-    
-    init_gpio(get_gpio_regs_init(gpio_init));
+inline constexpr void g474_pin_config() { 
+    init_gpio<get_gpio_regs_init(gpio_init)>();
 }

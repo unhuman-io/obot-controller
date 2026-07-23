@@ -20,8 +20,16 @@ struct Config1 : DefaultConfig1 {
     int special_parameter = 11;
 };
 
-constexpr auto config1_gpio_init = [](){
+constexpr auto config1_gpio_init = []() consteval {
     GPIOInit init = config1_default_gpio_init();
     init.a[2].mode = GPIOMode::ALTERNATE;
     return init;
-};
+}();
+
+constexpr auto config1_rcc_init = []() consteval {
+    return RCCInit{.gpioe = RCCEnable::ENABLED,
+        .gpiod = RCCEnable::ENABLED,
+        .gpioc = RCCEnable::ENABLED,
+        .gpiob = RCCEnable::ENABLED,
+        .gpioa = RCCEnable::ENABLED};
+}();

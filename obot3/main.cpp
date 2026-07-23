@@ -49,9 +49,6 @@ void tim2_isr();
 void tim1_isr();
 
 int main() {
-    RCC->AHB2ENR = RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN |
-        RCC_AHB2ENR_GPIODEN | RCC_AHB2ENR_GPIOEEN | RCC_AHB2ENR_GPIOFEN |
-        RCC_AHB2ENR_GPIOGEN;
     pin_config();
     while(1) {
         tim2_isr();

@@ -21,5 +21,10 @@ void tim2_isr() {
 }
 
 void pin_config() {
+    g474_rcc_config<RCCInit{.gpioe = RCCEnable::ENABLED,
+        .gpiod = RCCEnable::ENABLED,
+        .gpioc = RCCEnable::ENABLED,
+        .gpiob = RCCEnable::ENABLED,
+        .gpioa = RCCEnable::ENABLED}>();
     g474_pin_config<config1_gpio_init()>();
 }

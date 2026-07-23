@@ -80,6 +80,10 @@ struct RCCInit {
     RCCEnable syscfg    = RCCEnable::DISABLED; 
 };
 
+struct RCCClockInit {
+    uint32_t cpu_frequency_hz = 170'000'000;
+};
+
 template<const RCCInit r>
 inline consteval uint32_t get_ahb1enr() {
     return static_cast<uint32_t>(r.crc) << RCC_AHB1ENR_CRCEN_Pos |
@@ -186,7 +190,47 @@ inline constexpr void init_rcc() {
     }
 }
 
+template<const RCCClockInit c>
+inline constexpr void init_rcc_clock() {
+    PWR->CR5 &= ~PWR_CR5_R1MODE; // R1MODE -> 0 for > 150 MHz operation
+
+    // ensure cpu clock is started for us_delay
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
+    // PWR_CR5_R1MODE change recommends 1 us startup
+    //us_delay(1);
+
+    FLASH->ACR |= FLASH_ACR_PRFTEN;
+    FLASH->ACR = (FLASH->ACR & ~FLASH_ACR_LATENCY_Msk) | FLASH_ACR_LATENCY_4WS; // 4 flash wait states for 170 MHz
+
+  // P, Q, R all 170 MHz
+  RCC->PLLCFGR = 3 << RCC_PLLCFGR_PLLSRC_Pos | // (3) HSE is pll source (24 MHz)
+    5 << RCC_PLLCFGR_PLLM_Pos | // (5) div6
+    (uint32_t) c.cpu_frequency_hz/2000000 << RCC_PLLCFGR_PLLN_Pos | // (85) x85
+    2 << RCC_PLLCFGR_PLLPDIV_Pos | // (2) div2
+    //RCC_PLLCFGR_PLLPEN |
+    0 << RCC_PLLCFGR_PLLQ_Pos | // (0) div2
+    //RCC_PLLCFGR_PLLQEN |
+    0 << RCC_PLLCFGR_PLLR_Pos | // (0) div2
+    RCC_PLLCFGR_PLLREN;
+    RCC->CR = RCC_CR_HSEON | RCC_CR_HSION | RCC_CR_PLLON;
+
+  RCC->CRRCR = RCC_CRRCR_HSI48ON;
+  while(!(RCC->CRRCR & RCC_CRRCR_HSI48RDY));
+  while(!(RCC->CR & RCC_CR_PLLRDY));
+
+  RCC->CFGR = 3 << RCC_CFGR_SW_Pos; // (3) // PLL clock
+}
+
+
 template<RCCInit rcc_init>
 inline constexpr void g474_rcc_config() {
     init_rcc<rcc_init>();
+}
+
+template<RCCClockInit rcc_clock_init>
+inline constexpr void g474_rcc_clock_config() {
+    init_rcc_clock<rcc_clock_init>();
 }

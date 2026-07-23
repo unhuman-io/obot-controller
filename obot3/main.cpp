@@ -2,6 +2,7 @@
 // unsigned int go_to_bootloader;
 // unsigned int rcc_csr_copy;
 #include "stm32g474xx.h"
+void clock_config();
 void pin_config();
 extern unsigned int _estack;
 extern unsigned int _sidata; // Flash load address
@@ -13,6 +14,7 @@ extern "C" void (*__init_array_start[])(void);
 extern "C" void (*__init_array_end[])(void);
 int main();
 extern "C" void Reset_Handler(void) {
+    clock_config();
     // Copy .data from Flash to RAM
     unsigned int *src = &_sidata;
     unsigned int *dst = &_sdata;

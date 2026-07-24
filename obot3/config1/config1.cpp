@@ -42,11 +42,15 @@ GlobalTask<void, 1, 36> task1(CycleScheduler &sched){
 
 auto task1_task = task1(sched);
 
-GlobalTask<void, 2, 36> task2(CycleScheduler &sched){
+GlobalTask<void, 2, 48> task2(CycleScheduler &sched){
     volatile int count2 = 0;
-    while(1) {
+    constexpr uint32_t PERIOD_CYCLES = CPU_FREQUENCY_HZ / 10; // 10Hz
+    uint32_t target_wake_time = get_clock();
+
+    while (1) {
+        target_wake_time += PERIOD_CYCLES;
         count2 += 1;
-        co_await sched.yield();
+        co_await sched.delay_until(target_wake_time);
     }
 }
 

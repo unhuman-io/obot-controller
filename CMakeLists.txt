@@ -3,6 +3,7 @@ project(obot CXX C ASM)
 
 set(CMAKE_CXX_STANDARD 23)
 message(VERBOSE "cxx: " ${CMAKE_CXX_COMPILER})
+set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 # define optimization options
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
@@ -29,3 +30,4 @@ add_link_options("-Wl,--gc-sections")
 
 add_subdirectory(motorlib)
 add_subdirectory(obot_g474/config)
+add_subdirectory(obot3)

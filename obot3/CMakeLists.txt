@@ -8,13 +8,6 @@ function(add_obot3_target name device config_dir)
         -nostartfiles       # <-- Drops crt0.o completely
         "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${name}.map"
     )
-    target_compile_options(${tgt} PRIVATE
-        -fno-use-cxa-atexit
-        -fno-threadsafe-statics
-        -fno-exceptions
-        -fno-rtti
-        -fno-unwind-tables
-    )
 endfunction()
 
 add_obot3_target(config1-1    device_stm32g474 config1/config1-1    config1/config1.cpp)

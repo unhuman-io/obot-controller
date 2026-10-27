@@ -1,7 +1,7 @@
 #pragma once
 #include "basic_config.h"
 #include "../trace/trace.h"
-#include "hrtim_init.h"
+import device.hrtim_init;
 
 struct Config1SensorPolicy {
     int update() { count++; return 0; }

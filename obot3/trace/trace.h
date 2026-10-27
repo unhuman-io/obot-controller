@@ -1,6 +1,6 @@
 #pragma once
-#include "gpio_init.h"
-#include "rcc_init.h"
+import device.gpio_init;
+import device.rcc_init;
 
 constexpr auto trace_gpio_init = [](){
     GPIOInit init = get_default_gpio_init();

@@ -1,6 +1,6 @@
 #pragma once
 #include "../config1_default.h"
-#include "play_init.h"
+import device.play_init;
 
 struct SpecialEncoder {
     void read() {}
@@ -76,5 +76,5 @@ inline void config1_device_init() {
 }
 
 inline void config1_toggle() {
-    gpio_toggle(GPIOG, 3);
+    gpio_toggle(gpio_port<'G'>(), 3);
 }

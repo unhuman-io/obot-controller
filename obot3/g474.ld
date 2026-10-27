@@ -1,88 +1,50 @@
-/* linker.ld */
 ENTRY(Reset_Handler)
-/* Define the memory map for your specific MCU */
-/* Check your MCU datasheet for exact ORIGIN and LENGTH */
+
 MEMORY
 {
-    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 512K
+    FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 512K
     RAM (xrw)  : ORIGIN = 0x20000000, LENGTH = 96K
 }
 
-/* Define the top of the stack (End of RAM) */
 _estack = ORIGIN(RAM) + LENGTH(RAM);
-__stack = ORIGIN(RAM) + LENGTH(RAM);
 
 SECTIONS
 {
-    /* The vector table goes first into Flash */
-    .isr_vector :
-    {
-        . = ALIGN(4);
-        KEEP(*(.isr_vector)) /* KEEP prevents the linker from discarding it */
-        . = ALIGN(4);
-    } > FLASH
-
-    /* The actual code goes after the vector table */
     .text :
     {
-        . = ALIGN(4);
-        *(.text)
-        *(.text.*)
-        *(.init)
-        *(.fini)
-        . = ALIGN(4);
+        KEEP(*(.isr_vector))
+        *(.text*)
+        *(.rodata*)
     } > FLASH
 
-    _sidata = LOADADDR(.data);
+    .init_array :
+    {
+        __init_array_start = .;
+        KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)))
+        KEEP(*(.init_array))
+        __init_array_end = .;
+    } > FLASH
 
+    /* Reset_Handler copies .data and zeroes .bss a word at a time */
     .data :
     {
         . = ALIGN(4);
-        _sdata = .;        /* Start of .data in RAM */
-
-        *(.data)           /* Initialized variables */
-        *(.data.*)
-
+        _sdata = .;
+        *(.data*)
         . = ALIGN(4);
-        _edata = .;        /* End of .data in RAM */
-    } > RAM AT> FLASH      /* <--- The crucial part */
+        _edata = .;
+    } > RAM AT> FLASH
+    _sidata = LOADADDR(.data);
 
     .bss :
     {
         . = ALIGN(4);
-        __bss_start__ = .; /* crt0 expects this exact name */
-
-        *(.bss)
-        *(.bss.*)
-        *(COMMON)
-
+        __bss_start__ = .;
+        *(.bss*)
         . = ALIGN(4);
-        __bss_end__ = .;   /* crt0 expects this exact name */
-
-        /* If you have ST-style symbols like _sbss and _ebss already here,
-           you can leave them alone. Just add the two lines above. */
+        __bss_end__ = .;
     } > RAM
 
-    .init_array :
-    {
-        . = ALIGN(4);
-        PROVIDE_HIDDEN (__init_array_start = .);
-        KEEP (*(SORT(.init_array.*)))
-        KEEP (*(.init_array*))
-        PROVIDE_HIDDEN (__init_array_end = .);
-        . = ALIGN(4);
-    } > FLASH
-
-    /* Required for C++ Exception Unwinding */
-    .ARM.extab : 
-    { 
-        *(.ARM.extab* .gnu.linkonce.armextab.*) 
-    } > FLASH
-    
-    .ARM.exidx :
-    {
-        __exidx_start = .;
-        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-        __exidx_end = .;
-    } > FLASH
+    /* No exceptions or unwinding */
+    /DISCARD/ : { *(.ARM.exidx*) *(.ARM.extab*) }
 }

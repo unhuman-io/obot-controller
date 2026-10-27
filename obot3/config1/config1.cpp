@@ -22,12 +22,12 @@ void tim2_isr() {
 }
 
 void clock_config() {
-    g474_rcc_clock_config<RCCClockInit{}>();
+    device_rcc_clock_config<RCCClockInit{}>();
 }
 
 void pin_config() {
-    g474_rcc_config<config1_rcc_init>();
-    g474_pin_config<config1_gpio_init>();
+    device_rcc_config<config1_rcc_init>();
+    device_pin_config<config1_gpio_init>();
 }
 
 CycleScheduler sched;

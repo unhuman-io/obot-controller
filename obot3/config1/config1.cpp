@@ -28,6 +28,7 @@ void clock_config() {
 void pin_config() {
     device_rcc_config<config1_rcc_init>();
     device_pin_config<config1_gpio_init>();
+    device_hrtim_config<config1_hrtim_init>();
 }
 
 CycleScheduler sched;

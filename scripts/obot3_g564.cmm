@@ -51,8 +51,8 @@ system.Option.IMASKASM ON
 
 SYStem.Up
 
-; ITM over SWO at the 64 MHz HSI reset clock (see stm32g5 rcc_init.h)
-itm.clock 64MHz
+; ITM over SWO at the 280 MHz PLL clock (see config1_rcc_clock_init)
+itm.clock 280MHz
 tpiu.PortSize SWV
 tpiu.SWVPrescaler 4.
 trace.TraceCLOCK 16MHz

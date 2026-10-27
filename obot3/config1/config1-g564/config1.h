@@ -45,23 +45,29 @@ constexpr auto config1_rcc_init = []() consteval {
         .hrtim1 = RCCEnable::ENABLED};
 }();
 
-constexpr auto config1_rcc_clock_init = RCCClockInit{.play_clock = RCCKernelClock::HSI};
+// 280 MHz from the 24 MHz crystal (24 / 3 = 8 MHz, x 70 = 560 MHz VCO, / 2);
+// the PLAY gets the same clock from PLL2 so it can catch one-cycle HRTIM triggers
+constexpr auto config1_rcc_clock_init = RCCClockInit{
+    .cpu_frequency_hz = 280'000'000,
+    .pll_source = RCCPLLSource::HSE,
+    .hse_frequency_hz = 24'000'000,
+    .pll2_frequency_hz = 280'000'000,
+    .play_clock = RCCKernelClock::PLL2P};
 
-// PLAY input 1 source 5 (HRTIM1 ADC trigger 1) -> filter 1 -> LE1 -> PLAY_OUT0 (PD11)
-// toggle: LE1 is a flip-flop (registered output fed back through NOT, clock
-//         enable = filter 1), PD11 is a square wave at half the trigger rate
-// pulse:  LE1 passes the trigger through, PD11 is the trigger pulse itself
+// PLAY -> PLAY_OUT0 (PD11), two monitors of the ADC trigger:
+//   toggle: input 15 source 7 (HRTIM1 CHF1, toggled on every timer F cmp3)
+//   pulse:  input 1 source 5 (HRTIM1 ADC trigger 1, a one hrtim clock pulse)
 constexpr bool config1_play_toggle = true;
 constexpr auto config1_play_init = []() consteval {
     PLAYInit init{};
-    init.filter[1] = {.premux_select = 5};
     if constexpr (config1_play_toggle) {
-        init.le[1] = {.lut = play_lut_invert(0), .in0 = play_in_le_registered(1), .clock = play_in_filter(1)};
-        init.out[0] = {.select = play_out_le_registered(1)};   // PD11 is PLAY_OUT0
+        init.filter[15] = {.premux_select = 7};
+        init.le[1] = {.lut = play_lut_passthrough(0), .in0 = play_in_filter(15)};
     } else {
+        init.filter[1] = {.premux_select = 5};
         init.le[1] = {.lut = play_lut_passthrough(0), .in0 = play_in_filter(1)};
-        init.out[0] = {.select = play_out_le_direct(1)};
     }
+    init.out[0] = {.select = play_out_le_direct(1)};   // PD11 is PLAY_OUT0
     return init;
 }();
 

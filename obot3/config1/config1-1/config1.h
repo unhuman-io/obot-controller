@@ -37,3 +37,5 @@ constexpr auto config1_rcc_init = []() consteval {
 
 // no spare pin to toggle on this board
 inline void config1_toggle() {}
+
+inline void config1_device_init() {}

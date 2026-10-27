@@ -1,5 +1,6 @@
 #pragma once
 #include "../config1_default.h"
+#include "play_init.h"
 
 struct SpecialEncoder {
     void read() {}
@@ -26,6 +27,9 @@ constexpr auto config1_gpio_init = []() consteval {
     init.g[3].mode = GPIOMode::OUTPUT;
     init.b[5].mode = GPIOMode::ALTERNATE;
     init.b[5].af = GPIOAF::AF12;
+    init.d[11].mode = GPIOMode::ALTERNATE;   // PLAY_OUT0
+    init.d[11].af = GPIOAF::AF14;
+    init.d[11].speed = GPIOSpeed::VERY_HIGH;  // adc trigger pulse is a few hrtim clocks wide
     return init;
 }();
 
@@ -36,8 +40,23 @@ constexpr auto config1_rcc_init = []() consteval {
         .gpioc = RCCEnable::ENABLED,
         .gpiob = RCCEnable::ENABLED,
         .gpioa = RCCEnable::ENABLED,
+        .playapb = RCCEnable::ENABLED,
+        .play = RCCEnable::ENABLED,
         .hrtim1 = RCCEnable::ENABLED};
 }();
+
+// PLAY input 1 source 5 (HRTIM1 ADC trigger 1) -> filter 1 -> LE1 -> PLAY_OUT0 (PD11)
+constexpr auto config1_play_init = []() consteval {
+    PLAYInit init{};
+    init.filter[1] = {.premux_select = 5};
+    init.le[1] = {.lut = play_lut_passthrough(0), .in0 = play_in_filter(0)};
+    init.out[0] = {.select = play_out_le_direct(1)};   // PD11 is PLAY_OUT0
+    return init;
+}();
+
+inline void config1_device_init() {
+    device_play_config<config1_play_init>();
+}
 
 inline void config1_toggle() {
     gpio_toggle(GPIOG, 3);

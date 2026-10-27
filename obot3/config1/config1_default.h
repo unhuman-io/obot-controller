@@ -43,5 +43,6 @@ constexpr auto config1_hrtim_init = []() consteval {
         .cmp3 = static_cast<uint16_t>(hrtim_period(100'000) / 2),
     };
     init.adc_trigger1 = HRTIMADCTrigger::TIMF_CMP3;
+    init.adc_trigger1_update = HRTIMTimer::F;
     return init;
 }();

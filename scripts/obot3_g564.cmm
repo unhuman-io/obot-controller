@@ -1,0 +1,67 @@
+&elf_file="~/obot/obot-controller/build/llvm/obot3/config1-g564.elf"
+
+; STM32G564: Cortex-M33, 512K flash at 0x08000000 (2 banks, 8K sectors),
+; 112K SRAM at 0x20000000. TRACE32 (R.2026.02) has no G5 support yet, so this
+; is a generic Cortex-M33 setup with the flash declared by hand.
+system.cpu cortexm33f
+system.jtagclock 10MHz
+SYStem.CONFIG.DEBUGPORTTYPE SWD
+
+; From SYStem.DETECT DAP:
+;   AP#0 APB-AP  idr 0x54770002  ROM table APB:0xE00E0000 -> DBGMCU 0xE00E6000
+;   AP#1 AHB-AP  idr 0x84770001  ROM table AHB:0xE00FE000 -> Cortex-M33 debug,
+;                                DWT, FPB, ITM, ETM, CTI, TPIU
+SYStem.CONFIG.AHBAP1.Port 1.
+SYStem.CONFIG.DEBUGAP1.Port 1.
+SYStem.CONFIG.MEMORYAP1.Port 1.
+SYStem.CONFIG.APBAP1.Port 1.
+//SYStem.CONFIG.ITM.Base AHB:0xE0000000
+//SYStem.CONFIG.ETM.Base AHB:0xE0041000
+//SYStem.CONFIG.CTI.Base AHB:0xE0042000
+//SYStem.CONFIG.TPIU.Base AHB:0xE0040000
+SYStem.MemAccess DAP
+
+system.Option.EnReset Off
+system.Option.DUALPORT ON
+system.mode attach
+break
+
+; Flash declaration. The G564 flash controller is the STM32H5 one: same base
+; (0x40022000) and the same register offsets for everything the H5 algorithm
+; touches (KEYR/SR/CR/CCR/OPTSR/WRP/EDATA), so stm32h5.bin is used directly.
+; Equivalent to stm32h5.cmm PREPAREONLY for a 512K non-TrustZone part.
+IF (Data.Long(ZD:0x40022070)&0xFF000000)==0xB4000000
+  PRINT %ERROR "TrustZone is enabled (OPTSR2 TZEN=0xB4); flash layout below assumes it is off"
+FLASH.RESet
+FLASH.Create 1. 0x08000000++0x3FFFF 0x2000 TARGET Quad
+FLASH.Create 2. 0x08040000++0x3FFFF 0x2000 TARGET Quad
+FLASH.TARGET 0x20000000 0x20001000 0x2000 ~~/demo/arm/flash/byte/stm32h5.bin
+
+flash.ReProgram all /Erase
+data.load.elf &elf_file
+flash.ReProgram off
+
+Data.LOAD.elf &elf_file /DIFF
+IF FOUND()
+  PRINT "Verify error after FLASH programming"
+ELSE
+  PRINT "FLASH programming completed successfully"
+
+system.Option.IMASKASM ON
+
+SYStem.Up
+
+; ITM over SWO at the 280 MHz PLL clock (see config1_rcc_clock_init)
+itm.clock 280MHz
+tpiu.PortSize SWV
+tpiu.SWVPrescaler 4.
+trace.TraceCLOCK 16MHz
+itm.DataTrace off
+
+system.RESetTarget
+
+itm.TImeMode.PCSampler
+
+list.auto
+
+menu.addtool "Reset" "R" "system.resettarget"

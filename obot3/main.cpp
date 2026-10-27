@@ -1,7 +1,7 @@
 
 // unsigned int go_to_bootloader;
 // unsigned int rcc_csr_copy;
-#include "stm32g474xx.h"
+#include "st_device.h"
 void clock_config();
 void pin_config();
 extern unsigned int _estack;

@@ -1,7 +1,7 @@
 #include "system.h"
 #include <atomic>
+#include "../motorlib/task.h"   // device header first: the device.* modules carry it in their global module fragment
 #include "config1.h"
-#include "../motorlib/task.h"
 
 template<auto config = Config1{}>
 struct Config : BasicConfig<config> {
@@ -22,12 +22,14 @@ void tim2_isr() {
 }
 
 void clock_config() {
-    g474_rcc_clock_config<RCCClockInit{}>();
+    device_rcc_clock_config<config1_rcc_clock_init>();
 }
 
 void pin_config() {
-    g474_rcc_config<config1_rcc_init>();
-    g474_pin_config<config1_gpio_init>();
+    device_rcc_config<config1_rcc_init>();
+    device_pin_config<config1_gpio_init>();
+    device_hrtim_config<config1_hrtim_init>();
+    config1_device_init();
 }
 
 CycleScheduler sched;
@@ -50,6 +52,7 @@ GlobalTask<void, 2, 48> task2(CycleScheduler &sched){
     while (1) {
         target_wake_time += PERIOD_CYCLES;
         count2 += 1;
+        config1_toggle();
         co_await sched.delay_until(target_wake_time);
     }
 }

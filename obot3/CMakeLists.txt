@@ -17,5 +17,5 @@ function(add_obot3_target name device config_dir)
     )
 endfunction()
 
-add_obot3_target(config1-1      device_stm32g474 config1/config1-1 config1/config1.cpp)
-add_obot3_target(config1-1-g564 device_stm32g564 config1/config1-1 config1/config1.cpp)
+add_obot3_target(config1-1    device_stm32g474 config1/config1-1    config1/config1.cpp)
+add_obot3_target(config1-g564 device_stm32g564 config1/config1-g564 config1/config1.cpp)

@@ -50,6 +50,7 @@ GlobalTask<void, 2, 48> task2(CycleScheduler &sched){
     while (1) {
         target_wake_time += PERIOD_CYCLES;
         count2 += 1;
+        config1_toggle();
         co_await sched.delay_until(target_wake_time);
     }
 }

@@ -33,3 +33,6 @@ constexpr auto config1_rcc_init = []() consteval {
         .gpiob = RCCEnable::ENABLED,
         .gpioa = RCCEnable::ENABLED};
 }();
+
+// no spare pin to toggle on this board
+inline void config1_toggle() {}

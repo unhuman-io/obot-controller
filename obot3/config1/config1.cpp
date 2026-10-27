@@ -22,7 +22,7 @@ void tim2_isr() {
 }
 
 void clock_config() {
-    device_rcc_clock_config<RCCClockInit{}>();
+    device_rcc_clock_config<config1_rcc_clock_init>();
 }
 
 void pin_config() {

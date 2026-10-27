@@ -45,12 +45,23 @@ constexpr auto config1_rcc_init = []() consteval {
         .hrtim1 = RCCEnable::ENABLED};
 }();
 
+constexpr auto config1_rcc_clock_init = RCCClockInit{.play_clock = RCCKernelClock::HSI};
+
 // PLAY input 1 source 5 (HRTIM1 ADC trigger 1) -> filter 1 -> LE1 -> PLAY_OUT0 (PD11)
+// toggle: LE1 is a flip-flop (registered output fed back through NOT, clock
+//         enable = filter 1), PD11 is a square wave at half the trigger rate
+// pulse:  LE1 passes the trigger through, PD11 is the trigger pulse itself
+constexpr bool config1_play_toggle = true;
 constexpr auto config1_play_init = []() consteval {
     PLAYInit init{};
     init.filter[1] = {.premux_select = 5};
-    init.le[1] = {.lut = play_lut_passthrough(0), .in0 = play_in_filter(0)};
-    init.out[0] = {.select = play_out_le_direct(1)};   // PD11 is PLAY_OUT0
+    if constexpr (config1_play_toggle) {
+        init.le[1] = {.lut = play_lut_invert(0), .in0 = play_in_le_registered(1), .clock = play_in_filter(1)};
+        init.out[0] = {.select = play_out_le_registered(1)};   // PD11 is PLAY_OUT0
+    } else {
+        init.le[1] = {.lut = play_lut_passthrough(0), .in0 = play_in_filter(1)};
+        init.out[0] = {.select = play_out_le_direct(1)};
+    }
     return init;
 }();
 

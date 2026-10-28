@@ -29,6 +29,7 @@ void pin_config() {
     device_rcc_config<config1_rcc_init>();
     device_pin_config<config1_gpio_init>();
     device_hrtim_config<config1_hrtim_init>();
+    device_can_config<config1_can_init>();
     config1_device_init();
 }
 
@@ -53,6 +54,7 @@ GlobalTask<void, 2, 48> task2(CycleScheduler &sched){
         target_wake_time += PERIOD_CYCLES;
         count2 += 1;
         config1_toggle();
+        can_write<config1_can_init>(0x100, count2);
         co_await sched.delay_until(target_wake_time);
     }
 }

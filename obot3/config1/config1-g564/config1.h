@@ -1,6 +1,7 @@
 #pragma once
 #include "../config1_default.h"
 import device.play_init;
+import device.can_init;
 
 struct SpecialEncoder {
     void read() {}
@@ -30,6 +31,11 @@ constexpr auto config1_gpio_init = []() consteval {
     init.d[11].mode = GPIOMode::ALTERNATE;   // PLAY_OUT0
     init.d[11].af = GPIOAF::AF14;
     init.d[11].speed = GPIOSpeed::VERY_HIGH;  // adc trigger pulse is a few hrtim clocks wide
+    init.b[12].mode = GPIOMode::ALTERNATE;    // FDCAN1 RX
+    init.b[12].af = GPIOAF::AF13;
+    init.b[13].mode = GPIOMode::ALTERNATE;    // FDCAN1 TX
+    init.b[13].af = GPIOAF::AF13;
+    init.b[13].speed = GPIOSpeed::VERY_HIGH;
     return init;
 }();
 
@@ -40,6 +46,7 @@ constexpr auto config1_rcc_init = []() consteval {
         .gpioc = RCCEnable::ENABLED,
         .gpiob = RCCEnable::ENABLED,
         .gpioa = RCCEnable::ENABLED,
+        .fdcan = RCCEnable::ENABLED,
         .playapb = RCCEnable::ENABLED,
         .play = RCCEnable::ENABLED,
         .hrtim1 = RCCEnable::ENABLED};
@@ -52,7 +59,11 @@ constexpr auto config1_rcc_clock_init = RCCClockInit{
     .pll_source = RCCPLLSource::HSE,
     .hse_frequency_hz = 24'000'000,
     .pll2_frequency_hz = 280'000'000,
+    .pll1_q_frequency_hz = 80'000'000,          // fdcan kernel clock: 1 Mbps = 80 tq, 8 Mbps = 10 tq
+    .fdcan_clock = RCCFDCANClock::PLL1Q,
     .play_clock = RCCKernelClock::PLL2P};
+
+constexpr auto config1_can_init = CANInit{.kernel_clock_hz = config1_rcc_clock_init.pll1_q_frequency_hz};
 
 // PLAY -> PLAY_OUT0 (PD11), two monitors of the ADC trigger:
 //   toggle: input 15 source 7 (HRTIM1 CHF1, toggled on every timer F cmp3)

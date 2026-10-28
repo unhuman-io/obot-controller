@@ -31,6 +31,7 @@ constexpr auto config1_gpio_init = []() consteval {
     init.d[11].mode = GPIOMode::ALTERNATE;   // PLAY_OUT0
     init.d[11].af = GPIOAF::AF14;
     init.d[11].speed = GPIOSpeed::VERY_HIGH;  // adc trigger pulse is a few hrtim clocks wide
+    init.d[11].function = "hrtim adc trg1 debug";
     init.b[12].mode = GPIOMode::ALTERNATE;    // FDCAN1 RX
     init.b[12].af = GPIOAF::AF13;
     init.b[13].mode = GPIOMode::ALTERNATE;    // FDCAN1 TX

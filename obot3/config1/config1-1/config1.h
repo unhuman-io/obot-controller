@@ -4,6 +4,7 @@ import device.can_init;
 import device.adc_init;
 import device.dac_init;
 import device.opamp_init;
+import device.irq_init;
 
 // DAC3 channel 2 holds VREF+ / 2 on the OPAMP3 non inverting input
 constexpr auto config1_dac_init = DACInit{
@@ -39,6 +40,7 @@ constexpr auto config1_adc_init = []() consteval {
         .trigger = ADCTrigger::HRTIM_TRG1,
         .trigger_edge = ADCTriggerEdge::RISING,
         .overwrite = ADCEnable::ENABLED,              // DR always holds the latest conversion
+        .end_of_conversion_interrupt = ADCEnable::ENABLED,
     };
     init.adc3.sequence[0] = config1_adc_channel;
     init.adc3.sample_time[config1_adc_channel] = ADCSampleTime::CYCLES_12_5;   // 294 ns, the opamp output needs 200 ns
@@ -99,6 +101,18 @@ constexpr auto config1_rcc_init = []() consteval {
 
 // no spare pin to toggle on this board
 inline void config1_toggle() {}
+
+// The fast loop runs in the ADC3 interrupt, once per conversion. Its read of
+// the result (SpecialEncoder) clears the request.
+void fast_loop_isr();
+constexpr auto config1_irq_init = []() consteval {
+    IRQInit init{};
+    init.irq[ADC3_IRQn] = {.handler = fast_loop_isr};
+    return init;
+}();
+
+// nothing to poll in the main loop
+inline void config1_poll() {}
 
 constexpr auto config1_rcc_clock_init = RCCClockInit{.fdcan_clock = RCCFDCANClock::PCLK1};   // 170 MHz
 

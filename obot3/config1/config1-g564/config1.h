@@ -2,6 +2,7 @@
 #include "../config1_default.h"
 import device.play_init;
 import device.can_init;
+import device.irq_init;
 
 struct SpecialEncoder {
     void read() {}
@@ -89,4 +90,12 @@ inline void config1_device_init() {
 
 inline void config1_toggle() {
     gpio_toggle(gpio_port<'G'>(), 3);
+}
+
+// No ADC on this board yet, so no interrupt runs the fast loop: the main loop
+// polls it
+void fast_loop_isr();
+constexpr auto config1_irq_init = IRQInit{};
+inline void config1_poll() {
+    fast_loop_isr();
 }

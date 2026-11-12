@@ -4,7 +4,6 @@
 #include "st_device.h"
 void clock_config();
 void pin_config();
-extern unsigned int _estack;
 extern unsigned int _sidata; // Flash load address
 extern unsigned int _sdata;  // RAM start address
 extern unsigned int _edata;  // RAM end address
@@ -40,22 +39,13 @@ extern "C" void Reset_Handler(void) {
     while(1);
 }
 
-
-__attribute__((section(".isr_vector"), used))
-void (*const vector_table[])(void) = {
-    (void (*)(void))(&_estack), // 0x0: Initial Stack Pointer
-    Reset_Handler                        // 0x4: Jump to standard crt0 start
-};
-
 void tim2_isr();
-void tim1_isr();
 void os_loop();
 
 int main() {
     pin_config();
     while(1) {
         tim2_isr();
-        tim1_isr();
         os_loop();
         //MySystem::MainLoop::update();
     }

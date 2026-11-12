@@ -31,8 +31,8 @@ SYStem.Up
 ; ITM over SWO at the 280 MHz PLL clock (see config1_rcc_clock_init)
 itm.clock 170MHz
 tpiu.PortSize SWV
-tpiu.SWVPrescaler 2.
-trace.TraceCLOCK 85MHz
+tpiu.SWVPrescaler 1.
+trace.TraceCLOCK 170MHz
 itm.on
 itm.DataTrace on
 trace.autoinit.on

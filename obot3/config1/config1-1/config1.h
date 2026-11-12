@@ -2,13 +2,26 @@
 #include "../config1_default.h"
 import device.can_init;
 import device.adc_init;
+import device.dac_init;
 import device.opamp_init;
 
-// OPAMP3 follows PB13 (VINP1) and drives ADC3 IN13 internally, PB1 (VOUT) stays free
+// DAC3 channel 2 holds VREF+ / 2 on the OPAMP3 non inverting input
+constexpr auto config1_dac_init = DACInit{
+    .dac3 = {
+        .ch2 = {
+            .enable = DACEnable::ENABLED,
+            .output = DACOutput::INTERNAL,
+            .value = dac_range / 2,
+        },
+    },
+};
+
+// OPAMP3 follows DAC3 channel 2 (VINP3) and drives ADC3 IN13 internally. PB1
+// (VOUT) is driven only during the calibration.
 constexpr auto config1_opamp_init = OPAMPInit{
     .opamp3 = {
         .enable = OPAMPEnable::ENABLED,
-        .input = OPAMPInput::VINP1,
+        .input = OPAMPInput::VINP3,
         .mode = OPAMPMode::FOLLOWER,
         .high_speed = OPAMPEnable::ENABLED,
         .internal_output = OPAMPEnable::ENABLED,
@@ -67,12 +80,12 @@ constexpr auto config1_gpio_init = []() consteval {
     init.b[9].mode = GPIOMode::ALTERNATE;    // FDCAN1 TX
     init.b[9].af = GPIOAF::AF9;
     init.b[9].speed = GPIOSpeed::VERY_HIGH;
-    // PB13 (OPAMP3 VINP1) is analog from reset
     return init;
 }();
 
 constexpr auto config1_rcc_init = []() consteval {
     return RCCInit{
+        .dac3 = RCCEnable::ENABLED,
         .adc345 = RCCEnable::ENABLED,
         .gpioe = RCCEnable::ENABLED,
         .gpiod = RCCEnable::ENABLED,
@@ -91,7 +104,20 @@ constexpr auto config1_rcc_clock_init = RCCClockInit{.fdcan_clock = RCCFDCANCloc
 
 constexpr auto config1_can_init = CANInit{.kernel_clock_hz = config1_rcc_clock_init.cpu_frequency_hz};
 
+// The calibrations are coroutines on a scheduler local to this function, so
+// they run in parallel. More init tasks can join them here.
+inline void config1_device_calibrate() {
+    CycleScheduler sched;
+    auto adc_task = adc_calibrate_async<3>(sched);
+    auto opamp_task = opamp_calibrate_async<3>(sched);
+    while (!adc_task.is_done() || !opamp_task.is_done()) {
+        sched.poll();
+    }
+}
+
 inline void config1_device_init() {
+    device_dac_config<config1_dac_init>();
     device_opamp_config<config1_opamp_init>();
     device_adc_config<config1_adc_init>();
+    config1_device_calibrate();
 }

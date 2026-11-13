@@ -11,7 +11,7 @@ struct Config : BasicConfig<config> {
 
 using MySystem = System<Config<>>;
 
-void tim1_isr() {
+void fast_loop_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
     MySystem::fast_loop.update();
 }
@@ -20,6 +20,10 @@ void tim2_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
     MySystem::main_loop.update();
 }
+
+extern "C" void Reset_Handler();
+__attribute__((section(".isr_vector"), used))
+constinit const auto vector_table = get_vector_table<config1_irq_init>(&_estack, Reset_Handler);
 
 void clock_config() {
     device_rcc_clock_config<config1_rcc_clock_init>();
@@ -31,6 +35,7 @@ void pin_config() {
     device_hrtim_config<config1_hrtim_init>();
     device_can_config<config1_can_init>();
     config1_device_init();
+    device_irq_config<config1_irq_init>(vector_table);   // last: the handlers run from here on
 }
 
 CycleScheduler sched;
@@ -62,5 +67,6 @@ GlobalTask<void, 2, 48> task2(CycleScheduler &sched){
 auto task2_task = task2(sched);
 
 void os_loop() {
+    config1_poll();
     sched.poll();
 }

@@ -26,8 +26,8 @@ constexpr auto config1_default_gpio_init = [](){
 // on cmp3 anywhere in the period (period / 2 = the crest of A = off time center),
 // output 1 toggled by the same event as a monitor
 constexpr uint16_t config1_pwm_period = hrtim_period(100'000, 0, HRTIMMode::CENTER_ALIGNED);
-constexpr uint16_t config1_trigger_period = hrtim_period(100'000, 1);
-constexpr auto config1_hrtim_init = []() consteval {
+constexpr uint16_t config1_trigger_period = hrtim_period(1'000'000, 1);
+constexpr auto config1_default_hrtim_init = []() consteval {
     HRTIMInit init{};
     init.a = {
         .enable = HRTIMEnable::ENABLED,
@@ -55,4 +55,4 @@ constexpr auto config1_hrtim_init = []() consteval {
     init.adc_trigger1 = HRTIMADCTrigger::TIMF_CMP3;
     init.adc_trigger1_update = HRTIMTimer::F;
     return init;
-}();
+};

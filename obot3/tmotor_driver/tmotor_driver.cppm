@@ -353,10 +353,14 @@ struct TMotorDRV8323IO {
     static void wait_ns_400() {
         for (int i = 0; i < 100; i++) __asm__ volatile("");     // more than 68 cpu cycles
     }
-    static uint16_t transfer(uint16_t word) {
+    static void transfer_start(uint16_t word) {
         gpio_clear(gpio_port<'A'>(), 4);
         wait_ns_400();                              // 50 ns needed
-        const uint16_t reply = spi_transfer<1>(word);
+        spi_write<1>(word);
+    }
+    static bool transfer_ready() { return spi_ready<1>(); }
+    static uint16_t transfer_end() {
+        const uint16_t reply = spi_read<1>();
         wait_ns_400();
         gpio_set(gpio_port<'A'>(), 4);
         wait_ns_400();                              // chip select high between frames
@@ -365,10 +369,6 @@ struct TMotorDRV8323IO {
     static void enable(bool on) {
         if (on) gpio_set(gpio_port<'C'>(), 13);
         else gpio_clear(gpio_port<'C'>(), 13);
-    }
-    static void delay_us(uint32_t us) {
-        const uint32_t start = get_clock();
-        while (get_clock() - start < us * (cpu_frequency_hz / 1'000'000));
     }
 };
 
@@ -379,22 +379,25 @@ inline constinit volatile uint32_t tmotor_drv8323_errors = ~0u;
 inline bool tmotor_drv8323_fault() { return !gpio_read(gpio_port<'C'>(), 14); }
 inline uint32_t tmotor_drv8323_status() { return drv8323_status<TMotorDRV8323IO>(); }
 
-// Everything past the clocks and pins, in order: tmotor_analog_init(), the
-// ADC calibration, tmotor_device_init(), and then the interrupts. The
-// calibration is in tmotor_driver.cpp: gcc 15 fails on its coroutines when
-// they are instantiated in a module.
-inline void tmotor_analog_init() {
+// Everything past the clocks and pins, in order: tmotor_startup_init(),
+// tmotor_startup(), tmotor_device_init(), and then the interrupts.
+// tmotor_startup() is in tmotor_driver.cpp: gcc 15 fails on coroutines that
+// are instantiated in a module.
+// What the startup tasks work on
+inline void tmotor_startup_init() {
     device_opamp_config<tmotor_opamp_init>();
     device_adc_config<tmotor_adc_init>();
+    device_spi_config<tmotor_spi_init>();
+}
+
+// For the result of drv8323_config_async
+inline void tmotor_drv8323_configured(uint32_t errors) {
+    if (errors != 0) drv8323_disable<TMotorDRV8323IO>();
+    tmotor_drv8323_errors = errors;
 }
 
 inline void tmotor_device_init() {
     device_tim_config<tmotor_tim_init>();
-    device_spi_config<tmotor_spi_init>();
-    // the gate driver comes up with the pwm outputs off: its inputs are low
-    const uint32_t drv8323_errors = drv8323_config<tmotor_drv8323_init, TMotorDRV8323IO>();
-    if (drv8323_errors != 0) drv8323_disable<TMotorDRV8323IO>();
-    tmotor_drv8323_errors = drv8323_errors;
     device_can_config<tmotor_can_init>();
     can_filter<tmotor_can_init>(0, obot_can_id(obot_can_ascii, tmotor_can_address()), tmotor_can_ascii_fifo);
     can_filter<tmotor_can_init>(1, obot_can_id(obot_can_enum, obot_can_broadcast_address), tmotor_can_command_fifo);

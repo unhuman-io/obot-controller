@@ -45,24 +45,28 @@ void clock_config() {
     device_rcc_clock_config<tmotor_rcc_clock_init>();
 }
 
-// The calibrations are coroutines on a scheduler local to this function, so
-// the four converters run in parallel
-void adc_calibrate() {
+// Whatever takes time at startup, in parallel as coroutines on a scheduler
+// local to this function: the calibration of the four converters, and the
+// gate driver's wake up and register frames. The driver comes up with the pwm
+// outputs off: its inputs are low until the hrtim starts.
+void tmotor_startup() {
     CycleScheduler sched;
     auto adc1 = adc_calibrate_async<1>(sched);
     auto adc3 = adc_calibrate_async<3>(sched);
     auto adc4 = adc_calibrate_async<4>(sched);
     auto adc5 = adc_calibrate_async<5>(sched);
-    while (!adc1.is_done() || !adc3.is_done() || !adc4.is_done() || !adc5.is_done()) {
+    auto drv8323 = drv8323_config_async<tmotor_drv8323_init, TMotorDRV8323IO>(sched);
+    while (!adc1.is_done() || !adc3.is_done() || !adc4.is_done() || !adc5.is_done() || !drv8323.is_done()) {
         sched.poll();
     }
+    tmotor_drv8323_configured(drv8323.get_result());
 }
 
 void pin_config() {
     device_rcc_config<tmotor_rcc_init>();
     device_pin_config<tmotor_gpio_init>();
-    tmotor_analog_init();
-    adc_calibrate();
+    tmotor_startup_init();
+    tmotor_startup();
     tmotor_device_init();
     device_irq_config<tmotor_irq_init>(vector_table);   // last: the loops run from here on
 }

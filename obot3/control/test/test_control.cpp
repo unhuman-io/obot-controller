@@ -1,11 +1,13 @@
-// Host test of the control code, no hardware:
-//   g++ -std=c++23 -O2 -I ../.. test_control.cpp -o /tmp/test_control && /tmp/test_control
+// Host test of the control modules, no hardware: control/test/run.sh
 // The FOC and the controllers run against simple motor models with the
 // tmotor_driver gains.
 #include <cmath>
 #include <cstdio>
 #include <cstdint>
-#include "control/motor_controller.h"
+#include <numbers>
+#include "../motorlib/motor_messages/motor_messages.h"
+import control.motor_controller;
+import control.sincos;
 
 static int failures = 0;
 #define CHECK(condition, ...) do { \

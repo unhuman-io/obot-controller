@@ -1,11 +1,17 @@
-#pragma once
+module;
+#include <cmath>
+#include <cstdint>
+#include <limits>
+#include <numbers>
+
+export module control.foc;
+export import control.control_fun;
+import control.sincos;
+
 // Field oriented current control, the math of motorlib/foc.cpp. It is the
 // fast loop's controller: update(command, measured) takes the phase currents
 // and the motor angle and returns the phase voltages.
-#include <cmath>
-#include "control_fun.h"
-#include "sincos.h"
-
+export {
 // What the output stage does
 enum class FOCMode : uint8_t {
     OPEN,           // all switches off
@@ -104,3 +110,4 @@ class FOC {
     RateLimiter id_limiter_{param.id_rate_limit * dt}, iq_limiter_{param.iq_rate_limit * dt};
     FOCStatus status_{};
 };
+}

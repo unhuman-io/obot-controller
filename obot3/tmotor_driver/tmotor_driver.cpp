@@ -1,8 +1,10 @@
-#include "system.h"
 #include <atomic>
 #include <cstring>
 #include "../motorlib/task.h"   // device header first: the device.* modules carry it in their global module fragment
-#include "tmotor_driver.h"
+#include "../motorlib/motor_messages/motor_messages.h"
+#include "system.h"
+#include "basic_config.h"
+import tmotor_driver;
 
 template<auto config = TMotorConfig{}>
 struct Config : BasicConfig<config> {};
@@ -13,19 +15,27 @@ using MySystem = System<Config<>>;
 void fast_loop_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
     MySystem::fast_loop.update();
-    motor_fast_loop_irq_clear();
+    tmotor_fast_loop_irq_clear();
 }
 
 // HRTIM master cmp1, 10 kHz
 void main_loop_isr() {
     std::atomic_signal_fence(std::memory_order_acq_rel);
     MySystem::main_loop.update();
-    motor_main_loop_irq_clear();
+    tmotor_main_loop_irq_clear();
 }
 
 // main.cpp polls this from the background loop. Here the main loop has its
 // own interrupt.
 void tim2_isr() {}
+
+// The fast loop preempts the main loop
+constexpr auto tmotor_irq_init = []() consteval {
+    IRQInit init{};
+    init.irq[ADC5_IRQn] = {.handler = fast_loop_isr, .priority = 0};
+    init.irq[HRTIM1_Master_IRQn] = {.handler = main_loop_isr, .priority = 1};
+    return init;
+}();
 
 extern "C" void Reset_Handler();
 __attribute__((section(".isr_vector"), used))
@@ -35,9 +45,24 @@ void clock_config() {
     device_rcc_clock_config<tmotor_rcc_clock_init>();
 }
 
+// The calibrations are coroutines on a scheduler local to this function, so
+// the four converters run in parallel
+void adc_calibrate() {
+    CycleScheduler sched;
+    auto adc1 = adc_calibrate_async<1>(sched);
+    auto adc3 = adc_calibrate_async<3>(sched);
+    auto adc4 = adc_calibrate_async<4>(sched);
+    auto adc5 = adc_calibrate_async<5>(sched);
+    while (!adc1.is_done() || !adc3.is_done() || !adc4.is_done() || !adc5.is_done()) {
+        sched.poll();
+    }
+}
+
 void pin_config() {
     device_rcc_config<tmotor_rcc_init>();
     device_pin_config<tmotor_gpio_init>();
+    tmotor_analog_init();
+    adc_calibrate();
     tmotor_device_init();
     device_irq_config<tmotor_irq_init>(vector_table);   // last: the loops run from here on
 }
@@ -76,7 +101,7 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
         }
 
         ticks++;
-        motor_led(0, ticks & 1 ? 0x2000 : 0, 0);
+        tmotor_led(0, ticks & 1 ? 0x2000 : 0, 0);
 
         const uint32_t fast_loop_count = MySystem::fast_loop.count;
         const uint32_t main_loop_count = MySystem::main_loop.sensors.count;
@@ -86,8 +111,8 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
         host_idle_ticks = host_idle_ticks + 1;
         watchdog_ok = ticks < startup_ticks || (loops_run && host_idle_ticks < host_timeout_ticks);
 
-        temperature_reading = motor_temperature();
-        vrefint_reading = motor_vrefint();
+        temperature_reading = tmotor_temperature();
+        vrefint_reading = tmotor_vrefint();
         adc_start_injected<1>();
         adc_start_injected<2>();
     }
@@ -108,10 +133,10 @@ constexpr TextValue text_values[] = {
     {"main_loop_count", [] { return static_cast<int32_t>(MySystem::main_loop.sensors.count); }},
     {"mode", [] { return static_cast<int32_t>(MySystem::main_loop.controller.status.read().flags.mode); }},
     {"menc", [] { return MySystem::main_loop.controller.status.read().motor_encoder; }},
-    {"ia", [] { return static_cast<int32_t>(motor_ia()); }},        // adc counts
-    {"ib", [] { return static_cast<int32_t>(motor_ib()); }},
-    {"ic", [] { return static_cast<int32_t>(motor_ic()); }},
-    {"vbus", [] { return static_cast<int32_t>(motor_vbus()); }},
+    {"ia", [] { return static_cast<int32_t>(tmotor_ia()); }},        // adc counts
+    {"ib", [] { return static_cast<int32_t>(tmotor_ib()); }},
+    {"ic", [] { return static_cast<int32_t>(tmotor_ic()); }},
+    {"vbus", [] { return static_cast<int32_t>(tmotor_vbus()); }},
     {"vbus_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().measured.vbus * 1000); }},
     {"vq_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.v_q * 1000); }},
     {"iq_ma", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.i_q * 1000); }},

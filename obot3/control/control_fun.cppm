@@ -1,12 +1,15 @@
-#pragma once
-// The control building blocks of motorlib/control_fun.h, header only and with
-// their parameters fixed at construction: an object built from a constexpr
-// parameter struct is constant initialized, so it can be a member of the
-// constinit loops.
+module;
 #include <cstdint>
 #include <limits>
 #include <numbers>
 
+export module control.control_fun;
+
+// The control building blocks of motorlib/control_fun.h, with their
+// parameters fixed at construction: an object built from a constexpr
+// parameter struct is constant initialized, so it can be a member of the
+// constinit loops.
+export {
 inline constexpr float control_infinity = std::numeric_limits<float>::infinity();
 
 constexpr float fsat(float a, float sat) {
@@ -157,32 +160,4 @@ class PIDController {
     float dt_;
     RateLimiter rate_limit_;
 };
-
-// The newest value of a T, between two interrupt priorities (or an interrupt
-// and the background) in either direction. The writer fills the slot that is
-// not current and then makes it current with one store. A reader that
-// interrupts the writer gets the previous value; a reader that is interrupted
-// reads a slot the writer leaves alone until its second write, and repeats in
-// that case. One writer; T is copied whole.
-template<typename T>
-class Latest {
- public:
-    constexpr Latest() = default;
-    void write(const T& value) {
-        const uint32_t sequence = sequence_;
-        slots_[(sequence + 1) & 1] = value;
-        sequence_ = sequence + 1;
-    }
-    T read() const {
-        T value;
-        uint32_t sequence;
-        do {
-            sequence = sequence_;
-            value = slots_[sequence & 1];
-        } while (sequence_ - sequence >= 2);
-        return value;
-    }
- private:
-    T slots_[2] = {};
-    volatile uint32_t sequence_ = 0;
-};
+}

@@ -1,10 +1,12 @@
-#pragma once
-// sin and cos from a 512 entry table with a third order correction, as
-// motorlib/sincos.cpp. The table is made at compile time.
+module;
 #include <cstdint>
 #include <numbers>
 
-struct Sincos {
+export module control.sincos;
+
+// sin and cos from a 512 entry table with a third order correction, as
+// motorlib/sincos.cpp. The table is made at compile time.
+export struct Sincos {
     float sin, cos;
 };
 
@@ -41,7 +43,7 @@ constexpr Table make_table() {
 inline constexpr Table table = make_table();
 }
 
-// x in radians, any range that fits an int32 of table steps
+export // x in radians, any range that fits an int32 of table steps
 inline Sincos sincos1(float x) {
     using namespace sincos_detail;
     const float table_x = x * static_cast<float>(table_length / 2 / std::numbers::pi);

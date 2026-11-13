@@ -1,6 +1,6 @@
-#include "system.h"
 #include <atomic>
 #include "../motorlib/task.h"   // device header first: the device.* modules carry it in their global module fragment
+#include "system.h"
 #include "config1.h"
 
 template<auto config = Config1{}>

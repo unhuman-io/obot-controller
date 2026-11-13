@@ -4,6 +4,9 @@ function(add_obot3_target name device config_dir)
     add_executable(${tgt} main.cpp ${ARGN})
     target_link_libraries(${tgt} PRIVATE ${device})
     target_include_directories(${tgt} PRIVATE . ${config_dir})
+    # the control modules are built per target, with its device's flags
+    target_sources(${tgt} PRIVATE FILE_SET CXX_MODULES BASE_DIRS ${CMAKE_CURRENT_LIST_DIR} FILES
+        control/latest.cppm control/control_fun.cppm control/sincos.cppm control/foc.cppm control/motor_controller.cppm)
     target_link_options(${tgt} PRIVATE
         -nostartfiles       # <-- Drops crt0.o completely
         "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${name}.map"
@@ -22,6 +25,8 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
 )
+target_sources(obot3_tmotor_driver.elf PRIVATE FILE_SET CXX_MODULES BASE_DIRS ${CMAKE_CURRENT_LIST_DIR} FILES
+    tmotor_driver/tmotor_driver.cppm)
 target_compile_definitions(obot3_tmotor_driver.elf PRIVATE OBOT3_VERSION="${OBOT3_VERSION}")
 target_link_options(obot3_tmotor_driver.elf PRIVATE -Wl,--defsym=CUSTOM_BOOTLOADER=1)
 add_custom_command(TARGET obot3_tmotor_driver.elf POST_BUILD

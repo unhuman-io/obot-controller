@@ -2,7 +2,7 @@
 #include <concepts>
 #include <cstdint>
 #include <utility>
-#include "control/control_fun.h"
+import control.latest;
 
 // The main loop's sensors may use what the fast loop measured:
 // update(fast_loop_status), or update() if they don't

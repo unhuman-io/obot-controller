@@ -126,9 +126,10 @@ jobs:
         submodules: recursive
     - name: control host test
       run: |
-        g++ --version
-        g++ -std=c++23 -O2 -Wall -I obot3 obot3/control/test/test_control.cpp -o test_control
-        ./test_control
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq g++-14
+        g++-14 --version
+        obot3/control/test/run.sh g++-14
 
   test-builds:
     timeout-minutes: 10

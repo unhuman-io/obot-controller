@@ -1,12 +1,17 @@
-#pragma once
+module;
+#include <cstdint>
+#include "../motorlib/motor_messages/motor_messages.h"
+
+export module control.motor_controller;
+export import control.foc;
+export import control.latest;
+
 // The main loop's controllers, from motorlib/controller and the mode handling
 // of motorlib/main_loop.h: a host command (obot::MotorCommand) selects the
 // mode, the controller of that mode turns the measurements into a current,
-// and the result is the fast loop's FOC command.
-#include <cstdint>
-#include "../motorlib/motor_messages/motor_messages.h"
-#include "foc.h"
-
+// and the result is the fast loop's FOC command. An importer that names the
+// obot message types includes motor_messages.h itself.
+export {
 struct MotorControllerParam {
     PIDParam position{};                        // rad -> A
     float position_velocity_limit = 0;          // rad/s on the desired position, 0: none
@@ -219,3 +224,4 @@ struct MotorControllerPolicy {
     ImpedanceController<param, dt> impedance_controller{};
     Latest<obot::MotorStatusRegular> status{};
 };
+}

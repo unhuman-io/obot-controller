@@ -96,6 +96,9 @@ check ic $(api ic) -1 4096
 check vrefint $(api vrefint) 1300 1700
 echo "mode $(api mode), menc $(api menc), vbus $(api vbus_mv) mV, temperature $(api temperature)"
 
+# the gate driver: 0 errors means every register read back as written
+echo "drv_errors $(api drv_errors), drv_fault $(api drv_fault), drv_status $(api drv_status)"
+
 # still there after the watchdog period several times over
 sleep 3
 [ "$(name)" == obot3_tmotor_driver ]

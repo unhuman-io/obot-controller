@@ -15,6 +15,7 @@ export import device.tim_init;
 export import device.can_init;
 export import device.irq_init;
 export import device.spi_init;
+export import device.drv8323_init;
 export import device.system;
 export import control.motor_controller;
 
@@ -24,9 +25,10 @@ export import control.motor_controller;
 //   - CAN FD on FDCAN3 (PA8 rx, PB4 tx), 1 Mbps / 8 Mbps
 //   - an MA732 motor encoder on SPI3, chip select PD2
 //   - the three phase pwm on HRTIM timers D, F and E
+//   - the DRV8323S gate driver on SPI1, chip select PA4, enable PC13, fault PC14
 //   - phase currents and bus voltage through the opamps to the ADCs
 //   - the led on TIM4
-//   - the gate driver enable held low, the unused chip selects parked high
+//   - the unused chip selects parked high
 //   - 50 kHz pwm and fast loop, 10 kHz main loop
 // The output encoder is the motor encoder through the 6:1 gear; there is no
 // torque sensor. It is linked behind the can bootloader and answers the obot
@@ -66,6 +68,7 @@ constexpr auto tmotor_rcc_init = RCCInit{
     .spi3 = RCCEnable::ENABLED,
     .tim4 = RCCEnable::ENABLED,       // led
     .hrtim1 = RCCEnable::ENABLED,
+    .spi1 = RCCEnable::ENABLED,
     .syscfg = RCCEnable::ENABLED};    // clocks the opamps
 
 // Pins that are not mentioned stay analog, which is also what the ADC and
@@ -102,7 +105,18 @@ constexpr auto tmotor_gpio_init = []() consteval {
     alternate(init.c[8], GPIOAF::AF3, "hrtim1 che1");
     alternate(init.c[9], GPIOAF::AF3, "hrtim1 che2");
 
-    output(init.c[13], GPIOSet::RESET, "drv enable");   // low: the gate driver is off
+    // gate driver
+    alternate(init.a[5], GPIOAF::AF5, "spi1 clk");
+    alternate(init.a[6], GPIOAF::AF5, "spi1 hido");
+    alternate(init.a[7], GPIOAF::AF5, "spi1 hodi");
+    init.a[6].pullupd = GPIOPullUpD::PULL_UP;           // the driver's output is open drain
+    output(init.a[4], GPIOSet::SET, "spi1 cs drv8323s");
+    init.a[4].speed = GPIOSpeed::VERY_HIGH;
+    output(init.c[13], GPIOSet::RESET, "drv enable");   // low until tmotor_device_init
+    init.c[14].mode = GPIOMode::INPUT;
+    init.c[14].pullupd = GPIOPullUpD::PULL_UP;
+    init.c[14].function = "drv fault, active low";
+
     output(init.a[0], GPIOSet::SET, "torque sensor cs");    // not used: parked high
     output(init.c[3], GPIOSet::SET, "output encoder cs");
 
@@ -294,14 +308,76 @@ constexpr auto tmotor_can_init = CANInit{
 };
 constexpr int tmotor_can_ascii_fifo = 1, tmotor_can_command_fifo = 0;
 
+// SPI1 for the gate driver: 16 bit frames at pclk / 256 = 664 kHz, sampled on
+// the falling edge, chip select on PA4
 // SPI3 for the MA732: 16 bit frames at pclk / 16 = 10.6 MHz, chip select on PD2
 constexpr auto tmotor_spi_init = SPIInit{
+    .spi1 = {
+        .enable = SPIEnable::ENABLED,
+        .baud_rate = SPIBaudRate::PCLK_DIV256,
+        .clock_phase = SPIClockPhase::SECOND_EDGE,
+        .data_bits = 16,
+    },
     .spi3 = {
         .enable = SPIEnable::ENABLED,
         .baud_rate = SPIBaudRate::PCLK_DIV16,
         .data_bits = 16,
     },
 };
+
+// The DRV8323S gate driver, as the drv_regs of
+// obot_g474/param/param_obot_g474_tmotor_driver.c
+constexpr auto tmotor_drv8323_init = DRV8323Init{
+    .pwm_mode = DRV8323PWMMode::PWM_6X,
+    .high_side_source_current = 15,                 // 1 A
+    .high_side_sink_current = 15,                   // 2 A
+    .cycle_by_cycle = DRV8323Enable::DISABLED,
+    .drive_time = DRV8323DriveTime::NS_4000,
+    .low_side_source_current = 7,                   // 0.57 A
+    .low_side_sink_current = 15,                    // 2 A
+    .ocp_retry = DRV8323OCPRetry::MS_4,
+    .dead_time = DRV8323DeadTime::NS_50,
+    .ocp_mode = DRV8323OCPMode::LATCHED,
+    .ocp_deglitch = DRV8323OCPDeglitch::US_2,
+    .vds_level = 4,                                 // 0.31 V
+    .bidirectional = DRV8323Enable::ENABLED,
+    .csa_gain = DRV8323CSAGain::X5,
+    .sense_level = DRV8323SenseLevel::V_0_25,
+};
+static_assert(get_drv8323_reg(tmotor_drv8323_init, 0) == 0x000 && get_drv8323_reg(tmotor_drv8323_init, 1) == 0x3FF &&
+    get_drv8323_reg(tmotor_drv8323_init, 2) == 0x37F && get_drv8323_reg(tmotor_drv8323_init, 3) == 0x004 &&
+    get_drv8323_reg(tmotor_drv8323_init, 4) == 0x200, "the register values of the obot_g474 tmotor_driver");
+
+// How the driver is reached
+struct TMotorDRV8323IO {
+    static void wait_ns_400() {
+        for (int i = 0; i < 100; i++) __asm__ volatile("");     // more than 68 cpu cycles
+    }
+    static uint16_t transfer(uint16_t word) {
+        gpio_clear(gpio_port<'A'>(), 4);
+        wait_ns_400();                              // 50 ns needed
+        const uint16_t reply = spi_transfer<1>(word);
+        wait_ns_400();
+        gpio_set(gpio_port<'A'>(), 4);
+        wait_ns_400();                              // chip select high between frames
+        return reply;
+    }
+    static void enable(bool on) {
+        if (on) gpio_set(gpio_port<'C'>(), 13);
+        else gpio_clear(gpio_port<'C'>(), 13);
+    }
+    static void delay_us(uint32_t us) {
+        const uint32_t start = get_clock();
+        while (get_clock() - start < us * (cpu_frequency_hz / 1'000'000));
+    }
+};
+
+// Result of the driver's configuration: 0 once every register has read back
+// as written. While it isn't, the driver is disabled and TMotorPWM keeps the
+// outputs off.
+inline constinit volatile uint32_t tmotor_drv8323_errors = ~0u;
+inline bool tmotor_drv8323_fault() { return !gpio_read(gpio_port<'C'>(), 14); }
+inline uint32_t tmotor_drv8323_status() { return drv8323_status<TMotorDRV8323IO>(); }
 
 // Everything past the clocks and pins, in order: tmotor_analog_init(), the
 // ADC calibration, tmotor_device_init(), and then the interrupts. The
@@ -315,6 +391,10 @@ inline void tmotor_analog_init() {
 inline void tmotor_device_init() {
     device_tim_config<tmotor_tim_init>();
     device_spi_config<tmotor_spi_init>();
+    // the gate driver comes up with the pwm outputs off: its inputs are low
+    const uint32_t drv8323_errors = drv8323_config<tmotor_drv8323_init, TMotorDRV8323IO>();
+    if (drv8323_errors != 0) drv8323_disable<TMotorDRV8323IO>();
+    tmotor_drv8323_errors = drv8323_errors;
     device_can_config<tmotor_can_init>();
     can_filter<tmotor_can_init>(0, obot_can_id(obot_can_ascii, tmotor_can_address()), tmotor_can_ascii_fifo);
     can_filter<tmotor_can_init>(1, obot_can_id(obot_can_enum, obot_can_broadcast_address), tmotor_can_command_fifo);
@@ -350,7 +430,7 @@ struct TMotorMeasurement {
 // per frame, summed over its roll-over. The frame takes 1.5 us and is waited
 // for.
 struct TMotorFastLoopSensors {
-    static constexpr float adc_gain = -3.3f / 4096 / (.033f * 5);              // A per count from mid scale: 33 mohm shunts, driver gain 5, which needs the driver set up for it
+    static constexpr float adc_gain = -3.3f / 4096 / (.033f * drv8323_csa_gain(tmotor_drv8323_init));   // A per count from mid scale: 33 mohm shunts through the driver's amplifiers
     static constexpr float vbus_gain = 3.3f / 4096 * (215 + 13.7f) / 13.7f;    // V per count, nominal 3.3 V reference
     static constexpr int32_t encoder_cpr = 65536;
     static constexpr int32_t encoder_dir = -1;                      // sign of the motor position
@@ -400,8 +480,8 @@ struct TMotorFastLoopSensors {
 };
 
 // The power stage: phase voltages to the compare values of timers D, F and E,
-// and the state of their outputs. The gate driver's enable pin is not handled
-// here: while it is low nothing switches whatever the outputs do.
+// and the state of their outputs. They stay off while the gate driver is not
+// configured.
 // A pulse is at least 1 us at either end, which the driver and the current
 // sense need.
 struct TMotorPWM {
@@ -416,7 +496,8 @@ struct TMotorPWM {
         hrtim_output_mask(phase_c, false, true);
 
     void update(const FOCStatus& foc, const TMotorMeasurement& measured) {
-        if (foc.mode != mode) set_mode(foc.mode);
+        const FOCMode wanted = tmotor_drv8323_errors == 0 ? foc.mode : FOCMode::OPEN;
+        if (wanted != mode) set_mode(wanted);
         const float v_to_pwm = period / (measured.vbus > vbus_min ? measured.vbus : vbus_min);
         hrtim_compare1(phase_a, fsat2(foc.v_a * v_to_pwm + period / 2, pwm_min, pwm_max));
         hrtim_compare1(phase_b, fsat2(foc.v_b * v_to_pwm + period / 2, pwm_min, pwm_max));

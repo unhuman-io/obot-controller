@@ -141,6 +141,9 @@ constexpr TextValue text_values[] = {
     {"vq_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.v_q * 1000); }},
     {"iq_ma", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.i_q * 1000); }},
     {"iq_desired_ma", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.i_q_desired * 1000); }},
+    {"drv_errors", [] { return static_cast<int32_t>(tmotor_drv8323_errors); }},     // 0: configured
+    {"drv_fault", [] { return static_cast<int32_t>(tmotor_drv8323_fault()); }},     // the fault pin
+    {"drv_status", [] { return static_cast<int32_t>(tmotor_drv8323_status()); }},   // status 2 << 16 | status 1
     {"invalid_command_count", [] { return static_cast<int32_t>(MySystem::main_loop.controller.invalid_command_count); }},
     {"temperature", [] { return static_cast<int32_t>(temperature_reading); }},
     {"vrefint", [] { return static_cast<int32_t>(vrefint_reading); }},

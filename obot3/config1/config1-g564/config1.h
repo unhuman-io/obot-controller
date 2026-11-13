@@ -23,6 +23,8 @@ struct Config1 : DefaultConfig1 {
     int special_parameter = 11;
 };
 
+constexpr auto config1_hrtim_init = config1_default_hrtim_init();
+
 constexpr auto config1_gpio_init = []() consteval {
     GPIOInit init = config1_default_gpio_init();
     init.a[2].mode = GPIOMode::ALTERNATE;

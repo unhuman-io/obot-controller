@@ -86,6 +86,37 @@ jobs:
           ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.tgz
         tag: main
 
+  build-obot3:
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [gcc, llvm]
+    runs-on: ubuntu-latest
+    container: leemagnusson/arm-gcc:15.3
+    steps:
+    - uses: actions/checkout@main
+      with:
+        fetch-depth: 0
+        submodules: recursive
+    - name: install dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -y -qq clang-tools-20 cmake ninja-build
+        ./motorlib/scripts/install_llvm.sh
+    - name: cmake obot3 tmotor_driver ${{ matrix.toolchain }}
+      run: |
+        git config --global --add safe.directory '*'
+        cmake --preset ${{ matrix.toolchain }}
+        cmake --build --preset ${{ matrix.toolchain }} -t obot3_tmotor_driver.elf
+    - name: Archive obot3 tmotor_driver ${{ matrix.toolchain }}
+      uses: actions/upload-artifact@main
+      with:
+        name: obot3 tmotor_driver ${{ matrix.toolchain }}
+        path: |
+          build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.elf
+          build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.bin
+
   test-builds:
     timeout-minutes: 10
     needs: [build]

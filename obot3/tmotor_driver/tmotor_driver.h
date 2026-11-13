@@ -10,6 +10,7 @@
 // It is linked behind the can bootloader and answers the obot text api on the
 // can address the bootloader uses, see tmotor_driver.cpp.
 #include "obot_g474_motor.h"
+#include "control/motor_controller.h"
 import device.can_init;
 import device.irq_init;
 import device.spi_init;
@@ -28,6 +29,7 @@ inline uint32_t tmotor_can_address() {
 }
 
 // obot can ids: message << 7 | address
+constexpr uint32_t obot_can_command = 1, obot_can_command_status = 2, obot_can_status = 3;
 constexpr uint32_t obot_can_ascii = 4, obot_can_ascii_response = 5, obot_can_enum = 0xF;
 constexpr uint32_t obot_can_broadcast_address = 0x7F;
 constexpr uint32_t obot_can_id(uint32_t message, uint32_t address) { return message << 7 | address; }
@@ -71,9 +73,9 @@ constexpr auto tmotor_can_init = CANInit{
     .kernel_clock_hz = tmotor_rcc_clock_init.cpu_frequency_hz,
     .nominal_bitrate_hz = 1'000'000,
     .data_bitrate_hz = 8'000'000,
-    .standard_filter_count = 2,
+    .standard_filter_count = 5,
 };
-constexpr int tmotor_can_ascii_fifo = 1, tmotor_can_enum_fifo = 0;
+constexpr int tmotor_can_ascii_fifo = 1, tmotor_can_command_fifo = 0;
 
 // The fast loop runs at the end of the ADC5 injected sequence, when the phase
 // currents of this pwm period are in; the main loop on the HRTIM master cmp1.
@@ -106,60 +108,83 @@ inline void tmotor_device_init() {
     device_spi_config<tmotor_spi_init>();
     device_can_config<tmotor_can_init>();
     can_filter<tmotor_can_init>(0, obot_can_id(obot_can_ascii, tmotor_can_address()), tmotor_can_ascii_fifo);
-    can_filter<tmotor_can_init>(1, obot_can_id(obot_can_enum, obot_can_broadcast_address), tmotor_can_enum_fifo);
+    can_filter<tmotor_can_init>(1, obot_can_id(obot_can_enum, obot_can_broadcast_address), tmotor_can_command_fifo);
+    can_filter<tmotor_can_init>(2, obot_can_id(obot_can_command, tmotor_can_address()), tmotor_can_command_fifo);
+    can_filter<tmotor_can_init>(3, obot_can_id(obot_can_command_status, tmotor_can_address()), tmotor_can_command_fifo);
+    can_filter<tmotor_can_init>(4, obot_can_id(obot_can_status, tmotor_can_address()), tmotor_can_command_fifo);
     device_hrtim_config<tmotor_hrtim_init>();   // last: starts the master and pwm timers in phase, and the ADC triggers with them
 }
 
 // ---------------------------------------------------------------- fast loop
-
-// What the fast loop reads every pwm period, for the main loop and the
-// debugger. Each is a single word: a read from a lower priority is whole.
-struct TMotorFastLoopIO {
-    volatile int32_t motor_encoder;     // counts, 65536 per turn, multiturn
-    volatile uint32_t ia, ib, ic;       // adc counts
-    volatile uint32_t count;            // fast loop passes
-};
-inline constinit TMotorFastLoopIO tmotor_fast_loop_io{};
+// sensors -> FOC -> pwm. The values are those of
+// obot_g474/param/param_obot_g474_tmotor_driver.c
 
 // MA732: 16 bit angle per frame, summed over the roll-over. The frame takes
 // 1.5 us and is waited for.
 struct TMotorEncoder {
-    void read() {
+    int32_t read() {
         gpio_clear(gpio_port<'D'>(), 2);                // cs low, 80 ns before the clock
         for (int i = 0; i < 4; i++) __asm__ volatile("");
         const uint16_t angle = spi_transfer<3>(0);
         gpio_set(gpio_port<'D'>(), 2);
         count += static_cast<int16_t>(angle - last_angle);
         last_angle = angle;
-        tmotor_fast_loop_io.motor_encoder = count;
-
-        // the fast loop's other inputs ride along: this is its only hook
-        tmotor_fast_loop_io.ia = motor_ia();
-        tmotor_fast_loop_io.ib = motor_ib();
-        tmotor_fast_loop_io.ic = motor_ic();
-        tmotor_fast_loop_io.count = tmotor_fast_loop_io.count + 1;
+        return count;
     }
     uint16_t last_angle = 0;
     int32_t count = 0;
 };
 
-// ---------------------------------------------------------------- main loop
+constexpr float tmotor_num_poles = 14;
+constexpr auto tmotor_sensor_param = MotorSensorParam{
+    .frequency_hz = tmotor_pwm_frequency_hz,
+    .adc_gain = -3.3f / 4096 / (.033f * 5),                 // 33 mohm shunts, driver gain 5: needs the driver set up for it
+    .vbus_gain = 3.3f / 4096 * (215 + 13.7f) / 13.7f,       // nominal 3.3 V reference
+    .encoder_cpr = 65536,
+    .encoder_dir = -1,
+    .encoder_rollover = 1 << 24,
+    .num_poles = tmotor_num_poles,
+    .phase_mode = -1,
+    .current_direction = 1,
+};
 
+constexpr auto tmotor_foc_param = FOCParam{
+    .num_poles = tmotor_num_poles,
+    .pi_d = {.kp = 2, .ki = .1f, .ki_limit = 10, .command_max = 10},
+    .pi_q = {.kp = 2, .ki = .1f, .ki_limit = 10, .command_max = 10},
+    .current_filter_frequency_hz = 40000,
+};
+
+// ---------------------------------------------------------------- main loop
+// sensors -> the controller of the commanded mode -> the FOC command
+
+constexpr auto tmotor_controller_param = MotorControllerParam{
+    .position = {.kp = 20, .kd = .2f, .command_max = 3, .velocity_filter_frequency_hz = 200},
+    .velocity = {.kp = .2f, .ki = 20, .ki_limit = 3, .command_max = 3, .output_filter_frequency_hz = 200},
+    .acceleration_limit = 1000,
+    .rollover = 2 * std::numbers::pi_v<float> * (1 << 24) / 65536,
+};
+
+// No output encoder and no torque sensor: the output position is the motor's
+// through the gear
 struct TMotorSensorStatus {
-    int32_t motor_encoder;
-    int32_t output_encoder;             // motor encoder counts through the gear
-    uint32_t vbus;                      // adc counts
+    float output_position;              // rad
+    float torque;                       // Nm
 };
 
 struct TMotorSensorPolicy {
-    TMotorSensorStatus update() {
-        const int32_t motor_encoder = tmotor_fast_loop_io.motor_encoder;
-        status = {motor_encoder, motor_encoder / tmotor_gear_ratio, motor_vbus()};
+    template<typename FastLoopStatus>
+    TMotorSensorStatus update(const FastLoopStatus& fast_loop) {
         count = count + 1;
-        return status;
+        return {fast_loop.measured.motor_position / tmotor_gear_ratio, 0};
     }
-    TMotorSensorStatus status{};
     volatile uint32_t count = 0;        // main loop passes
+};
+
+// The host's command, written from the background as frames arrive
+struct TMotorHostCommand {
+    static inline constinit Latest<obot::MotorCommand> latest{};
+    static obot::MotorCommand read() { return latest.read(); }
 };
 
 struct TMotorConfig : BasicDefaultConfig {
@@ -167,6 +192,9 @@ struct TMotorConfig : BasicDefaultConfig {
         fast_loop_frequency = tmotor_pwm_frequency_hz;
         main_loop_frequency = tmotor_main_loop_frequency_hz;
     }
-    using MotorEncoderType = TMotorEncoder;
+    using FastLoopSensorPolicy = MotorFastLoopSensors<tmotor_sensor_param, TMotorEncoder>;
+    using FastLoopControllerType = FOC<tmotor_foc_param, 1.f / tmotor_pwm_frequency_hz>;
+    using FastLoopOutputPolicy = MotorPWM<tmotor_pwm_frequency_hz>;
     using MainLoopSensorPolicy = TMotorSensorPolicy;
+    using MainLoopControllerPolicy = MotorControllerPolicy<tmotor_controller_param, 1.f / tmotor_main_loop_frequency_hz, TMotorHostCommand>;
 };

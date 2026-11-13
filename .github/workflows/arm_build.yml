@@ -117,6 +117,19 @@ jobs:
           build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.elf
           build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.bin
 
+  test-obot3-control:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+      with:
+        submodules: recursive
+    - name: control host test
+      run: |
+        g++ --version
+        g++ -std=c++23 -O2 -Wall -I obot3 obot3/control/test/test_control.cpp -o test_control
+        ./test_control
+
   test-builds:
     timeout-minutes: 10
     needs: [build]

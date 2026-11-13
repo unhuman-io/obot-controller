@@ -94,7 +94,7 @@ check ia $(api ia) -1 4096
 check ib $(api ib) -1 4096
 check ic $(api ic) -1 4096
 check vrefint $(api vrefint) 1300 1700
-echo "menc $(api menc), oenc $(api oenc), temperature $(api temperature)"
+echo "mode $(api mode), menc $(api menc), vbus $(api vbus_mv) mV, temperature $(api temperature)"
 
 # still there after the watchdog period several times over
 sleep 3

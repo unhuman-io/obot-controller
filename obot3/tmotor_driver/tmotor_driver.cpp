@@ -3,7 +3,6 @@
 #include <cstring>
 #include "../motorlib/task.h"   // device header first: the device.* modules carry it in their global module fragment
 #include "tmotor_driver.h"
-#include "../motorlib/motor_messages/motor_messages.h"   // MOTOR_MESSAGES_VERSION
 
 template<auto config = TMotorConfig{}>
 struct Config : BasicConfig<config> {};
@@ -79,7 +78,7 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
         ticks++;
         motor_led(0, ticks & 1 ? 0x2000 : 0, 0);
 
-        const uint32_t fast_loop_count = tmotor_fast_loop_io.count;
+        const uint32_t fast_loop_count = MySystem::fast_loop.count;
         const uint32_t main_loop_count = MySystem::main_loop.sensors.count;
         const bool loops_run = fast_loop_count != last_fast_loop_count && main_loop_count != last_main_loop_count;
         last_fast_loop_count = fast_loop_count;
@@ -105,14 +104,19 @@ struct TextValue {
     int32_t (*get)();
 };
 constexpr TextValue text_values[] = {
-    {"fast_loop_count", [] { return static_cast<int32_t>(tmotor_fast_loop_io.count); }},
+    {"fast_loop_count", [] { return static_cast<int32_t>(MySystem::fast_loop.count); }},
     {"main_loop_count", [] { return static_cast<int32_t>(MySystem::main_loop.sensors.count); }},
-    {"menc", [] { return static_cast<int32_t>(tmotor_fast_loop_io.motor_encoder); }},
-    {"oenc", [] { return MySystem::main_loop.sensors.status.output_encoder; }},
-    {"ia", [] { return static_cast<int32_t>(tmotor_fast_loop_io.ia); }},
-    {"ib", [] { return static_cast<int32_t>(tmotor_fast_loop_io.ib); }},
-    {"ic", [] { return static_cast<int32_t>(tmotor_fast_loop_io.ic); }},
-    {"vbus", [] { return static_cast<int32_t>(MySystem::main_loop.sensors.status.vbus); }},
+    {"mode", [] { return static_cast<int32_t>(MySystem::main_loop.controller.status.read().flags.mode); }},
+    {"menc", [] { return MySystem::main_loop.controller.status.read().motor_encoder; }},
+    {"ia", [] { return static_cast<int32_t>(motor_ia()); }},        // adc counts
+    {"ib", [] { return static_cast<int32_t>(motor_ib()); }},
+    {"ic", [] { return static_cast<int32_t>(motor_ic()); }},
+    {"vbus", [] { return static_cast<int32_t>(motor_vbus()); }},
+    {"vbus_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().measured.vbus * 1000); }},
+    {"vq_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.v_q * 1000); }},
+    {"iq_ma", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.i_q * 1000); }},
+    {"iq_desired_ma", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.i_q_desired * 1000); }},
+    {"invalid_command_count", [] { return static_cast<int32_t>(MySystem::main_loop.controller.invalid_command_count); }},
     {"temperature", [] { return static_cast<int32_t>(temperature_reading); }},
     {"vrefint", [] { return static_cast<int32_t>(vrefint_reading); }},
 };
@@ -174,9 +178,25 @@ void host_poll() {
         host_idle_ticks = 0;
         text_request(data);
     }
-    if (can_read<tmotor_can_init>(tmotor_can_enum_fifo, id, data) >= 0) {
+    // commands, as the obot_g474: a command frame is the new MotorCommand, a
+    // command status frame is that and a request for the status, a status
+    // frame only the request
+    if (const int length = can_read<tmotor_can_init>(tmotor_can_command_fifo, id, data); length >= 0) {
         host_idle_ticks = 0;
-        can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), data, 0);   // here, with no data
+        const uint32_t message = id >> 7;
+        if (message == obot_can_enum) {
+            can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), data, 0);   // here, with no data
+        } else {
+            if (message != obot_can_status && length >= static_cast<int>(sizeof(obot::MotorCommand))) {
+                obot::MotorCommand command;
+                std::memcpy(&command, data, sizeof(command));
+                TMotorHostCommand::latest.write(command);
+            }
+            if (message != obot_can_command) {
+                can_write<tmotor_can_init>(obot_can_id(obot_can_status, tmotor_can_address()),
+                    MySystem::main_loop.controller.status.read());
+            }
+        }
     }
 }
 

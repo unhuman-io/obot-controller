@@ -4,6 +4,7 @@
 // motorlib/boards/pin_config_obot_g474_motor.h: a configuration starts from
 // these defaults and overrides what it wires differently, see tmotor_driver.h.
 #include "basic_config.h"
+#include "control/foc.h"
 import device.rcc_init;
 import device.gpio_init;
 import device.hrtim_init;
@@ -304,3 +305,125 @@ inline void motor_led(uint16_t red, uint16_t green, uint16_t blue) {
     tim_compare<4, 2>(green);
     tim_compare<4, 3>(blue);
 }
+
+// ---------------------------------------------------------------- fast loop
+// Sensors and power stage of the board for the FOC of control/foc.h
+
+struct MotorSensorParam {
+    float frequency_hz = 50'000;            // of the fast loop
+    float adc_gain = 0;                     // A per adc count from mid scale, phase currents
+    float vbus_gain = 0;                    // V per adc count
+    int32_t encoder_cpr = 65536;            // counts per motor revolution
+    int32_t encoder_dir = 1;                // 1 or -1: sign of the motor position
+    int32_t encoder_rollover = 1 << 24;     // counts: the position wraps at +-rollover
+    float num_poles = 7;                    // electrical revolutions per motor revolution
+    int32_t phase_mode = 1;                 // 1, or -1 with two motor wires swapped
+    int32_t current_direction = 0;          // 1 moves the electrical zero by half an electrical revolution
+    int32_t electrical_zero = 0;            // encoder counts at an electrical zero, until a phase lock measures it
+    float velocity_filter_frequency_hz = 0;
+};
+
+struct MotorMeasurement {
+    uint32_t timestamp = 0;                 // cpu cycles
+    float i_a = 0, i_b = 0, i_c = 0;        // A
+    float vbus = 0;                         // V
+    int32_t motor_encoder = 0;              // counts
+    float motor_electrical_position = 0;    // rad at the motor, from the electrical zero, for the FOC
+    float motor_position = 0;               // rad
+    float motor_velocity = 0;               // rad/s
+};
+
+// Encoder is anything with an int32_t read() that returns a count that only
+// wraps with the int32
+template<MotorSensorParam param, typename Encoder>
+struct MotorFastLoopSensors {
+    static constexpr float rad_per_count = 2 * std::numbers::pi_v<float> / param.encoder_cpr;
+    static constexpr int32_t electrical_zero_offset = param.current_direction *
+        (param.encoder_cpr / static_cast<int32_t>(param.num_poles) / 2);
+
+    MotorMeasurement update() {
+        MotorMeasurement m;
+        m.timestamp = get_clock();
+        m.i_a = param.adc_gain * (static_cast<int32_t>(motor_ia()) - 2048) - ia_bias;
+        m.i_b = param.adc_gain * (static_cast<int32_t>(motor_ib()) - 2048) - ib_bias;
+        m.i_c = param.adc_gain * (static_cast<int32_t>(motor_ic()) - 2048) - ic_bias;
+        m.vbus = param.vbus_gain * motor_vbus();
+
+        const int32_t motor_encoder = encoder.read();   // may wait a little
+        const int32_t difference = motor_encoder - last_motor_encoder;
+        last_motor_encoder = motor_encoder;
+        motor_encoder_wrap = wrap1(motor_encoder_wrap + difference, param.encoder_rollover);
+        m.motor_encoder = motor_encoder;
+        m.motor_position = param.encoder_dir * rad_per_count * motor_encoder_wrap;
+        m.motor_velocity = velocity_filter.update(param.encoder_dir * rad_per_count * param.frequency_hz * difference);
+        m.motor_electrical_position = param.phase_mode * rad_per_count *
+            (motor_encoder_wrap - electrical_zero - electrical_zero_offset);
+        return m;
+    }
+
+    // During a phase lock the rotor sits at an electrical zero
+    void feedback(const FOCStatus& foc) {
+        if (foc.mode == FOCMode::PHASE_LOCK) electrical_zero = motor_encoder_wrap;
+    }
+
+    Encoder encoder{};
+    int32_t last_motor_encoder = 0;
+    int32_t motor_encoder_wrap = 0;
+    int32_t electrical_zero = param.electrical_zero;
+    float ia_bias = 0, ib_bias = 0, ic_bias = 0;    // A
+    FirstOrderLowPassFilter velocity_filter{1 / param.frequency_hz, param.velocity_filter_frequency_hz};
+};
+
+// The power stage: phase voltages to the compare values of timers D, F and E,
+// and the state of their outputs. The gate driver's enable pin is not handled
+// here: while it is low nothing switches whatever the outputs do.
+// A pulse is at least 1 us at either end, which the driver and the current
+// sense need.
+template<uint32_t pwm_frequency_hz>
+struct MotorPWM {
+    static constexpr float period = hrtim_period(pwm_frequency_hz, 0, HRTIMMode::CENTER_ALIGNED);
+    static constexpr float min_pulse_ticks = 2 * 1000 * 1.36f;      // 1 us in hrtim clock / 4 * 32 ticks, both edges
+    static constexpr float pwm_min = min_pulse_ticks, pwm_max = period - min_pulse_ticks;
+    static constexpr float vbus_min = 7;                            // V: below this the voltage scale is held
+    static constexpr HRTIMTimer phase_a = HRTIMTimer::D, phase_b = HRTIMTimer::F, phase_c = HRTIMTimer::E;
+    static constexpr uint32_t high_sides = hrtim_output_mask(phase_a, true, false) | hrtim_output_mask(phase_b, true, false) |
+        hrtim_output_mask(phase_c, true, false);
+    static constexpr uint32_t low_sides = hrtim_output_mask(phase_a, false, true) | hrtim_output_mask(phase_b, false, true) |
+        hrtim_output_mask(phase_c, false, true);
+
+    void update(const FOCStatus& foc, const MotorMeasurement& measured) {
+        if (foc.mode != mode) set_mode(foc.mode);
+        const float v_to_pwm = period / (measured.vbus > vbus_min ? measured.vbus : vbus_min);
+        hrtim_compare1(phase_a, fsat2(foc.v_a * v_to_pwm + period / 2, pwm_min, pwm_max));
+        hrtim_compare1(phase_b, fsat2(foc.v_b * v_to_pwm + period / 2, pwm_min, pwm_max));
+        hrtim_compare1(phase_c, fsat2(foc.v_c * v_to_pwm + period / 2, pwm_min, pwm_max));
+    }
+
+    void set_mode(FOCMode new_mode) {
+        switch (new_mode) {
+            case FOCMode::OPEN:
+                hrtim_output_disable(high_sides | low_sides);
+                break;
+            case FOCMode::BRAKE:
+                hrtim_output_disable(high_sides);
+                hrtim_output_enable(low_sides);
+                hrtim_update_disable();
+                for (HRTIMTimer timer : {phase_a, phase_b, phase_c}) {
+                    hrtim_output1_events(timer, HRTIMEvent::NONE, HRTIMEvent::SOFTWARE);    // high side inactive: low side on
+                }
+                hrtim_update_enable();
+                break;
+            default:    // pwm
+                hrtim_update_disable();
+                for (HRTIMTimer timer : {phase_a, phase_b, phase_c}) {
+                    hrtim_output1_events(timer, HRTIMEvent::CMP1, HRTIMEvent::NONE);
+                }
+                hrtim_update_enable();
+                hrtim_output_enable(high_sides | low_sides);
+                break;
+        }
+        mode = new_mode;
+    }
+
+    FOCMode mode = FOCMode::OPEN;
+};

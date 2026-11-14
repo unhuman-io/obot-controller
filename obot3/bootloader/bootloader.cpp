@@ -10,6 +10,7 @@ import device.gpio_init;
 import device.can_init;
 import device.irq_init;
 import device.flash;
+import device.crc_init;
 import device.system;
 
 // The can bootloader of the obot_g474 motor boards (the tmotor driver among
@@ -65,6 +66,7 @@ extern "C" void Reset_Handler() {
 
 constexpr auto rcc_clock_init = RCCClockInit{.fdcan_clock = RCCFDCANClock::PCLK1};    // 170 MHz from the 24 MHz crystal
 constexpr auto rcc_init = RCCInit{
+    .crc = RCCEnable::ENABLED,
     .gpiob = RCCEnable::ENABLED,
     .gpioa = RCCEnable::ENABLED,
     .fdcan = RCCEnable::ENABLED};
@@ -100,29 +102,6 @@ constexpr uint32_t param_address = 0x08060000;
 
 uint32_t can_address;       // read once: the parameters can be loaded from here
 bool reset_request;
-
-// zlib's crc32, a nibble at a time
-constexpr auto crc_table = []() consteval {
-    struct { uint32_t value[16]; } table{};
-    for (uint32_t i = 0; i < 16; i++) {
-        uint32_t crc = i;
-        for (int bit = 0; bit < 4; bit++) crc = crc & 1 ? crc >> 1 ^ 0xEDB88320 : crc >> 1;
-        table.value[i] = crc;
-    }
-    return table;
-}();
-
-uint32_t crc32(uint32_t address, uint32_t length) {
-    uint32_t crc = ~0u;
-    const uint8_t* p = reinterpret_cast<const uint8_t*>(address);
-    for (uint32_t i = 0; i < length; i++) {
-        crc ^= p[i];
-        crc = crc >> 4 ^ crc_table.value[crc & 0xF];
-        crc = crc >> 4 ^ crc_table.value[crc & 0xF];
-        if ((i & 0xFFFF) == 0) watchdog_kick();
-    }
-    return ~crc;
-}
 
 // [address, address + length) inside [low, high)
 bool in_range(uint32_t address, uint32_t length, uint32_t low, uint32_t high) {
@@ -204,7 +183,7 @@ void load_request(const BootloaderRequest& request, BootloaderReply& reply) {
                 reply.status = BOOTLOADER_BAD_RANGE;
                 break;
             }
-            reply.value = crc32(address, length);
+            reply.value = crc_compute<crc32_init>(reinterpret_cast<const void*>(address), length);
             break;
         }
         case BOOTLOADER_RESET:
@@ -252,6 +231,7 @@ void text_request(const char* request) {
     can_filter<can_init>(0, obot_can_id(obot_can_command, can_address), request_fifo);
     can_filter<can_init>(1, obot_can_id(obot_can_enum, obot_can_broadcast_address), request_fifo);
     can_filter<can_init>(2, obot_can_id(obot_can_ascii, can_address), text_fifo);
+    device_crc_config<crc32_init>();
     flash_unlock();
 
     constexpr uint32_t reset_timeout_cycles = rcc_clock_init.cpu_frequency_hz / 100;    // 10 ms for the last reply to go out

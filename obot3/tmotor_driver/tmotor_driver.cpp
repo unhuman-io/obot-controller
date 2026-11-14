@@ -50,10 +50,11 @@ DEBUG_THREAD_ENTRY(main_loop_isr, 2, main_loop_update)
 void tim2_isr() {}
 
 // The fast loop preempts everything. The text api comes next, and the debug
-// monitor between it and the main loop: gdb can stop and step the main loop
-// and the background, with the fast loop running and the node answering.
+// monitor either between it and the main loop or below the main loop: gdb can
+// stop and step the main loop and the background, or the background alone,
+// with the fast loop running and the node answering.
 void text_isr();
-constexpr uint8_t text_priority = 1, debug_monitor_priority = 2, main_loop_priority = 3;
+constexpr uint8_t text_priority = 1, debug_monitor_priority = 2, main_loop_priority = 3, debug_monitor_low_priority = 4;
 constexpr auto tmotor_irq_init = []() consteval {
     IRQInit init{};
     init.irq[ADC5_IRQn] = {.handler = fast_loop_isr, .priority = 0};
@@ -71,6 +72,7 @@ __attribute__((section(".isr_vector"), used))
 constinit const auto vector_table = []() consteval {
     auto table = get_vector_table<tmotor_irq_init>(&_estack, Reset_Handler);
     table.vector[DebugMonitor_IRQn + 15] = debug_monitor_entry;
+    table.vector[PendSV_IRQn + 15] = debug_holder_entry;
     table.vector[HardFault_IRQn + 15] = debug_hard_fault_entry;
     return table;
 }();
@@ -104,7 +106,7 @@ void pin_config() {
     tmotor_startup_init();
     tmotor_startup();
     tmotor_device_init();
-    debug_monitor_init(debug_threads, std::size(debug_threads), debug_monitor_priority, text_priority, debug_idle);
+    debug_monitor_init(debug_threads, std::size(debug_threads), debug_monitor_priority, debug_monitor_low_priority, debug_idle);
     can_interrupt_enable<tmotor_can_init>(can_interrupt_rx_fifo[tmotor_can_ascii_fifo]);
     device_irq_config<tmotor_irq_init>(vector_table);   // last: the loops run from here on
 }
@@ -272,8 +274,6 @@ constexpr TextVariable text_variables[] = {
     text_int("t_period_mainloop", [] { return static_cast<int64_t>(t_period_mainloop); }),
     text_int("cpu_frequency", [] { return static_cast<int64_t>(CPU_FREQUENCY_HZ); }),
     text_int("debug_probe", [] { return static_cast<int64_t>(debug_probe_attached()); }),    // 1: no step or breakpoints for gdb
-    text_int("halt_main_loop", [] { return static_cast<int64_t>(debug_thread_halts(2)); },         // 0: gdb stops only the background
-        [](int64_t halts) { debug_thread_halts(2, halts != 0); }),
     text_int("breakpoints_dropped", [] { return static_cast<int64_t>(debug.breakpoints_dropped); }),   // set above the debug monitor
 };
 #undef TUNE

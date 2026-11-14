@@ -2,7 +2,7 @@
 # gdb on an obot3 application over can, without a debug probe: through its
 # text api and the debug monitor (obot3/debug_monitor.h).
 #
-#   obot3_gdb.sh CAN_ID [ELF] [gdb arguments, e.g. -batch -ex 'p fast_loop.sensors']
+#   obot3_gdb.sh [-n] CAN_ID [ELF] [gdb arguments, e.g. -batch -ex 'p fast_loop.sensors']
 #
 # The node keeps running when gdb connects: memory is live, so with the elf
 # file every static variable is there by name, and the registers are a sample.
@@ -18,7 +18,17 @@
 #   (gdb) continue
 #   (gdb) next
 #   (gdb) info threads
-#   (gdb) monitor halt_main_loop=0      the main loop runs on, only the background stops (1: both)
+# Which thread runs is gdb's to say. As it is, everything stops at a stop, and
+# the other thread runs during a step:
+#   (gdb) set scheduler-locking step    the other thread stays stopped during a step
+# Thread 2 while the main loop is not in its handler is shown where thread 1
+# is; stepi from there enters the handler.
+# With -n gdb is in non-stop mode: the threads stop and run one by one, and
+# the main loop keeps running while only the background is stopped.
+#   (gdb) interrupt                     stops thread 1, the background
+#   (gdb) interrupt -a                  both
+#   (gdb) thread 2                      then continue, stepi, ... are for the main loop
+#   (gdb) continue -a
 #   (gdb) monitor live                  the node continues and gdb keeps its prompt, as at the start
 # Leaving gdb removes the breakpoints and lets the node continue.
 #
@@ -29,8 +39,13 @@
 # A debug probe has to be detached (text api: debug_probe is 0), or
 # breakpoints and steps halt the cpu for the probe instead.
 set -e
+non_stop=()
+if [ "$1" == -n ]; then
+    non_stop=(-ex "set non-stop on")
+    shift
+fi
 if [ $# -lt 1 ]; then
-    sed -n '2,31p' "$0"
+    sed -n '2,40p' "$0"
     exit 2
 fi
 id=$1
@@ -61,9 +76,14 @@ if [[ "$stop" != T* ]]; then
     exit 1
 fi
 
+if ss -ltn 2>/dev/null | grep -q ':3293 '; then
+    echo "port 3293 is in use: another gdbserver is running, $(ss -ltnp 2>/dev/null | grep -o 'pid=[0-9]*' | head -n1)" >&2
+    exit 1
+fi
 # In a session of its own: ctrl-c at the terminal is for gdb, not for the server
 setsid "$motor_util" -f can0:$id --no-list gdbserver > /dev/null 2>&1 &
 server=$!
 trap 'kill -INT $server 2>/dev/null' EXIT
+trap 'exit 1' HUP TERM      # with the exit trap: no server left behind
 sleep 0.5
-"$gdb" -q -ex "set confirm off" -ex "target remote :3293" "$@" "$elf"
+"$gdb" -q -ex "set confirm off" "${non_stop[@]}" -ex "target remote :3293" "$@" "$elf"

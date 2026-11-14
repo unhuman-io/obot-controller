@@ -8,25 +8,34 @@
 // packets that come in over the text api (text_api.h, `motor_util gdbserver`).
 // Include the device header first.
 //
-// The monitor is an exception with a priority of its own. What is more urgent
-// keeps running while the node is stopped, and that has to include the
-// interrupt that takes the text requests in; what is less urgent is what gdb
-// stops, steps and sees:
+// Two exceptions hold what gdb has stopped, each by waiting for gdb's next
+// request: what is more urgent than the one that waits keeps running, and
+// that always includes the interrupt that takes the text requests in.
 //
-//     fast loop, text api interrupt       run on, breakpoints there are ignored
-//     debug monitor
-//     thread 2..: interrupts, as listed   stopped
-//     thread 1: the background            stopped
+//     fast loop, text api interrupt       run on, breakpoints there are dropped
+//     debug monitor                       holds thread 2.. and with them thread 1
+//     thread 2..: interrupts, as listed
+//     holder (PendSV)                     holds thread 1 alone
+//     thread 1: the background
 //
-// gdb gets these as threads. One that is not active when the node stops is
-// shown at the entry of its handler, about to interrupt what runs. A step is
-// one instruction of the thread that runs; for its duration the interrupts of
-// the other threads are as urgent as the text api, so they run as they would
-// and the step never ends up in them.
-//
-// A thread's interrupt can be left running (debug_thread_halts): it then is
-// as urgent as the text api all the time and gdb does not get it as a thread,
-// so that for one a control loop goes on while the background is debugged.
+// gdb gets these as threads, and says which of them run with its own
+// commands (vCont, below). The interrupt threads are held or run together.
+//   - everything stopped: the monitor waits. An interrupt thread that is not
+//     active is shown where the one it will interrupt is.
+//   - only the background stopped: the holder waits and the interrupts run
+//     above it. Breakpoints in them and steps of them work: the monitor is
+//     free for those, and then waits on top of the holder.
+//   - a step of the background with the others running has the monitor below
+//     their interrupts for its duration; with the others held, their
+//     interrupts are off for it.
+//   - a step of a held interrupt thread that is not active enters its
+//     handler: the interrupt is made pending for it.
+//   - the background can't run while an interrupt thread is held inside its
+//     handler.
+// In gdb's all-stop mode everything stops at every event; `set
+// scheduler-locking on` or `step` then decides whether the other thread runs
+// during a step or a continue. In non-stop mode a stop of the background
+// leaves the interrupt threads running.
 //
 // The node is not stopped by gdb connecting: until the first continue the
 // registers are those at the moment of the request, and memory is live.
@@ -85,19 +94,37 @@ inline constexpr uint32_t debug_thread_max = 4;
 struct DebugMonitor {
     const DebugThread* threads;             // [0] is thread 1
     uint32_t thread_count;
-    uint8_t text_priority;                  // of the interrupt that calls debug_request
+    uint8_t high_priority, low_priority;    // of the monitor: above the threads, and below them
     void (*idle)();                         // called over and over while stopped
     DebugFrame* thread_frame[debug_thread_max];     // what the thread's handler interrupted
     DebugFrame* volatile frame;             // what the monitor interrupted, while stopped
     DebugFrame* sample;                     // what the text api interrupt interrupted
-    volatile bool stopped, resume, step, raised;
+    volatile bool stopped;                  // the monitor or the holder waits: the background is held
+    volatile bool waiting, resume;          // the monitor waits: everything is held. resume ends that
+    volatile bool exit_step, exit_low, exit_irqs_off;      // how the monitor leaves, set with resume
+    DebugFrame* volatile holder_frame;      // what the holder interrupted: the background
+    volatile bool holding, holder_release;  // the holder waits, release ends that
+    volatile bool holder_step;              // with a step of the background
+    volatile bool holder_leaving;           // that step is not yet in the background
+    volatile bool holder_pending;           // the holder is on its way
+    volatile bool holder_event;             // and its stop is one to tell gdb of
+    volatile bool pause_interrupts;         // the stop that was asked for is one of everything
+    volatile bool keep_interrupts;          // the interrupt threads stay held over a step of the background
+    volatile bool irqs_off;
+    volatile bool background_free;          // for gdb the background runs: it is only kept from it by the interrupt
+                                            // threads being held, which gdb's non-stop mode does not take as a stop
+    volatile bool pause_background;         // the stop that was asked for names the background too
+    bool non_stop;                          // gdb's mode
     volatile uint8_t pause_signal;
+    volatile uint8_t step_thread;           // the thread a step was for
+    volatile uint8_t pause_thread;          // and a stop that was asked for
+    uint32_t event_count;                   // stops so far
+    uint8_t event_thread;                   // and the thread of the last one
     uint8_t signal;                         // why it stopped: 2 on request, else 5
     uint8_t watch_function;                 // if it was a watchpoint
     uint32_t watch_address;
     uint32_t general_thread;                // the one gdb selected for the registers, 0: the one that runs
     uint32_t breakpoints_dropped;           // hit where the monitor can't run
-    bool runs_on[debug_thread_max];         // the thread is not stopped, see debug_thread_halts
 };
 inline constinit DebugMonitor debug{};
 
@@ -125,16 +152,24 @@ inline void debug_breakpoints_clear() {
     for (uint32_t n = 0; n < watchpoint_count(); n++) dwt_function(n) = 0;
 }
 
-// threads[0] names the background, the others are interrupts less urgent than
-// monitor_priority. text_priority is that of the interrupt that calls
-// debug_request(), more urgent than the monitor.
-inline void debug_monitor_init(const DebugThread* threads, uint32_t thread_count, uint8_t monitor_priority,
-                               uint8_t text_priority, void (*idle)()) {
+inline void debug_monitor_level(bool high) {
+    NVIC_SetPriority(DebugMonitor_IRQn, high ? debug.high_priority : debug.low_priority);
+}
+
+// threads[0] names the background, the others are interrupts. high_priority
+// is a level between the text api's interrupt, which calls debug_request(),
+// and those of the threads; low_priority one below all of them, with the
+// next one free for the holder.
+inline void debug_monitor_init(const DebugThread* threads, uint32_t thread_count, uint8_t high_priority,
+                               uint8_t low_priority, void (*idle)()) {
     debug.threads = threads;
     debug.thread_count = thread_count < debug_thread_max ? thread_count : debug_thread_max;
-    debug.text_priority = text_priority;
+    debug.high_priority = high_priority;
+    debug.low_priority = low_priority;
     debug.idle = idle;
-    NVIC_SetPriority(DebugMonitor_IRQn, monitor_priority);
+    debug.pause_signal = 5;
+    debug_monitor_level(true);
+    NVIC_SetPriority(PendSV_IRQn, low_priority + 1);
     CoreDebug->DEMCR = CoreDebug->DEMCR | debug_reg::DEMCR_MON_EN | debug_reg::DEMCR_TRCENA;
     debug_breakpoints_clear();
     debug_reg::fp_ctrl() = debug_reg::FP_CTRL_KEY | debug_reg::FP_CTRL_ENABLE;
@@ -148,39 +183,53 @@ inline uint32_t debug_thread_of(uint32_t exception) {
     return 1;
 }
 
-// The interrupts of the threads at their own priority, or for a step of
-// stepped_thread (not 0) above the monitor, except its own. Those that run on
-// are always there.
-inline void debug_thread_priorities(uint32_t stepped_thread) {
+// The interrupts of the threads off, for the background to run without them
+inline void debug_thread_irqs(bool enable) {
     for (uint32_t i = 1; i < debug.thread_count; i++) {
-        const DebugThread& thread = debug.threads[i];
-        const bool above = debug.runs_on[i] || (stepped_thread != 0 && i + 1 != stepped_thread);
-        NVIC_SetPriority(static_cast<IRQn_Type>(thread.irq), above ? debug.text_priority : thread.priority);
+        const IRQn_Type irq = static_cast<IRQn_Type>(debug.threads[i].irq);
+        if (enable) NVIC_EnableIRQ(irq);
+        else NVIC_DisableIRQ(irq);
     }
-    debug.raised = stepped_thread != 0;
+    debug.irqs_off = !enable;
 }
 
-// Whether gdb stops thread (2..) with the others, which is so at the start.
-// One that doesn't runs on while the less urgent ones are stopped and
-// stepped. Takes effect when the node continues, if it is stopped.
-inline void debug_thread_halts(uint32_t thread, bool halts) {
-    if (thread < 2 || thread > debug.thread_count) return;
-    debug.runs_on[thread - 1] = !halts;
-    if (!debug.stopped) debug_thread_priorities(0);
-}
-inline bool debug_thread_halts(uint32_t thread) {
-    return thread >= 1 && thread <= debug.thread_count && !debug.runs_on[thread - 1];
+inline constexpr uint32_t debug_holder_exception = 14;      // PendSV
+
+// The holder takes the background when everything above it has returned
+inline void debug_hold(bool event) {
+    debug.holder_event = event;
+    debug.holder_pending = true;
+    SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
 
-// The monitor exception: here the node is stopped, until a request says to go on
+// What a frame interrupted, if that was the holder: the background
+inline DebugFrame* debug_below_holder(DebugFrame* frame) {
+    return frame != nullptr && frame->exception() == debug_holder_exception ? debug.holder_frame : frame;
+}
+
+inline void debug_event(uint8_t signal, uint32_t thread) {
+    debug.signal = signal;
+    debug.event_thread = thread;
+    debug.event_count = debug.event_count + 1;
+}
+
+// The monitor exception: a breakpoint, a watchpoint, a step or a stop that was
+// asked for. Here everything is held until a request says to go on.
 extern "C" [[gnu::used]] inline void debug_monitor(DebugFrame* frame) {
     using namespace debug_reg;
-    if (debug.raised) debug_thread_priorities(0);
-    CoreDebug->DEMCR = CoreDebug->DEMCR & ~DEMCR_MON_STEP;
     const uint32_t reason = SCB->DFSR;
     SCB->DFSR = reason;
-    debug.signal = (reason & (DFSR_HALTED | DFSR_BKPT | DFSR_DWTTRAP)) != 0 ? 5 : debug.pause_signal;
-    debug.pause_signal = 5;
+    if ((reason & DFSR_HALTED) != 0 && debug.holder_leaving) {
+        // A step of the background that is still in the holder's way out, or
+        // has just returned from it without an instruction of the background: on with it
+        if (frame->exception() != debug_holder_exception) debug.holder_leaving = false;
+        return;
+    }
+    debug.holder_leaving = false;
+    CoreDebug->DEMCR = CoreDebug->DEMCR & ~DEMCR_MON_STEP;
+    debug_monitor_level(true);
+    if (debug.irqs_off) debug_thread_irqs(true);
+    const uint32_t top = debug_thread_of(debug_below_holder(frame)->exception());
     debug.watch_function = 0;
     if (reason & DFSR_DWTTRAP) {
         for (uint32_t n = 0; n < watchpoint_count(); n++) {
@@ -191,27 +240,73 @@ extern "C" [[gnu::used]] inline void debug_monitor(DebugFrame* frame) {
             }
         }
     }
+    const bool event = (reason & (DFSR_HALTED | DFSR_BKPT | DFSR_DWTTRAP)) != 0;
+    // The thread of a step or of a stop that was asked for is the one gdb
+    // named, also when a step has left its handler
+    const bool stepped = (reason & DFSR_HALTED) != 0 && (reason & (DFSR_BKPT | DFSR_DWTTRAP)) == 0;
+    debug_event(event ? 5 : debug.pause_signal, stepped && debug.step_thread != 0 ? debug.step_thread :
+        !event && debug.pause_thread != 0 ? debug.pause_thread : top);
+    const bool everything = !debug.non_stop || top >= 2 || debug.step_thread >= 2 || debug.pause_interrupts || debug.keep_interrupts;
+    debug.pause_signal = 5;
+    debug.pause_interrupts = false;
+    debug.keep_interrupts = false;
+    debug.step_thread = 0;
+    debug.pause_thread = 0;
+    if (!debug.non_stop || debug.event_thread == 1 || debug.pause_background) debug.background_free = false;
+    else if (everything && !debug.holding && !debug.holder_pending) debug.background_free = true;
+    debug.pause_background = false;
+    if (!everything) {
+        // only the background stops: that is the holder's, the interrupts go on
+        if (!debug.holding) debug_hold(false);
+        return;
+    }
     debug.frame = frame;
-    debug.general_thread = 0;
     debug.resume = false;
+    debug.exit_step = false;
+    debug.exit_low = false;
+    debug.exit_irqs_off = false;
+    debug.waiting = true;
     debug.stopped = true;
     while (!debug.resume) debug.idle();
-    if (debug.step) {
-        debug.step = false;
-        // The other threads' interrupts that are pending run right here
-        debug_thread_priorities(debug_thread_of(frame->exception()));
-        CoreDebug->DEMCR = CoreDebug->DEMCR | DEMCR_MON_STEP;
-    } else {
-        debug_thread_priorities(0);
-    }
-    debug.stopped = false;
+    if (debug.exit_irqs_off) debug_thread_irqs(false);
+    if (debug.exit_low) debug_monitor_level(false);
+    if (debug.exit_step) CoreDebug->DEMCR = CoreDebug->DEMCR | DEMCR_MON_STEP;
+    debug.waiting = false;
+    debug.stopped = debug.holding || debug.holder_pending;
 }
 
-// For the debug monitor's vector. The callee saved floating point registers
-// go below the frame, which also puts the others into what the cpu stacked.
+// The holder: the background alone is held here until a request says to go on
+extern "C" [[gnu::used]] inline void debug_holder(DebugFrame* frame) {
+    debug.holder_frame = frame;
+    if (debug.holder_event) debug_event(debug.pause_signal, 1);
+    debug.holder_event = false;
+    debug.pause_signal = 5;
+    debug.holder_release = false;
+    debug.holder_step = false;
+    debug.holding = true;
+    debug.stopped = true;
+    debug.holder_pending = false;
+    while (!debug.holder_release) debug.idle();
+    debug.holding = false;
+    debug.stopped = false;
+    if (debug.holder_step) {
+        // one instruction of the background, counted from when this has returned
+        debug.holder_leaving = true;
+        debug_monitor_level(false);
+        CoreDebug->DEMCR = CoreDebug->DEMCR | debug_reg::DEMCR_MON_STEP;
+    }
+}
+
+// For the vectors of the debug monitor and of PendSV. The callee saved
+// floating point registers go below the frame, which also puts the others
+// into what the cpu stacked.
 [[gnu::naked]] inline void debug_monitor_entry() {
     __asm__("push {r3-r11, lr}\n vpush {s16-s31}\n" DEBUG_FRAME_CFI(104)
         "add r0, sp, #64\n bl debug_monitor\n vpop {s16-s31}\n pop {r3-r11, pc}");
+}
+[[gnu::naked]] inline void debug_holder_entry() {
+    __asm__("push {r3-r11, lr}\n vpush {s16-s31}\n" DEBUG_FRAME_CFI(104)
+        "add r0, sp, #64\n bl debug_holder\n vpop {s16-s31}\n pop {r3-r11, pc}");
 }
 
 // For the hard fault's vector: a breakpoint where the monitor can't run is
@@ -241,9 +336,11 @@ extern "C" [[gnu::used]] inline void debug_hard_fault(uint32_t* stacked) {
     __asm__("mov r0, sp\n b debug_hard_fault");
 }
 
-// The context that runs now, or ran when the node stopped
+// The context that runs now, or the most urgent one that is held
 inline DebugFrame* debug_top_frame() {
-    return debug.stopped ? debug.frame : debug.sample;
+    if (debug.waiting) return debug_below_holder(debug.frame);
+    if (debug.holding) return debug.holder_frame;
+    return debug_below_holder(debug.sample);
 }
 inline uint32_t debug_top_thread() {
     const DebugFrame* frame = debug_top_frame();
@@ -258,7 +355,7 @@ inline DebugFrame* debug_thread_context(uint32_t thread) {
         const uint32_t frame_thread = debug_thread_of(frame->exception());
         if (frame_thread == thread) return frame;
         if (frame_thread == 1) break;
-        frame = debug.thread_frame[frame_thread - 1];
+        frame = debug_below_holder(debug.thread_frame[frame_thread - 1]);
     }
     return nullptr;
 }
@@ -276,14 +373,12 @@ TEXT_API_SMALL inline DebugRegister debug_register(uint32_t thread, uint32_t n) 
     DebugRegister reg;
     if (n >= 17 && n <= 32) reg.words = 2;
     DebugFrame* frame = debug_thread_context(thread);
+    // An interrupt thread that is not active is where what it will interrupt
+    // is: stepped out of its handler it is back there, as gdb expects of a
+    // signal handler, and a step from there enters the handler.
+    if (frame == nullptr) frame = debug_top_frame();
     if (frame == nullptr) {
-        // Not active: at its handler, which returns to what runs
-        const DebugFrame* top = debug_top_frame();
-        if (n >= 17 || top == nullptr || thread < 2 || thread > debug.thread_count) reg.available = n < 17 && top != nullptr;
-        else if (n == 13) reg.value = reinterpret_cast<uint32_t>(&top->r0);
-        else if (n == 14) reg.value = top->exc_return;
-        else if (n == 15) reg.value = reinterpret_cast<uint32_t>(debug.threads[thread - 1].entry) & ~1u;
-        else if (n == 16) reg.value = 1u << 24 | (debug.threads[thread - 1].irq + 16);
+        reg.available = false;
         return reg;
     }
     if (n < 4) reg.location = &frame->r0 + n;
@@ -296,7 +391,7 @@ TEXT_API_SMALL inline DebugRegister debug_register(uint32_t thread, uint32_t n) 
     // Floating point: only in memory once the monitor has run
     else if (!debug.stopped) reg.available = false;
     else if (n < 25 && frame->extended()) reg.location = &frame->s[2 * (n - 17)];
-    else if (n >= 25 && n < 33 && frame == debug.frame) reg.location = reinterpret_cast<uint32_t*>(frame) - 16 + 2 * (n - 25);
+    else if (n >= 25 && n < 33 && ((debug.waiting && frame == debug.frame) || (debug.holding && frame == debug.holder_frame))) reg.location = reinterpret_cast<uint32_t*>(frame) - 16 + 2 * (n - 25);
     else if (n == 33 && frame->extended()) reg.location = &frame->fpscr;
     else reg.available = false;
     return reg;
@@ -337,14 +432,126 @@ TEXT_API_SMALL inline void debug_put_stop(TextOut& out) {
         out.put(';');
     }
     out.put("thread:");
-    debug_put_hex(out, debug_top_thread());
+    debug_put_hex(out, debug.stopped ? debug.event_thread : debug_top_thread());
     out.put(';');
 }
 
-inline void debug_pause(uint8_t signal) {
-    if (debug.stopped) return;
+// A thread id of a packet: 0 for "any" (0 and -1)
+inline uint32_t debug_parse_thread(const char*& p) {
+    uint32_t thread = 0;
+    if (*p == '-') {
+        p += 2;
+        return 0;
+    }
+    parse_hex(p, thread);
+    return thread;
+}
+
+// Stops everything, wherever it is
+inline void debug_pause(uint8_t signal, uint32_t thread, bool background) {
+    if (debug.waiting) return;
     debug.pause_signal = signal;
+    debug.pause_interrupts = true;
+    debug.pause_background = background;
+    debug.pause_thread = thread;
     CoreDebug->DEMCR = CoreDebug->DEMCR | debug_reg::DEMCR_MON_PEND;
+}
+
+// What gdb wants each thread to do: 'c' continue, 's' step, 't' stop, 0
+// nothing. background is thread 1's, interrupts that of the others. False if
+// it can't be done.
+inline bool debug_resume(char background, char interrupts) {
+    const bool background_go = background == 'c' || background == 's';
+    const bool interrupts_go = interrupts == 'c' || interrupts == 's';
+    if (interrupts_go && debug.irqs_off) debug_thread_irqs(true);
+    if (!debug.waiting) {
+        // the interrupt threads run
+        if (interrupts == 't' || interrupts == 's') {
+            debug_pause(interrupts == 't' ? 0 : 5, 2, background == 't' || debug.stopped);
+        } else if (!debug.stopped) {
+            // and the background: a step of what runs is a stop
+            if (background == 't' || background == 's') {
+                if (!debug.non_stop) {
+                    debug_pause(background == 't' ? 0 : 5, 0, true);
+                } else {
+                    debug.pause_signal = background == 't' ? 0 : 5;
+                    debug_hold(true);
+                }
+            }
+        } else if (background_go && debug.holding) {
+                    debug.step_thread = background == 's' ? 1 : 0;
+            debug.holder_step = background == 's';
+            debug.holder_release = true;
+        }
+        return true;
+    }
+    if (background == 't' && debug.background_free) {
+        debug.background_free = false;
+        debug_event(0, 1);
+    }
+    if (!background_go && !interrupts_go) return true;
+    const uint32_t top = debug_thread_of(debug_below_holder(debug.frame)->exception());
+    if (background_go && top >= 2 && !interrupts_go) {
+        // Under a handler that is held: it runs once that lets it. No step of it.
+        if (background == 's') return false;
+        debug.background_free = true;
+        if (debug.holding) debug.holder_release = true;
+        return true;
+    }
+    if (background_go) {
+        if (interrupts == 's') {
+            debug.step_thread = top >= 2 ? top : 2;
+            if (top < 2) NVIC_SetPendingIRQ(static_cast<IRQn_Type>(debug.threads[1].irq));
+            debug.exit_step = true;
+        } else if (interrupts_go) {
+            if (background == 's') {
+                debug.step_thread = 1;
+                debug.exit_step = true;
+                debug.exit_low = true;
+            }
+        } else {
+            debug.background_free = false;      // it runs for real
+            debug.exit_irqs_off = true;
+            debug.keep_interrupts = true;
+            if (background == 's') {
+                debug.step_thread = 1;
+                debug.exit_step = true;
+            }
+        }
+        if (debug.holding) {
+            debug.holder_release = true;
+            debug.holder_leaving = debug.exit_step && interrupts != 's';    // the step goes through the holder first
+        }
+    } else if (interrupts == 'c') {
+        if (!debug.holding && !debug.background_free) debug_hold(false);    // the background stays where it is
+        debug.background_free = false;
+    } else {
+        debug.step_thread = top >= 2 ? top : 2;
+        if (top < 2) NVIC_SetPendingIRQ(static_cast<IRQn_Type>(debug.threads[1].irq));
+        debug.exit_step = true;
+    }
+    debug.resume = true;
+    return true;
+}
+
+// vCont;action[:thread];...: the first action that names a thread, or none, is its
+inline bool debug_vcont(const char* p) {
+    char action[2] = {0, 0};       // background, interrupts
+    while (*p == ';') {
+        const char a = p[1] == 'C' ? 'c' : p[1] == 'S' ? 's' : p[1];
+        p += 2;
+        while (*p != 0 && *p != ':' && *p != ';') p++;     // the signal of C and S
+        uint32_t thread = 0;
+        if (*p == ':') {
+            p++;
+            thread = debug_parse_thread(p);
+        }
+        for (uint32_t i = 0; i < 2; i++) {
+            const bool named = thread == 0 || (i == 0 ? thread == 1 : thread >= 2);
+            if (named && action[i] == 0) action[i] = a;
+        }
+    }
+    return debug_resume(action[0], action[1]);
 }
 
 // A breakpoint in a free comparator, or out of the one it is in. False if
@@ -390,24 +597,16 @@ inline bool debug_watchpoint(bool insert, uint32_t function, uint32_t address, u
     return true;
 }
 
-// A thread id of a packet: 0 for "any" (0 and -1)
-inline uint32_t debug_parse_thread(const char*& p) {
-    uint32_t thread = 0;
-    if (*p == '-') {
-        p += 2;
-        return 0;
-    }
-    parse_hex(p, thread);
-    return thread;
-}
-
 // The run control packets, `request` with its leading "$" and no checksum.
 // False if it is not one of these: memory and monitor commands are in
 // text_api.h. Call it from the text api interrupt, after debug.sample is set.
 //   ?                       the stop reply for the thread that runs: T05thread:1;
-//   y                       "continued" while running, the stop reply once stopped
-//   b                       stop. The reply is OK, y tells when it has
-//   c, s                    continue, step one instruction: OK, then as above
+//   y                       "continued" while a thread 2.. runs, the stop reply once everything is stopped
+//   Y                       for non-stop: stops so far;threads stopped, a bit each;the last stop reply
+//   b                       stop everything. The reply is OK, y tells when it has
+//   c, s                    continue all, step the thread that runs with the others running: OK, then as above
+//   vCont;action:thread;... c, s or t (stop) for each thread, see debug_resume
+//   QNonStop:1, QNonStop:0  gdb's mode: what else stops with the background
 //   D                       detach: breakpoints out and continue
 //   g, p n, P n=value       registers of the selected thread, x for those that are not known.
 //                           Written only while stopped; sp and those of a thread that is not active never.
@@ -423,27 +622,45 @@ TEXT_API_SMALL inline bool debug_request(const char* request, TextOut& out) {
             debug_put_stop(out);
             return true;
         case 'y':
-            if (debug.stopped) debug_put_stop(out);
+            if (debug.waiting) debug_put_stop(out);
             else out.put("continued");
             return true;
+        case 'Y': {
+            debug_put_hex(out, debug.event_count);
+            out.put(';');
+            const bool background = (debug.stopped || debug.holder_pending) && !debug.background_free;
+            const bool interrupts = debug.waiting || debug.irqs_off;
+            debug_put_hex(out, (background ? 1 : 0) | (interrupts ? ((1u << debug.thread_count) - 1) & ~1u : 0));
+            out.put(';');
+            debug_put_stop(out);
+            return true;
+        }
         case 'b':
-            debug_pause(2);
+            debug_pause(2, 0, true);
             out.put("OK");
             return true;
-        case 's':
-            if (debug.stopped) debug.step = true;
-            else debug_pause(5);
-            [[fallthrough]];
+        case 's': {
+            const bool top_is_interrupt = debug.waiting && debug_top_thread() >= 2;
+            out.put(debug_resume(top_is_interrupt ? 0 : 's', top_is_interrupt ? 's' : 'c') ? "OK" : "E01");
+            return true;
+        }
         case 'c':
-            debug.general_thread = 0;
-            if (debug.stopped) debug.resume = true;
+            out.put(debug_resume('c', 'c') ? "OK" : "E01");
+            return true;
+        case 'v':
+            if (std::strncmp(p, "Cont;", 5) != 0) return false;
+            out.put(debug_vcont(p + 4) ? "OK" : "E01");
+            return true;
+        case 'Q':
+            if (std::strncmp(p, "NonStop:", 8) != 0) return false;
+            debug.non_stop = p[8] == '1';
             out.put("OK");
             return true;
         case 'D':
             debug_breakpoints_clear();
+            debug.non_stop = false;
             debug.general_thread = 0;
-            debug.step = false;
-            if (debug.stopped) debug.resume = true;
+            debug_resume('c', 'c');
             out.put("OK");
             return true;
         case 'g':
@@ -485,7 +702,7 @@ TEXT_API_SMALL inline bool debug_request(const char* request, TextOut& out) {
         }
         case 'T': {
             const uint32_t alive = debug_parse_thread(p);
-            out.put(debug_thread_halts(alive) ? "OK" : "E01");
+            out.put(alive >= 1 && alive <= debug.thread_count ? "OK" : "E01");
             return true;
         }
         case 'q':
@@ -495,7 +712,6 @@ TEXT_API_SMALL inline bool debug_request(const char* request, TextOut& out) {
             } else if (std::strcmp(p, "fThreadInfo") == 0) {
                 out.put('m');
                 for (uint32_t i = 1; i <= debug.thread_count; i++) {
-                    if (!debug_thread_halts(i)) continue;
                     if (i != 1) out.put(',');
                     debug_put_hex(out, i);
                 }
@@ -510,7 +726,8 @@ TEXT_API_SMALL inline bool debug_request(const char* request, TextOut& out) {
                 }
                 const char* name = debug.threads[info - 1].name;
                 out.put_hex(reinterpret_cast<const uint8_t*>(name), std::strlen(name));
-                const char* state = info == debug_top_thread() ? "" : debug_thread_context(info) != nullptr ? ", interrupted" : ", not active";
+                const char* state = info == debug_top_thread() ? "" : debug_thread_context(info) != nullptr ? ", interrupted" :
+                    debug.stopped && !debug.waiting ? ", running" : ", not active";
                 out.put_hex(reinterpret_cast<const uint8_t*>(state), std::strlen(state));
             } else {
                 return false;

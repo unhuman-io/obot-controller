@@ -272,7 +272,7 @@ struct DebugRegister {
     uint32_t words = 1;
     bool available = true;
 };
-inline DebugRegister debug_register(uint32_t thread, uint32_t n) {
+TEXT_API_SMALL inline DebugRegister debug_register(uint32_t thread, uint32_t n) {
     DebugRegister reg;
     if (n >= 17 && n <= 32) reg.words = 2;
     DebugFrame* frame = debug_thread_context(thread);
@@ -302,7 +302,7 @@ inline DebugRegister debug_register(uint32_t thread, uint32_t n) {
     return reg;
 }
 
-inline void debug_put_register(TextOut& out, uint32_t thread, uint32_t n) {
+TEXT_API_SMALL inline void debug_put_register(TextOut& out, uint32_t thread, uint32_t n) {
     const DebugRegister reg = debug_register(thread, n);
     for (uint32_t word = 0; word < reg.words; word++) {
         if (!reg.available) {
@@ -327,7 +327,7 @@ inline void debug_put_hex(TextOut& out, uint32_t value) {
 }
 
 // The stop reply: the signal, the watchpoint if it was one, and the thread
-inline void debug_put_stop(TextOut& out) {
+TEXT_API_SMALL inline void debug_put_stop(TextOut& out) {
     const uint8_t signal = debug.stopped ? debug.signal : 5;
     out.put('T');
     out.put_hex(&signal, 1);
@@ -415,7 +415,7 @@ inline uint32_t debug_parse_thread(const char*& p) {
 //   T thread                OK if there is one
 //   qC, qfThreadInfo, qsThreadInfo, qThreadExtraInfo,thread
 //   Z type,address,kind     insert, z remove: 0 and 1 breakpoint, 2 write, 3 read, 4 access watchpoint
-inline bool debug_request(const char* request, TextOut& out) {
+TEXT_API_SMALL inline bool debug_request(const char* request, TextOut& out) {
     const char* p = request + 1;
     const uint32_t thread = debug.general_thread != 0 ? debug.general_thread : debug_top_thread();
     switch (*p++) {

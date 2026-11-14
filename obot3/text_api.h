@@ -8,6 +8,16 @@
 // motorlib's parameter_api takes ("$m...", see gdb_request below). A request
 // is a string and so is its reply.
 
+// None of this is in a hurry, and the loops it shares a file with are built
+// for speed: these functions for size, and the conversions not inline.
+#if defined(__clang__)
+#define TEXT_API_SMALL [[clang::minsize]]
+#elif defined(__GNUC__)
+#define TEXT_API_SMALL [[gnu::optimize("Os")]]
+#else
+#define TEXT_API_SMALL
+#endif
+
 // A variable is a float or an integer, through functions: get, and set if it
 // can be written. text_float() and text_int() make one from lambdas.
 struct TextVariable {
@@ -27,7 +37,7 @@ constexpr TextVariable text_int(const char* name, int64_t (*get)(), void (*set)(
 // A float as text with 7 significant digits, in the shortest of 0.00123,
 // 1234.5 and 1.2345e-10. The library's conversions need a heap and
 // exceptions. Returns the length; buffer has room for 16 characters.
-constexpr uint32_t float_to_text(float value, char* buffer) {
+TEXT_API_SMALL [[gnu::noinline]] constexpr uint32_t float_to_text(float value, char* buffer) {
     char* p = buffer;
     const auto put = [&p](const char* text) {
         while (*text != 0) *p++ = *text++;
@@ -98,7 +108,7 @@ constexpr uint32_t float_to_text(float value, char* buffer) {
 
 // The other way: [-]digits[.digits][e[-]digits], and nothing behind it but
 // spaces. False if the text is not that.
-constexpr bool text_to_float(const char* p, float& value) {
+TEXT_API_SMALL [[gnu::noinline]] constexpr bool text_to_float(const char* p, float& value) {
     const bool negative = *p == '-';
     if (*p == '-' || *p == '+') p++;
     float mantissa = 0;
@@ -164,16 +174,16 @@ class TextOut {
     void put(const char* string, uint32_t length) {
         for (uint32_t i = 0; i < length; i++) put(string[i]);
     }
-    void put_number(float value) {
+    TEXT_API_SMALL [[gnu::noinline]] void put_number(float value) {
         char number[16];
         put(number, float_to_text(value, number));
     }
-    void put_number(int64_t value) {
+    TEXT_API_SMALL [[gnu::noinline]] void put_number(int64_t value) {
         char number[24];
         const auto result = std::to_chars(number, number + sizeof(number), value);
         put(number, result.ptr - number);
     }
-    void put_hex(const uint8_t* data, uint32_t length) {
+    TEXT_API_SMALL [[gnu::noinline]] void put_hex(const uint8_t* data, uint32_t length) {
         constexpr char hex[] = "0123456789abcdef";
         for (uint32_t i = 0; i < length; i++) {
             put(hex[data[i] >> 4]);
@@ -197,7 +207,7 @@ class TextOut {
 // value, or "name set value", or "name error" for a value that is no number or
 // a variable that can't be written. False if there is no such variable.
 template<uint32_t N>
-bool text_variable_request(const TextVariable (&variables)[N], const char* request, TextOut& out) {
+TEXT_API_SMALL bool text_variable_request(const TextVariable (&variables)[N], const char* request, TextOut& out) {
     const char* equal = std::strchr(request, '=');
     const uint32_t name_length = equal != nullptr ? equal - request : std::strlen(request);
     for (const TextVariable& variable : variables) {
@@ -266,7 +276,7 @@ inline uint32_t parse_hex_bytes(const char* p, uint8_t* data, uint32_t capacity)
 // Memory::read / write(address, data, length) return the bytes they got to.
 // monitor(request, out) is the text api itself.
 template<typename Memory, typename Monitor>
-void gdb_request(const char* request, TextOut& out, Monitor monitor) {
+TEXT_API_SMALL void gdb_request(const char* request, TextOut& out, Monitor monitor) {
     const char* p = request + 1;    // behind the $
     uint8_t data[256];
     uint32_t address, length;

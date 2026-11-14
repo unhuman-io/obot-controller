@@ -108,7 +108,7 @@ jobs:
       run: |
         git config --global --add safe.directory '*'
         cmake --preset ${{ matrix.toolchain }}
-        cmake --build --preset ${{ matrix.toolchain }} -t obot3_tmotor_driver.elf -t obot3_bootloader.elf
+        cmake --build --preset ${{ matrix.toolchain }} -t obot3_tmotor_driver.elf -t obot3_tmotor_driver_release.elf -t obot3_bootloader.elf
     - name: Archive obot3 tmotor_driver ${{ matrix.toolchain }}
       uses: actions/upload-artifact@main
       with:
@@ -116,6 +116,8 @@ jobs:
         path: |
           build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.elf
           build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.bin
+          build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver_release.elf
+          build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver_release.bin
           build/${{ matrix.toolchain }}/obot3/obot3_bootloader.elf
           build/${{ matrix.toolchain }}/obot3/obot3_bootloader.bin
 
@@ -135,7 +137,7 @@ jobs:
 
   test-builds:
     timeout-minutes: 10
-    needs: [build]
+    needs: [build, build-obot3]
     strategy:
       max-parallel: 1 # Ensures GCC and LLVM tests do not collide on the same physical hardware
       fail-fast: false
@@ -269,11 +271,20 @@ jobs:
       run: |
         set -x
         # firmware loaded above - communicates over usb and can
-        # may need ip link set can0 up type can bitrate 2000000 dbitrate 10000000 fd on one-shot on
+        # the runner names its can adapters by usb port and brings them up at boot
+        # (/usr/local/sbin/can-setup there): can0 is this board at 1/5 Mbps, which is as
+        # fast as it gets, can1 the tmotor driver at 1/8 Mbps
         [ $(motor_util -f can0:1 --list-names-only) == can_test ]
         [ $(motor_util -f --list-names-only | tail -n1) == can_test ]
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_can.py
         
+    - name: test tmotor
+      run: |
+        set -x
+        # obot3 on the tmotor driver board, node 1 on can1: loaded through its can
+        # bootloader and left there afterwards
+        CAN_IF=can1 obot3/tmotor_driver/test_can.sh 1 "obot3 tmotor_driver ${{ matrix.toolchain }}/obot3_tmotor_driver.bin"
+
     - name: test uart
       run: |
         set -x

@@ -4,7 +4,7 @@
 #
 #   test_can.sh CAN_ID obot3_tmotor_driver.bin [tmotor_driver_noparam.bin]
 #
-# The board is the node CAN_ID on can0. It must answer as one of the firmwares
+# The board is the node CAN_ID on can0, or on the interface in CAN_IF. It must answer as one of the firmwares
 # below: anything else is left alone. With a third argument that firmware is
 # loaded at the end, whether the test passed or not; without it the board is
 # left in the bootloader.
@@ -16,7 +16,8 @@ fi
 id=$1
 bin=$2
 restore=$3
-dev=can0:$id
+interface=${CAN_IF:-can0}
+dev=$interface:$id
 load_can=$(dirname "$0")/../../scripts/load_can.py
 
 name() { motor_util -f $dev --list-names-only | tail -n1; }
@@ -48,7 +49,7 @@ to_bootloader() {
 
 # load_can.py gets the node into the bootloader and resets it afterwards
 load() {
-    "$load_can" --can_id $id --address 0x8002000 --file "$1"
+    "$load_can" --interface $interface --can_id $id --address 0x8002000 --file "$1"
     sleep 1
 }
 

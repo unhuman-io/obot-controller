@@ -26,7 +26,8 @@ export import control.motor_controller;
 //   - an MA732 motor encoder on SPI3, chip select PD2
 //   - the three phase pwm on HRTIM timers D, F and E
 //   - the DRV8323S gate driver on SPI1, chip select PA4, enable PC13, fault PC14
-//   - phase currents and bus voltage through the opamps to the ADCs
+//   - phase currents through the opamps to the ADCs
+//   - no bus voltage sense on this board: the bus is taken as 24 V
 //   - the led on TIM4
 //   - the unused chip selects parked high
 //   - 50 kHz pwm and fast loop, 10 kHz main loop
@@ -38,6 +39,7 @@ export {
 constexpr uint32_t tmotor_pwm_frequency_hz = 50'000;
 constexpr uint32_t tmotor_main_loop_frequency_hz = 10'000;
 constexpr int tmotor_gear_ratio = 6;
+constexpr float tmotor_vbus = 24;            // V, assumed: the board doesn't measure it
 
 // The can address is the first byte of the parameters in flash, which this
 // firmware leaves alone: the same one the bootloader and the obot_g474
@@ -124,7 +126,6 @@ constexpr auto tmotor_gpio_init = []() consteval {
     alternate(init.b[7], GPIOAF::AF2, "tim4 ch2 led g");
     alternate(init.b[8], GPIOAF::AF2, "tim4 ch3 led b");
 
-    init.a[3].function = "vbus, opamp1 vinp1";
     init.b[13].function = "ia, opamp3 vinp1";
     init.b[12].function = "ib, opamp6 vinp0";
     init.b[11].function = "ic, opamp4 vinp2";
@@ -145,7 +146,6 @@ constexpr auto tmotor_opamp_init = []() consteval {
         };
     };
     return OPAMPInit{
-        .opamp1 = follower(OPAMPInput::VINP1),   // PA3  vbus -> ADC1 IN13
         .opamp3 = follower(OPAMPInput::VINP1),   // PB13 ia   -> ADC3 IN13
         .opamp4 = follower(OPAMPInput::VINP2),   // PB11 ic   -> ADC5 IN5
         .opamp6 = follower(OPAMPInput::VINP0),   // PB12 ib   -> ADC4 IN17
@@ -213,11 +213,11 @@ constexpr auto tmotor_hrtim_init = []() consteval {
 //     sequence is the fast loop interrupt.
 //   regular, HRTIM trigger 3: the same channel with the low side off, for the
 //     zero current offset
-// ADC1 regular follows the bus voltage; its injected sequence, which software
-// starts with adc_start_injected<1>(), is the temperature sensor and vrefint.
+// ADC1 has only an injected sequence, which software starts with
+// adc_start_injected<1>(): the temperature sensor and vrefint.
 //
 //         regular       injected
-//   ADC1  IN13 vbus     IN16 temperature, IN18 vrefint
+//   ADC1                IN16 temperature, IN18 vrefint
 //   ADC3  IN13 ia       IN13 ia, IN13
 //   ADC4  IN17 ib       IN17 ib, IN17
 //   ADC5  IN5 ic        IN5 ic, IN5
@@ -247,10 +247,6 @@ constexpr auto tmotor_adc_init = []() consteval {
     ADCInit init{};
     init.adc1 = converter();
     init.adc1.temperature_sensor = ADCEnable::ENABLED;
-    init.adc1.trigger = ADCTrigger::HRTIM_TRG1;
-    init.adc1.trigger_edge = ADCTriggerEdge::RISING;
-    init.adc1.sequence[0] = 13;
-    init.adc1.sample_time[13] = ADCSampleTime::CYCLES_12_5;
     init.adc1.injected_sequence_length = 2;
     init.adc1.injected_sequence[0] = 16;
     init.adc1.injected_sequence[1] = 18;
@@ -267,7 +263,6 @@ constexpr auto tmotor_adc_init = []() consteval {
 inline uint32_t tmotor_ia() { return adc_read_injected<3>(0); }
 inline uint32_t tmotor_ib() { return adc_read_injected<4>(0); }
 inline uint32_t tmotor_ic() { return adc_read_injected<5>(0); }
-inline uint32_t tmotor_vbus() { return adc_read<1>(); }
 inline uint32_t tmotor_temperature() { return adc_read_injected<1>(0); }
 inline uint32_t tmotor_vrefint() { return adc_read_injected<1>(1); }
 
@@ -422,19 +417,18 @@ constexpr auto tmotor_foc_param = FOCParam{
 struct TMotorMeasurement {
     uint32_t timestamp = 0;                 // cpu cycles
     float i_a = 0, i_b = 0, i_c = 0;        // A
-    float vbus = 0;                         // V
+    float vbus = tmotor_vbus;               // V, not measured
     int32_t motor_encoder = 0;              // counts
     float motor_electrical_position = 0;    // rad at the motor, from the electrical zero, for the FOC
     float motor_position = 0;               // rad
     float motor_velocity = 0;               // rad/s
 };
 
-// Phase currents, bus voltage and the MA732 motor encoder: a 16 bit angle
+// Phase currents and the MA732 motor encoder: a 16 bit angle
 // per frame, summed over its roll-over. The frame takes 1.5 us and is waited
 // for.
 struct TMotorFastLoopSensors {
     static constexpr float adc_gain = -3.3f / 4096 / (.033f * drv8323_csa_gain(tmotor_drv8323_init));   // A per count from mid scale: 33 mohm shunts through the driver's amplifiers
-    static constexpr float vbus_gain = 3.3f / 4096 * (215 + 13.7f) / 13.7f;    // V per count, nominal 3.3 V reference
     static constexpr int32_t encoder_cpr = 65536;
     static constexpr int32_t encoder_dir = -1;                      // sign of the motor position
     static constexpr int32_t encoder_rollover = 1 << 24;            // counts: the position wraps at +-rollover
@@ -459,7 +453,6 @@ struct TMotorFastLoopSensors {
         m.i_a = adc_gain * (static_cast<int32_t>(tmotor_ia()) - 2048);
         m.i_b = adc_gain * (static_cast<int32_t>(tmotor_ib()) - 2048);
         m.i_c = adc_gain * (static_cast<int32_t>(tmotor_ic()) - 2048);
-        m.vbus = vbus_gain * tmotor_vbus();
 
         const int32_t difference = read_encoder();
         motor_encoder += difference;
@@ -491,7 +484,6 @@ struct TMotorPWM {
     static constexpr float period = tmotor_pwm_period;
     static constexpr float min_pulse_ticks = 2 * 1000 * 1.36f;      // 1 us in hrtim clock / 4 * 32 ticks, both edges
     static constexpr float pwm_min = min_pulse_ticks, pwm_max = period - min_pulse_ticks;
-    static constexpr float vbus_min = 7;                            // V: below this the voltage scale is held
     static constexpr HRTIMTimer phase_a = HRTIMTimer::D, phase_b = HRTIMTimer::F, phase_c = HRTIMTimer::E;
     static constexpr uint32_t high_sides = hrtim_output_mask(phase_a, true, false) | hrtim_output_mask(phase_b, true, false) |
         hrtim_output_mask(phase_c, true, false);
@@ -501,7 +493,7 @@ struct TMotorPWM {
     void update(const FOCStatus& foc, const TMotorMeasurement& measured) {
         const FOCMode wanted = tmotor_drv8323_errors == 0 ? foc.mode : FOCMode::OPEN;
         if (wanted != mode) set_mode(wanted);
-        const float v_to_pwm = period / (measured.vbus > vbus_min ? measured.vbus : vbus_min);
+        const float v_to_pwm = period / measured.vbus;
         hrtim_compare1(phase_a, fsat2(foc.v_a * v_to_pwm + period / 2, pwm_min, pwm_max));
         hrtim_compare1(phase_b, fsat2(foc.v_b * v_to_pwm + period / 2, pwm_min, pwm_max));
         hrtim_compare1(phase_c, fsat2(foc.v_c * v_to_pwm + period / 2, pwm_min, pwm_max));

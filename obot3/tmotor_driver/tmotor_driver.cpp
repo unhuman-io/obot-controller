@@ -140,7 +140,6 @@ constexpr TextValue text_values[] = {
     {"ia", [] { return static_cast<int32_t>(tmotor_ia()); }},        // adc counts
     {"ib", [] { return static_cast<int32_t>(tmotor_ib()); }},
     {"ic", [] { return static_cast<int32_t>(tmotor_ic()); }},
-    {"vbus", [] { return static_cast<int32_t>(tmotor_vbus()); }},
     {"vbus_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().measured.vbus * 1000); }},
     {"vq_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.v_q * 1000); }},
     {"iq_ma", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.i_q * 1000); }},

@@ -89,12 +89,11 @@ check main_loop_rate $(( (main2 - main1) / 2 )) 9000 13000
 
 # readings: 12 bit adc counts. The gate driver is off, so the current sense
 # outputs are only checked for being conversions at all; vrefint is 1.21 V.
-check vbus $(api vbus) -1 4096
 check ia $(api ia) -1 4096
 check ib $(api ib) -1 4096
 check ic $(api ic) -1 4096
 check vrefint $(api vrefint) 1300 1700
-echo "mode $(api mode), menc $(api menc), vbus $(api vbus_mv) mV, temperature $(api temperature)"
+echo "mode $(api mode), menc $(api menc), temperature $(api temperature)"
 
 # the gate driver: 0 errors means every register read back as written
 echo "drv_errors $(api drv_errors), drv_fault $(api drv_fault), drv_status $(api drv_status)"

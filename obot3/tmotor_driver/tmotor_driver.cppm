@@ -417,7 +417,7 @@ constexpr auto tmotor_foc_param = FOCParam{
 struct TMotorMeasurement {
     uint32_t timestamp = 0;                 // cpu cycles
     float i_a = 0, i_b = 0, i_c = 0;        // A
-    float vbus = tmotor_vbus;               // V, not measured
+    float vbus = 0;                         // V, not measured
     int32_t motor_encoder = 0;              // counts
     float motor_electrical_position = 0;    // rad at the motor, from the electrical zero, for the FOC
     float motor_position = 0;               // rad
@@ -454,6 +454,8 @@ struct TMotorFastLoopSensors {
         m.i_b = adc_gain * (static_cast<int32_t>(tmotor_ib()) - 2048);
         m.i_c = adc_gain * (static_cast<int32_t>(tmotor_ic()) - 2048);
 
+        m.vbus = vbus;
+
         const int32_t difference = read_encoder();
         motor_encoder += difference;
         motor_encoder_wrap = wrap1(motor_encoder_wrap + difference, encoder_rollover);
@@ -473,6 +475,7 @@ struct TMotorFastLoopSensors {
     int32_t motor_encoder = 0;          // counts, wraps with the int32
     int32_t motor_encoder_wrap = 0;     // counts, wraps at the rollover
     int32_t electrical_zero = 0;        // counts, until a phase lock measures it
+    float vbus = tmotor_vbus;           // V, assumed
 };
 
 // The power stage: phase voltages to the compare values of timers D, F and E,

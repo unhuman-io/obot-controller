@@ -4,6 +4,9 @@
 #include "../motorlib/motor_messages/motor_messages.h"
 #include "system.h"
 #include "basic_config.h"
+#include "text_api.h"
+#include <initializer_list>
+#include <iterator>
 import tmotor_driver;
 
 template<auto config = TMotorConfig{}>
@@ -11,18 +14,32 @@ struct Config : BasicConfig<config> {};
 
 using MySystem = System<Config<>>;
 
+// How long the loops take and how far apart they start, cpu cycles
+volatile uint32_t t_exec_fastloop, t_period_fastloop, t_exec_mainloop, t_period_mainloop;
+
 // ADC5 end of injected sequence, 50 kHz
 void fast_loop_isr() {
+    static uint32_t t_last;
+    const uint32_t t_start = DWT->CYCCNT;
     std::atomic_signal_fence(std::memory_order_acq_rel);
     MySystem::fast_loop.update();
     tmotor_fast_loop_irq_clear();
+    t_period_fastloop = t_start - t_last;
+    t_last = t_start;
+    t_exec_fastloop = DWT->CYCCNT - t_start;
 }
 
-// HRTIM master cmp1, 10 kHz
+// HRTIM master cmp1, 10 kHz. The time it takes includes the fast loops that
+// interrupt it.
 void main_loop_isr() {
+    static uint32_t t_last;
+    const uint32_t t_start = DWT->CYCCNT;
     std::atomic_signal_fence(std::memory_order_acq_rel);
     MySystem::main_loop.update();
     tmotor_main_loop_irq_clear();
+    t_period_mainloop = t_start - t_last;
+    t_last = t_start;
+    t_exec_mainloop = DWT->CYCCNT - t_start;
 }
 
 // main.cpp polls this from the background loop. Here the main loop has its
@@ -124,90 +141,187 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
 
 auto status_task_instance = status_task(sched);
 
-// The obot text api over can, as far as a host needs it to find this node and
-// to get it back into the bootloader, plus a few readings. Requests are
-// strings to the ascii id of this address; each gets one reply, empty for an
-// unknown name.
-struct TextValue {
-    const char* name;
-    int32_t (*get)();
+// The loops by a short name, for the variables below and for gdb:
+// `p fast_loop.controller` instead of the System<...> they are members of
+[[gnu::used]] constinit auto& fast_loop = MySystem::fast_loop;
+[[gnu::used]] constinit auto& main_loop = MySystem::main_loop;
+
+// The obot text api over can: requests are strings to the ascii id of this
+// address, and each gets one reply.
+//   name, serial, version, messages_version     what a host needs to find this node
+//   go_to_bootloader=b007, reset                and to get it back into the bootloader
+//   <variable>, <variable>=<value>              the variables below, see text_api.h
+//   api_length, api_name=<n>, help              their number and names
+//   $...                                        gdb remote protocol packets, see text_api.h
+// An unknown request gets an empty reply.
+constexpr float fast_dt = 1.f / tmotor_pwm_frequency_hz;
+#define TUNE(name, value) text_float(name, [] { return static_cast<float>(value); }, [](float v) { value = v; })
+#define FAST_STATUS(name, member) text_float(name, [] { return static_cast<float>(fast_loop.get_status().member); })
+constexpr TextVariable text_variables[] = {
+    // the current controllers, in use by the fast loop
+    TUNE("ikp", fast_loop.controller.pi_q().kp),
+    TUNE("iki", fast_loop.controller.pi_q().ki),
+    TUNE("iki_limit", fast_loop.controller.pi_q().ki_limit),
+    TUNE("imax", fast_loop.controller.pi_q().command_max),                  // V
+    TUNE("idkp", fast_loop.controller.pi_d().kp),
+    TUNE("idki", fast_loop.controller.pi_d().ki),
+    TUNE("idki_limit", fast_loop.controller.pi_d().ki_limit),
+    TUNE("idmax", fast_loop.controller.pi_d().command_max),
+    text_float("iq_filter", [] { return fast_loop.controller.get_current_filter_frequency(); },    // Hz, both axes
+        [](float hz) { fast_loop.controller.set_current_filter_frequency(hz); }),
+    TUNE("vbus", fast_loop.sensors.vbus),                                   // V, what the pwm scale assumes
+    text_int("electrical_zero_pos", [] { return static_cast<int64_t>(fast_loop.sensors.electrical_zero); },
+        [](int64_t counts) { fast_loop.sensors.electrical_zero = counts; }),
+
+    // the position controller
+    TUNE("kp", main_loop.controller.position_controller.pid().kp_),
+    TUNE("kd", main_loop.controller.position_controller.pid().kd_),
+    TUNE("ki", main_loop.controller.position_controller.pid().ki_),
+    TUNE("ki_limit", main_loop.controller.position_controller.pid().ki_limit_),
+    TUNE("max", main_loop.controller.position_controller.pid().command_max_),          // A
+    text_float("velocity_filter", [] { return main_loop.controller.position_controller.pid().get_velocity_filter_frequency(); },
+        [](float hz) { main_loop.controller.position_controller.pid().set_velocity_filter_frequency(hz); }),
+    text_float("output_filter", [] { return main_loop.controller.position_controller.pid().get_output_filter_frequency(); },
+        [](float hz) { main_loop.controller.position_controller.pid().set_output_filter_frequency(hz); }),
+
+    // the velocity controller
+    TUNE("vkp", main_loop.controller.velocity_controller.pid().kp_),
+    TUNE("vki", main_loop.controller.velocity_controller.pid().ki_),
+    TUNE("vki_limit", main_loop.controller.velocity_controller.pid().ki_limit_),
+    TUNE("vmax", main_loop.controller.velocity_controller.pid().command_max_),
+    text_float("voutput_filt", [] { return main_loop.controller.velocity_controller.pid().get_output_filter_frequency(); },
+        [](float hz) { main_loop.controller.velocity_controller.pid().set_output_filter_frequency(hz); }),
+
+    // what the fast loop measures and puts out: A, V, rad, rad/s
+    FAST_STATUS("ia", measured.i_a),
+    FAST_STATUS("ib", measured.i_b),
+    FAST_STATUS("ic", measured.i_c),
+    FAST_STATUS("id", controller.i_d),
+    FAST_STATUS("iq", controller.i_q),
+    FAST_STATUS("i0", controller.i_0),
+    FAST_STATUS("id_des", controller.i_d_desired),
+    FAST_STATUS("iq_des", controller.i_q_desired),
+    FAST_STATUS("va", controller.v_a),
+    FAST_STATUS("vb", controller.v_b),
+    FAST_STATUS("vc", controller.v_c),
+    FAST_STATUS("vd", controller.v_d),
+    FAST_STATUS("vq", controller.v_q),
+    FAST_STATUS("motor_position", measured.motor_position),
+    FAST_STATUS("motor_velocity", measured.motor_velocity),
+    text_float("output_position", [] { return main_loop.controller.status.read().joint_position; }),
+    text_float("torque", [] { return main_loop.controller.status.read().torque; }),
+    text_float("num_poles", [] { return tmotor_num_poles; }),
+
+    text_int("mode", [] { return static_cast<int64_t>(main_loop.controller.status.read().flags.mode); }),
+    text_int("menc", [] { return static_cast<int64_t>(main_loop.controller.status.read().motor_encoder); }),
+    text_int("IA", [] { return static_cast<int64_t>(tmotor_ia()); }),      // adc counts
+    text_int("IB", [] { return static_cast<int64_t>(tmotor_ib()); }),
+    text_int("IC", [] { return static_cast<int64_t>(tmotor_ic()); }),
+    text_int("temperature", [] { return static_cast<int64_t>(temperature_reading); }),
+    text_int("vrefint", [] { return static_cast<int64_t>(vrefint_reading); }),
+    text_int("drv_errors", [] { return static_cast<int64_t>(tmotor_drv8323_errors); }),     // 0: configured
+    text_int("drv_fault", [] { return static_cast<int64_t>(tmotor_drv8323_fault()); }),     // the fault pin
+    text_int("drv_status", [] { return static_cast<int64_t>(tmotor_drv8323_status()); }),   // status 2 << 16 | status 1
+    text_int("invalid_command_count", [] { return static_cast<int64_t>(main_loop.controller.invalid_command_count); }),
+
+    // timing, cpu cycles
+    text_int("fast_loop_count", [] { return static_cast<int64_t>(fast_loop.count); }),
+    text_int("main_loop_count", [] { return static_cast<int64_t>(main_loop.sensors.count); }),
+    text_int("t_exec_fastloop", [] { return static_cast<int64_t>(t_exec_fastloop); }),
+    text_int("t_exec_mainloop", [] { return static_cast<int64_t>(t_exec_mainloop); }),
+    text_int("t_period_fastloop", [] { return static_cast<int64_t>(t_period_fastloop); }),
+    text_int("t_period_mainloop", [] { return static_cast<int64_t>(t_period_mainloop); }),
+    text_int("cpu_frequency", [] { return static_cast<int64_t>(CPU_FREQUENCY_HZ); }),
 };
-constexpr TextValue text_values[] = {
-    {"fast_loop_count", [] { return static_cast<int32_t>(MySystem::fast_loop.count); }},
-    {"main_loop_count", [] { return static_cast<int32_t>(MySystem::main_loop.sensors.count); }},
-    {"mode", [] { return static_cast<int32_t>(MySystem::main_loop.controller.status.read().flags.mode); }},
-    {"menc", [] { return MySystem::main_loop.controller.status.read().motor_encoder; }},
-    {"ia", [] { return static_cast<int32_t>(tmotor_ia()); }},        // adc counts
-    {"ib", [] { return static_cast<int32_t>(tmotor_ib()); }},
-    {"ic", [] { return static_cast<int32_t>(tmotor_ic()); }},
-    {"vbus_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().measured.vbus * 1000); }},
-    {"vq_mv", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.v_q * 1000); }},
-    {"iq_ma", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.i_q * 1000); }},
-    {"iq_desired_ma", [] { return static_cast<int32_t>(MySystem::fast_loop.get_status().controller.i_q_desired * 1000); }},
-    {"drv_errors", [] { return static_cast<int32_t>(tmotor_drv8323_errors); }},     // 0: configured
-    {"drv_fault", [] { return static_cast<int32_t>(tmotor_drv8323_fault()); }},     // the fault pin
-    {"drv_status", [] { return static_cast<int32_t>(tmotor_drv8323_status()); }},   // status 2 << 16 | status 1
-    {"invalid_command_count", [] { return static_cast<int32_t>(MySystem::main_loop.controller.invalid_command_count); }},
-    {"temperature", [] { return static_cast<int32_t>(temperature_reading); }},
-    {"vrefint", [] { return static_cast<int32_t>(vrefint_reading); }},
+#undef TUNE
+#undef FAST_STATUS
+
+struct TextMemory {
+    static uint32_t read(uint32_t address, uint8_t* data, uint32_t length) { return memory_read(address, data, length); }
+    static uint32_t write(uint32_t address, const uint8_t* data, uint32_t length) { return memory_write(address, data, length); }
 };
 
-// A string of two or more characters goes out with its terminator, as the
-// obot_g474 does
-void text_reply(const char* string) {
-    uint32_t length = std::strlen(string);
-    if (length > 1) length++;
-    can_write<tmotor_can_init>(obot_can_id(obot_can_ascii_response, tmotor_can_address()), string, length);
-}
-
-void text_reply(int32_t value) {
-    char buffer[12];
-    char* p = buffer + sizeof(buffer);
-    uint32_t magnitude = value < 0 ? -static_cast<uint32_t>(value) : value;
-    *--p = 0;
-    do {
-        *--p = '0' + magnitude % 10;
-        magnitude /= 10;
-    } while (magnitude != 0);
-    if (value < 0) *--p = '-';
-    text_reply(p);
-}
-
-void text_request(const char* request) {
-    if (std::strcmp(request, "name") == 0) {
-        text_reply("obot3_tmotor_driver");
+void text_request(const char* request, TextOut& out) {
+    if (request[0] == '$') {
+        gdb_request<TextMemory>(request, out, text_request);
+    } else if (std::strcmp(request, "name") == 0) {
+        out.put("obot3_tmotor_driver");
     } else if (std::strcmp(request, "serial") == 0) {
         char serial[13];
         system_serial_number(serial);
-        text_reply(serial);
+        out.put(serial);
     } else if (std::strcmp(request, "messages_version") == 0) {
-        text_reply(MOTOR_MESSAGES_VERSION);
+        out.put(MOTOR_MESSAGES_VERSION);
     } else if (std::strcmp(request, "version") == 0) {
-        text_reply(OBOT3_VERSION);
+        out.put(OBOT3_VERSION);
     } else if (std::strcmp(request, "go_to_bootloader=b007") == 0) {
         bootloader_request = true;      // for the next reset
-        text_reply("b007");
+        out.put("b007");
     } else if (std::strcmp(request, "reset") == 0) {
-        text_reply("");
         reset_request = true;
-    } else {
-        for (const TextValue& value : text_values) {
-            if (std::strcmp(request, value.name) == 0) {
-                text_reply(value.get());
-                return;
-            }
+    } else if (std::strcmp(request, "api_length") == 0) {
+        out.put_number(static_cast<int64_t>(std::size(text_variables)));
+    } else if (std::strncmp(request, "api_name=", 9) == 0) {
+        uint32_t index = 0;
+        const char* number = request + 9;
+        std::from_chars(number, number + std::strlen(number), index);
+        if (index < std::size(text_variables)) out.put(text_variables[index].name);
+    } else if (std::strcmp(request, "help") == 0) {
+        out.put_number(static_cast<int64_t>(std::size(text_variables)));
+        out.put(" variables:\n");
+        for (const TextVariable& variable : text_variables) {
+            out.put(variable.name);
+            out.put('\n');
         }
-        text_reply("");
+    } else {
+        text_variable_request(text_variables, request, out);
+    }
+}
+
+// A reply of up to 63 characters is one frame, with its terminator if it has
+// two or more characters, as the obot_g474 does. A longer one goes out as the
+// long packets of motor_messages.h, in frames that the can fd lengths don't
+// pad: a host takes every byte of those as text.
+void text_send(TextOut& out) {
+    const uint32_t id = obot_can_id(obot_can_ascii_response, tmotor_can_address());
+    if (out.length() < 64) {
+        can_write<tmotor_can_init>(id, out.text(), out.length() > 1 ? out.length() + 1 : out.length());
+        return;
+    }
+    while (out.length() % 4 != 0 && out.room() != 0) out.put(' ');
+    const uint32_t total = out.length() & ~3u;
+    struct {
+        APIControlPacket header;
+        char data[56];
+    } frame;
+    uint16_t number = 1;
+    for (uint32_t offset = 0; offset < total; number++) {
+        uint32_t size = 56;
+        for (const uint32_t fit : {56, 40, 24, 16, 12, 8, 4}) {
+            size = fit;
+            if (fit <= total - offset) break;
+        }
+        frame.header = {.control_packet_id = 0, .type = LONG_PACKET,
+            .long_packet = {.total_length = static_cast<uint16_t>(total), .packet_number = number}};
+        std::memcpy(frame.data, out.text() + offset, size);
+        const uint32_t t_start = get_clock();
+        while (!can_write<tmotor_can_init>(id, &frame, sizeof(frame.header) + size)) {     // the three tx buffers are full
+            if (get_clock() - t_start > CPU_FREQUENCY_HZ / 100) return;                    // 10 ms: nobody takes the frames
+        }
+        offset += size;
     }
 }
 
 void host_poll() {
     uint32_t id;
     char data[65];
-    if (can_read<tmotor_can_init>(tmotor_can_ascii_fifo, id, data) >= 0) {
-        data[64] = 0;
+    if (const int length = can_read<tmotor_can_init>(tmotor_can_ascii_fifo, id, data); length >= 0) {
+        data[length] = 0;
         host_idle_ticks = 0;
-        text_request(data);
+        static char reply[1200];
+        TextOut out(reply, sizeof(reply));
+        text_request(data, out);
+        text_send(out);
     }
     // commands, as the obot_g474: a command frame is the new MotorCommand, a
     // command status frame is that and a request for the status, a status

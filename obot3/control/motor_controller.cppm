@@ -35,6 +35,7 @@ class PositionController {
         const float position_desired = desired_filter_.update(command.position_desired);
         return controller_.step(position_desired, command.velocity_desired, motor_position, velocity_limit) + command.current_desired;
     }
+    PIDController& pid() { return controller_; }    // for tuning
  private:
     static constexpr float velocity_limit = param.position_velocity_limit == 0 ? control_infinity : param.position_velocity_limit;
     PIDController controller_{dt, param.position};
@@ -56,6 +57,7 @@ class VelocityController {
         const float velocity_measured = velocity_filter_.update(difference / dt);
         return controller_.step(command.velocity_desired, 0, velocity_measured, acceleration_limit) + command.current_desired;
     }
+    PIDController& pid() { return controller_; }    // for tuning
  private:
     static constexpr float acceleration_limit = param.acceleration_limit == 0 ? control_infinity : param.acceleration_limit;
     float last_motor_position_ = 0;

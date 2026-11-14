@@ -88,9 +88,9 @@ check main_loop_rate $(( (main2 - main1) / 2 )) 9000 13000
 
 # readings: 12 bit adc counts. The gate driver is off, so the current sense
 # outputs are only checked for being conversions at all; vrefint is 1.21 V.
-check ia $(api ia) -1 4096
-check ib $(api ib) -1 4096
-check ic $(api ic) -1 4096
+check IA $(api IA) -1 4096
+check IB $(api IB) -1 4096
+check IC $(api IC) -1 4096
 check vrefint $(api vrefint) 1300 1700
 echo "mode $(api mode), menc $(api menc), temperature $(api temperature)"
 

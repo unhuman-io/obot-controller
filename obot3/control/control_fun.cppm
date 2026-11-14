@@ -58,7 +58,15 @@ class FirstOrderLowPassFilter {
         return value_;
     }
     constexpr float get_value() const { return value_; }
+    // for tuning: a new corner frequency, and the one in use (0: no filtering)
+    constexpr void set_frequency(float dt, float frequency_hz) { *this = FirstOrderLowPassFilter(dt, frequency_hz).with_value(value_); }
+    constexpr float get_frequency(float dt) const { return alpha_ == 1 ? 0 : alpha_ / (1 - alpha_) / (2 * std::numbers::pi_v<float> * dt); }
  private:
+    constexpr FirstOrderLowPassFilter with_value(float value) const {
+        FirstOrderLowPassFilter filter = *this;
+        filter.value_ = value;
+        return filter;
+    }
     float value_ = 0;
     float alpha_;
 };
@@ -72,6 +80,11 @@ class SecondOrderLowPassFilter {
     }
     constexpr float update(float value) { return low_pass_2_.update(low_pass_1_.update(value)); }
     constexpr float get_value() const { return low_pass_2_.get_value(); }
+    constexpr void set_frequency(float dt, float frequency_hz) {
+        low_pass_1_.set_frequency(dt, frequency_hz);
+        low_pass_2_.set_frequency(dt, frequency_hz);
+    }
+    constexpr float get_frequency(float dt) const { return low_pass_1_.get_frequency(dt); }
  private:
     FirstOrderLowPassFilter low_pass_1_, low_pass_2_;
 };
@@ -111,8 +124,8 @@ class PIController {
         ki_sum_ = fsat(ki_sum_ + param_.ki * error, param_.ki_limit);
         return fsat(param_.kp * error + ki_sum_, param_.command_max);
     }
+    PIParam param_;         // in use: can be tuned while it runs
  private:
-    PIParam param_;
     float ki_sum_ = 0;
 };
 
@@ -151,7 +164,12 @@ class PIDController {
         return fsat(filtered_out, command_max_);
     }
 
-    float kp_, kd_, ki_, ki_limit_, command_max_;
+    constexpr void set_velocity_filter_frequency(float frequency_hz) { velocity_filter_.set_frequency(dt_, frequency_hz); }
+    constexpr float get_velocity_filter_frequency() const { return velocity_filter_.get_frequency(dt_); }
+    constexpr void set_output_filter_frequency(float frequency_hz) { output_filter_.set_frequency(dt_, frequency_hz); }
+    constexpr float get_output_filter_frequency() const { return output_filter_.get_frequency(dt_); }
+
+    float kp_, kd_, ki_, ki_limit_, command_max_;   // in use: can be tuned while it runs
  private:
     float ki_sum_ = 0;
     SecondOrderLowPassFilter velocity_filter_;

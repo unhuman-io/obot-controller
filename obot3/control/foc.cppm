@@ -102,6 +102,15 @@ class FOC {
         return status_;
     }
 
+    // for tuning while it runs
+    PIParam& pi_d() { return pi_id_.param_; }
+    PIParam& pi_q() { return pi_iq_.param_; }
+    void set_current_filter_frequency(float frequency_hz) {
+        id_filter_.set_frequency(dt, frequency_hz);
+        iq_filter_.set_frequency(dt, frequency_hz);
+    }
+    float get_current_filter_frequency() const { return id_filter_.get_frequency(dt); }
+
  private:
     static constexpr float voltage_limit = param.voltage_limit == 0 ? control_infinity : param.voltage_limit;
     float i_gain_ = 0;

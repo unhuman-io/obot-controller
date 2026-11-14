@@ -20,13 +20,15 @@
 #   (gdb) info threads
 # Leaving gdb removes the breakpoints and lets the node continue.
 #
-# The bridge is `motor_util gdbserver` on port 3293, from motor-realtime with
-# the thread support: MOTOR_UTIL names it if it is not the installed one. A
-# debug probe has to be detached (text api: debug_probe is 0), or breakpoints
-# and steps halt the cpu for the probe instead.
+# The bridge is `motor_util gdbserver` on port 3293, from a motor-realtime with
+# the thread support (gdbserver --verbose exists): $MOTOR_UTIL, else the build
+# in ../motor-realtime, else the installed one. An earlier one is refused: it
+# shows one thread and leaves the node stopped, which then resets after 60 s.
+# A debug probe has to be detached (text api: debug_probe is 0), or
+# breakpoints and steps halt the cpu for the probe instead.
 set -e
 if [ $# -lt 1 ]; then
-    sed -n '2,27p' "$0"
+    sed -n '2,29p' "$0"
     exit 2
 fi
 id=$1
@@ -37,7 +39,19 @@ shift
 gdb=$root/motorlib/gcc/bin/arm-none-eabi-gdb
 [ -x "$gdb" ] || gdb=arm-none-eabi-gdb
 
-${MOTOR_UTIL:-motor_util} -f can0:$id --no-list gdbserver > /dev/null 2>&1 &
+motor_util=
+for candidate in "$MOTOR_UTIL" "$root/../motor-realtime/build/src/motor/motor_util" motor_util; do
+    if [ -n "$candidate" ] && "$candidate" gdbserver --help 2>/dev/null | grep -q -- --verbose; then
+        motor_util=$candidate
+        break
+    fi
+done
+if [ -z "$motor_util" ]; then
+    echo "no motor_util with the gdbserver for threads: build motor-realtime's feature/gdbserver_threads and set MOTOR_UTIL" >&2
+    exit 1
+fi
+
+"$motor_util" -f can0:$id --no-list gdbserver > /dev/null 2>&1 &
 server=$!
 trap 'kill -INT $server 2>/dev/null' EXIT
 sleep 0.5

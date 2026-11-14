@@ -46,10 +46,9 @@ to_bootloader() {
     [ "$(name)" == bootloader ]
 }
 
+# load_can.py gets the node into the bootloader and resets it afterwards
 load() {
-    to_bootloader
     "$load_can" --can_id $id --address 0x8002000 --file "$1"
-    motor_util -f $dev --no-list --set-api reset || true
     sleep 1
 }
 

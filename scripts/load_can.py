@@ -6,11 +6,12 @@ erased, written with a reply per frame, and compared by crc. The earlier
 bootloader (motorlib/bootloader/stm32g4) does not answer: it gets the frames at
 a rate it can keep up with, and nothing is checked.
 
-The node stays in the bootloader afterwards, for another file (the parameters),
-unless --run is given: then it is reset and starts what was loaded.
+A node that runs its application is sent into the bootloader first, and the
+node is reset after the load, which starts what was loaded. With --stay it is
+left in the bootloader.
 
 example usage:
-  load_can.py --can_id 2 --address 0x8002000 --file build/gcc/obot3/obot3_tmotor_driver.bin --run
+  load_can.py --can_id 2 --address 0x8002000 --file build/gcc/obot3/obot3_tmotor_driver.bin
   load_can.py --can_id 2 --address 0x8060000 --file tmotor_driver_param.bin
 """
 
@@ -26,7 +27,8 @@ CANFD_BRS = 1
 CANFD_FRAME = struct.Struct("<IBB2x64s")
 
 # obot can ids: message << 7 | address
-OBOT_COMMAND, OBOT_STATUS = 1, 3
+OBOT_COMMAND, OBOT_STATUS, OBOT_ASCII, OBOT_ASCII_RESPONSE = 1, 3, 4, 5
+BOARD_RESET = 255   # MotorCommand mode_desired
 
 INFO, ERASE, WRITE, READ, CRC, RESET = 0x10, 0x11, 0x12, 0x13, 0x14, 0x15
 REPLY = 0x80
@@ -46,14 +48,69 @@ class Bootloader:
     def __init__(self, can_id, interface="can0"):
         self.request_id = OBOT_COMMAND << 7 | can_id
         self.reply_id = OBOT_STATUS << 7 | can_id
+        self.text_id = OBOT_ASCII << 7 | can_id
+        self.text_reply_id = OBOT_ASCII_RESPONSE << 7 | can_id
         self.sequence = 0
         self.socket = socket.socket(socket.AF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
         self.socket.setsockopt(socket.SOL_CAN_RAW, CAN_RAW_FD_FRAMES, 1)
-        self.socket.setsockopt(socket.SOL_CAN_RAW, socket.CAN_RAW_FILTER, struct.pack("<II", self.reply_id, 0x7FF))
+        self.socket.setsockopt(socket.SOL_CAN_RAW, socket.CAN_RAW_FILTER,
+                               struct.pack("<IIII", self.reply_id, 0x7FF, self.text_reply_id, 0x7FF))
         self.socket.bind((interface,))
 
-    def send(self, payload):
-        self.socket.send(CANFD_FRAME.pack(self.request_id, len(payload), CANFD_BRS, payload))
+    def send(self, payload, can_id=None):
+        self.socket.send(CANFD_FRAME.pack(self.request_id if can_id is None else can_id, len(payload), CANFD_BRS, payload))
+
+    def receive(self, can_id, timeout):
+        """The next frame with this id: its data, or None after the timeout."""
+        deadline = time.monotonic() + timeout
+        while (remaining := deadline - time.monotonic()) > 0:
+            self.socket.settimeout(remaining)
+            try:
+                frame = self.socket.recv(CANFD_FRAME.size)
+            except socket.timeout:
+                break
+            frame_id, length, _, data = CANFD_FRAME.unpack(frame.ljust(CANFD_FRAME.size, b"\0"))
+            if frame_id & 0x7FF == can_id:
+                return data[:length]
+        return None
+
+    def text(self, request, timeout=0.1):
+        """The obot text api, which applications and bootloaders answer: the reply, or None without one."""
+        self.send(request.encode() + b"\0", self.text_id)
+        reply = self.receive(self.text_reply_id, timeout)
+        return None if reply is None else reply.split(b"\0")[0].decode(errors="replace")
+
+    def name(self, timeout=0.1, tries=3):
+        for _ in range(tries):
+            if (name := self.text("name", timeout)) is not None:
+                return name
+        return None
+
+    def enter(self):
+        """Gets a node that runs an application into its bootloader."""
+        name = self.name()
+        if name is None:
+            raise BootloaderError("the node does not answer")
+        if name == "bootloader":
+            return
+        print(f"node is '{name}': resetting it into the bootloader")
+        self.text("go_to_bootloader=b007")
+        self.text("reset")                                          # obot3 applications
+        self.send(struct.pack("<IB59x", 0, BOARD_RESET))            # obot_g474 applications
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline:
+            if self.name(tries=1) == "bootloader":
+                return
+        raise BootloaderError(f"the node did not get to its bootloader, it is '{self.name()}'")
+
+    def run(self):
+        """Resets the node, which starts the application. Returns its name then."""
+        try:
+            self.request(RESET, tries=1)
+        except NoReply:
+            self.text("reset")      # the earlier bootloader, which doesn't reply to it either
+        time.sleep(0.3)
+        return self.name()
 
     def start(self, command, address=0, length=0, data=b""):
         """Sends a request. What it returns is for reply()."""
@@ -70,13 +127,8 @@ class Bootloader:
                 self.send(payload)
             deadline = time.monotonic() + timeout
             while (remaining := deadline - time.monotonic()) > 0:
-                self.socket.settimeout(remaining)
-                try:
-                    frame = self.socket.recv(CANFD_FRAME.size)
-                except socket.timeout:
-                    break
-                _, frame_length, _, reply = CANFD_FRAME.unpack(frame.ljust(CANFD_FRAME.size, b"\0"))
-                if frame_length < 8:
+                reply = self.receive(self.reply_id, remaining)
+                if reply is None or len(reply) < 8:
                     continue
                 reply_command, sequence, status, reply_length, value = struct.unpack_from("<BBBBI", reply)
                 if reply_command != command | REPLY or sequence != request_sequence:
@@ -152,7 +204,7 @@ if __name__ == "__main__":
     parser.add_argument("--file", type=argparse.FileType('rb'), required=True, help="Binary file to load.")
     parser.add_argument("--interface", default="can0", help="CAN interface.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output.")
-    parser.add_argument("--run", action="store_true", help="Reset the node after the load, which starts the application.")
+    parser.add_argument("--stay", action="store_true", help="Leave the node in the bootloader instead of resetting it after the load.")
     args = parser.parse_args()
 
     data = args.file.read()
@@ -160,6 +212,7 @@ if __name__ == "__main__":
     print(f"Data length to load: {len(data)} bytes")
     bootloader = Bootloader(args.can_id, args.interface)
     try:
+        bootloader.enter()
         try:
             bootloader.info()
         except NoReply:
@@ -167,8 +220,9 @@ if __name__ == "__main__":
             bootloader.load_legacy(args.address, data, args.verbose)
         else:
             bootloader.load(args.address, data, args.verbose)
-            if args.run:
-                bootloader.request(RESET)
+        if not args.stay:
+            name = bootloader.run()
+            print("node does not answer after the reset" if name is None else f"node is '{name}' after the reset")
     except BootloaderError as error:
         print(f"\nfailed: {error}")
         sys.exit(1)

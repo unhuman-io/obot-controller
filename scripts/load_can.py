@@ -6,8 +6,11 @@ erased, written with a reply per frame, and compared by crc. The earlier
 bootloader (motorlib/bootloader/stm32g4) does not answer: it gets the frames at
 a rate it can keep up with, and nothing is checked.
 
+The node stays in the bootloader afterwards, for another file (the parameters),
+unless --run is given: then it is reset and starts what was loaded.
+
 example usage:
-  load_can.py --can_id 2 --address 0x8002000 --file build/gcc/obot3/obot3_tmotor_driver.bin
+  load_can.py --can_id 2 --address 0x8002000 --file build/gcc/obot3/obot3_tmotor_driver.bin --run
   load_can.py --can_id 2 --address 0x8060000 --file tmotor_driver_param.bin
 """
 
@@ -149,6 +152,7 @@ if __name__ == "__main__":
     parser.add_argument("--file", type=argparse.FileType('rb'), required=True, help="Binary file to load.")
     parser.add_argument("--interface", default="can0", help="CAN interface.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output.")
+    parser.add_argument("--run", action="store_true", help="Reset the node after the load, which starts the application.")
     args = parser.parse_args()
 
     data = args.file.read()
@@ -163,6 +167,8 @@ if __name__ == "__main__":
             bootloader.load_legacy(args.address, data, args.verbose)
         else:
             bootloader.load(args.address, data, args.verbose)
+            if args.run:
+                bootloader.request(RESET)
     except BootloaderError as error:
         print(f"\nfailed: {error}")
         sys.exit(1)

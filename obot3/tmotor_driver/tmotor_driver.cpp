@@ -284,7 +284,7 @@ struct TextMemory {
     static uint32_t write(uint32_t address, const uint8_t* data, uint32_t length) { return memory_write(address, data, length); }
 };
 
-TEXT_API_SMALL void text_request(const char* request, TextOut& out) {
+void text_request(const char* request, TextOut& out) {
     if (request[0] == '$') {
         if (!debug_request(request, out)) gdb_request<TextMemory>(request, out, text_request);
     } else if (std::strcmp(request, "name") == 0) {
@@ -330,7 +330,7 @@ char text_reply[1200];
 uint32_t text_reply_total, text_reply_offset;
 uint16_t text_reply_number;
 
-TEXT_API_SMALL void text_send_more() {
+void text_send_more() {
     const uint32_t id = obot_can_id(obot_can_ascii_response, tmotor_can_address());
     struct {
         APIControlPacket header;
@@ -355,7 +355,7 @@ TEXT_API_SMALL void text_send_more() {
     can_interrupt_disable<tmotor_can_init>(can_interrupt_tx_empty);
 }
 
-TEXT_API_SMALL void text_send(TextOut& out) {
+void text_send(TextOut& out) {
     text_reply_total = 0;
     if (out.length() < 64) {
         can_write<tmotor_can_init>(obot_can_id(obot_can_ascii_response, tmotor_can_address()),
@@ -408,7 +408,7 @@ struct TextLock {
 
 // The text requests that are no gdb packets, from the background: the main
 // loop is not held up by them. The reply shares the interrupt's way out.
-TEXT_API_SMALL void text_poll() {
+void text_poll() {
     if (!text_pending_request) return;
     char request[sizeof(text_pending)];
     {

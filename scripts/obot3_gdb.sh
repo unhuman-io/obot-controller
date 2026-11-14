@@ -51,6 +51,14 @@ if [ -z "$motor_util" ]; then
     exit 1
 fi
 
+# A node that doesn't take gdb's packets, its bootloader for one, is no target
+name=$("$motor_util" -f can0:$id --no-list --set-api name 2>/dev/null | tail -n1 | tr -d '\0')
+stop=$("$motor_util" -f can0:$id --no-list --set-api '$?' 2>/dev/null | tail -n1 | tr -d '\0')
+if [[ "$stop" != T* ]]; then
+    echo "node can0:$id is '$name', which does not answer gdb's packets: load the application first (scripts/load_can.py)" >&2
+    exit 1
+fi
+
 "$motor_util" -f can0:$id --no-list gdbserver > /dev/null 2>&1 &
 server=$!
 trap 'kill -INT $server 2>/dev/null' EXIT

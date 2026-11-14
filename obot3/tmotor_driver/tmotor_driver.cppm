@@ -299,7 +299,7 @@ constexpr auto tmotor_can_init = CANInit{
     .kernel_clock_hz = tmotor_rcc_clock_init.cpu_frequency_hz,
     .nominal_bitrate_hz = 1'000'000,
     .data_bitrate_hz = 8'000'000,
-    .standard_filter_count = 5,
+    .standard_filter_count = 6,
 };
 constexpr int tmotor_can_ascii_fifo = 1, tmotor_can_command_fifo = 0;
 
@@ -399,6 +399,7 @@ inline void tmotor_device_init() {
     can_filter<tmotor_can_init>(2, obot_can_id(obot_can_command, tmotor_can_address()), tmotor_can_command_fifo);
     can_filter<tmotor_can_init>(3, obot_can_id(obot_can_command_status, tmotor_can_address()), tmotor_can_command_fifo);
     can_filter<tmotor_can_init>(4, obot_can_id(obot_can_status, tmotor_can_address()), tmotor_can_command_fifo);
+    can_filter<tmotor_can_init>(5, obot_can_id(obot_can_enum, tmotor_can_address()), tmotor_can_command_fifo);
     device_hrtim_config<tmotor_hrtim_init>();   // last: starts the master and pwm timers in phase, and the ADC triggers with them
 }
 

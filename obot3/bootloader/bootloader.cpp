@@ -5,6 +5,7 @@
 #include "st_device.h"      // device header first: the device.* modules carry it in their global module fragment
 #include "../motorlib/motor_messages/motor_messages.h"
 #include "bootloader_protocol.h"
+#include "obot_enum.h"
 import device.rcc_init;
 import device.gpio_init;
 import device.can_init;
@@ -90,7 +91,7 @@ constexpr auto can_init = CANInit{
     .kernel_clock_hz = rcc_clock_init.cpu_frequency_hz,
     .nominal_bitrate_hz = 1'000'000,
     .data_bitrate_hz = 8'000'000,
-    .standard_filter_count = 3,
+    .standard_filter_count = 4,
 };
 constexpr int request_fifo = 0, text_fifo = 1;
 
@@ -189,6 +190,8 @@ void load_request(const BootloaderRequest& request, BootloaderReply& reply) {
         case BOOTLOADER_RESET:
             reset_request = true;
             break;
+        case BOOTLOADER_ENTER:      // it is in
+            break;
         default:
             reply.status = BOOTLOADER_BAD_COMMAND;
             break;
@@ -231,6 +234,7 @@ void text_request(const char* request) {
     can_filter<can_init>(0, obot_can_id(obot_can_command, can_address), request_fifo);
     can_filter<can_init>(1, obot_can_id(obot_can_enum, obot_can_broadcast_address), request_fifo);
     can_filter<can_init>(2, obot_can_id(obot_can_ascii, can_address), text_fifo);
+    can_filter<can_init>(3, obot_can_id(obot_can_enum, can_address), request_fifo);
     device_crc_config<crc32_init>();
     flash_unlock();
 
@@ -249,7 +253,10 @@ void text_request(const char* request) {
         } frame;
         if (can_read<can_init>(request_fifo, id, &frame) >= 0) {
             if (id >> 7 == obot_can_enum) {
-                can_write<can_init>(obot_can_id(obot_can_enum, can_address), &frame, 0);    // here, with no data
+                uint8_t serial[6];
+                system_serial_bytes(serial);
+                const obot::EnumResponse response = obot_enum_response("bootloader", serial);
+                can_write<can_init>(obot_can_id(obot_can_enum, can_address), &response, sizeof(response));
             } else {
                 BootloaderReply reply{};
                 reply.command = frame.request.command | BOOTLOADER_REPLY;

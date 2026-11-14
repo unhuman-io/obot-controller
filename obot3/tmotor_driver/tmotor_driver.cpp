@@ -4,8 +4,14 @@
 #include "../motorlib/motor_messages/motor_messages.h"
 #include "system.h"
 #include "basic_config.h"
+#include "obot_enum.h"
+#include "bootloader/bootloader_protocol.h"
+// OBOT3_TEXT_API 1: the text api, its variables and gdb. 0, the release build:
+// neither, and a host has the enum, command and status frames.
+#if OBOT3_TEXT_API
 #include "text_api.h"
 #include "debug_monitor.h"
+#endif
 #include <initializer_list>
 #include <iterator>
 import tmotor_driver;
@@ -43,12 +49,17 @@ void main_loop_update() {
     t_exec_mainloop = DWT->CYCCNT - t_start;
 }
 
+#if OBOT3_TEXT_API
 DEBUG_THREAD_ENTRY(main_loop_isr, 2, main_loop_update)
+#else
+void main_loop_isr() { main_loop_update(); }
+#endif
 
 // main.cpp polls this from the background loop. Here the main loop has its
 // own interrupt.
 void tim2_isr() {}
 
+#if OBOT3_TEXT_API
 // The fast loop preempts everything. The text api comes next, and the debug
 // monitor either between it and the main loop or below the main loop: gdb can
 // stop and step the main loop and the background, or the background alone,
@@ -76,6 +87,18 @@ constinit const auto vector_table = []() consteval {
     table.vector[HardFault_IRQn + 15] = debug_hard_fault_entry;
     return table;
 }();
+#else
+constexpr auto tmotor_irq_init = []() consteval {
+    IRQInit init{};
+    init.irq[ADC5_IRQn] = {.handler = fast_loop_isr, .priority = 0};
+    init.irq[HRTIM1_Master_IRQn] = {.handler = main_loop_isr, .priority = 3};
+    return init;
+}();
+
+extern "C" void Reset_Handler();
+__attribute__((section(".isr_vector"), used))
+constinit const auto vector_table = get_vector_table<tmotor_irq_init>(&_estack, Reset_Handler);
+#endif
 
 void clock_config() {
     device_rcc_clock_config<tmotor_rcc_clock_init>();
@@ -106,8 +129,10 @@ void pin_config() {
     tmotor_startup_init();
     tmotor_startup();
     tmotor_device_init();
+#if OBOT3_TEXT_API
     debug_monitor_init(debug_threads, std::size(debug_threads), debug_monitor_priority, debug_monitor_low_priority, debug_idle);
     can_interrupt_enable<tmotor_can_init>(can_interrupt_rx_fifo[tmotor_can_ascii_fifo]);
+#endif
     device_irq_config<tmotor_irq_init>(vector_table);   // last: the loops run from here on
 }
 
@@ -165,6 +190,7 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
 
 auto status_task_instance = status_task(sched);
 
+#if OBOT3_TEXT_API
 // What runs while gdb has the node stopped, in place of the background: the
 // watchdog, with the same host timeout, and the reset
 void debug_idle() {
@@ -423,9 +449,18 @@ void text_poll() {
     text_send(out);
 }
 
-// commands, as the obot_g474: a command frame is the new MotorCommand, a
-// command status frame is that and a request for the status, a status
-// frame only the request
+#else
+struct TextLock { TextLock() {} };     // nothing else sends
+void text_poll() {}
+#endif
+
+// What a host has without the text api, as the obot_g474:
+//   enum             to all nodes or to this one: the reply is this node's EnumResponse
+//   command          a new MotorCommand. BOARD_RESET as its mode resets the node
+//   command status   that and a request for the status
+//   status           only the request
+// and on the command id the 8 byte BOOTLOADER_ENTER request of
+// bootloader_protocol.h, which is answered and ends in the bootloader.
 void host_poll() {
     uint32_t id;
     char data[64];
@@ -433,13 +468,27 @@ void host_poll() {
         host_idle_ticks = 0;
         const uint32_t message = id >> 7;
         if (message == obot_can_enum) {
+            uint8_t serial[6];
+            system_serial_bytes(serial);
+            const obot::EnumResponse response = obot_enum_response(OBOT3_TEXT_API ? "obot3_tmotor_driver" : "obot3_tmotor_release", serial);
             const TextLock lock;
-            can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), data, 0);   // here, with no data
+            can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), &response, sizeof(response));
+        } else if (message == obot_can_command && length == offsetof(BootloaderRequest, data)) {
+            if (static_cast<uint8_t>(data[0]) == BOOTLOADER_ENTER) {
+                BootloaderReply reply{};
+                reply.command = BOOTLOADER_ENTER | BOOTLOADER_REPLY;
+                reply.sequence = data[1];
+                bootloader_request = true;
+                reset_request = true;
+                const TextLock lock;
+                can_write<tmotor_can_init>(obot_can_id(obot_can_status, tmotor_can_address()), &reply, offsetof(BootloaderReply, data));
+            }
         } else {
             if (message != obot_can_status && length >= static_cast<int>(sizeof(obot::MotorCommand))) {
                 obot::MotorCommand command;
                 std::memcpy(&command, data, sizeof(command));
                 TMotorHostCommand::latest.write(command);
+                if (command.mode_desired == obot::BOARD_RESET) reset_request = true;
             }
             if (message != obot_can_command) {
                 const auto status = MySystem::main_loop.controller.status.read();

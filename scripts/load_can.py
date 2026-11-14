@@ -8,7 +8,9 @@ a rate it can keep up with, and nothing is checked.
 
 A node that runs its application is sent into the bootloader first, and the
 node is reset after the load, which starts what was loaded. With --stay it is
-left in the bootloader.
+left in the bootloader. A node says what it runs in its reply to an obot enum
+request and takes the bootloader's ENTER request, so none of this needs the
+text api; firmware from before that is asked and sent there by text.
 
 example usage:
   load_can.py --can_id 2 --address 0x8002000 --file build/gcc/obot3/obot3_tmotor_driver.bin
@@ -27,10 +29,11 @@ CANFD_BRS = 1
 CANFD_FRAME = struct.Struct("<IBB2x64s")
 
 # obot can ids: message << 7 | address
-OBOT_COMMAND, OBOT_STATUS, OBOT_ASCII, OBOT_ASCII_RESPONSE = 1, 3, 4, 5
+OBOT_COMMAND, OBOT_STATUS, OBOT_ASCII, OBOT_ASCII_RESPONSE, OBOT_ENUM = 1, 3, 4, 5, 15
+ENUM_RESPONSE = struct.Struct("<2s6s2sHI20s8sBxH")    # motor_messages.h EnumResponse
 BOARD_RESET = 255   # MotorCommand mode_desired
 
-INFO, ERASE, WRITE, READ, CRC, RESET = 0x10, 0x11, 0x12, 0x13, 0x14, 0x15
+INFO, ERASE, WRITE, READ, CRC, RESET, ENTER = 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16
 REPLY = 0x80
 STATUS = {1: "bad command", 2: "bad range", 3: "flash error", 4: "verify error"}
 ERASE_SECONDS_PER_PAGE = 0.05   # 25 ms typical
@@ -50,11 +53,12 @@ class Bootloader:
         self.reply_id = OBOT_STATUS << 7 | can_id
         self.text_id = OBOT_ASCII << 7 | can_id
         self.text_reply_id = OBOT_ASCII_RESPONSE << 7 | can_id
+        self.enum_id = OBOT_ENUM << 7 | can_id
         self.sequence = 0
         self.socket = socket.socket(socket.AF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
         self.socket.setsockopt(socket.SOL_CAN_RAW, CAN_RAW_FD_FRAMES, 1)
         self.socket.setsockopt(socket.SOL_CAN_RAW, socket.CAN_RAW_FILTER,
-                               struct.pack("<IIII", self.reply_id, 0x7FF, self.text_reply_id, 0x7FF))
+                               struct.pack("<IIIIII", self.reply_id, 0x7FF, self.text_reply_id, 0x7FF, self.enum_id, 0x7FF))
         self.socket.bind((interface,))
 
     def send(self, payload, can_id=None):
@@ -80,8 +84,18 @@ class Bootloader:
         reply = self.receive(self.text_reply_id, timeout)
         return None if reply is None else reply.split(b"\0")[0].decode(errors="replace")
 
+    def enum(self, timeout=0.1):
+        """The node's EnumResponse as a tuple, or None from a node that has none."""
+        self.send(b"", self.enum_id)
+        reply = self.receive(self.enum_id, timeout)
+        if reply is None or len(reply) < ENUM_RESPONSE.size:
+            return None
+        return ENUM_RESPONSE.unpack_from(reply)
+
     def name(self, timeout=0.1, tries=3):
         for _ in range(tries):
+            if (enum := self.enum(timeout)) is not None:
+                return enum[5].split(b"\0")[0].decode(errors="replace")
             if (name := self.text("name", timeout)) is not None:
                 return name
         return None
@@ -94,9 +108,12 @@ class Bootloader:
         if name == "bootloader":
             return
         print(f"node is '{name}': resetting it into the bootloader")
-        self.text("go_to_bootloader=b007")
-        self.text("reset")                                          # obot3 applications
-        self.send(struct.pack("<IB59x", 0, BOARD_RESET))            # obot_g474 applications
+        try:
+            self.request(ENTER, tries=1)                                # obot3 applications
+        except NoReply:
+            self.text("go_to_bootloader=b007")                          # those from before ENTER
+            self.text("reset")
+            self.send(struct.pack("<IB59x", 0, BOARD_RESET))            # obot_g474 applications
         deadline = time.monotonic() + 3
         while time.monotonic() < deadline:
             if self.name(tries=1) == "bootloader":

@@ -19,6 +19,9 @@
 //   CRC      address, data: uint32 length    value: the crc32 (zlib) of the range
 //   RESET    -                               the node resets once the reply is out, into the application
 //                                            if there is one
+//   ENTER    -                               nothing here. An application takes this one request, as an
+//                                            8 byte frame, and resets into the bootloader once its
+//                                            reply is out: the way in that needs no text api
 //
 // ERASE and WRITE take ranges in the application's flash, from
 // BootloaderInfo.application_address to flash_end; READ and CRC anywhere in
@@ -41,6 +44,7 @@ enum {
     BOOTLOADER_READ = 0x13,
     BOOTLOADER_CRC = 0x14,
     BOOTLOADER_RESET = 0x15,
+    BOOTLOADER_ENTER = 0x16,
     BOOTLOADER_REPLY = 0x80,
 };
 

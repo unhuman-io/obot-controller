@@ -190,8 +190,9 @@ void debug_idle() {
 //   <variable>, <variable>=<value>              the variables below, see text_api.h
 //   api_length, api_name=<n>, help              their number and names
 //   $...                                        gdb remote protocol packets, see text_api.h and debug_monitor.h
-// An unknown request gets an empty reply. The requests are served in an
-// interrupt that preempts the main loop.
+// An unknown request gets an empty reply. The interrupt that takes the
+// requests in preempts the main loop, so it only serves the gdb packets
+// itself; the others are left for the background, see text_poll.
 constexpr float fast_dt = 1.f / tmotor_pwm_frequency_hz;
 #define TUNE(name, value) text_float(name, [] { return static_cast<float>(value); }, [](float v) { value = v; })
 #define FAST_STATUS(name, member) text_float(name, [] { return static_cast<float>(fast_loop.get_status().member); })
@@ -361,13 +362,20 @@ void text_send(TextOut& out) {
     }
     while (out.length() % 4 != 0 && out.room() != 0) out.put(' ');
     text_reply_total = out.length() & ~3u;
+    if (out.text() != text_reply) std::memcpy(text_reply, out.text(), text_reply_total);
     text_reply_offset = 0;
     text_reply_number = 1;
     text_send_more();
 }
 
+// A request that the interrupt left for the background, the latest one
+char text_pending[65];
+volatile bool text_pending_request;
+
 // FDCAN3: a text request has come in, or the rest of a long reply can go out.
 // What it interrupted is what gdb gets as the registers while the node runs.
+// The gdb packets are served here, which is what lets gdb stop the background
+// and the main loop, and so is everything else while those are stopped.
 extern "C" [[gnu::used]] void text_isr_frame(DebugFrame* frame) {
     debug.sample = frame;
     can_interrupt_flags<tmotor_can_init>();
@@ -376,9 +384,14 @@ extern "C" [[gnu::used]] void text_isr_frame(DebugFrame* frame) {
     for (int length; (length = can_read<tmotor_can_init>(tmotor_can_ascii_fifo, id, data)) >= 0;) {
         data[length] = 0;
         host_idle_ticks = 0;
-        TextOut out(text_reply, sizeof(text_reply));
-        text_request(data, out);
-        text_send(out);
+        if (data[0] == '$' || debug.stopped) {
+            TextOut out(text_reply, sizeof(text_reply));
+            text_request(data, out);
+            text_send(out);
+        } else {
+            std::memcpy(text_pending, data, length + 1);
+            text_pending_request = true;
+        }
     }
     if (text_reply_offset < text_reply_total) text_send_more();
     debug.sample = nullptr;
@@ -390,6 +403,23 @@ struct TextLock {
     TextLock() { __set_BASEPRI(text_priority << (8 - __NVIC_PRIO_BITS)); }
     ~TextLock() { __set_BASEPRI(0); }
 };
+
+// The text requests that are no gdb packets, from the background: the main
+// loop is not held up by them. The reply shares the interrupt's way out.
+void text_poll() {
+    if (!text_pending_request) return;
+    char request[sizeof(text_pending)];
+    {
+        const TextLock lock;
+        std::memcpy(request, text_pending, sizeof(request));
+        text_pending_request = false;
+    }
+    static char reply[sizeof(text_reply)];
+    TextOut out(reply, sizeof(reply));
+    text_request(request, out);
+    const TextLock lock;
+    text_send(out);
+}
 
 // commands, as the obot_g474: a command frame is the new MotorCommand, a
 // command status frame is that and a request for the status, a status
@@ -419,6 +449,7 @@ void host_poll() {
 }
 
 void os_loop() {
+    text_poll();
     host_poll();
     sched.poll();
     if (watchdog_ok) watchdog_kick();

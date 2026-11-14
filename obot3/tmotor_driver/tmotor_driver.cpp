@@ -5,6 +5,7 @@
 #include "system.h"
 #include "basic_config.h"
 #include "text_api.h"
+#include "debug_monitor.h"
 #include <initializer_list>
 #include <iterator>
 import tmotor_driver;
@@ -30,8 +31,8 @@ void fast_loop_isr() {
 }
 
 // HRTIM master cmp1, 10 kHz. The time it takes includes the fast loops that
-// interrupt it.
-void main_loop_isr() {
+// interrupt it. For gdb it is thread 2, see debug_monitor.h.
+void main_loop_update() {
     static uint32_t t_last;
     const uint32_t t_start = DWT->CYCCNT;
     std::atomic_signal_fence(std::memory_order_acq_rel);
@@ -42,21 +43,37 @@ void main_loop_isr() {
     t_exec_mainloop = DWT->CYCCNT - t_start;
 }
 
+DEBUG_THREAD_ENTRY(main_loop_isr, 2, main_loop_update)
+
 // main.cpp polls this from the background loop. Here the main loop has its
 // own interrupt.
 void tim2_isr() {}
 
-// The fast loop preempts the main loop
+// The fast loop preempts everything. The text api comes next, and the debug
+// monitor between it and the main loop: gdb can stop and step the main loop
+// and the background, with the fast loop running and the node answering.
+void text_isr();
+constexpr uint8_t text_priority = 1, debug_monitor_priority = 2, main_loop_priority = 3;
 constexpr auto tmotor_irq_init = []() consteval {
     IRQInit init{};
     init.irq[ADC5_IRQn] = {.handler = fast_loop_isr, .priority = 0};
-    init.irq[HRTIM1_Master_IRQn] = {.handler = main_loop_isr, .priority = 1};
+    init.irq[FDCAN3_IT0_IRQn] = {.handler = text_isr, .priority = text_priority};
+    init.irq[HRTIM1_Master_IRQn] = {.handler = main_loop_isr, .priority = main_loop_priority};
     return init;
 }();
+constexpr DebugThread debug_threads[] = {
+    {.name = "background"},
+    {.name = "main_loop", .irq = HRTIM1_Master_IRQn, .entry = main_loop_isr, .priority = main_loop_priority},
+};
 
 extern "C" void Reset_Handler();
 __attribute__((section(".isr_vector"), used))
-constinit const auto vector_table = get_vector_table<tmotor_irq_init>(&_estack, Reset_Handler);
+constinit const auto vector_table = []() consteval {
+    auto table = get_vector_table<tmotor_irq_init>(&_estack, Reset_Handler);
+    table.vector[DebugMonitor_IRQn + 15] = debug_monitor_entry;
+    table.vector[HardFault_IRQn + 15] = debug_hard_fault_entry;
+    return table;
+}();
 
 void clock_config() {
     device_rcc_clock_config<tmotor_rcc_clock_init>();
@@ -79,12 +96,16 @@ void tmotor_startup() {
     tmotor_drv8323_configured(drv8323.get_result());
 }
 
+void debug_idle();
+
 void pin_config() {
     device_rcc_config<tmotor_rcc_init>();
     device_pin_config<tmotor_gpio_init>();
     tmotor_startup_init();
     tmotor_startup();
     tmotor_device_init();
+    debug_monitor_init(debug_threads, std::size(debug_threads), debug_monitor_priority, text_priority, debug_idle);
+    can_interrupt_enable<tmotor_can_init>(can_interrupt_rx_fifo[tmotor_can_ascii_fifo]);
     device_irq_config<tmotor_irq_init>(vector_table);   // last: the loops run from here on
 }
 
@@ -115,6 +136,7 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
     uint32_t last_fast_loop_count = 0, last_main_loop_count = 0;
     while (1) {
         target_wake_time += PERIOD_CYCLES;
+        if (static_cast<int32_t>(get_clock() - target_wake_time) > 0) target_wake_time = get_clock();   // gdb had it stopped
         co_await sched.delay_until(target_wake_time);   // first: the task starts before pin_config
         if (reset_request) {                            // a tick after the request, so the reply is out
             if (bootloader_request) system_reset_to_bootloader();
@@ -141,6 +163,21 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
 
 auto status_task_instance = status_task(sched);
 
+// What runs while gdb has the node stopped, in place of the background: the
+// watchdog, with the same host timeout, and the reset
+void debug_idle() {
+    static uint32_t t_tick;
+    if (get_clock() - t_tick > CPU_FREQUENCY_HZ / status_frequency_hz) {
+        t_tick = get_clock();
+        host_idle_ticks = host_idle_ticks + 1;
+    }
+    if (reset_request && can_tx_idle<tmotor_can_init>()) {
+        if (bootloader_request) system_reset_to_bootloader();
+        system_reset();
+    }
+    if (host_idle_ticks < host_timeout_ticks) watchdog_kick();
+}
+
 // The loops by a short name, for the variables below and for gdb:
 // `p fast_loop.controller` instead of the System<...> they are members of
 [[gnu::used]] constinit auto& fast_loop = MySystem::fast_loop;
@@ -152,8 +189,9 @@ auto status_task_instance = status_task(sched);
 //   go_to_bootloader=b007, reset                and to get it back into the bootloader
 //   <variable>, <variable>=<value>              the variables below, see text_api.h
 //   api_length, api_name=<n>, help              their number and names
-//   $...                                        gdb remote protocol packets, see text_api.h
-// An unknown request gets an empty reply.
+//   $...                                        gdb remote protocol packets, see text_api.h and debug_monitor.h
+// An unknown request gets an empty reply. The requests are served in an
+// interrupt that preempts the main loop.
 constexpr float fast_dt = 1.f / tmotor_pwm_frequency_hz;
 #define TUNE(name, value) text_float(name, [] { return static_cast<float>(value); }, [](float v) { value = v; })
 #define FAST_STATUS(name, member) text_float(name, [] { return static_cast<float>(fast_loop.get_status().member); })
@@ -232,6 +270,8 @@ constexpr TextVariable text_variables[] = {
     text_int("t_period_fastloop", [] { return static_cast<int64_t>(t_period_fastloop); }),
     text_int("t_period_mainloop", [] { return static_cast<int64_t>(t_period_mainloop); }),
     text_int("cpu_frequency", [] { return static_cast<int64_t>(CPU_FREQUENCY_HZ); }),
+    text_int("debug_probe", [] { return static_cast<int64_t>(debug_probe_attached()); }),    // 1: no step or breakpoints for gdb
+    text_int("breakpoints_dropped", [] { return static_cast<int64_t>(debug.breakpoints_dropped); }),   // set above the debug monitor
 };
 #undef TUNE
 #undef FAST_STATUS
@@ -243,7 +283,7 @@ struct TextMemory {
 
 void text_request(const char* request, TextOut& out) {
     if (request[0] == '$') {
-        gdb_request<TextMemory>(request, out, text_request);
+        if (!debug_request(request, out)) gdb_request<TextMemory>(request, out, text_request);
     } else if (std::strcmp(request, "name") == 0) {
         out.put("obot3_tmotor_driver");
     } else if (std::strcmp(request, "serial") == 0) {
@@ -281,55 +321,87 @@ void text_request(const char* request, TextOut& out) {
 // A reply of up to 63 characters is one frame, with its terminator if it has
 // two or more characters, as the obot_g474 does. A longer one goes out as the
 // long packets of motor_messages.h, in frames that the can fd lengths don't
-// pad: a host takes every byte of those as text.
-void text_send(TextOut& out) {
+// pad: a host takes every byte of those as text. Three frames fit the tx
+// fifo; the rest follows from the interrupt when it is empty.
+char text_reply[1200];
+uint32_t text_reply_total, text_reply_offset;
+uint16_t text_reply_number;
+
+void text_send_more() {
     const uint32_t id = obot_can_id(obot_can_ascii_response, tmotor_can_address());
-    if (out.length() < 64) {
-        can_write<tmotor_can_init>(id, out.text(), out.length() > 1 ? out.length() + 1 : out.length());
-        return;
-    }
-    while (out.length() % 4 != 0 && out.room() != 0) out.put(' ');
-    const uint32_t total = out.length() & ~3u;
     struct {
         APIControlPacket header;
         char data[56];
     } frame;
-    uint16_t number = 1;
-    for (uint32_t offset = 0; offset < total; number++) {
+    while (text_reply_offset < text_reply_total) {
         uint32_t size = 56;
         for (const uint32_t fit : {56, 40, 24, 16, 12, 8, 4}) {
             size = fit;
-            if (fit <= total - offset) break;
+            if (fit <= text_reply_total - text_reply_offset) break;
         }
         frame.header = {.control_packet_id = 0, .type = LONG_PACKET,
-            .long_packet = {.total_length = static_cast<uint16_t>(total), .packet_number = number}};
-        std::memcpy(frame.data, out.text() + offset, size);
-        const uint32_t t_start = get_clock();
-        while (!can_write<tmotor_can_init>(id, &frame, sizeof(frame.header) + size)) {     // the three tx buffers are full
-            if (get_clock() - t_start > CPU_FREQUENCY_HZ / 100) return;                    // 10 ms: nobody takes the frames
+            .long_packet = {.total_length = static_cast<uint16_t>(text_reply_total), .packet_number = text_reply_number}};
+        std::memcpy(frame.data, text_reply + text_reply_offset, size);
+        if (!can_write<tmotor_can_init>(id, &frame, sizeof(frame.header) + size)) {
+            can_interrupt_enable<tmotor_can_init>(can_interrupt_tx_empty);
+            return;
         }
-        offset += size;
+        text_reply_offset += size;
+        text_reply_number++;
     }
+    can_interrupt_disable<tmotor_can_init>(can_interrupt_tx_empty);
 }
 
-void host_poll() {
+void text_send(TextOut& out) {
+    text_reply_total = 0;
+    if (out.length() < 64) {
+        can_write<tmotor_can_init>(obot_can_id(obot_can_ascii_response, tmotor_can_address()),
+            out.text(), out.length() > 1 ? out.length() + 1 : out.length());
+        return;
+    }
+    while (out.length() % 4 != 0 && out.room() != 0) out.put(' ');
+    text_reply_total = out.length() & ~3u;
+    text_reply_offset = 0;
+    text_reply_number = 1;
+    text_send_more();
+}
+
+// FDCAN3: a text request has come in, or the rest of a long reply can go out.
+// What it interrupted is what gdb gets as the registers while the node runs.
+extern "C" [[gnu::used]] void text_isr_frame(DebugFrame* frame) {
+    debug.sample = frame;
+    can_interrupt_flags<tmotor_can_init>();
     uint32_t id;
     char data[65];
-    if (const int length = can_read<tmotor_can_init>(tmotor_can_ascii_fifo, id, data); length >= 0) {
+    for (int length; (length = can_read<tmotor_can_init>(tmotor_can_ascii_fifo, id, data)) >= 0;) {
         data[length] = 0;
         host_idle_ticks = 0;
-        static char reply[1200];
-        TextOut out(reply, sizeof(reply));
+        TextOut out(text_reply, sizeof(text_reply));
         text_request(data, out);
         text_send(out);
     }
-    // commands, as the obot_g474: a command frame is the new MotorCommand, a
-    // command status frame is that and a request for the status, a status
-    // frame only the request
+    if (text_reply_offset < text_reply_total) text_send_more();
+    debug.sample = nullptr;
+}
+DEBUG_FRAME_ENTRY(text_isr, text_isr_frame)
+
+// The background's frames share the tx fifo with the text api's
+struct TextLock {
+    TextLock() { __set_BASEPRI(text_priority << (8 - __NVIC_PRIO_BITS)); }
+    ~TextLock() { __set_BASEPRI(0); }
+};
+
+// commands, as the obot_g474: a command frame is the new MotorCommand, a
+// command status frame is that and a request for the status, a status
+// frame only the request
+void host_poll() {
+    uint32_t id;
+    char data[64];
     if (const int length = can_read<tmotor_can_init>(tmotor_can_command_fifo, id, data); length >= 0) {
         host_idle_ticks = 0;
         const uint32_t message = id >> 7;
         if (message == obot_can_enum) {
+            const TextLock lock;
             can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), data, 0);   // here, with no data
         } else {
             if (message != obot_can_status && length >= static_cast<int>(sizeof(obot::MotorCommand))) {
@@ -338,8 +410,9 @@ void host_poll() {
                 TMotorHostCommand::latest.write(command);
             }
             if (message != obot_can_command) {
-                can_write<tmotor_can_init>(obot_can_id(obot_can_status, tmotor_can_address()),
-                    MySystem::main_loop.controller.status.read());
+                const auto status = MySystem::main_loop.controller.status.read();
+                const TextLock lock;
+                can_write<tmotor_can_init>(obot_can_id(obot_can_status, tmotor_can_address()), status);
             }
         }
     }

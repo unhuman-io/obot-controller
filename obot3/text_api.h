@@ -252,9 +252,10 @@ inline uint32_t parse_hex_bytes(const char* p, uint8_t* data, uint32_t capacity)
 
 // The gdb remote protocol packets that come as text requests with a leading
 // "$" and without the checksum, from `motor_util gdbserver` between gdb and
-// the node. The application keeps running: gdb sees a target that is stopped
-// and can read and write its memory, which with the elf file is every static
-// variable by name.
+// the node: memory, which with the elf file is every static variable by name,
+// and monitor commands. An application with the debug monitor takes the run
+// control packets itself (debug_monitor.h) before it calls this; without it
+// gdb sees a target that is stopped, while the application runs.
 //   m address,length        memory read: hex bytes, fewer than asked for if the reply is full or the
 //                           memory ends, E14 if there is none
 //   M address,length:hex    memory write: OK, or E14

@@ -18,6 +18,7 @@
 #   (gdb) continue
 #   (gdb) next
 #   (gdb) info threads
+#   (gdb) monitor live                  the node continues and gdb keeps its prompt, as at the start
 # Leaving gdb removes the breakpoints and lets the node continue.
 #
 # The bridge is `motor_util gdbserver` on port 3293, from a motor-realtime with
@@ -28,7 +29,7 @@
 # breakpoints and steps halt the cpu for the probe instead.
 set -e
 if [ $# -lt 1 ]; then
-    sed -n '2,29p' "$0"
+    sed -n '2,30p' "$0"
     exit 2
 fi
 id=$1
@@ -59,7 +60,8 @@ if [[ "$stop" != T* ]]; then
     exit 1
 fi
 
-"$motor_util" -f can0:$id --no-list gdbserver > /dev/null 2>&1 &
+# In a session of its own: ctrl-c at the terminal is for gdb, not for the server
+setsid "$motor_util" -f can0:$id --no-list gdbserver > /dev/null 2>&1 &
 server=$!
 trap 'kill -INT $server 2>/dev/null' EXIT
 sleep 0.5

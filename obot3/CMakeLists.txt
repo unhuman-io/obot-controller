@@ -31,3 +31,14 @@ target_compile_definitions(obot3_tmotor_driver.elf PRIVATE OBOT3_VERSION="${OBOT
 target_link_options(obot3_tmotor_driver.elf PRIVATE -Wl,--defsym=CUSTOM_BOOTLOADER=1)
 add_custom_command(TARGET obot3_tmotor_driver.elf POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:obot3_tmotor_driver.elf> ${CMAKE_CURRENT_BINARY_DIR}/obot3_tmotor_driver.bin)
+
+# The can bootloader in front of it: the first 8K of the flash, see bootloader/bootloader.cpp
+add_executable(obot3_bootloader.elf bootloader/bootloader.cpp)
+target_link_libraries(obot3_bootloader.elf PRIVATE device_stm32g474)
+target_include_directories(obot3_bootloader.elf PRIVATE . bootloader)
+target_compile_definitions(obot3_bootloader.elf PRIVATE OBOT3_VERSION="${OBOT3_VERSION}")
+target_compile_options(obot3_bootloader.elf PRIVATE -Os)
+target_link_options(obot3_bootloader.elf PRIVATE -nostartfiles -Wl,--defsym=BOOTLOADER=1
+    "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/obot3_bootloader.map")
+add_custom_command(TARGET obot3_bootloader.elf POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:obot3_bootloader.elf> ${CMAKE_CURRENT_BINARY_DIR}/obot3_bootloader.bin)

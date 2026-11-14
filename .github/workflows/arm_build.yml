@@ -108,7 +108,7 @@ jobs:
       run: |
         git config --global --add safe.directory '*'
         cmake --preset ${{ matrix.toolchain }}
-        cmake --build --preset ${{ matrix.toolchain }} -t obot3_tmotor_driver.elf
+        cmake --build --preset ${{ matrix.toolchain }} -t obot3_tmotor_driver.elf -t obot3_bootloader.elf
     - name: Archive obot3 tmotor_driver ${{ matrix.toolchain }}
       uses: actions/upload-artifact@main
       with:
@@ -116,6 +116,8 @@ jobs:
         path: |
           build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.elf
           build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.bin
+          build/${{ matrix.toolchain }}/obot3/obot3_bootloader.elf
+          build/${{ matrix.toolchain }}/obot3/obot3_bootloader.bin
 
   test-obot3-control:
     timeout-minutes: 5

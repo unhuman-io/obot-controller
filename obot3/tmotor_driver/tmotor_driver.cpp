@@ -272,6 +272,8 @@ constexpr TextVariable text_variables[] = {
     text_int("t_period_mainloop", [] { return static_cast<int64_t>(t_period_mainloop); }),
     text_int("cpu_frequency", [] { return static_cast<int64_t>(CPU_FREQUENCY_HZ); }),
     text_int("debug_probe", [] { return static_cast<int64_t>(debug_probe_attached()); }),    // 1: no step or breakpoints for gdb
+    text_int("halt_main_loop", [] { return static_cast<int64_t>(debug_thread_halts(2)); },         // 0: gdb stops only the background
+        [](int64_t halts) { debug_thread_halts(2, halts != 0); }),
     text_int("breakpoints_dropped", [] { return static_cast<int64_t>(debug.breakpoints_dropped); }),   // set above the debug monitor
 };
 #undef TUNE

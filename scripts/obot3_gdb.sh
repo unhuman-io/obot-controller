@@ -18,6 +18,7 @@
 #   (gdb) continue
 #   (gdb) next
 #   (gdb) info threads
+#   (gdb) monitor halt_main_loop=0      the main loop runs on, only the background stops (1: both)
 #   (gdb) monitor live                  the node continues and gdb keeps its prompt, as at the start
 # Leaving gdb removes the breakpoints and lets the node continue.
 #
@@ -29,7 +30,7 @@
 # breakpoints and steps halt the cpu for the probe instead.
 set -e
 if [ $# -lt 1 ]; then
-    sed -n '2,30p' "$0"
+    sed -n '2,31p' "$0"
     exit 2
 fi
 id=$1

@@ -24,6 +24,10 @@
 // the other threads are as urgent as the text api, so they run as they would
 // and the step never ends up in them.
 //
+// A thread's interrupt can be left running (debug_thread_halts): it then is
+// as urgent as the text api all the time and gdb does not get it as a thread,
+// so that for one a control loop goes on while the background is debugged.
+//
 // The node is not stopped by gdb connecting: until the first continue the
 // registers are those at the moment of the request, and memory is live.
 //
@@ -93,6 +97,7 @@ struct DebugMonitor {
     uint32_t watch_address;
     uint32_t general_thread;                // the one gdb selected for the registers, 0: the one that runs
     uint32_t breakpoints_dropped;           // hit where the monitor can't run
+    bool runs_on[debug_thread_max];         // the thread is not stopped, see debug_thread_halts
 };
 inline constinit DebugMonitor debug{};
 
@@ -143,19 +148,34 @@ inline uint32_t debug_thread_of(uint32_t exception) {
     return 1;
 }
 
-inline void debug_thread_priorities(bool raise, uint32_t except_thread) {
+// The interrupts of the threads at their own priority, or for a step of
+// stepped_thread (not 0) above the monitor, except its own. Those that run on
+// are always there.
+inline void debug_thread_priorities(uint32_t stepped_thread) {
     for (uint32_t i = 1; i < debug.thread_count; i++) {
         const DebugThread& thread = debug.threads[i];
-        if (raise && i + 1 == except_thread) continue;
-        NVIC_SetPriority(static_cast<IRQn_Type>(thread.irq), raise ? debug.text_priority : thread.priority);
+        const bool above = debug.runs_on[i] || (stepped_thread != 0 && i + 1 != stepped_thread);
+        NVIC_SetPriority(static_cast<IRQn_Type>(thread.irq), above ? debug.text_priority : thread.priority);
     }
-    debug.raised = raise;
+    debug.raised = stepped_thread != 0;
+}
+
+// Whether gdb stops thread (2..) with the others, which is so at the start.
+// One that doesn't runs on while the less urgent ones are stopped and
+// stepped. Takes effect when the node continues, if it is stopped.
+inline void debug_thread_halts(uint32_t thread, bool halts) {
+    if (thread < 2 || thread > debug.thread_count) return;
+    debug.runs_on[thread - 1] = !halts;
+    if (!debug.stopped) debug_thread_priorities(0);
+}
+inline bool debug_thread_halts(uint32_t thread) {
+    return thread >= 1 && thread <= debug.thread_count && !debug.runs_on[thread - 1];
 }
 
 // The monitor exception: here the node is stopped, until a request says to go on
 extern "C" [[gnu::used]] inline void debug_monitor(DebugFrame* frame) {
     using namespace debug_reg;
-    if (debug.raised) debug_thread_priorities(false, 0);
+    if (debug.raised) debug_thread_priorities(0);
     CoreDebug->DEMCR = CoreDebug->DEMCR & ~DEMCR_MON_STEP;
     const uint32_t reason = SCB->DFSR;
     SCB->DFSR = reason;
@@ -179,8 +199,10 @@ extern "C" [[gnu::used]] inline void debug_monitor(DebugFrame* frame) {
     if (debug.step) {
         debug.step = false;
         // The other threads' interrupts that are pending run right here
-        debug_thread_priorities(true, debug_thread_of(frame->exception()));
+        debug_thread_priorities(debug_thread_of(frame->exception()));
         CoreDebug->DEMCR = CoreDebug->DEMCR | DEMCR_MON_STEP;
+    } else {
+        debug_thread_priorities(0);
     }
     debug.stopped = false;
 }
@@ -463,7 +485,7 @@ inline bool debug_request(const char* request, TextOut& out) {
         }
         case 'T': {
             const uint32_t alive = debug_parse_thread(p);
-            out.put(alive >= 1 && alive <= debug.thread_count ? "OK" : "E01");
+            out.put(debug_thread_halts(alive) ? "OK" : "E01");
             return true;
         }
         case 'q':
@@ -473,6 +495,7 @@ inline bool debug_request(const char* request, TextOut& out) {
             } else if (std::strcmp(p, "fThreadInfo") == 0) {
                 out.put('m');
                 for (uint32_t i = 1; i <= debug.thread_count; i++) {
+                    if (!debug_thread_halts(i)) continue;
                     if (i != 1) out.put(',');
                     debug_put_hex(out, i);
                 }

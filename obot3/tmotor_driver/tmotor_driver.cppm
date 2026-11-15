@@ -1,4 +1,5 @@
 module;
+#include <cmath>
 #include <cstdint>
 #include <numbers>
 #include "../motorlib/task.h"   // device header, get_clock, CycleScheduler
@@ -130,6 +131,7 @@ constexpr auto tmotor_gpio_init = []() consteval {
     init.b[13].function = "ia, opamp3 vinp1";
     init.b[12].function = "ib, opamp6 vinp0";
     init.b[11].function = "ic, opamp4 vinp2";
+    init.c[0].function = "motor thermistor, adc2 in6";
     return init;
 }();
 
@@ -214,11 +216,13 @@ constexpr auto tmotor_hrtim_init = []() consteval {
 //     sequence is the fast loop interrupt.
 //   regular, HRTIM trigger 3: the same channel with the low side off, for the
 //     zero current offset
-// ADC1 has only an injected sequence, which software starts with
-// adc_start_injected<1>(): the temperature sensor and vrefint.
+// ADC1 and ADC2 have only an injected sequence, which software starts with
+// adc_start_injected<1>() and <2>(): the temperature sensor and vrefint, and
+// the motor's thermistor on PC0, which has 10 k to 3.3 V on the board.
 //
 //         regular       injected
 //   ADC1                IN16 temperature, IN18 vrefint
+//   ADC2                IN6 motor thermistor
 //   ADC3  IN13 ia       IN13 ia, IN13
 //   ADC4  IN17 ib       IN17 ib, IN17
 //   ADC5  IN5 ic        IN5 ic, IN5
@@ -253,6 +257,10 @@ constexpr auto tmotor_adc_init = []() consteval {
     init.adc1.injected_sequence[1] = 18;
     init.adc1.sample_time[16] = ADCSampleTime::CYCLES_247_5;    // 5.8 us, the internal channels need 5
     init.adc1.sample_time[18] = ADCSampleTime::CYCLES_247_5;
+    init.adc2 = converter();
+    init.adc2.injected_sequence_length = 1;
+    init.adc2.injected_sequence[0] = 6;
+    init.adc2.sample_time[6] = ADCSampleTime::CYCLES_247_5;     // 5.8 us for the 5 k source
     init.adc3 = current_sense(13);
     init.adc4 = current_sense(17);
     init.adc5 = current_sense(5);
@@ -267,6 +275,17 @@ DEBUG_CALL inline uint32_t tmotor_ib() { return adc_read_injected<4>(0); }
 DEBUG_CALL inline uint32_t tmotor_ic() { return adc_read_injected<5>(0); }
 DEBUG_CALL inline uint32_t tmotor_temperature() { return adc_read_injected<1>(0); }
 DEBUG_CALL inline uint32_t tmotor_vrefint() { return adc_read_injected<1>(1); }
+DEBUG_CALL inline uint32_t tmotor_motor_thermistor() { return adc_read_injected<2>(0); }
+
+// The motor's temperature from that reading, deg C: a 10 k NTC to ground under
+// the 10 k to 3.3 V. Its B value is assumed, which matters away from 25 C. An
+// open input reads full scale, which comes out far below any real temperature.
+inline float tmotor_motor_temperature(uint32_t counts) {
+    constexpr float b = 3950, t0 = 298.15f;
+    if (counts == 0 || counts >= 4095) return -273.15f;
+    const float ratio = static_cast<float>(counts) / (4096 - counts);   // thermistor / 10 k
+    return 1 / (std::log(ratio) / b + 1 / t0) - 273.15f;
+}
 
 // For the handlers of the two loops: the fast loop runs at the end of the
 // ADC5 injected sequence, when the phase currents of this pwm period are in;

@@ -113,11 +113,12 @@ void clock_config() {
 void tmotor_startup() {
     CycleScheduler sched;
     auto adc1 = adc_calibrate_async<1>(sched);
+    auto adc2 = adc_calibrate_async<2>(sched);
     auto adc3 = adc_calibrate_async<3>(sched);
     auto adc4 = adc_calibrate_async<4>(sched);
     auto adc5 = adc_calibrate_async<5>(sched);
     auto drv8323 = drv8323_config_async<tmotor_drv8323_init, TMotorDRV8323IO>(sched);
-    while (!adc1.is_done() || !adc3.is_done() || !adc4.is_done() || !adc5.is_done() || !drv8323.is_done()) {
+    while (!adc1.is_done() || !adc2.is_done() || !adc3.is_done() || !adc4.is_done() || !adc5.is_done() || !drv8323.is_done()) {
         sched.poll();
     }
     tmotor_drv8323_configured(drv8323.get_result());
@@ -154,7 +155,7 @@ constexpr uint32_t host_timeout_ticks = 60 * status_frequency_hz;   // 60 s with
 volatile bool watchdog_ok = true;
 volatile uint32_t host_idle_ticks = 0;
 volatile bool reset_request = false, bootloader_request = false;
-volatile uint32_t temperature_reading, vrefint_reading;
+volatile uint32_t temperature_reading, vrefint_reading, motor_thermistor_reading;
 
 // 10 Hz: heartbeat on the green led, the watchdog condition and the slow ADC
 // channels. The injected sequences take 6 us per channel, so the results of
@@ -186,6 +187,7 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
 
         temperature_reading = tmotor_temperature();
         vrefint_reading = tmotor_vrefint();
+        motor_thermistor_reading = tmotor_motor_thermistor();
         adc_start_injected<1>();
         adc_start_injected<2>();
     }
@@ -295,6 +297,8 @@ constexpr TextVariable text_variables[] = {
     text_int("IC", [] { return static_cast<int64_t>(tmotor_ic()); }),
     text_int("temperature", [] { return static_cast<int64_t>(temperature_reading); }),
     text_int("vrefint", [] { return static_cast<int64_t>(vrefint_reading); }),
+    text_int("motor_thermistor", [] { return static_cast<int64_t>(motor_thermistor_reading); }),   // adc counts
+    text_float("Tmotor", [] { return tmotor_motor_temperature(motor_thermistor_reading); }),        // deg C
     text_int("drv_errors", [] { return static_cast<int64_t>(tmotor_drv8323_errors); }),     // 0: configured
     text_int("drv_fault", [] { return static_cast<int64_t>(tmotor_drv8323_fault()); }),     // the fault pin
     text_int("drv_status", [] { return static_cast<int64_t>(tmotor_drv8323_status()); }),   // status 2 << 16 | status 1

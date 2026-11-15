@@ -191,7 +191,7 @@ volatile bool watchdog_ok = true;
 volatile bool reset_request = false, bootloader_request = false;
 volatile uint32_t temperature_reading, vrefint_reading, motor_thermistor_reading;
 
-// 10 Hz: heartbeat on the green led, the watchdog condition and the slow ADC
+// 10 Hz: the watchdog condition and the slow ADC
 // channels. The injected sequences take 6 us per channel, so the results of
 // one pass are read at the start of the next.
 GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
@@ -209,7 +209,6 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
         }
 
         ticks++;
-        tmotor_led(0, ticks & 1 ? 0x2000 : 0, 0);
 
         const uint32_t fast_loop_count = MySystem::fast_loop.count;
         const uint32_t main_loop_count = MySystem::main_loop.sensors.count;
@@ -558,10 +557,42 @@ void imu_poll() {
     imu_data = data;
 }
 
+// The led as on the obot_g474 (motorlib/main_loop.h, led.h): the color is the
+// mode, breathing once a second, and red at twice that on a fault. 200 Hz.
+void led_poll() {
+    static uint32_t t_last, phase;
+    if (get_clock() - t_last < CPU_FREQUENCY_HZ / 200) return;
+    t_last = get_clock();
+    struct Color { uint8_t red, green, blue; };     // in halves
+    constexpr Color red{2, 0, 0}, orange{2, 1, 0}, yellow{2, 2, 0}, chartreuse{1, 2, 0}, green{0, 2, 0},
+        azure{0, 1, 2}, blue{0, 0, 2}, violet{1, 0, 2}, magenta{2, 0, 2}, rose{2, 0, 1};
+    Color color = azure;
+    uint32_t rate = 1;
+    switch (MySystem::main_loop.controller.status.read().flags.mode) {
+        case obot::DAMPED: color = orange; break;
+        case obot::CURRENT: color = green; break;
+        case obot::POSITION:
+        case obot::VELOCITY: color = blue; break;
+        case obot::IMPEDANCE: color = chartreuse; break;
+        case obot::TORQUE: color = rose; break;
+        case obot::STATE: color = magenta; break;
+        case obot::VOLTAGE: color = violet; break;
+        case obot::PHASE_LOCK: color = yellow; break;
+        case obot::FAULT: color = red; rate = 2; break;
+        default: break;     // open
+    }
+    phase = (phase + rate) % 200;
+    const float t = phase * (1.f / 200);
+    const float triangle = t < .5f ? 2 * t : 2 - 2 * t;
+    const uint32_t intensity = static_cast<uint32_t>(32767 * triangle * triangle * triangle);     // of half scale
+    tmotor_led(color.red * intensity, color.green * intensity, color.blue * intensity);
+}
+
 void os_loop() {
 #if OBOT3_TEXT_API
     debug_call_poll();      // a function that gdb wants run, between the tasks of this loop
 #endif
+    led_poll();
     imu_poll();
     text_poll();
     host_poll();

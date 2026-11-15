@@ -50,7 +50,7 @@
 # The bridge is `motor_util gdbserver` on port 3293, from a motor-realtime with
 # the thread support (gdbserver --verbose exists): $MOTOR_UTIL, else the build
 # in ../motor-realtime, else the installed one. An earlier one is refused: it
-# shows one thread and leaves the node stopped, which then resets after 60 s.
+# shows one thread and leaves the node stopped.
 # A debug probe has to be detached (text api: debug_probe is 0), or
 # breakpoints and steps halt the cpu for the probe instead.
 set -e

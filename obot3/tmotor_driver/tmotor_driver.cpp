@@ -145,15 +145,12 @@ CycleScheduler sched;
 volatile uint32_t* const cpu_clock = &DWT->CYCCNT;
 
 // The watchdog, which the bootloader starts, is fed from the background loop
-// while this holds. It drops when a loop stops, and when no host has talked to
-// this node for a while: either way the watchdog reset ends in the bootloader,
-// where new firmware can be loaded. A firmware that can't be reached is never
-// left running.
+// while this holds. It drops when a loop stops: the watchdog reset ends in the
+// bootloader, where new firmware can be loaded. A node that no host talks to
+// keeps running.
 constexpr uint32_t status_frequency_hz = 10;
 constexpr uint32_t startup_ticks = status_frequency_hz;             // 1 s for the loops to start
-constexpr uint32_t host_timeout_ticks = 60 * status_frequency_hz;   // 60 s without a frame from a host
 volatile bool watchdog_ok = true;
-volatile uint32_t host_idle_ticks = 0;
 volatile bool reset_request = false, bootloader_request = false;
 volatile uint32_t temperature_reading, vrefint_reading, motor_thermistor_reading;
 
@@ -182,8 +179,7 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
         const bool loops_run = fast_loop_count != last_fast_loop_count && main_loop_count != last_main_loop_count;
         last_fast_loop_count = fast_loop_count;
         last_main_loop_count = main_loop_count;
-        host_idle_ticks = host_idle_ticks + 1;
-        watchdog_ok = ticks < startup_ticks || (loops_run && host_idle_ticks < host_timeout_ticks);
+        watchdog_ok = ticks < startup_ticks || loops_run;
 
         temperature_reading = tmotor_temperature();
         vrefint_reading = tmotor_vrefint();
@@ -197,18 +193,13 @@ auto status_task_instance = status_task(sched);
 
 #if OBOT3_TEXT_API
 // What runs while gdb has the node stopped, in place of the background: the
-// watchdog, with the same host timeout, and the reset
+// watchdog and the reset
 void debug_idle() {
-    static uint32_t t_tick;
-    if (get_clock() - t_tick > CPU_FREQUENCY_HZ / status_frequency_hz) {
-        t_tick = get_clock();
-        host_idle_ticks = host_idle_ticks + 1;
-    }
     if (reset_request && can_tx_idle<tmotor_can_init>()) {
         if (bootloader_request) system_reset_to_bootloader();
         system_reset();
     }
-    if (host_idle_ticks < host_timeout_ticks) watchdog_kick();
+    watchdog_kick();
 }
 
 // The loops by a short name, for the variables below and for gdb:
@@ -424,7 +415,6 @@ extern "C" [[gnu::used]] void text_isr_frame(DebugFrame* frame) {
     char data[65];
     for (int length; (length = can_read<tmotor_can_init>(tmotor_can_ascii_fifo, id, data)) >= 0;) {
         data[length] = 0;
-        host_idle_ticks = 0;
         if (data[0] == '$' || debug.stopped) {
             TextOut out(text_reply, sizeof(text_reply));
             text_request(data, out);
@@ -479,7 +469,6 @@ void host_poll() {
     uint32_t id;
     char data[64];
     if (const int length = can_read<tmotor_can_init>(tmotor_can_command_fifo, id, data); length >= 0) {
-        host_idle_ticks = 0;
         const uint32_t message = id >> 7;
         if (message == obot_can_enum) {
             uint8_t serial[6];

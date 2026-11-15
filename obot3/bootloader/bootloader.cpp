@@ -198,6 +198,18 @@ void load_request(const BootloaderRequest& request, BootloaderReply& reply) {
     }
 }
 
+// The MotorCommand of an application with BOARD_RESET as its mode, which is
+// what `motor_util set --mode reset` sends: the way out of the bootloader
+// without the text api, as it is the reset of an application. A MotorCommand
+// starts with the host's time stamp where a request has its command, so one
+// whose first byte is a command of bootloader_protocol.h is taken as that.
+bool motor_command_reset(const BootloaderRequest& request, int length) {
+    const bool bootloader_command = request.command >= BOOTLOADER_INFO && request.command <= BOOTLOADER_ENTER;
+    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(&request);
+    return !bootloader_command && length >= static_cast<int>(sizeof(obot::MotorCommand)) &&
+        bytes[offsetof(obot::MotorCommand, mode_desired)] == obot::BOARD_RESET;
+}
+
 // A string of two or more characters goes out with its terminator, as the
 // applications do
 void text_reply(const char* string) {
@@ -251,7 +263,7 @@ void text_request(const char* request) {
             BootloaderRequest request;
             char text[65];
         } frame;
-        if (can_read<can_init>(request_fifo, id, &frame) >= 0) {
+        if (const int length = can_read<can_init>(request_fifo, id, &frame); length >= 0) {
             if (id >> 7 == obot_can_enum) {
                 uint8_t serial[6];
                 system_serial_bytes(serial);
@@ -259,6 +271,8 @@ void text_request(const char* request) {
                 // to all nodes: an empty reply, that this one is here
                 const bool to_all = (id & 0x7F) == obot_can_broadcast_address;
                 can_write<can_init>(obot_can_id(obot_can_enum, can_address), &response, to_all ? 0 : sizeof(response));
+            } else if (motor_command_reset(frame.request, length)) {
+                reset_request = true;       // no reply, as from an application
             } else {
                 BootloaderReply reply{};
                 reply.command = frame.request.command | BOOTLOADER_REPLY;

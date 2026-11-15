@@ -33,6 +33,10 @@
 // The node holds three requests, so a host may send a WRITE while the reply
 // to the one before is still out, which keeps the flash busy all the time.
 //
+// A MotorCommand with the mode BOARD_RESET on the same id resets the node as
+// RESET does, without a reply: it is how a host resets an application, and so
+// it also gets a node out of the bootloader (motor_util set --mode reset).
+//
 // The commands of the earlier bootloader, 0 and 1 without replies, are not
 // accepted; it in turn ignores the commands here, so a host can tell the two
 // apart with an INFO request.

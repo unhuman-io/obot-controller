@@ -5,6 +5,8 @@
 #include "system.h"
 #include "basic_config.h"
 #include "obot_enum.h"
+#define CYCLE_STATS OBOT3_TEXT_API      // the text api's cpu request is what shows them
+#include "cycle_stats.h"
 #include "bmi270.h"
 #include "bootloader/bootloader_protocol.h"
 // OBOT3_TEXT_API 1: the text api, its variables and gdb. 0, the release build:
@@ -26,8 +28,19 @@ using MySystem = System<Config<>>;
 // How long the loops take and how far apart they start, cpu cycles
 volatile uint32_t t_exec_fastloop, t_period_fastloop, t_exec_mainloop, t_period_mainloop;
 
+// The same for every interrupt and every task of the background, with the
+// extremes and net of what interrupts them: the text api's cpu request
+inline uint32_t stats_clock() { return DWT->CYCCNT; }
+using StatsTimer = CycleTimer<stats_clock>;
+constinit CycleStats fast_loop_stats{"fast_loop"}, main_loop_stats{"main_loop"}, text_isr_stats{"text_isr"},
+    status_task_stats{"status_task"}, imu_task_stats{"imu_task"}, led_task_stats{"led_task"},
+    text_task_stats{"text_task"}, host_task_stats{"host_task"};
+constinit CycleStats* const cycle_stats[] = {&fast_loop_stats, &main_loop_stats, &text_isr_stats,
+    &status_task_stats, &imu_task_stats, &led_task_stats, &text_task_stats, &host_task_stats};
+
 // ADC5 end of injected sequence, 50 kHz
 void fast_loop_isr() {
+    const CycleTimer<stats_clock, true> timer(fast_loop_stats);
     static uint32_t t_last;
     const uint32_t t_start = DWT->CYCCNT;
     std::atomic_signal_fence(std::memory_order_acq_rel);
@@ -42,6 +55,7 @@ void fast_loop_isr() {
 // interrupt it. For gdb it is thread 2, the background thread 1 and the call
 // thread, which runs functions for gdb from os_loop, thread 3: see debug_monitor.h.
 void main_loop_update() {
+    const StatsTimer timer(main_loop_stats);
     static uint32_t t_last;
     const uint32_t t_start = DWT->CYCCNT;
     std::atomic_signal_fence(std::memory_order_acq_rel);
@@ -188,6 +202,8 @@ constexpr uint32_t status_frequency_hz = 10;
 constexpr uint32_t startup_ticks = status_frequency_hz;             // 1 s for the loops to start
 volatile bool watchdog_ok = true;
 volatile bool reset_request = false, bootloader_request = false;
+uint64_t uptime_cycles;             // as of uptime_clock, which is never more than a turn of the cpu's counter back
+uint32_t uptime_clock;
 volatile uint32_t temperature_reading, vrefint_reading, motor_thermistor_reading;
 
 // 10 Hz: the watchdog condition and the slow ADC
@@ -202,6 +218,9 @@ GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
         target_wake_time += PERIOD_CYCLES;
         if (static_cast<int32_t>(get_clock() - target_wake_time) > 0) target_wake_time = get_clock();   // gdb had it stopped
         co_await sched.delay_until(target_wake_time);   // first: the task starts before pin_config
+        const StatsTimer timer(status_task_stats);
+        uptime_cycles += get_clock() - uptime_clock;
+        uptime_clock = get_clock();
         if (reset_request) {                            // a tick after the request, so the reply is out
             if (bootloader_request) system_reset_to_bootloader();
             system_reset();
@@ -254,6 +273,7 @@ constexpr auto controller_param = tmotor_controller_param;
 //   go_to_bootloader=b007, reset                and to get it back into the bootloader
 //   <variable>, <variable>=<value>              the variables below, see text_api.h
 //   api_length, api_name=<n>, help              their number and names
+//   cpu                                         the cpu time of the interrupts and tasks, see cpu_request
 //   $...                                        gdb remote protocol packets, see text_api.h and debug_monitor.h
 // An unknown request gets an empty reply. The interrupt that takes the
 // requests in preempts the main loop, so it only serves the gdb packets
@@ -357,6 +377,58 @@ struct TextMemory {
     static uint32_t write(uint32_t address, const uint8_t* data, uint32_t length) { return memory_write(address, data, length); }
 };
 
+// cpu: what every interrupt handler and every task of the background took
+// since the last cpu request, a line each:
+//   name  percent of the cpu  runs  cycles min/mean/max  period min/max
+// in cpu cycles, net of what interrupted it. The rest is the background
+// going around the scheduler.
+struct StatsLock {
+    StatsLock() { __asm__ volatile("mrs %0, primask\n cpsid i" : "=r"(state)); }
+    ~StatsLock() { __asm__ volatile("msr primask, %0" : : "r"(state)); }
+    uint32_t state;
+};
+DEBUG_SMALL void cpu_request(TextOut& out) {
+    static uint64_t last_uptime;
+    const uint64_t uptime = uptime_cycles + (get_clock() - uptime_clock);
+    const uint64_t elapsed = uptime - last_uptime;
+    last_uptime = uptime;
+    const auto tenths = [&](uint64_t cycles) {
+        const uint32_t value = elapsed == 0 ? 0 : static_cast<uint32_t>(cycles * 1000 / elapsed);
+        out.put_number(static_cast<int64_t>(value / 10));
+        out.put('.');
+        out.put(static_cast<char>('0' + value % 10));
+    };
+    const auto number = [&](uint64_t value) {
+        out.put(' ');
+        out.put_number(static_cast<int64_t>(value));
+    };
+    uint64_t total = 0;
+    for (CycleStats* stats : cycle_stats) {
+        const CycleStats s = cycle_stats_take<StatsLock>(*stats);
+        total += s.sum;
+        out.put(s.name);
+        out.put(' ');
+        tenths(s.sum);
+        out.put('%');
+        number(s.count);
+        if (s.count != 0) {
+            number(s.min);
+            number(s.sum / s.count);
+            number(s.max);
+            if (s.period_max != 0) {
+                number(s.period_min);
+                number(s.period_max);
+            }
+        }
+        out.put('\n');
+    }
+    out.put("total ");
+    tenths(total);
+    out.put("% of ");
+    out.put_number(static_cast<int64_t>(elapsed / (CPU_FREQUENCY_HZ / 1000)));
+    out.put(" ms");
+}
+
 void text_request(const char* request, TextOut& out) {
     if (request[0] == '$') {
         if (!debug_request(request, out)) gdb_request<TextMemory>(request, out, text_request);
@@ -382,6 +454,8 @@ void text_request(const char* request, TextOut& out) {
         const char* number = request + 9;
         std::from_chars(number, number + std::strlen(number), index);
         if (index < std::size(text_variables)) out.put(text_variables[index].name);
+    } else if (std::strcmp(request, "cpu") == 0) {
+        cpu_request(out);
     } else if (std::strcmp(request, "help") == 0) {
         out.put_number(static_cast<int64_t>(std::size(text_variables)));
         out.put(" variables:\n");
@@ -452,6 +526,7 @@ volatile bool text_pending_request;
 // The gdb packets are served here, which is what lets gdb stop the background
 // and the main loop, and so is everything else while those are stopped.
 extern "C" [[gnu::used]] void text_isr_frame(DebugFrame* frame) {
+    const StatsTimer timer(text_isr_stats);
     debug.sample = frame;
     can_interrupt_flags<tmotor_can_init>();
     uint32_t id;
@@ -562,6 +637,7 @@ GlobalTask<void, 2, 192> imu_task(CycleScheduler& sched) {
         wake_time += period_cycles;
         if (static_cast<int32_t>(get_clock() - wake_time) > 0) wake_time = get_clock();     // gdb had it stopped
         co_await sched.delay_until(wake_time);
+        const StatsTimer timer(imu_task_stats);
         const BMI270Data data = bmi270_data<TMotorIMUIO>();
         const TextLock lock;        // the text api reads it from its interrupt while gdb has the node stopped
         imu_data = data;
@@ -605,6 +681,7 @@ GlobalTask<void, 3, 128> led_task(CycleScheduler& sched) {
         wake_time += period_cycles;
         if (static_cast<int32_t>(get_clock() - wake_time) > 0) wake_time = get_clock();
         co_await sched.delay_until(wake_time);      // first: the task starts before pin_config
+        const StatsTimer timer(led_task_stats);
         led_update();
     }
 }
@@ -614,12 +691,14 @@ GlobalTask<void, 3, 128> led_task(CycleScheduler& sched) {
 GlobalTask<void, 4, 128> text_task(CycleScheduler& sched) {
     while (true) {
         co_await sched.yield();
+        const StatsTimer timer(text_task_stats);
         text_poll();
     }
 }
 GlobalTask<void, 5, 128> host_task(CycleScheduler& sched) {
     while (true) {
         co_await sched.yield();
+        const StatsTimer timer(host_task_stats);
         host_poll();
     }
 }

@@ -6,7 +6,7 @@
 //   static void transfer(const uint8_t* out, uint8_t* in, uint32_t length, const uint8_t* more, uint32_t more_length)
 //       one frame: chip select low, length bytes out and in, then more_length
 //       bytes out of more with the replies dropped, chip select high
-//   static void delay_us(uint32_t us)
+//   static void delay_us(uint32_t us)      a few us between frames
 // A read is the register with bit 7 set, a dummy byte and then the data.
 struct BMI270Data {
     int16_t acc[3];     // x, y, z: +-8 g full scale
@@ -32,21 +32,32 @@ inline void bmi270_write(uint8_t address, uint8_t value) {
     IO::delay_us(3);
 }
 
-// Loads the configuration and starts both sensors at 400 Hz output, about
-// 30 ms. Returns the chip id << 8 | the internal status: bmi270_chip_id and
-// bmi270_init_ok when it worked.
+// Bringing it up is three steps with a wait after the first two, 450 us and
+// 20 ms, which is left to the caller: the middle one loads the configuration,
+// about 15 ms on the bus. The last returns the chip id << 8 | the internal
+// status, bmi270_chip_id and bmi270_init_ok when it worked, with both sensors
+// running at 400 Hz output.
+constexpr uint32_t bmi270_power_up_us = 450, bmi270_load_us = 20000;
+
 template<typename IO>
-inline uint32_t bmi270_init() {
+inline uint8_t bmi270_init_start() {
     bmi270_read<IO>(0x00);                  // the first chip select edge puts the chip on spi
     const uint8_t chip_id = bmi270_read<IO>(0x00);
     bmi270_write<IO>(0x7C, 0x00);           // power conf: advanced power save off
-    IO::delay_us(450);
+    return chip_id;
+}
+
+template<typename IO>
+inline void bmi270_init_load() {
     bmi270_write<IO>(0x59, 0x00);           // init ctrl: load
     const uint8_t address = 0x5E;
     uint8_t in;
     IO::transfer(&address, &in, 1, bmi270_config_file, sizeof(bmi270_config_file));
     bmi270_write<IO>(0x59, 0x01);           // done
-    IO::delay_us(20000);
+}
+
+template<typename IO>
+inline uint32_t bmi270_init_finish(uint8_t chip_id) {
     const uint8_t status = bmi270_read<IO>(0x21) & 0xF;
     bmi270_write<IO>(0x7D, 0x0E);           // power ctrl: accelerometer, gyro and temperature on
     bmi270_write<IO>(0x40, 0xAA);           // accelerometer: 400 Hz, normal filter, performance mode

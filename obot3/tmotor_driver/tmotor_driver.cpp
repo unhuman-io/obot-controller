@@ -130,7 +130,7 @@ void debug_idle();
 // The BMI270 shares SPI1 with the gate driver, chip select PC4: for one of its
 // frames the bus is 8 bit, mode 3, pclk / 32 = 5.3 MHz, and then the gate
 // driver's again. Both are used from the background only, the gate driver for
-// its status on request.
+// its status on request, and the background's tasks don't interrupt each other.
 struct TMotorIMUIO {
     static void delay_us(uint32_t us) {
         const uint32_t start = get_clock();
@@ -167,7 +167,6 @@ void pin_config() {
     device_pin_config<tmotor_gpio_init>();
     tmotor_startup_init();
     tmotor_startup();
-    imu_status = bmi270_init<TMotorIMUIO>();
     tmotor_device_init();
 #if OBOT3_TEXT_API
     debug_monitor_init(debug_threads, std::size(debug_threads), debug_monitor_priority, debug_monitor_low_priority, debug_idle);
@@ -547,22 +546,33 @@ void host_poll() {
     }
 }
 
-// 200 Hz, when there is one
-void imu_poll() {
-    static uint32_t t_last;
-    if (imu_status != (bmi270_chip_id << 8 | bmi270_init_ok) || get_clock() - t_last < CPU_FREQUENCY_HZ / 200) return;
-    t_last = get_clock();
-    const BMI270Data data = bmi270_data<TMotorIMUIO>();
-    const TextLock lock;        // the text api reads it from its interrupt while gdb has the node stopped
-    imu_data = data;
+// The imu is brought up here, with the node already answering, and then read
+// at 200 Hz. Without one the task ends.
+GlobalTask<void, 2, 192> imu_task(CycleScheduler& sched) {
+    constexpr uint32_t period_cycles = CPU_FREQUENCY_HZ / 200;
+    co_await sched.async_delay_us(1000);    // first: the task starts before pin_config
+    const uint8_t chip_id = bmi270_init_start<TMotorIMUIO>();
+    co_await sched.async_delay_us(bmi270_power_up_us);
+    bmi270_init_load<TMotorIMUIO>();
+    co_await sched.async_delay_us(bmi270_load_us);
+    imu_status = bmi270_init_finish<TMotorIMUIO>(chip_id);
+    if (imu_status != (bmi270_chip_id << 8 | bmi270_init_ok)) co_return;
+    uint32_t wake_time = get_clock();
+    while (true) {
+        wake_time += period_cycles;
+        if (static_cast<int32_t>(get_clock() - wake_time) > 0) wake_time = get_clock();     // gdb had it stopped
+        co_await sched.delay_until(wake_time);
+        const BMI270Data data = bmi270_data<TMotorIMUIO>();
+        const TextLock lock;        // the text api reads it from its interrupt while gdb has the node stopped
+        imu_data = data;
+    }
 }
 
 // The led as on the obot_g474 (motorlib/main_loop.h, led.h): the color is the
-// mode, breathing once a second, and red at twice that on a fault. 200 Hz.
-void led_poll() {
-    static uint32_t t_last, phase;
-    if (get_clock() - t_last < CPU_FREQUENCY_HZ / 200) return;
-    t_last = get_clock();
+// mode, breathing once a second, and red at twice that on a fault. One step
+// of 200 a second.
+void led_update() {
+    static uint32_t phase;
     struct Color { uint8_t red, green, blue; };     // in halves
     constexpr Color red{2, 0, 0}, orange{2, 1, 0}, yellow{2, 2, 0}, chartreuse{1, 2, 0}, green{0, 2, 0},
         azure{0, 1, 2}, blue{0, 0, 2}, violet{1, 0, 2}, magenta{2, 0, 2}, rose{2, 0, 1};
@@ -588,14 +598,42 @@ void led_poll() {
     tmotor_led(color.red * intensity, color.green * intensity, color.blue * intensity);
 }
 
+GlobalTask<void, 3, 128> led_task(CycleScheduler& sched) {
+    constexpr uint32_t period_cycles = CPU_FREQUENCY_HZ / 200;
+    uint32_t wake_time = get_clock();
+    while (true) {
+        wake_time += period_cycles;
+        if (static_cast<int32_t>(get_clock() - wake_time) > 0) wake_time = get_clock();
+        co_await sched.delay_until(wake_time);      // first: the task starts before pin_config
+        led_update();
+    }
+}
+
+// The host's frames, every pass of the background: what came in is served
+// between two yields
+GlobalTask<void, 4, 128> text_task(CycleScheduler& sched) {
+    while (true) {
+        co_await sched.yield();
+        text_poll();
+    }
+}
+GlobalTask<void, 5, 128> host_task(CycleScheduler& sched) {
+    while (true) {
+        co_await sched.yield();
+        host_poll();
+    }
+}
+
+// The background is the scheduler: status_task above and these
+auto imu_task_instance = imu_task(sched);
+auto led_task_instance = led_task(sched);
+auto text_task_instance = text_task(sched);
+auto host_task_instance = host_task(sched);
+
 void os_loop() {
 #if OBOT3_TEXT_API
     debug_call_poll();      // a function that gdb wants run, between the tasks of this loop
 #endif
-    led_poll();
-    imu_poll();
-    text_poll();
-    host_poll();
     sched.poll();
     if (watchdog_ok) watchdog_kick();
 }

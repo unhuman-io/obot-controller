@@ -5,6 +5,7 @@
 #include "system.h"
 #include "basic_config.h"
 #include "obot_enum.h"
+#include "bmi270.h"
 #include "bootloader/bootloader_protocol.h"
 // OBOT3_TEXT_API 1: the text api, its variables and gdb. 0, the release build:
 // neither, and a host has the enum, command and status frames.
@@ -126,11 +127,47 @@ void tmotor_startup() {
 
 void debug_idle();
 
+// The BMI270 shares SPI1 with the gate driver, chip select PC4: for one of its
+// frames the bus is 8 bit, mode 3, pclk / 32 = 5.3 MHz, and then the gate
+// driver's again. Both are used from the background only, the gate driver for
+// its status on request.
+struct TMotorIMUIO {
+    static void delay_us(uint32_t us) {
+        const uint32_t start = get_clock();
+        while (get_clock() - start < us * (CPU_FREQUENCY_HZ / 1'000'000));
+    }
+    static uint8_t byte(uint8_t out) {
+        *reinterpret_cast<volatile uint8_t*>(&SPI1->DR) = out;
+        while (!(SPI1->SR & SPI_SR_RXNE));
+        return *reinterpret_cast<volatile uint8_t*>(&SPI1->DR);
+    }
+    static void transfer(const uint8_t* out, uint8_t* in, uint32_t length, const uint8_t* more, uint32_t more_length) {
+        const uint32_t cr1 = SPI1->CR1, cr2 = SPI1->CR2;
+        SPI1->CR1 = 0;
+        SPI1->CR2 = 7 << SPI_CR2_DS_Pos | SPI_CR2_FRXTH;
+        SPI1->CR1 = SPI_CR1_MSTR | 4 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA | SPI_CR1_SPE;
+        gpio_clear(gpio_port<'C'>(), 4);
+        for (uint32_t i = 0; i < length; i++) in[i] = byte(out[i]);
+        for (uint32_t i = 0; i < more_length; i++) {
+            byte(more[i]);
+            if ((i & 0x3FF) == 0) watchdog_kick();
+        }
+        gpio_set(gpio_port<'C'>(), 4);
+        while (SPI1->SR & SPI_SR_BSY);
+        SPI1->CR1 = 0;
+        SPI1->CR2 = cr2;
+        SPI1->CR1 = cr1;
+    }
+};
+volatile uint32_t imu_status;       // chip id << 8 | init status: 0x2401 is a BMI270 that runs
+BMI270Data imu_data;
+
 void pin_config() {
     device_rcc_config<tmotor_rcc_init>();
     device_pin_config<tmotor_gpio_init>();
     tmotor_startup_init();
     tmotor_startup();
+    imu_status = bmi270_init<TMotorIMUIO>();
     tmotor_device_init();
 #if OBOT3_TEXT_API
     debug_monitor_init(debug_threads, std::size(debug_threads), debug_monitor_priority, debug_monitor_low_priority, debug_idle);
@@ -290,6 +327,14 @@ constexpr TextVariable text_variables[] = {
     text_int("vrefint", [] { return static_cast<int64_t>(vrefint_reading); }),
     text_int("motor_thermistor", [] { return static_cast<int64_t>(motor_thermistor_reading); }),   // adc counts
     text_float("Tmotor", [] { return tmotor_motor_temperature(motor_thermistor_reading); }),        // deg C
+    // the BMI270: g and rad/s
+    text_int("imu_status", [] { return static_cast<int64_t>(imu_status); }),       // 0x2401 = 9217: found and running
+    text_float("ax", [] { return imu_data.acc[0] * bmi270_g_per_count; }),
+    text_float("ay", [] { return imu_data.acc[1] * bmi270_g_per_count; }),
+    text_float("az", [] { return imu_data.acc[2] * bmi270_g_per_count; }),
+    text_float("gx", [] { return imu_data.gyr[0] * bmi270_rad_s_per_count; }),
+    text_float("gy", [] { return imu_data.gyr[1] * bmi270_rad_s_per_count; }),
+    text_float("gz", [] { return imu_data.gyr[2] * bmi270_rad_s_per_count; }),
     text_int("drv_errors", [] { return static_cast<int64_t>(tmotor_drv8323_errors); }),     // 0: configured
     text_int("drv_fault", [] { return static_cast<int64_t>(tmotor_drv8323_fault()); }),     // the fault pin
     text_int("drv_status", [] { return static_cast<int64_t>(tmotor_drv8323_status()); }),   // status 2 << 16 | status 1
@@ -503,10 +548,21 @@ void host_poll() {
     }
 }
 
+// 200 Hz, when there is one
+void imu_poll() {
+    static uint32_t t_last;
+    if (imu_status != (bmi270_chip_id << 8 | bmi270_init_ok) || get_clock() - t_last < CPU_FREQUENCY_HZ / 200) return;
+    t_last = get_clock();
+    const BMI270Data data = bmi270_data<TMotorIMUIO>();
+    const TextLock lock;        // the text api reads it from its interrupt while gdb has the node stopped
+    imu_data = data;
+}
+
 void os_loop() {
 #if OBOT3_TEXT_API
     debug_call_poll();      // a function that gdb wants run, between the tasks of this loop
 #endif
+    imu_poll();
     text_poll();
     host_poll();
     sched.poll();

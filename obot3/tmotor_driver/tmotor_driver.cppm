@@ -28,6 +28,7 @@ export import control.motor_controller;
 //   - an MA732 motor encoder on SPI3, chip select PD2
 //   - the three phase pwm on HRTIM timers D, F and E
 //   - the DRV8323S gate driver on SPI1, chip select PA4, enable PC13, fault PC14
+//   - a BMI270 imu on SPI1 as well, chip select PC4
 //   - phase currents through the opamps to the ADCs
 //   - no bus voltage sense on this board: the bus is taken as 24 V
 //   - the led on TIM4
@@ -121,6 +122,8 @@ constexpr auto tmotor_gpio_init = []() consteval {
     init.c[14].pullupd = GPIOPullUpD::PULL_UP;
     init.c[14].function = "drv fault, active low";
 
+    output(init.c[4], GPIOSet::SET, "spi1 cs bmi270");
+    init.c[4].speed = GPIOSpeed::VERY_HIGH;
     output(init.a[0], GPIOSet::SET, "torque sensor cs");    // not used: parked high
     output(init.c[3], GPIOSet::SET, "output encoder cs");
 

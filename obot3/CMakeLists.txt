@@ -1,7 +1,7 @@
 # add_obot3_target(<name> <device_lib> <config_dir> <extra sources...>)
 function(add_obot3_target name device config_dir)
     set(tgt ${name}.elf)
-    add_executable(${tgt} main.cpp ${ARGN})
+    add_executable(${tgt} main.cpp memcpy.cpp ${ARGN})
     target_link_libraries(${tgt} PRIVATE ${device})
     target_include_directories(${tgt} PRIVATE . ${config_dir})
     # the control modules are built per target, with its device's flags

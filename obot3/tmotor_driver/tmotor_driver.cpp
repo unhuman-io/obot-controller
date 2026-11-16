@@ -458,7 +458,8 @@ void text_poll() {}
 #endif
 
 // What a host has without the text api, as the obot_g474:
-//   enum             to all nodes or to this one: the reply is this node's EnumResponse
+//   enum             to all nodes: an empty reply, that this one is here. To this
+//                    one: its EnumResponse
 //   command          a new MotorCommand. BOARD_RESET as its mode resets the node
 //   command status   that and a request for the status
 //   status           only the request
@@ -474,8 +475,9 @@ void host_poll() {
             uint8_t serial[6];
             system_serial_bytes(serial);
             const obot::EnumResponse response = obot_enum_response(OBOT3_TEXT_API ? "obot3_tmotor_driver" : "obot3_tmotor_release", serial);
+            const bool to_all = (id & 0x7F) == obot_can_broadcast_address;
             const TextLock lock;
-            can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), &response, sizeof(response));
+            can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), &response, to_all ? 0 : sizeof(response));
         } else if (message == obot_can_command && length == offsetof(BootloaderRequest, data)) {
             if (static_cast<uint8_t>(data[0]) == BOOTLOADER_ENTER) {
                 BootloaderReply reply{};

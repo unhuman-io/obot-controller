@@ -256,7 +256,9 @@ void text_request(const char* request) {
                 uint8_t serial[6];
                 system_serial_bytes(serial);
                 const obot::EnumResponse response = obot_enum_response("bootloader", serial);
-                can_write<can_init>(obot_can_id(obot_can_enum, can_address), &response, sizeof(response));
+                // to all nodes: an empty reply, that this one is here
+                const bool to_all = (id & 0x7F) == obot_can_broadcast_address;
+                can_write<can_init>(obot_can_id(obot_can_enum, can_address), &response, to_all ? 0 : sizeof(response));
             } else {
                 BootloaderReply reply{};
                 reply.command = frame.request.command | BOOTLOADER_REPLY;

@@ -275,9 +275,8 @@ jobs:
         # (/usr/local/sbin/can-setup there): can0 is this board at 1/5 Mbps, which is as
         # fast as it gets, can1 the tmotor driver at 1/8 Mbps
         [ $(motor_util -f can0:1 --list-names-only) == can_test ]
-        # found without its address too. The tmotor driver on can1 may be in the list
-        # as well, in either place: it is left in its bootloader, which answers the
-        # enumeration, but not always within motor_util's 10 ms
+        # found without its address too. The tmotor driver on can1, left in its
+        # bootloader, may be in the list as well, before or after it
         motor_util -f --list-names-only | grep -qx can_test
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_can.py
         

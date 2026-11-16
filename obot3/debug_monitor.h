@@ -52,11 +52,15 @@
 //   - the function returns to this file, not to gdb's address: the result
 //     goes to the registers and the thread is stopped at gdb's address, which
 //     is what gdb waits for. No breakpoint is hit for it.
-//   - in all-stop mode a call from a node that was stopped stops it again
-//     when it is done; from a node that runs, it leaves it running.
-//   - it needs the background: a call does not start while that is held, and
-//     one that takes longer than the watchdog allows the scheduler loop ends
-//     in a reset.
+//   - it needs the background. A call from a node that runs leaves it
+//     running. If the background is held, alone or with everything else, what
+//     is held continues for the call and is held again when the function has
+//     returned, further on than it was: in all-stop mode gdb sees that as any
+//     other stop, in non-stop mode it takes those threads as stopped
+//     throughout and shows them where they were until it reads them again
+//     (maintenance flush register-cache).
+//   - a function that takes longer than the watchdog allows the scheduler
+//     loop ends in a reset.
 // Functions that are only there for gdb to call need DEBUG_CALL (debug_call.h),
 // or the linker drops them.
 //
@@ -134,8 +138,10 @@ struct DebugCall {
     uint32_t return_address;        // where gdb wants the function to return to
     volatile DebugCallState state;
     volatile bool finished;         // the last stop is that of a function that returned, with nothing else stopped
-    bool stop_after;                // everything stops when the function has returned
+    uint8_t restore;                // what was held when the function was asked for, and is again when it has
+                                    // returned: 0 nothing, 1 the background, 2 everything
     bool enabled;
+    uint8_t lent;                   // the same, for as long as gdb is to take those threads as stopped
     uint32_t count;                 // functions run so far
 };
 extern "C" { [[gnu::used]] inline constinit DebugCall debug_call{}; }
@@ -696,12 +702,13 @@ inline void debug_call_poll() {
     debug_call.count = debug_call.count + 1;
     debug_call.state = DEBUG_CALL_IDLE;
     const uint32_t thread = debug_call_thread();
-    if (debug_call.stop_after) {
-        debug_pause(5, thread, true);       // the monitor, as soon as the interrupts are on
+    if (debug_call.restore == 2) {
+        debug_pause(5, thread, true);       // the monitor, as soon as the interrupts are on: its stop is this one
     } else {
         debug.watch_function = 0;
         debug_event(5, thread);
         debug_call.finished = true;
+        if (debug_call.restore == 1) debug_hold(false);     // the holder, the same
     }
     __enable_irq();
 }
@@ -731,12 +738,20 @@ inline bool debug_call_resume(char action) {
         return true;
     }
     if (debug_call_has_function()) {
-        debug_call.stop_after = !debug.non_stop && debug.stopped;
+        debug_call.restore = debug.waiting ? 2 : debug.stopped ? 1 : 0;
+        debug_call.lent = debug_call.restore;
         debug_call.state = DEBUG_CALL_REQUESTED;
     } else {
         debug_call.state = DEBUG_CALL_RESUMED;
     }
     return true;
+}
+
+// With every resume: the last stop is no longer that of a function that
+// returned, and what was held for one is held or not as gdb says from here on
+inline void debug_call_resumes() {
+    debug_call.finished = false;
+    if (debug_call.state <= DEBUG_CALL_RESUMED) debug_call.lent = 0;
 }
 
 // vCont;action[:thread];...: the first action that names a thread, or none, is its
@@ -759,15 +774,13 @@ inline bool debug_vcont(const char* p) {
             if (named && action[i] == 0) action[i] = a;
         }
     }
+    debug_call_resumes();
     if (call != 0 && call != background) {
-        // a function only starts if the scheduler loop gets to run
-        const bool background_go = action[0] == 'c' || action[0] == 's', interrupts_go = action[1] == 'c' || action[1] == 's';
-        if (action[2] == 'c' && debug_call_has_function() &&
-            ((debug.stopped && !background_go) || (debug.waiting && !interrupts_go))) return false;
-        debug_call.finished = false;
+        const bool requested = debug_call.state == DEBUG_CALL_REQUESTED;
         if (!debug_call_resume(action[2])) return false;
+        // A function to start: whatever is held continues for it, the scheduler loop has to get there
+        if (!requested && debug_call.state == DEBUG_CALL_REQUESTED) return debug_resume('c', 'c');
     }
-    debug_call.finished = false;
     return debug_resume(action[0], action[1]);
 }
 
@@ -851,8 +864,11 @@ DEBUG_SMALL inline bool debug_request(const char* request, TextOut& out) {
             const bool interrupts = debug.waiting || debug.irqs_off;
             // thread 1 while the call thread's function runs is not stopped, it waits for that
             const uint32_t call = debug_call_thread();
+            // and what continues for a call is stopped again after it: for gdb it never ran
+            const uint32_t interrupt_threads = ((1u << debug.thread_count) - 1) & ~1u;
             debug_put_hex(out, (background ? 1u << (debug_background() - 1) : 0) |
-                (interrupts ? ((1u << debug.thread_count) - 1) & ~1u : 0) |
+                (interrupts ? interrupt_threads : 0) |
+                (debug_call.lent >= 1 ? 1u : 0) | (debug_call.lent == 2 ? interrupt_threads : 0) |
                 (call != 0 && debug_call.state == DEBUG_CALL_IDLE ? 1u << (call - 1) : 0));
             out.put(';');
             debug_put_stop(out);
@@ -864,12 +880,12 @@ DEBUG_SMALL inline bool debug_request(const char* request, TextOut& out) {
             return true;
         case 's': {
             const bool top_is_interrupt = debug.waiting && debug_is_interrupt(debug_top_thread());
-            debug_call.finished = false;
+            debug_call_resumes();
             out.put(debug_resume(top_is_interrupt ? 0 : 's', top_is_interrupt ? 's' : 'c') ? "OK" : "E01");
             return true;
         }
         case 'c':
-            debug_call.finished = false;
+            debug_call_resumes();
             if (debug_call.enabled && debug_call.state != DEBUG_CALL_ACTIVE) debug_call_resume('c');
             out.put(debug_resume('c', 'c') ? "OK" : "E01");
             return true;
@@ -888,7 +904,8 @@ DEBUG_SMALL inline bool debug_request(const char* request, TextOut& out) {
             debug.non_stop = false;
             debug.general_thread = 0;
             // a function that runs goes on to its end, anything else of the call thread is forgotten
-            debug_call.stop_after = false;
+            debug_call.restore = 0;
+            debug_call.lent = 0;
             if (debug_call.enabled && debug_call.state != DEBUG_CALL_ACTIVE) debug_call_reset();
             debug_resume('c', 'c');
             out.put("OK");

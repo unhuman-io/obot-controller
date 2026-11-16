@@ -40,9 +40,10 @@
 # function has to be in the elf: DEBUG_CALL in front of it keeps it there
 # (obot3/debug_call.h). Integers, floats and pointers go in and come back;
 # a string literal as an argument does not, gdb wants malloc for it. Called
-# while the node is stopped, everything continues for the call and stops again
-# after it. The scheduler loop waits for the function: one that takes longer
-# than the watchdog allows resets the node.
+# while the node is stopped, what is stopped continues for the call and stops
+# again after it, further on than it was (with -n gdb still shows it where it
+# was: maintenance flush register-cache). The scheduler loop waits for the
+# function: one that takes longer than the watchdog allows resets the node.
 # Leaving gdb removes the breakpoints and lets the node continue.
 #
 # The bridge is `motor_util gdbserver` on port 3293, from a motor-realtime with
@@ -58,7 +59,7 @@ if [ "$1" == -n ]; then
     shift
 fi
 if [ $# -lt 1 ]; then
-    sed -n '2,52p' "$0"
+    sed -n '2,53p' "$0"
     exit 2
 fi
 id=$1
@@ -90,7 +91,7 @@ if [[ "$stop" != T* ]]; then
 fi
 
 if ss -ltn 2>/dev/null | grep -q ':3293 '; then
-    echo "port 3293 is in use: another gdbserver is running, $(ss -ltnp 2>/dev/null | grep -o 'pid=[0-9]*' | head -n1)" >&2
+    echo "port 3293 is in use: another gdbserver is running, $(ss -ltnp 2>/dev/null | grep ':3293 ' | grep -o 'pid=[0-9]*' | head -n1)" >&2
     exit 1
 fi
 # In a session of its own: ctrl-c at the terminal is for gdb, not for the server

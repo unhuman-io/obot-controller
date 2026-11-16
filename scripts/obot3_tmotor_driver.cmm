@@ -1,0 +1,83 @@
+; Programs a tmotor driver board with the obot3 firmware through the debug
+; probe: the can bootloader (obot3/bootloader) into the first 8K of the flash
+; and obot3_tmotor_driver behind it at 0x08002000. The parameters at
+; 0x08060000, with the can address in their first byte, are left alone.
+;
+;   do obot3_tmotor_driver.cmm              the build with the text api and gdb
+;   do obot3_tmotor_driver.cmm release      obot3_tmotor_driver_release
+;   do obot3_tmotor_driver.cmm llvm         from build/llvm instead of build/gcc
+;
+; Afterwards the node runs and the debugger is attached, with the symbols of
+; the application. For gdb over can (scripts/obot3_gdb.sh) the probe has to
+; let go of the core first, or breakpoints halt it for the probe:
+;   system.mode nodebug
+LOCAL &build &app &arg1 &arg2 &arg
+ENTRY &arg1 &arg2
+&build="gcc"
+&app="obot3_tmotor_driver"
+&arg="&arg1"
+IF "&arg"=="release"
+  &app="obot3_tmotor_driver_release"
+IF "&arg"=="llvm"
+  &build="llvm"
+&arg="&arg2"
+IF "&arg"=="release"
+  &app="obot3_tmotor_driver_release"
+IF "&arg"=="llvm"
+  &build="llvm"
+LOCAL &dir &elf_bootloader &elf_app
+&dir="~/obot/obot-controller/build/&build/obot3"
+&elf_bootloader="&dir/obot3_bootloader.elf"
+&elf_app="&dir/&app.elf"
+PRINT "programming &elf_bootloader and &elf_app"
+
+IF !SYStem.Up()
+(
+  system.cpu stm32g474re
+  system.jtagclock 40MHz
+  SYStem.CONFIG.DEBUGPORTTYPE SWD
+  system.Option.EnReset OFF
+  system.Option.DUALPORT ON
+  system.mode attach
+)
+IF STATE.RUN()
+  break
+
+; The bootloader starts the watchdog: it stands still while the core is
+; halted (DBGMCU_APB1FZR1 IWDG and WWDG stop), and the reset below ends in
+; the reset vector, before the bootloader has run
+Data.Set SD:0xE0042008 %Long 0x1800
+TrOnchip.set.corereset on
+system.RESetTarget
+
+do ~~/demo/arm/flash/stm32g4xx.cmm PREPAREONLY CPU=STM32G474RE DUALPORT=0
+
+flash.ReProgram 0x8000000--0x8001fff /Erase
+data.load.elf &elf_bootloader
+flash.ReProgram off
+Data.LOAD.elf &elf_bootloader /DIFF
+IF FOUND()
+(
+  PRINT %ERROR "bootloader: verify error after FLASH programming"
+  ENDDO
+)
+PRINT "bootloader programmed"
+
+flash.ReProgram 0x8002000--0x805ffff /Erase
+data.load.elf &elf_app
+flash.ReProgram off
+Data.LOAD.elf &elf_app /DIFF
+IF FOUND()
+(
+  PRINT %ERROR "&app: verify error after FLASH programming"
+  ENDDO
+)
+PRINT "&app programmed"
+
+; a reset must not stop in the debugger: the bootloader is left through one
+TrOnchip.set.corereset off
+system.Option.IMASKASM ON
+system.RESetTarget
+go
+PRINT "running: can address " %Decimal Data.Byte(SD:0x08060000)&0x7f
+ENDDO

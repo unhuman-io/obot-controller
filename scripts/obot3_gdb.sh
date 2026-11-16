@@ -3,6 +3,7 @@
 # text api and the debug monitor (obot3/debug_monitor.h).
 #
 #   obot3_gdb.sh [-n] CAN_ID [ELF] [gdb arguments, e.g. -batch -ex 'p fast_loop.sensors']
+#   obot3_gdb.sh -t CAN_ID [ELF]      TRACE32 instead of gdb: scripts/obot3_gdb_trace32.cmm
 #
 # The node keeps running when gdb connects: memory is live, so with the elf
 # file every static variable is there by name, and the registers are a sample.
@@ -54,12 +55,16 @@
 # breakpoints and steps halt the cpu for the probe instead.
 set -e
 non_stop=()
+trace32=
 if [ "$1" == -n ]; then
     non_stop=(-ex "set non-stop on")
     shift
+elif [ "$1" == -t ]; then
+    trace32=$(command -v t32marm) || { echo "no t32marm in the path" >&2; exit 1; }
+    shift
 fi
 if [ $# -lt 1 ]; then
-    sed -n '2,53p' "$0"
+    sed -n '2,55p' "$0"
     exit 2
 fi
 id=$1
@@ -100,4 +105,13 @@ server=$!
 trap 'kill -INT $server 2>/dev/null' EXIT
 trap 'exit 1' HUP TERM      # with the exit trap: no server left behind
 sleep 0.5
+if [ -n "$trace32" ]; then
+    # as a gdb front end, PBI=GDB, with the system directory of the installation
+    config=$(mktemp)
+    trap 'kill -INT $server 2>/dev/null; rm -f "$config"' EXIT
+    printf 'OS=\nSYS=%s\nTMP=%s\n\nPBI=GDB\n\n' \
+        "$(cd "$(dirname "$(readlink -f "$trace32")")/../.." && pwd)" "${TMPDIR:-/tmp}" > "$config"
+    "$trace32" -c "$config" -s "$root/scripts/obot3_gdb_trace32.cmm" "$elf"
+    exit
+fi
 "$gdb" -q -ex "set confirm off" "${non_stop[@]}" -ex "target remote :3293" "$@" "$elf"

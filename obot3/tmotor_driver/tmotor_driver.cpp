@@ -12,6 +12,7 @@
 #include "text_api.h"
 #include "debug_monitor.h"
 #endif
+#include "debug_call.h"
 #include <initializer_list>
 #include <iterator>
 import tmotor_driver;
@@ -37,7 +38,8 @@ void fast_loop_isr() {
 }
 
 // HRTIM master cmp1, 10 kHz. The time it takes includes the fast loops that
-// interrupt it. For gdb it is thread 2, see debug_monitor.h.
+// interrupt it. For gdb it is thread 2, the background thread 1 and the call
+// thread, which runs functions for gdb from os_loop, thread 3: see debug_monitor.h.
 void main_loop_update() {
     static uint32_t t_last;
     const uint32_t t_start = DWT->CYCCNT;
@@ -131,6 +133,7 @@ void pin_config() {
     tmotor_device_init();
 #if OBOT3_TEXT_API
     debug_monitor_init(debug_threads, std::size(debug_threads), debug_monitor_priority, debug_monitor_low_priority, debug_idle);
+    debug_call_init();      // thread 3: functions for gdb, run from os_loop
     can_interrupt_enable<tmotor_can_init>(can_interrupt_rx_fifo[tmotor_can_ascii_fifo]);
 #endif
     device_irq_config<tmotor_irq_init>(vector_table);   // last: the loops run from here on
@@ -208,8 +211,8 @@ void debug_idle() {
 
 // The loops by a short name, for the variables below and for gdb:
 // `p fast_loop.controller` instead of the System<...> they are members of
-[[gnu::used]] constinit auto& fast_loop = MySystem::fast_loop;
-[[gnu::used]] constinit auto& main_loop = MySystem::main_loop;
+DEBUG_KEEP constinit auto& fast_loop = MySystem::fast_loop;
+DEBUG_KEEP constinit auto& main_loop = MySystem::main_loop;
 
 // The obot text api over can: requests are strings to the ascii id of this
 // address, and each gets one reply.
@@ -500,6 +503,9 @@ void host_poll() {
 }
 
 void os_loop() {
+#if OBOT3_TEXT_API
+    debug_call_poll();      // a function that gdb wants run, between the tasks of this loop
+#endif
     text_poll();
     host_poll();
     sched.poll();

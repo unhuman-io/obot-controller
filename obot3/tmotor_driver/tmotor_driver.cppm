@@ -4,6 +4,7 @@ module;
 #include "../motorlib/task.h"   // device header, get_clock, CycleScheduler
 #include "../motorlib/motor_messages/motor_messages.h"
 #include "basic_config.h"
+#include "debug_call.h"
 
 export module tmotor_driver;
 export import device.rcc_init;
@@ -259,12 +260,13 @@ constexpr auto tmotor_adc_init = []() consteval {
     return init;
 }();
 
-// The readings by name, adc counts
-inline uint32_t tmotor_ia() { return adc_read_injected<3>(0); }
-inline uint32_t tmotor_ib() { return adc_read_injected<4>(0); }
-inline uint32_t tmotor_ic() { return adc_read_injected<5>(0); }
-inline uint32_t tmotor_temperature() { return adc_read_injected<1>(0); }
-inline uint32_t tmotor_vrefint() { return adc_read_injected<1>(1); }
+// The readings by name, adc counts. DEBUG_CALL: also there for gdb to call,
+// see debug_call.h.
+DEBUG_CALL inline uint32_t tmotor_ia() { return adc_read_injected<3>(0); }
+DEBUG_CALL inline uint32_t tmotor_ib() { return adc_read_injected<4>(0); }
+DEBUG_CALL inline uint32_t tmotor_ic() { return adc_read_injected<5>(0); }
+DEBUG_CALL inline uint32_t tmotor_temperature() { return adc_read_injected<1>(0); }
+DEBUG_CALL inline uint32_t tmotor_vrefint() { return adc_read_injected<1>(1); }
 
 // For the handlers of the two loops: the fast loop runs at the end of the
 // ADC5 injected sequence, when the phase currents of this pwm period are in;
@@ -288,7 +290,7 @@ constexpr auto tmotor_tim_init = []() consteval {
         },
     };
 }();
-inline void tmotor_led(uint16_t red, uint16_t green, uint16_t blue) {
+DEBUG_CALL inline void tmotor_led(uint16_t red, uint16_t green, uint16_t blue) {
     tim_compare<4, 1>(red);
     tim_compare<4, 2>(green);
     tim_compare<4, 3>(blue);
@@ -371,8 +373,12 @@ struct TMotorDRV8323IO {
 // as written. While it isn't, the driver is disabled and TMotorPWM keeps the
 // outputs off.
 inline constinit volatile uint32_t tmotor_drv8323_errors = ~0u;
-inline bool tmotor_drv8323_fault() { return !gpio_read(gpio_port<'C'>(), 14); }
-inline uint32_t tmotor_drv8323_status() { return drv8323_status<TMotorDRV8323IO>(); }
+DEBUG_CALL inline bool tmotor_drv8323_fault() { return !gpio_read(gpio_port<'C'>(), 14); }
+DEBUG_CALL inline uint32_t tmotor_drv8323_status() { return drv8323_status<TMotorDRV8323IO>(); }
+// The driver's registers one by one: 0 and 1 the fault status, 2 to 6 the control registers
+DEBUG_CALL inline uint32_t tmotor_drv8323_read(uint32_t address) { return drv8323_read<TMotorDRV8323IO>(address); }
+DEBUG_CALL inline void tmotor_drv8323_write(uint32_t address, uint32_t value) { drv8323_write<TMotorDRV8323IO>(address, value); }
+DEBUG_CALL inline void tmotor_drv8323_clear_faults() { drv8323_clear_faults<tmotor_drv8323_init, TMotorDRV8323IO>(); }
 
 // Everything past the clocks and pins, in order: tmotor_startup_init(),
 // tmotor_startup(), tmotor_device_init(), and then the interrupts.

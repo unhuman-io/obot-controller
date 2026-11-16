@@ -30,6 +30,19 @@
 #   (gdb) thread 2                      then continue, stepi, ... are for the main loop
 #   (gdb) continue -a
 #   (gdb) monitor live                  the node continues and gdb keeps its prompt, as at the start
+#
+# Thread 3 runs functions for gdb, from the scheduler loop (os_loop) between
+# two of its tasks, with nothing else stopped for it:
+#   (gdb) thread apply 3 print tmotor_drv8323_read(5)
+#   (gdb) thread apply 3 call tmotor_led(0x4000, 0, 0)
+#   (gdb) thread 3                      then print f() and call f() are for it
+# A call from any other thread is refused ("Could not write register"). The
+# function has to be in the elf: DEBUG_CALL in front of it keeps it there
+# (obot3/debug_call.h). Integers, floats and pointers go in and come back;
+# a string literal as an argument does not, gdb wants malloc for it. Called
+# while the node is stopped, everything continues for the call and stops again
+# after it. The scheduler loop waits for the function: one that takes longer
+# than the watchdog allows resets the node.
 # Leaving gdb removes the breakpoints and lets the node continue.
 #
 # The bridge is `motor_util gdbserver` on port 3293, from a motor-realtime with
@@ -45,7 +58,7 @@ if [ "$1" == -n ]; then
     shift
 fi
 if [ $# -lt 1 ]; then
-    sed -n '2,40p' "$0"
+    sed -n '2,52p' "$0"
     exit 2
 fi
 id=$1

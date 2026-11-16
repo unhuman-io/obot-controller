@@ -527,8 +527,10 @@ inline void debug_put_hex(TextOut& out, uint32_t value) {
     }
 }
 
-// The stop reply: the signal, the watchpoint if it was one, and the thread
-DEBUG_SMALL inline void debug_put_stop(TextOut& out) {
+// The stop reply: the signal, the watchpoint if it was one, and the thread.
+// gdb takes that thread as the selected one from here on (in all-stop mode,
+// where these replies go), without an H packet: a g that follows is for it.
+DEBUG_SMALL inline void debug_put_stop(TextOut& out, bool select = false) {
     const bool event = debug.stopped || debug_call.finished;
     const uint8_t signal = event ? debug.signal : 5;
     out.put('T');
@@ -539,8 +541,10 @@ DEBUG_SMALL inline void debug_put_stop(TextOut& out) {
         out.put(';');
     }
     out.put("thread:");
-    debug_put_hex(out, event ? debug.event_thread : debug_top_thread());
+    const uint32_t thread = event ? debug.event_thread : debug_top_thread();
+    debug_put_hex(out, thread);
     out.put(';');
+    if (select) debug.general_thread = thread;
 }
 
 // A thread id of a packet: 0 for "any" (0 and -1)
@@ -851,10 +855,10 @@ DEBUG_SMALL inline bool debug_request(const char* request, TextOut& out) {
     const uint32_t thread = debug.general_thread != 0 ? debug.general_thread : debug_top_thread();
     switch (*p++) {
         case '?':
-            debug_put_stop(out);
+            debug_put_stop(out, true);
             return true;
         case 'y':
-            if (debug.waiting || debug_call.finished) debug_put_stop(out);
+            if (debug.waiting || debug_call.finished) debug_put_stop(out, true);
             else out.put("continued");
             return true;
         case 'Y': {

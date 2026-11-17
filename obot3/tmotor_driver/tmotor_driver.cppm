@@ -392,14 +392,20 @@ struct TMotorIMUIO {
 
 // The gate driver for device.drv8323_init. Its frames are plain functions'
 // (the startup, the status for the text api, what gdb calls), so they take
-// the bus as those can: after a frame of the imu that is on its way.
+// the bus as those can: after a frame of the imu that is on its way. A caller
+// that can wait in the scheduler does, for the lock: tmotor_bus_yield, when
+// it is set, lets the tasks run and returns true, or returns false where the
+// caller is not one of those. Functions that gdb calls are.
+inline bool (*tmotor_bus_yield)() = nullptr;
 struct TMotorDRV8323IO {
     static inline bool mine;
     static void wait_ns_400() {
         for (int i = 0; i < 100; i++) __asm__ volatile("");     // more than 68 cpu cycles
     }
     static void transfer_start(uint16_t word) {
-        mine = TMotorBus::take();
+        mine = TMotorBus::try_lock();
+        while (!mine && tmotor_bus_yield != nullptr && tmotor_bus_yield()) mine = TMotorBus::try_lock();
+        if (!mine) mine = TMotorBus::take();
         TMotorBus::select(tmotor_drv8323_chip);
         wait_ns_400();                              // 50 ns needed
         TMotorBus::port().DR = word;

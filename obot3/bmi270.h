@@ -14,8 +14,11 @@
 //   static void transfer_end()             chip select high
 // A read is the register with bit 7 set, a dummy byte and then the data.
 //
-// These are GlobalCall coroutines, with one static frame each: one task talks
-// to the chip, one call at a time. The frame sizes are what gcc and clang
+// These are GlobalCall coroutines, with one static frame each, so one call at
+// a time. bmi270_init, bmi270_data and bmi270_get are for any task: they take
+// the bus for each frame, and the lock is also what keeps the frames of the
+// calls below them, bmi270_transfer, bmi270_read and bmi270_write, to one
+// caller. Those are for a caller that has the lock. The frame sizes are what gcc and clang
 // need and a third more; promise_type::frame_size has what a build asked for.
 struct BMI270Data {
     int16_t acc[3];     // x, y, z: +-8 g full scale
@@ -36,11 +39,9 @@ constexpr auto bmi270_load_frame = [] {
 
 template<typename IO>
 inline GlobalCall<void, bmi270_task_id, 96> bmi270_transfer(CycleScheduler& sched, const uint8_t* out, uint8_t* in, uint32_t length) {
-    co_await IO::lock(sched);
     IO::transfer_start(out, in, length);
     co_await IO::done(sched);
     IO::transfer_end();
-    IO::unlock();
 }
 
 template<typename IO>
@@ -56,6 +57,15 @@ inline GlobalCall<void, bmi270_task_id + 2, 96> bmi270_write(CycleScheduler& sch
     uint8_t out[2] = {address, value};
     co_await bmi270_transfer<IO>(sched, out, nullptr, 2);
     co_await sched.async_delay_us(3);       // between a write and the next frame
+}
+
+// A register, from any task
+template<typename IO>
+inline GlobalCall<uint8_t, bmi270_task_id + 5, 96> bmi270_get(CycleScheduler& sched, uint8_t address) {
+    co_await IO::lock(sched);
+    const uint8_t value = co_await bmi270_read<IO>(sched, address);
+    IO::unlock();
+    co_return value;
 }
 
 // Brings the chip up, 35 ms: returns the chip id << 8 | the internal status,
@@ -91,6 +101,7 @@ inline GlobalCall<uint32_t, bmi270_task_id + 3, 160> bmi270_init(CycleScheduler&
     uint32_t chip_id = 0, status = 0;
     for (uint32_t i = 0; i < sizeof(bmi270_init_steps) / sizeof(bmi270_init_steps[0]); i++) {
         const BMI270Step& step = bmi270_init_steps[i];
+        co_await IO::lock(sched);
         if (step.kind == BMI270Step::READ) {
             const uint8_t value = co_await bmi270_read<IO>(sched, step.address);
             if (i == bmi270_chip_id_step) chip_id = value;
@@ -100,6 +111,7 @@ inline GlobalCall<uint32_t, bmi270_task_id + 3, 160> bmi270_init(CycleScheduler&
         } else if (step.kind == BMI270Step::LOAD) {
             co_await bmi270_transfer<IO>(sched, bmi270_load_frame.bytes, nullptr, sizeof(bmi270_load_frame.bytes));
         }
+        IO::unlock();
         if (step.wait_us != 0) co_await sched.async_delay_us(step.wait_us);
     }
     co_return chip_id << 8 | status;
@@ -109,7 +121,9 @@ template<typename IO>
 inline GlobalCall<BMI270Data, bmi270_task_id + 4, 144> bmi270_data(CycleScheduler& sched) {
     uint8_t out[14] = {0x80 | 0x0C};
     uint8_t in[14];
+    co_await IO::lock(sched);
     co_await bmi270_transfer<IO>(sched, out, in, 14);
+    IO::unlock();
     BMI270Data data;
     for (int i = 0; i < 3; i++) {
         data.acc[i] = static_cast<int16_t>(in[3 + 2 * i] << 8 | in[2 + 2 * i]);

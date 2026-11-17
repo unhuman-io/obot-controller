@@ -34,9 +34,9 @@ inline uint32_t stats_clock() { return DWT->CYCCNT; }
 using StatsTimer = CycleTimer<stats_clock>;
 constinit CycleStats fast_loop_stats{"fast_loop"}, main_loop_stats{"main_loop"}, text_isr_stats{"text_isr"},
     status_task_stats{"status_task"}, imu_task_stats{"imu_task"}, led_task_stats{"led_task"},
-    text_task_stats{"text_task"}, host_task_stats{"host_task"};
+    text_task_stats{"text_task"}, host_task_stats{"host_task"}, call_task_stats{"call_task"};
 constinit CycleStats* const cycle_stats[] = {&fast_loop_stats, &main_loop_stats, &text_isr_stats,
-    &status_task_stats, &imu_task_stats, &led_task_stats, &text_task_stats, &host_task_stats};
+    &status_task_stats, &imu_task_stats, &led_task_stats, &text_task_stats, &host_task_stats, &call_task_stats};
 
 // ADC5 end of injected sequence, 50 kHz
 void fast_loop_isr() {
@@ -152,7 +152,12 @@ void pin_config() {
     tmotor_device_init();
 #if OBOT3_TEXT_API
     debug_monitor_init(debug_threads, std::size(debug_threads), debug_monitor_priority, debug_monitor_low_priority, debug_idle);
-    debug_call_init();      // thread 3: functions for gdb, run from os_loop
+    debug_call_init();      // thread 3: functions for gdb, run from debug_call_task
+    tmotor_bus_yield = [] {
+        if (!debug_call_can_yield()) return false;
+        debug_call_yield();
+        return true;
+    };
     can_interrupt_enable<tmotor_can_init>(can_interrupt_rx_fifo[tmotor_can_ascii_fifo]);
 #endif
     device_irq_config<tmotor_irq_init>(vector_table);   // last: the loops run from here on
@@ -668,6 +673,26 @@ GlobalTask<void, 5, 96> host_task(CycleScheduler& sched) {
     }
 }
 
+#if OBOT3_TEXT_API
+// The functions that gdb calls, thread 3: one of the tasks, each on a pass of
+// the loop until it returns or yields (debug_monitor.h). One that waits for
+// the spi bus or for a coroutine does so here, with the other tasks running.
+GlobalTask<void, 6, 96> debug_call_task(CycleScheduler& sched) {
+    while (true) {
+        co_await sched.yield();
+        const StatsTimer timer(call_task_stats);
+        debug_call_poll();
+    }
+}
+auto debug_call_task_instance = debug_call_task(sched);
+
+// A register of the imu, for gdb: `thread apply 3 print/x tmotor_imu_get(0)`
+// is the chip id. The frame is a task's like the imu task's own, between them.
+DEBUG_CALL uint32_t tmotor_imu_get(uint32_t address) {
+    return debug_call_wait(bmi270_get<TMotorIMUIO>(sched, address));
+}
+#endif
+
 // The background is the scheduler: status_task above and these
 auto imu_task_instance = imu_task(sched);
 auto led_task_instance = led_task(sched);
@@ -675,9 +700,6 @@ auto text_task_instance = text_task(sched);
 auto host_task_instance = host_task(sched);
 
 void os_loop() {
-#if OBOT3_TEXT_API
-    debug_call_poll();      // a function that gdb wants run, between the tasks of this loop
-#endif
     sched.poll();
     if (watchdog_ok) watchdog_kick();
 }

@@ -60,7 +60,12 @@
 //     throughout and shows them where they were until it reads them again
 //     (maintenance flush register-cache).
 //   - a function that takes longer than the watchdog allows the scheduler
-//     loop ends in a reset.
+//     loop ends in a reset, unless it waits with debug_call_yield(): then the
+//     scheduler loop and its tasks run on, the function is where it was on
+//     its stack, and for gdb the background is thread 1 again until the
+//     function is continued. That is how a called function waits for what a
+//     task has to do, a bus that another one holds or a coroutine's result
+//     (debug_call_wait).
 // Functions that are only there for gdb to call need DEBUG_CALL (debug_call.h),
 // or the linker drops them.
 //
@@ -143,13 +148,15 @@ struct DebugCall {
     bool enabled;
     uint8_t lent;                   // the same, for as long as gdb is to take those threads as stopped
     uint32_t count;                 // functions run so far
+    uint32_t call_sp;               // the function's stack while it has yielded: d8 to d15, r4 to r11, lr
+    volatile bool yielded;          // the function waits in debug_call_yield(): the background is the scheduler loop again
 };
 extern "C" { [[gnu::used]] inline constinit DebugCall debug_call{}; }
 alignas(8) inline constinit uint32_t debug_call_stack[DEBUG_CALL_STACK_WORDS]{};
 // as the switch below has them
 static_assert(offsetof(DebugCall, sp) == 52 && offsetof(DebugCall, lr) == 56 && offsetof(DebugCall, pc) == 60 &&
     offsetof(DebugCall, xpsr) == 64 && offsetof(DebugCall, fpscr) == 68 && offsetof(DebugCall, d) == 72 &&
-    offsetof(DebugCall, parked_sp) == 200);
+    offsetof(DebugCall, parked_sp) == 200 && offsetof(DebugCall, call_sp) == 220 && offsetof(DebugCall, yielded) == 224);
 
 struct DebugMonitor {
     const DebugThread* threads;             // [0] is thread 1
@@ -248,7 +255,7 @@ inline bool debug_is_interrupt(uint32_t thread) {
 }
 // The thread that the background is: the call thread while its function runs
 inline uint32_t debug_background() {
-    return debug_call.state == DEBUG_CALL_ACTIVE ? debug_call_thread() : 1;
+    return debug_call.state == DEBUG_CALL_ACTIVE && !debug_call.yielded ? debug_call_thread() : 1;
 }
 
 // Thread number of what runs as exception number `exception`
@@ -456,7 +463,7 @@ struct DebugRegister {
 DEBUG_SMALL inline DebugRegister debug_register(uint32_t thread, uint32_t n) {
     DebugRegister reg;
     if (n >= 17 && n <= 32) reg.words = 2;
-    if (debug_call.enabled && thread == debug_call_thread() && debug_call.state != DEBUG_CALL_ACTIVE) {
+    if (debug_call.enabled && thread == debug_call_thread() && debug_call.state != DEBUG_CALL_ACTIVE) {   // (yielded is active)
         // the call thread while it does not run: its set in memory, which
         // only changes hands when a function is started
         reg.memory = debug_call.state <= DEBUG_CALL_RESUMED;
@@ -464,12 +471,16 @@ DEBUG_SMALL inline DebugRegister debug_register(uint32_t thread, uint32_t n) {
         reg.location = n < 17 ? set + n : n < 33 ? set + 18 + 2 * (n - 17) : set + 17;
         return reg;
     }
-    if (debug_call.enabled && thread == 1 && debug_call.state == DEBUG_CALL_ACTIVE) {
+    const bool call_yielded = debug_call.state == DEBUG_CALL_ACTIVE && debug_call.yielded;
+    if (debug_call.enabled && debug_call.state == DEBUG_CALL_ACTIVE &&
+            (call_yielded ? thread == debug_call_thread() : thread == 1)) {
         // the scheduler loop while the call thread runs: where it left for
-        // the function, with the registers that a call keeps
-        uint32_t* parked = reinterpret_cast<uint32_t*>(debug_call.parked_sp);
+        // the function, with the registers that a call keeps. Or the function
+        // while it has yielded: where it left for the scheduler loop.
+        const uint32_t parked_sp = call_yielded ? debug_call.call_sp : debug_call.parked_sp;
+        uint32_t* parked = reinterpret_cast<uint32_t*>(parked_sp);
         if (n >= 4 && n < 12) reg.location = parked + 16 + (n - 4);
-        else if (n == 13) reg.value = debug_call.parked_sp + 25 * 4;
+        else if (n == 13) reg.value = parked_sp + 25 * 4;
         else if (n == 15) reg.value = parked[24] & ~1u;
         else if (n == 16) reg.value = 1u << 24;
         else if (n >= 25 && n < 33) reg.location = parked + 2 * (n - 25);
@@ -689,19 +700,77 @@ inline void debug_call_init() {
         "2: .word debug_call");
 }
 
+// A function on the call thread waits for something that the scheduler loop
+// has to bring about: debug_call_yield() leaves for the loop, where the
+// function was started or continued from, and returns when the loop comes
+// around to debug_call_poll() again. In between every task runs, and the
+// function is where it was, on its own stack, with the registers that a call
+// keeps on it:
+//     while (!bus_try_lock()) debug_call_yield();
+// Only from a function that gdb has called: debug_call_can_yield().
+[[gnu::naked]] inline void debug_call_yield() {
+    __asm__(
+        "push {r4-r11, lr}\n vpush {d8-d15}\n"
+        "cpsid i\n"
+        "ldr r0, 1f\n"
+        "mov r1, sp\n str r1, [r0, #220]\n"
+        "movs r1, #1\n strb r1, [r0, #224]\n"
+        "ldr r1, [r0, #200]\n mov sp, r1\n"
+        "vpop {d8-d15}\n pop {r4-r11, pc}\n"      // out of debug_call_switch or debug_call_continue, to debug_call_poll
+        ".balign 4\n"
+        "1: .word debug_call");
+}
+
+// Back into a function that has yielded, r0 is debug_call. Interrupts are off
+// from before this until the function is on its stack again.
+[[gnu::naked]] inline void debug_call_continue(DebugCall*) {
+    __asm__(
+        "push {r4-r11, lr}\n vpush {d8-d15}\n"
+        "mov r1, sp\n str r1, [r0, #200]\n"
+        "movs r1, #0\n strb r1, [r0, #224]\n"
+        "ldr r1, [r0, #220]\n mov sp, r1\n"
+        "vpop {d8-d15}\n pop {r4-r11, lr}\n"
+        "cpsie i\n bx lr");
+}
+
+// The caller is a function that gdb has called, on the call thread's stack
+inline bool debug_call_can_yield() {
+    const uint32_t sp = __get_MSP();
+    return debug_call.enabled && debug_call.state == DEBUG_CALL_ACTIVE && !debug_call.yielded && __get_IPSR() == 0 &&
+        sp > reinterpret_cast<uint32_t>(debug_call_stack) && sp <= reinterpret_cast<uint32_t>(debug_call_stack + DEBUG_CALL_STACK_WORDS);
+}
+
+// A coroutine of the scheduler from a function that gdb has called: its result,
+// when it has one, with the tasks running until then. A GlobalCall of task.h.
+template<typename Call>
+inline auto debug_call_wait(Call call) {
+    while (!call.is_done()) debug_call_yield();
+    return call.result();
+}
+
 // From the scheduler loop, between two of its tasks: runs the function that
-// gdb has continued the call thread with. gdb's return address is where the
-// thread is stopped afterwards; the function itself returns to the switch.
+// gdb has continued the call thread with, or goes on with it where it has
+// yielded. gdb's return address is where the thread is stopped afterwards;
+// the function itself returns to the switch.
 inline void debug_call_poll() {
-    if (debug_call.state != DEBUG_CALL_REQUESTED) return;
+    const bool resume = debug_call.state == DEBUG_CALL_ACTIVE && debug_call.yielded;
+    if (debug_call.state != DEBUG_CALL_REQUESTED && !resume) return;
     __disable_irq();
-    if (debug_call.state != DEBUG_CALL_REQUESTED) {     // taken back just now
+    if (resume) {
+        debug_call_continue(&debug_call);
+    } else {
+        if (debug_call.state != DEBUG_CALL_REQUESTED) {     // taken back just now
+            __enable_irq();
+            return;
+        }
+        debug_call.return_address = debug_call.lr;
+        debug_call.state = DEBUG_CALL_ACTIVE;
+        debug_call_switch(&debug_call);
+    }
+    if (debug_call.yielded) {       // not through: the tasks have their turn
         __enable_irq();
         return;
     }
-    debug_call.return_address = debug_call.lr;
-    debug_call.state = DEBUG_CALL_ACTIVE;
-    debug_call_switch(&debug_call);
     debug_call.pc = debug_call.return_address & ~1u;
     debug_call.count = debug_call.count + 1;
     debug_call.state = DEBUG_CALL_IDLE;
@@ -976,10 +1045,12 @@ DEBUG_SMALL inline bool debug_request(const char* request, TextOut& out) {
                     return true;
                 }
                 const bool call = info == debug_call_thread();
-                const bool call_active = debug_call.state == DEBUG_CALL_ACTIVE;
+                const bool call_active = debug_call.state == DEBUG_CALL_ACTIVE && !debug_call.yielded;
+                const bool call_yielded = debug_call.state == DEBUG_CALL_ACTIVE && debug_call.yielded;
                 const char* name = call ? "call" : debug.threads[info - 1].name;
                 out.put_hex(reinterpret_cast<const uint8_t*>(name), std::strlen(name));
-                const char* state = call && !call_active ? (debug_call.state == DEBUG_CALL_REQUESTED ? ", starts" : ", idle") :
+                const char* state = call && call_yielded ? ", waits in the scheduler" :
+                    call && !call_active ? (debug_call.state == DEBUG_CALL_REQUESTED ? ", starts" : ", idle") :
                     info == 1 && call_active ? ", waits for the call" :
                     info == debug_top_thread() ? "" : debug_thread_context(info) != nullptr ? ", interrupted" :
                     debug.stopped && !debug.waiting ? ", running" : ", not active";

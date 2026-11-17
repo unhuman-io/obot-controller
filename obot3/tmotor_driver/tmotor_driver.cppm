@@ -5,6 +5,7 @@ module;
 #include "../motorlib/task.h"   // device header, get_clock, CycleScheduler
 #include "../motorlib/motor_messages/motor_messages.h"
 #include "basic_config.h"
+#include "spi_bus.h"
 #include "debug_call.h"
 
 export module tmotor_driver;
@@ -329,16 +330,9 @@ constexpr auto tmotor_can_init = CANInit{
 };
 constexpr int tmotor_can_ascii_fifo = 1, tmotor_can_command_fifo = 0;
 
-// SPI1 for the gate driver: 16 bit frames at pclk / 256 = 664 kHz, sampled on
-// the falling edge, chip select on PA4
-// SPI3 for the MA732: 16 bit frames at pclk / 16 = 10.6 MHz, chip select on PD2
+// SPI3 for the MA732: 16 bit frames at pclk / 16 = 10.6 MHz, chip select on PD2.
+// SPI1 is set for each frame, see TMotorBus.
 constexpr auto tmotor_spi_init = SPIInit{
-    .spi1 = {
-        .enable = SPIEnable::ENABLED,
-        .baud_rate = SPIBaudRate::PCLK_DIV256,
-        .clock_phase = SPIClockPhase::SECOND_EDGE,
-        .data_bits = 16,
-    },
     .spi3 = {
         .enable = SPIEnable::ENABLED,
         .baud_rate = SPIBaudRate::PCLK_DIV16,
@@ -370,118 +364,53 @@ static_assert(get_drv8323_reg(tmotor_drv8323_init, 0) == 0x000 && get_drv8323_re
     get_drv8323_reg(tmotor_drv8323_init, 4) == 0x200, "the register values of the obot_g474 tmotor_driver");
 
 // How the driver is reached
-// The BMI270 shares SPI1 with the gate driver, chip select PC4: for one of its
-// frames the bus is 8 bit, mode 3, pclk / 32 = 5.3 MHz, and then the gate
-// driver's again. A frame is either waited for, transfer(), or started and
-// left to DMA1 channels 1 (in) and 2 (out), transfer_start(): the task that
-// started it comes back when transfer_ready(). In between the bus is taken,
-// and whoever else wants it calls bus_release() first, which waits out the
-// rest of the frame, 25 us at most, and puts the bus back; the frame's data
-// stays for its transfer_end(). All of that is the background's; the text api
-// reads the gate driver from its interrupt only while gdb has the background
-// stopped, and the end of a frame is locked against that.
-struct TMotorIMUIO {
-    enum State : uint8_t { IDLE, FLYING, DONE };
-    static inline volatile State state = IDLE;
-    static inline uint8_t tx[16], rx[16];
-    static inline uint32_t cr1, cr2;        // the gate driver's
-
-    static void delay_us(uint32_t us) {
-        const uint32_t start = get_clock();
-        while (get_clock() - start < us * (CPU_FREQUENCY_HZ / 1'000'000));
-    }
-    static void select(uint32_t dma) {
-        cr1 = SPI1->CR1;
-        cr2 = SPI1->CR2;
-        SPI1->CR1 = 0;
-        SPI1->CR2 = 7 << SPI_CR2_DS_Pos | SPI_CR2_FRXTH | dma;
-        // enabled first: the clock is at its idle level, high, when the chip select falls
-        SPI1->CR1 = SPI_CR1_MSTR | 4 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA | SPI_CR1_SPE;
-        gpio_clear(gpio_port<'C'>(), 4);
-    }
-    static void deselect() {
-        while (SPI1->SR & SPI_SR_BSY);
-        gpio_set(gpio_port<'C'>(), 4);
-        SPI1->CR1 = 0;
-        SPI1->CR2 = cr2;
-        SPI1->CR1 = cr1;
-    }
-    static uint8_t byte(uint8_t out) {
-        *reinterpret_cast<volatile uint8_t*>(&SPI1->DR) = out;
-        while (!(SPI1->SR & SPI_SR_RXNE));
-        return *reinterpret_cast<volatile uint8_t*>(&SPI1->DR);
-    }
-    static void transfer(const uint8_t* out, uint8_t* in, uint32_t length, const uint8_t* more, uint32_t more_length) {
-        bus_release();
-        select(0);
-        for (uint32_t i = 0; i < length; i++) in[i] = byte(out[i]);
-        for (uint32_t i = 0; i < more_length; i++) {
-            byte(more[i]);
-            if ((i & 0x3FF) == 0) watchdog_kick();
-        }
-        deselect();
-    }
-
-    static void transfer_start(const uint8_t* out, uint32_t length) {
-        bus_release();
-        if (length > sizeof(tx)) length = sizeof(tx);
-        for (uint32_t i = 0; i < length; i++) tx[i] = out[i];
-        DMA1_Channel1->CCR = 0;
-        DMA1_Channel2->CCR = 0;
-        DMA1->IFCR = DMA_IFCR_CGIF1 | DMA_IFCR_CGIF2;
-        DMAMUX1_Channel0->CCR = DMA_REQUEST_SPI1_RX;
-        DMAMUX1_Channel1->CCR = DMA_REQUEST_SPI1_TX;
-        DMA1_Channel1->CPAR = reinterpret_cast<uint32_t>(&SPI1->DR);
-        DMA1_Channel1->CMAR = reinterpret_cast<uint32_t>(rx);
-        DMA1_Channel1->CNDTR = length;
-        DMA1_Channel2->CPAR = reinterpret_cast<uint32_t>(&SPI1->DR);
-        DMA1_Channel2->CMAR = reinterpret_cast<uint32_t>(tx);
-        DMA1_Channel2->CNDTR = length;
-        uint32_t primask;       // on its way or not, for bus_release from the interrupt
-        __asm__ volatile("mrs %0, primask\n cpsid i" : "=r"(primask));
-        DMA1_Channel1->CCR = DMA_CCR_MINC | DMA_CCR_EN;
-        select(SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN);
-        DMA1_Channel2->CCR = DMA_CCR_MINC | DMA_CCR_DIR | DMA_CCR_EN;
-        state = FLYING;
-        __asm__ volatile("msr primask, %0" : : "r"(primask));
-    }
-    static bool transfer_ready() { return state != FLYING || (DMA1->ISR & DMA_ISR_TCIF1) != 0; }
-    static void bus_release() {
-        if (state != FLYING) return;
-        while (!transfer_ready());
-        uint32_t primask;
-        __asm__ volatile("mrs %0, primask\n cpsid i" : "=r"(primask));
-        if (state == FLYING) {
-            DMA1_Channel2->CCR = 0;
-            DMA1_Channel1->CCR = 0;
-            deselect();
-            state = DONE;
-        }
-        __asm__ volatile("msr primask, %0" : : "r"(primask));
-    }
-    static void transfer_end(uint8_t* in, uint32_t length) {
-        bus_release();
-        for (uint32_t i = 0; i < length && i < sizeof(rx); i++) in[i] = rx[i];
-        state = IDLE;
-    }
+// SPI1 is the gate driver's and the imu's, see spi_bus.h: 16 bit frames at
+// pclk / 256 = 664 kHz, sampled on the falling edge, chip select PA4, and
+// 8 bit frames in mode 3 at pclk / 32 = 5.3 MHz, chip select PC4. DMA1
+// channels 1 and 2 move the imu's frames.
+using TMotorBus = SPIBus<1, 1, 2>;
+inline const SPIChip tmotor_drv8323_chip = {
+    .cr1 = SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE | 7 << SPI_CR1_BR_Pos | SPI_CR1_CPHA,
+    .cr2 = 15 << SPI_CR2_DS_Pos,
+    .cs_port = GPIOA, .cs_pin = 4,
+};
+inline const SPIChip tmotor_imu_chip = {
+    .cr1 = SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE | 4 << SPI_CR1_BR_Pos | SPI_CR1_CPOL | SPI_CR1_CPHA,
+    .cr2 = 7 << SPI_CR2_DS_Pos | SPI_CR2_FRXTH,
+    .cs_port = GPIOC, .cs_pin = 4,
+    .request_rx = DMA_REQUEST_SPI1_RX, .request_tx = DMA_REQUEST_SPI1_TX,
 };
 
+// The imu for bmi270.h: every frame is a task's, with the lock
+struct TMotorIMUIO {
+    static auto lock(CycleScheduler& sched) { return sched.when(TMotorBus::try_lock); }
+    static void unlock() { TMotorBus::unlock(); }
+    static void transfer_start(const uint8_t* out, uint8_t* in, uint32_t length) { TMotorBus::start(tmotor_imu_chip, out, in, length); }
+    static auto done(CycleScheduler& sched) { return sched.when(TMotorBus::ready); }
+    static void transfer_end() { TMotorBus::finish(); }
+};
+
+// The gate driver for device.drv8323_init. Its frames are plain functions'
+// (the startup, the status for the text api, what gdb calls), so they take
+// the bus as those can: after a frame of the imu that is on its way.
 struct TMotorDRV8323IO {
+    static inline bool mine;
     static void wait_ns_400() {
         for (int i = 0; i < 100; i++) __asm__ volatile("");     // more than 68 cpu cycles
     }
     static void transfer_start(uint16_t word) {
-        TMotorIMUIO::bus_release();                 // an imu frame that is on its way
-        gpio_clear(gpio_port<'A'>(), 4);
+        mine = TMotorBus::take();
+        TMotorBus::select(tmotor_drv8323_chip);
         wait_ns_400();                              // 50 ns needed
-        spi_write<1>(word);
+        TMotorBus::port().DR = word;
     }
-    static bool transfer_ready() { return spi_ready<1>(); }
+    static bool transfer_ready() { return (TMotorBus::port().SR & SPI_SR_RXNE) != 0; }
     static uint16_t transfer_end() {
-        const uint16_t reply = spi_read<1>();
+        const uint16_t reply = TMotorBus::port().DR;
         wait_ns_400();
-        gpio_set(gpio_port<'A'>(), 4);
+        TMotorBus::deselect(tmotor_drv8323_chip);
         wait_ns_400();                              // chip select high between frames
+        TMotorBus::give(mine);
         return reply;
     }
     static void enable(bool on) {

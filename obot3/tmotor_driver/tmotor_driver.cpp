@@ -590,33 +590,20 @@ void host_poll() {
 }
 
 // The imu is brought up here, with the node already answering, and then read
-// at 200 Hz: the task starts the frame and comes back for it when the dma has
-// moved it. Without an imu the task ends.
-GlobalTask<void, 2, 192> imu_task(CycleScheduler& sched) {
+// at 200 Hz. Each of its frames is a wait for the bus and for the dma, see
+// bmi270.h and spi_bus.h. Without an imu the task ends.
+GlobalTask<void, 2, 160> imu_task(CycleScheduler& sched) {
     constexpr uint32_t period_cycles = CPU_FREQUENCY_HZ / 200;
     co_await sched.async_delay_us(1000);    // first: the task starts before pin_config
-    bmi270_reset<TMotorIMUIO>();
-    co_await sched.async_delay_us(bmi270_reset_us);
-    bmi270_spi<TMotorIMUIO>();
-    co_await sched.async_delay_us(bmi270_spi_us);
-    const uint8_t chip_id = bmi270_init_start<TMotorIMUIO>();
-    co_await sched.async_delay_us(bmi270_power_up_us);
-    bmi270_init_load<TMotorIMUIO>();
-    co_await sched.async_delay_us(bmi270_load_us);
-    imu_status = bmi270_init_finish<TMotorIMUIO>(chip_id);
+    imu_status = co_await bmi270_init<TMotorIMUIO>(sched);
     if (imu_status != (bmi270_chip_id << 8 | bmi270_init_ok)) co_return;
     uint32_t wake_time = get_clock();
     while (true) {
         wake_time += period_cycles;
         if (static_cast<int32_t>(get_clock() - wake_time) > 0) wake_time = get_clock();     // gdb had it stopped
         co_await sched.delay_until(wake_time);
-        {
-            const StatsTimer timer(imu_task_stats);
-            bmi270_data_start<TMotorIMUIO>();
-        }
-        while (!TMotorIMUIO::transfer_ready()) co_await sched.yield();     // the dma moves the frame, 25 us
+        const BMI270Data data = co_await bmi270_data<TMotorIMUIO>(sched);
         const StatsTimer timer(imu_task_stats);
-        const BMI270Data data = bmi270_data_end<TMotorIMUIO>();
         const TextLock lock;        // the text api reads it from its interrupt while gdb has the node stopped
         imu_data = data;
     }
@@ -652,7 +639,7 @@ void led_update() {
     tmotor_led(color.red * intensity, color.green * intensity, color.blue * intensity);
 }
 
-GlobalTask<void, 3, 128> led_task(CycleScheduler& sched) {
+GlobalTask<void, 3, 96> led_task(CycleScheduler& sched) {
     constexpr uint32_t period_cycles = CPU_FREQUENCY_HZ / 200;
     uint32_t wake_time = get_clock();
     while (true) {
@@ -666,14 +653,14 @@ GlobalTask<void, 3, 128> led_task(CycleScheduler& sched) {
 
 // The host's frames, every pass of the background: what came in is served
 // between two yields
-GlobalTask<void, 4, 128> text_task(CycleScheduler& sched) {
+GlobalTask<void, 4, 144> text_task(CycleScheduler& sched) {
     while (true) {
         co_await sched.yield();
         const StatsTimer timer(text_task_stats);
         text_poll();
     }
 }
-GlobalTask<void, 5, 128> host_task(CycleScheduler& sched) {
+GlobalTask<void, 5, 96> host_task(CycleScheduler& sched) {
     while (true) {
         co_await sched.yield();
         const StatsTimer timer(host_task_stats);

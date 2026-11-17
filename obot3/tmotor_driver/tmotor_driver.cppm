@@ -28,7 +28,7 @@ export import control.motor_controller;
 //   - an MA732 motor encoder on SPI3, chip select PD2
 //   - the three phase pwm on HRTIM timers D, F and E
 //   - the DRV8323S gate driver on SPI1, chip select PA4, enable PC13, fault PC14
-//   - a BMI270 imu on SPI1 as well, chip select PC4
+//   - a BMI270 imu on SPI1 as well, chip select PC4, its readings by DMA1
 //   - phase currents through the opamps to the ADCs
 //   - no bus voltage sense on this board: the bus is taken as 24 V
 //   - the led on TIM4
@@ -63,6 +63,8 @@ constexpr uint32_t obot_can_id(uint32_t message, uint32_t address) { return mess
 constexpr auto tmotor_rcc_clock_init = RCCClockInit{.fdcan_clock = RCCFDCANClock::PCLK1};   // 170 MHz
 
 constexpr auto tmotor_rcc_init = RCCInit{
+    .dmamux1 = RCCEnable::ENABLED,    // spi1 for the imu
+    .dma1 = RCCEnable::ENABLED,
     .adc345 = RCCEnable::ENABLED,
     .adc12 = RCCEnable::ENABLED,
     .gpiod = RCCEnable::ENABLED,
@@ -368,11 +370,108 @@ static_assert(get_drv8323_reg(tmotor_drv8323_init, 0) == 0x000 && get_drv8323_re
     get_drv8323_reg(tmotor_drv8323_init, 4) == 0x200, "the register values of the obot_g474 tmotor_driver");
 
 // How the driver is reached
+// The BMI270 shares SPI1 with the gate driver, chip select PC4: for one of its
+// frames the bus is 8 bit, mode 3, pclk / 32 = 5.3 MHz, and then the gate
+// driver's again. A frame is either waited for, transfer(), or started and
+// left to DMA1 channels 1 (in) and 2 (out), transfer_start(): the task that
+// started it comes back when transfer_ready(). In between the bus is taken,
+// and whoever else wants it calls bus_release() first, which waits out the
+// rest of the frame, 25 us at most, and puts the bus back; the frame's data
+// stays for its transfer_end(). All of that is the background's; the text api
+// reads the gate driver from its interrupt only while gdb has the background
+// stopped, and the end of a frame is locked against that.
+struct TMotorIMUIO {
+    enum State : uint8_t { IDLE, FLYING, DONE };
+    static inline volatile State state = IDLE;
+    static inline uint8_t tx[16], rx[16];
+    static inline uint32_t cr1, cr2;        // the gate driver's
+
+    static void delay_us(uint32_t us) {
+        const uint32_t start = get_clock();
+        while (get_clock() - start < us * (CPU_FREQUENCY_HZ / 1'000'000));
+    }
+    static void select(uint32_t dma) {
+        cr1 = SPI1->CR1;
+        cr2 = SPI1->CR2;
+        SPI1->CR1 = 0;
+        SPI1->CR2 = 7 << SPI_CR2_DS_Pos | SPI_CR2_FRXTH | dma;
+        // enabled first: the clock is at its idle level, high, when the chip select falls
+        SPI1->CR1 = SPI_CR1_MSTR | 4 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA | SPI_CR1_SPE;
+        gpio_clear(gpio_port<'C'>(), 4);
+    }
+    static void deselect() {
+        while (SPI1->SR & SPI_SR_BSY);
+        gpio_set(gpio_port<'C'>(), 4);
+        SPI1->CR1 = 0;
+        SPI1->CR2 = cr2;
+        SPI1->CR1 = cr1;
+    }
+    static uint8_t byte(uint8_t out) {
+        *reinterpret_cast<volatile uint8_t*>(&SPI1->DR) = out;
+        while (!(SPI1->SR & SPI_SR_RXNE));
+        return *reinterpret_cast<volatile uint8_t*>(&SPI1->DR);
+    }
+    static void transfer(const uint8_t* out, uint8_t* in, uint32_t length, const uint8_t* more, uint32_t more_length) {
+        bus_release();
+        select(0);
+        for (uint32_t i = 0; i < length; i++) in[i] = byte(out[i]);
+        for (uint32_t i = 0; i < more_length; i++) {
+            byte(more[i]);
+            if ((i & 0x3FF) == 0) watchdog_kick();
+        }
+        deselect();
+    }
+
+    static void transfer_start(const uint8_t* out, uint32_t length) {
+        bus_release();
+        if (length > sizeof(tx)) length = sizeof(tx);
+        for (uint32_t i = 0; i < length; i++) tx[i] = out[i];
+        DMA1_Channel1->CCR = 0;
+        DMA1_Channel2->CCR = 0;
+        DMA1->IFCR = DMA_IFCR_CGIF1 | DMA_IFCR_CGIF2;
+        DMAMUX1_Channel0->CCR = DMA_REQUEST_SPI1_RX;
+        DMAMUX1_Channel1->CCR = DMA_REQUEST_SPI1_TX;
+        DMA1_Channel1->CPAR = reinterpret_cast<uint32_t>(&SPI1->DR);
+        DMA1_Channel1->CMAR = reinterpret_cast<uint32_t>(rx);
+        DMA1_Channel1->CNDTR = length;
+        DMA1_Channel2->CPAR = reinterpret_cast<uint32_t>(&SPI1->DR);
+        DMA1_Channel2->CMAR = reinterpret_cast<uint32_t>(tx);
+        DMA1_Channel2->CNDTR = length;
+        uint32_t primask;       // on its way or not, for bus_release from the interrupt
+        __asm__ volatile("mrs %0, primask\n cpsid i" : "=r"(primask));
+        DMA1_Channel1->CCR = DMA_CCR_MINC | DMA_CCR_EN;
+        select(SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN);
+        DMA1_Channel2->CCR = DMA_CCR_MINC | DMA_CCR_DIR | DMA_CCR_EN;
+        state = FLYING;
+        __asm__ volatile("msr primask, %0" : : "r"(primask));
+    }
+    static bool transfer_ready() { return state != FLYING || (DMA1->ISR & DMA_ISR_TCIF1) != 0; }
+    static void bus_release() {
+        if (state != FLYING) return;
+        while (!transfer_ready());
+        uint32_t primask;
+        __asm__ volatile("mrs %0, primask\n cpsid i" : "=r"(primask));
+        if (state == FLYING) {
+            DMA1_Channel2->CCR = 0;
+            DMA1_Channel1->CCR = 0;
+            deselect();
+            state = DONE;
+        }
+        __asm__ volatile("msr primask, %0" : : "r"(primask));
+    }
+    static void transfer_end(uint8_t* in, uint32_t length) {
+        bus_release();
+        for (uint32_t i = 0; i < length && i < sizeof(rx); i++) in[i] = rx[i];
+        state = IDLE;
+    }
+};
+
 struct TMotorDRV8323IO {
     static void wait_ns_400() {
         for (int i = 0; i < 100; i++) __asm__ volatile("");     // more than 68 cpu cycles
     }
     static void transfer_start(uint16_t word) {
+        TMotorIMUIO::bus_release();                 // an imu frame that is on its way
         gpio_clear(gpio_port<'A'>(), 4);
         wait_ns_400();                              // 50 ns needed
         spi_write<1>(word);

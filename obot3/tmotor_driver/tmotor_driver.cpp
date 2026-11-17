@@ -141,38 +141,6 @@ void tmotor_startup() {
 
 void debug_idle();
 
-// The BMI270 shares SPI1 with the gate driver, chip select PC4: for one of its
-// frames the bus is 8 bit, mode 3, pclk / 32 = 5.3 MHz, and then the gate
-// driver's again. Both are used from the background only, the gate driver for
-// its status on request, and the background's tasks don't interrupt each other.
-struct TMotorIMUIO {
-    static void delay_us(uint32_t us) {
-        const uint32_t start = get_clock();
-        while (get_clock() - start < us * (CPU_FREQUENCY_HZ / 1'000'000));
-    }
-    static uint8_t byte(uint8_t out) {
-        *reinterpret_cast<volatile uint8_t*>(&SPI1->DR) = out;
-        while (!(SPI1->SR & SPI_SR_RXNE));
-        return *reinterpret_cast<volatile uint8_t*>(&SPI1->DR);
-    }
-    static void transfer(const uint8_t* out, uint8_t* in, uint32_t length, const uint8_t* more, uint32_t more_length) {
-        const uint32_t cr1 = SPI1->CR1, cr2 = SPI1->CR2;
-        SPI1->CR1 = 0;
-        SPI1->CR2 = 7 << SPI_CR2_DS_Pos | SPI_CR2_FRXTH;
-        SPI1->CR1 = SPI_CR1_MSTR | 4 << SPI_CR1_BR_Pos | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_CPOL | SPI_CR1_CPHA | SPI_CR1_SPE;
-        gpio_clear(gpio_port<'C'>(), 4);
-        for (uint32_t i = 0; i < length; i++) in[i] = byte(out[i]);
-        for (uint32_t i = 0; i < more_length; i++) {
-            byte(more[i]);
-            if ((i & 0x3FF) == 0) watchdog_kick();
-        }
-        gpio_set(gpio_port<'C'>(), 4);
-        while (SPI1->SR & SPI_SR_BSY);
-        SPI1->CR1 = 0;
-        SPI1->CR2 = cr2;
-        SPI1->CR1 = cr1;
-    }
-};
 volatile uint32_t imu_status;       // chip id << 8 | init status: 0x2401 is a BMI270 that runs
 BMI270Data imu_data;
 
@@ -622,10 +590,15 @@ void host_poll() {
 }
 
 // The imu is brought up here, with the node already answering, and then read
-// at 200 Hz. Without one the task ends.
+// at 200 Hz: the task starts the frame and comes back for it when the dma has
+// moved it. Without an imu the task ends.
 GlobalTask<void, 2, 192> imu_task(CycleScheduler& sched) {
     constexpr uint32_t period_cycles = CPU_FREQUENCY_HZ / 200;
     co_await sched.async_delay_us(1000);    // first: the task starts before pin_config
+    bmi270_reset<TMotorIMUIO>();
+    co_await sched.async_delay_us(bmi270_reset_us);
+    bmi270_spi<TMotorIMUIO>();
+    co_await sched.async_delay_us(bmi270_spi_us);
     const uint8_t chip_id = bmi270_init_start<TMotorIMUIO>();
     co_await sched.async_delay_us(bmi270_power_up_us);
     bmi270_init_load<TMotorIMUIO>();
@@ -637,8 +610,13 @@ GlobalTask<void, 2, 192> imu_task(CycleScheduler& sched) {
         wake_time += period_cycles;
         if (static_cast<int32_t>(get_clock() - wake_time) > 0) wake_time = get_clock();     // gdb had it stopped
         co_await sched.delay_until(wake_time);
+        {
+            const StatsTimer timer(imu_task_stats);
+            bmi270_data_start<TMotorIMUIO>();
+        }
+        while (!TMotorIMUIO::transfer_ready()) co_await sched.yield();     // the dma moves the frame, 25 us
         const StatsTimer timer(imu_task_stats);
-        const BMI270Data data = bmi270_data<TMotorIMUIO>();
+        const BMI270Data data = bmi270_data_end<TMotorIMUIO>();
         const TextLock lock;        // the text api reads it from its interrupt while gdb has the node stopped
         imu_data = data;
     }

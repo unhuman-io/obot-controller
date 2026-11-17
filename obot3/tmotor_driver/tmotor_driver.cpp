@@ -214,6 +214,12 @@ void debug_idle() {
 DEBUG_KEEP constinit auto& fast_loop = MySystem::fast_loop;
 DEBUG_KEEP constinit auto& main_loop = MySystem::main_loop;
 
+// The module's constexpr values, for gdb: `p foc_param`. A copy here is a value
+// in the debug info of the elf, which the module's own are not, and nothing in
+// the binary.
+constexpr auto foc_param = tmotor_foc_param;
+constexpr auto controller_param = tmotor_controller_param;
+
 // The obot text api over can: requests are strings to the ascii id of this
 // address, and each gets one reply.
 //   name, serial, version, messages_version     what a host needs to find this node

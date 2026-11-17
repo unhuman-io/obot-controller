@@ -16,6 +16,7 @@
 #include "debug_monitor.h"
 #endif
 #include "debug_call.h"
+#include "control/chrono_types.h"
 #include <initializer_list>
 #include <iterator>
 import tmotor_driver;
@@ -24,6 +25,17 @@ template<auto config = TMotorConfig{}>
 struct Config : BasicConfig<config> {};
 
 using MySystem = System<Config<>>;
+
+// Time, see control/clock.cppm: the steady clock is the cpu's cycle counter
+// since pin_config, and the system clock a host's time on it, once the host
+// sends it (host_poll). Both are std::chrono clocks; time() of either is
+// seconds and nanoseconds.
+inline uint32_t clock_cycles() { return DWT->CYCCNT; }
+using SteadyClock = CycleClock<tmotor_rcc_clock_init.cpu_frequency_hz, clock_cycles>;
+using SystemClock = SyncedClock<SteadyClock>;
+using TimeSync = TimeSyncReceiver<SystemClock>;
+static_assert(std::chrono::is_clock_v<SteadyClock> && std::chrono::is_clock_v<SystemClock>);
+volatile uint32_t time_frames_late;     // time frames that waited too long in host_poll for their count to tell when they came
 
 // How long the loops take and how far apart they start, cpu cycles
 volatile uint32_t t_exec_fastloop, t_period_fastloop, t_exec_mainloop, t_period_mainloop;
@@ -45,6 +57,7 @@ void fast_loop_isr() {
     const uint32_t t_start = DWT->CYCCNT;
     std::atomic_signal_fence(std::memory_order_acq_rel);
     MySystem::fast_loop.update();
+    SteadyClock::update();      // here: this loop is the one that gdb never stops
     tmotor_fast_loop_irq_clear();
     t_period_fastloop = t_start - t_last;
     t_last = t_start;
@@ -145,6 +158,7 @@ volatile uint32_t imu_status;       // chip id << 8 | init status: 0x2401 is a B
 BMI270Data imu_data;
 
 void pin_config() {
+    SteadyClock::start();
     device_rcc_config<tmotor_rcc_init>();
     device_pin_config<tmotor_gpio_init>();
     tmotor_startup_init();
@@ -247,6 +261,7 @@ constexpr auto controller_param = tmotor_controller_param;
 //   <variable>, <variable>=<value>              the variables below, see text_api.h
 //   api_length, api_name=<n>, help              their number and names
 //   cpu                                         the cpu time of the interrupts and tasks, see cpu_request
+//   time, uptime                                the system and the steady clock, seconds.nanoseconds
 //   $...                                        gdb remote protocol packets, see text_api.h and debug_monitor.h
 // An unknown request gets an empty reply. The interrupt that takes the
 // requests in preempts the main loop, so it only serves the gdb packets
@@ -339,6 +354,12 @@ constexpr TextVariable text_variables[] = {
     text_int("t_period_fastloop", [] { return static_cast<int64_t>(t_period_fastloop); }),
     text_int("t_period_mainloop", [] { return static_cast<int64_t>(t_period_mainloop); }),
     text_int("cpu_frequency", [] { return static_cast<int64_t>(CPU_FREQUENCY_HZ); }),
+
+    // the host's time, see control/clock.cppm and the time and uptime requests
+    text_int("time_syncs", [] { return static_cast<int64_t>(SystemClock::count()); }),         // times the host has set the system clock
+    text_int("time_step", [] { return static_cast<int64_t>(SystemClock::last_step_ns()); }),   // ns that the last of them moved it by
+    text_int("time_rate", [] { return static_cast<int64_t>(SystemClock::rate_ppb()); }),       // ppb that the host's time gains on this node's
+    text_int("time_dropped", [] { return static_cast<int64_t>(TimeSync::dropped() + time_frames_late); }),     // time frames that set nothing
     text_int("debug_probe", [] { return static_cast<int64_t>(debug_probe_attached()); }),    // 1: no step or breakpoints for gdb
     text_int("breakpoints_dropped", [] { return static_cast<int64_t>(debug.breakpoints_dropped); }),   // set above the debug monitor
 };
@@ -402,6 +423,16 @@ DEBUG_SMALL void cpu_request(TextOut& out) {
     out.put(" ms");
 }
 
+DEBUG_SMALL void put_time(TextOut& out, ClockTime time) {
+    out.put_number(static_cast<int64_t>(time.seconds));
+    char fraction[11] = ".";
+    for (int i = 9; i >= 1; i--) {
+        fraction[i] = static_cast<char>('0' + time.nanoseconds % 10);
+        time.nanoseconds /= 10;
+    }
+    out.put(fraction);
+}
+
 void text_request(const char* request, TextOut& out) {
     if (request[0] == '$') {
         if (!debug_request(request, out)) gdb_request<TextMemory>(request, out, text_request);
@@ -429,6 +460,10 @@ void text_request(const char* request, TextOut& out) {
         if (index < std::size(text_variables)) out.put(text_variables[index].name);
     } else if (std::strcmp(request, "cpu") == 0) {
         cpu_request(out);
+    } else if (std::strcmp(request, "time") == 0) {
+        put_time(out, SystemClock::time());
+    } else if (std::strcmp(request, "uptime") == 0) {
+        put_time(out, SteadyClock::time());
     } else if (std::strcmp(request, "help") == 0) {
         out.put_number(static_cast<int64_t>(std::size(text_variables)));
         out.put(" variables:\n");
@@ -554,42 +589,69 @@ void text_poll() {}
 //   command          a new MotorCommand. BOARD_RESET as its mode resets the node
 //   command status   that and a request for the status
 //   status           only the request
+//   time             to all nodes: the host's time, which sets the system clock
 // and on the command id the 8 byte BOOTLOADER_ENTER request of
 // bootloader_protocol.h, which is answered and ends in the bootloader.
+
+// When a frame started, in cpu cycles: its count of TIM3 against the count
+// now, with nothing in between the two that are read here
+inline uint32_t can_frame_cycles(uint16_t timestamp) {
+    uint32_t state;
+    __asm__ volatile("mrs %0, primask\n cpsid i" : "=r"(state));
+    const uint16_t now = can_timestamp<tmotor_can_init>();
+    const uint32_t cycles = DWT->CYCCNT;
+    __asm__ volatile("msr primask, %0" : : "r"(state));
+    return cycles - static_cast<uint16_t>(now - timestamp) * tmotor_can_timestamp_cycles;
+}
+
 void host_poll() {
+    // A frame that is read here has come in since the fifo was last seen
+    // empty. Its count tells when, as long as that is less than the count's
+    // way around ago: not when gdb had the background stopped in between.
+    static uint32_t last_empty;
     uint32_t id;
     char data[64];
-    if (const int length = can_read<tmotor_can_init>(tmotor_can_command_fifo, id, data); length >= 0) {
-        const uint32_t message = id >> 7;
-        if (message == obot_can_enum) {
-            uint8_t serial[6];
-            system_serial_bytes(serial);
-            const obot::EnumResponse response = obot_enum_response(OBOT3_TEXT_API ? "obot3_tmotor_driver" : "obot3_tmotor_release", serial);
-            const bool to_all = (id & 0x7F) == obot_can_broadcast_address;
-            const TextLock lock;
-            can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), &response, to_all ? 0 : sizeof(response));
-        } else if (message == obot_can_command && length == offsetof(BootloaderRequest, data)) {
-            if (static_cast<uint8_t>(data[0]) == BOOTLOADER_ENTER) {
-                BootloaderReply reply{};
-                reply.command = BOOTLOADER_ENTER | BOOTLOADER_REPLY;
-                reply.sequence = data[1];
-                bootloader_request = true;
-                reset_request = true;
-                const TextLock lock;
-                can_write<tmotor_can_init>(obot_can_id(obot_can_status, tmotor_can_address()), &reply, offsetof(BootloaderReply, data));
-            }
+    uint16_t timestamp;
+    const int length = can_read<tmotor_can_init>(tmotor_can_command_fifo, id, data, &timestamp);
+    if (length < 0) {
+        last_empty = DWT->CYCCNT;
+        return;
+    }
+    const uint32_t message = id >> 7;
+    if (message == obot_can_time) {
+        if (DWT->CYCCNT - last_empty < 0x8000 * tmotor_can_timestamp_cycles) {
+            TimeSync::frame(reinterpret_cast<const uint8_t*>(data), length, SteadyClock::time_at(can_frame_cycles(timestamp)));
         } else {
-            if (message != obot_can_status && length >= static_cast<int>(sizeof(obot::MotorCommand))) {
-                obot::MotorCommand command;
-                std::memcpy(&command, data, sizeof(command));
-                TMotorHostCommand::latest.write(command);
-                if (command.mode_desired == obot::BOARD_RESET) reset_request = true;
-            }
-            if (message != obot_can_command) {
-                const auto status = MySystem::main_loop.controller.status.read();
-                const TextLock lock;
-                can_write<tmotor_can_init>(obot_can_id(obot_can_status, tmotor_can_address()), status);
-            }
+            time_frames_late = time_frames_late + 1;
+        }
+    } else if (message == obot_can_enum) {
+        uint8_t serial[6];
+        system_serial_bytes(serial);
+        const obot::EnumResponse response = obot_enum_response(OBOT3_TEXT_API ? "obot3_tmotor_driver" : "obot3_tmotor_release", serial);
+        const bool to_all = (id & 0x7F) == obot_can_broadcast_address;
+        const TextLock lock;
+        can_write<tmotor_can_init>(obot_can_id(obot_can_enum, tmotor_can_address()), &response, to_all ? 0 : sizeof(response));
+    } else if (message == obot_can_command && length == offsetof(BootloaderRequest, data)) {
+        if (static_cast<uint8_t>(data[0]) == BOOTLOADER_ENTER) {
+            BootloaderReply reply{};
+            reply.command = BOOTLOADER_ENTER | BOOTLOADER_REPLY;
+            reply.sequence = data[1];
+            bootloader_request = true;
+            reset_request = true;
+            const TextLock lock;
+            can_write<tmotor_can_init>(obot_can_id(obot_can_status, tmotor_can_address()), &reply, offsetof(BootloaderReply, data));
+        }
+    } else {
+        if (message != obot_can_status && length >= static_cast<int>(sizeof(obot::MotorCommand))) {
+            obot::MotorCommand command;
+            std::memcpy(&command, data, sizeof(command));
+            TMotorHostCommand::latest.write(command);
+            if (command.mode_desired == obot::BOARD_RESET) reset_request = true;
+        }
+        if (message != obot_can_command) {
+            const auto status = MySystem::main_loop.controller.status.read();
+            const TextLock lock;
+            can_write<tmotor_can_init>(obot_can_id(obot_can_status, tmotor_can_address()), status);
         }
     }
 }

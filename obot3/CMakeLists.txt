@@ -6,7 +6,8 @@ function(add_obot3_target name device config_dir)
     target_include_directories(${tgt} PRIVATE . ${config_dir})
     # the control modules are built per target, with its device's flags
     target_sources(${tgt} PRIVATE FILE_SET CXX_MODULES BASE_DIRS ${CMAKE_CURRENT_LIST_DIR} FILES
-        control/latest.cppm control/control_fun.cppm control/sincos.cppm control/foc.cppm control/motor_controller.cppm)
+        control/latest.cppm control/control_fun.cppm control/sincos.cppm control/foc.cppm control/motor_controller.cppm
+        control/clock.cppm)
     target_link_options(${tgt} PRIVATE
         -nostartfiles       # <-- Drops crt0.o completely
         "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${name}.map"

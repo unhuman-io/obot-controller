@@ -21,6 +21,7 @@ export import device.spi_init;
 export import device.drv8323_init;
 export import device.system;
 export import control.motor_controller;
+export import control.clock;
 
 // tmotor_driver: the obot3 counterpart of
 // obot_g474/config/config_obot_g474_tmotor_driver.cpp. Only what this
@@ -33,6 +34,7 @@ export import control.motor_controller;
 //   - phase currents through the opamps to the ADCs
 //   - no bus voltage sense on this board: the bus is taken as 24 V
 //   - the led on TIM4
+//   - TIM3 as the count that the can frames' times of arrival are taken in
 //   - the unused chip selects parked high
 //   - 50 kHz pwm and fast loop, 10 kHz main loop
 // The output encoder is the motor encoder through the 6:1 gear; there is no
@@ -56,6 +58,7 @@ inline uint32_t tmotor_can_address() {
 // obot can ids: message << 7 | address
 constexpr uint32_t obot_can_command = 1, obot_can_command_status = 2, obot_can_status = 3;
 constexpr uint32_t obot_can_ascii = 4, obot_can_ascii_response = 5, obot_can_enum = 0xF;
+constexpr uint32_t obot_can_time = 0;       // a host's time, to all nodes: see TimeSyncReceiver in control/clock.cppm
 constexpr uint32_t obot_can_broadcast_address = 0x7F;
 constexpr uint32_t obot_can_id(uint32_t message, uint32_t address) { return message << 7 | address; }
 
@@ -75,6 +78,7 @@ constexpr auto tmotor_rcc_init = RCCInit{
     .fdcan = RCCEnable::ENABLED,
     .spi3 = RCCEnable::ENABLED,
     .tim4 = RCCEnable::ENABLED,       // led
+    .tim3 = RCCEnable::ENABLED,       // the can frames' time of arrival
     .hrtim1 = RCCEnable::ENABLED,
     .spi1 = RCCEnable::ENABLED,
     .syscfg = RCCEnable::ENABLED};    // clocks the opamps
@@ -299,7 +303,10 @@ inline float tmotor_motor_temperature(uint32_t counts) {
 inline void tmotor_fast_loop_irq_clear() { adc_injected_end_of_sequence_clear<5>(); }
 inline void tmotor_main_loop_irq_clear() { hrtim_master_cmp1_interrupt_clear(); }
 
-// TIM4 is the led pwm, 0 (off) to 65535 on each color
+// TIM4 is the led pwm, 0 (off) to 65535 on each color. TIM3 only counts, for
+// the FDCAN, which notes its 16 bits at the start of every frame: 100 ns a
+// count, around in 6.5 ms.
+constexpr uint32_t tmotor_can_timestamp_cycles = 17;    // cpu cycles per count
 constexpr auto tmotor_tim_init = []() consteval {
     constexpr TIMChannelInit led = {
         .output = TIMEnable::ENABLED,
@@ -307,6 +314,10 @@ constexpr auto tmotor_tim_init = []() consteval {
         .preload = TIMEnable::ENABLED,
     };
     return TIMInit{
+        .tim3 = {
+            .enable = TIMEnable::ENABLED,
+            .prescaler = tmotor_can_timestamp_cycles - 1,
+        },
         .tim4 = {
             .enable = TIMEnable::ENABLED,
             .ch1 = led,
@@ -326,7 +337,8 @@ constexpr auto tmotor_can_init = CANInit{
     .kernel_clock_hz = tmotor_rcc_clock_init.cpu_frequency_hz,
     .nominal_bitrate_hz = 1'000'000,
     .data_bitrate_hz = 8'000'000,
-    .standard_filter_count = 6,
+    .standard_filter_count = 7,
+    .timestamp = CANTimestamp::EXTERNAL,        // TIM3
 };
 constexpr int tmotor_can_ascii_fifo = 1, tmotor_can_command_fifo = 0;
 
@@ -462,6 +474,7 @@ inline void tmotor_device_init() {
     can_filter<tmotor_can_init>(3, obot_can_id(obot_can_command_status, tmotor_can_address()), tmotor_can_command_fifo);
     can_filter<tmotor_can_init>(4, obot_can_id(obot_can_status, tmotor_can_address()), tmotor_can_command_fifo);
     can_filter<tmotor_can_init>(5, obot_can_id(obot_can_enum, tmotor_can_address()), tmotor_can_command_fifo);
+    can_filter<tmotor_can_init>(6, obot_can_id(obot_can_time, obot_can_broadcast_address), tmotor_can_command_fifo);
     device_hrtim_config<tmotor_hrtim_init>();   // last: starts the master and pwm timers in phase, and the ADC triggers with them
 }
 

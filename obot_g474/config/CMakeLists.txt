@@ -1,6 +1,7 @@
 set(OBOT_CONFIGS
     motor_9_pzdma
     motor_9
+    motor_icmu
     motor_40_osa14
    # motor_ads1235_2
    # motor_ads1235
@@ -29,6 +30,7 @@ set(OBOT_CONFIGS
     motor_template
     motor_timing
     motor_wheel
+    motor_wheel_icmu
     nucleo_spi
     nucleo_uart
     nucleo_uart_obot

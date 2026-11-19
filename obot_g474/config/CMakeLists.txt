@@ -1,7 +1,6 @@
 set(OBOT_CONFIGS
     motor_9_pzdma
     motor_9
-    motor_icmu
     motor_40_osa14
    # motor_ads1235_2
    # motor_ads1235

@@ -27,6 +27,8 @@ jobs:
           - { project: obot_g474, config: motor_40_osa14 }
           - { project: obot_g474, config: motor_9 }
           - { project: obot_g474, config: motor_9_pzdma }
+          - { project: obot_g474, config: motor_wheel_icmu }
+          - { project: obot_g474, config: motor_wheel_right }
           - { project: obot_g474, config: motor_aksim }
           - { project: obot_g474, config: motor_aksim_19_17, build_other: '-DCMAKE_CXX_FLAGS="-DMAX11254_TORQUE_SENSOR"' } # MR2
           - { project: obot_g474, config: motor_pz2 } # MR1

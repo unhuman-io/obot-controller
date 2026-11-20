@@ -1,0 +1,47 @@
+; TRACE32 as the front end to an obot3 application over can, in place of gdb
+; and with no debug probe: through `motor_util gdbserver`, the text api and
+; the debug monitor (obot3/debug_monitor.h). scripts/obot3_gdb.sh -t CAN_ID
+; starts the bridge and TRACE32 with this script. By hand, in a TRACE32
+; started with PBI=GDB in its configuration file, and the bridge running:
+;
+;   do obot3_gdb_trace32.cmm <elf> [<port>]
+;
+; The node keeps running at the attach, though TRACE32 shows it stopped:
+; memory is live and the registers are a sample. Go, Break, Step, breakpoints
+; and Var.View work from there. The front end has a license of its own;
+; without it TRACE32 says "demo for 10 minutes" at the first Go.
+;
+; The three threads of the node are three cores here: 0 the background, 1 the
+; main loop, 2 the one that runs functions from the scheduler loop.
+;   CORE.List
+;   CORE.select 2.
+;   Var.set tmotor_drv8323_read(5)      runs it and prints what it returns
+; Only on core 2: on another core TRACE32 writes its return stub below the
+; stack pointer of that thread, into its exception frame, before the node
+; refuses the registers. Var.Call with Go leaves core 2 at the return stub:
+; Frame.SWAP before the next Go, or that runs the stub.
+; A name that is in the elf twice needs its path:
+;   Var.View %Open \\obot3_tmotor_driver\Global\fast_loop
+;
+; SYStem.Mode NoDebug detaches and the node continues. Non-stop mode
+; (SYStem.GDBconfig.NONSTOP ON) is for a linux gdbserver and does not work.
+LOCAL &elf &port
+ENTRY &elf &port
+IF "&elf"==""
+  &elf="~/obot/obot-controller/build/gcc/obot3/obot3_tmotor_driver.elf"
+IF "&port"==""
+  &port="3293"
+
+IF SYStem.Up()
+  SYStem.Mode NoDebug
+; not stm32g474re: that one is a single core, and the threads need three
+SYStem.CPU CortexM4F
+SYStem.CONFIG.CoreNumber 3.
+CORE.ASSIGN 1. 2. 3.
+SYStem.PORT localhost:&port
+SYStem.GDBconfig.GDBSERVER OFF
+SYStem.Mode Attach
+Data.LOAD.Elf "&elf" /NoCODE /NoClear
+CORE.List
+List.auto
+ENDDO

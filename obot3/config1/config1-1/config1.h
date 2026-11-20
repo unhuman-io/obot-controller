@@ -117,7 +117,7 @@ constexpr auto config1_tim_init = TIMInit{
 volatile int adc_select = 3;
 volatile int adc_reading = 0;
 struct SpecialEncoder {
-    void read() {
+    int update() {
         int reading = adc_read<3>();    // always read: it clears the interrupt request
         switch (adc_select) {
             case 1: reading = adc_read<1>(); break;
@@ -126,6 +126,7 @@ struct SpecialEncoder {
             case 5: reading = adc_read<5>(); break;
         }
         adc_reading = reading;
+        return reading;
     }
 };
 
@@ -144,7 +145,7 @@ struct Config1_1SensorPolicy : Config1SensorPolicy {
 };
 
 struct Config1 : DefaultConfig1 {
-    using MotorEncoderType = SpecialEncoder;
+    using FastLoopSensorPolicy = SpecialEncoder;
     using MainLoopSensorPolicy = Config1_1SensorPolicy;
     int special_parameter = 11;
 };

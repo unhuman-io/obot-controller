@@ -1,0 +1,32 @@
+; Programs the obot3 can bootloader (obot3/bootloader) into the first 8K of
+; the flash of an obot_g474 motor board. The application and the parameters
+; behind it are left alone.
+&elf_file="~/obot/obot-controller/build/gcc/obot3/obot3_bootloader.elf"
+
+IF !SYStem.Up()
+(
+  system.cpu stm32g474re
+  system.jtagclock 40MHz
+  SYStem.CONFIG.DEBUGPORTTYPE SWD
+  system.Option.EnReset OFF
+  system.Option.DUALPORT ON
+  system.mode attach
+)
+IF STATE.RUN()
+  break
+
+do ~~/demo/arm/flash/stm32g4xx.cmm PREPAREONLY CPU=STM32G474RE DUALPORT=0
+
+flash.ReProgram 0x8000000--0x8001fff /Erase
+data.load.elf &elf_file
+flash.ReProgram off
+Data.LOAD.elf &elf_file /DIFF
+IF FOUND()
+  PRINT "Verify error after FLASH programming"
+ELSE
+  PRINT "FLASH programming completed successfully"
+
+; a reset must not stop in the debugger: the bootloader is left through one
+TrOnchip.set.corereset off
+system.RESetTarget
+go

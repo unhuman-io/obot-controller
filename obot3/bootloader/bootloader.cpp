@@ -49,7 +49,7 @@ extern "C" void Reset_Handler() {
     const uint32_t reset_flags = RCC->CSR;
     RCC->CSR = reset_flags | RCC_CSR_RMVF;
     volatile uint32_t& flag = bootloader_flag();
-    const bool requested = (reset_flags & RCC_CSR_SFTRSTF) && flag == bootloader_flag_value;
+    const bool requested = (reset_flags & RCC_CSR_SFTRSTF) && flag == bootloader_flag_value();
     flag = 0;
     const uint32_t* application = reinterpret_cast<const uint32_t*>(application_address);
     const uint32_t stack = application[0], entry = application[1];

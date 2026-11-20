@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795201699792,
+  "lastUpdate": 1795202213726,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -171223,6 +171223,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1224.439941,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4b72d2fffcc6f512521b95301617720d56e9d45f",
+          "message": "Add iC-MU configurations: motor_icmu and motor_wheel_icmu (#373)\n\n* Add iC-MU configurations: motor_icmu and motor_wheel_icmu\n\nTwo obot_g474 motor board configurations with an iC-Haus iC-MU as the\nmotor encoder on the board's SPI3 (chip select PD2):\n\n- motor_icmu: bench configuration, parameters from motor_9 plus the\n  encoder's counts per turn.\n- motor_wheel_icmu: motor_wheel with the iC-MU in place of the iC-PZ,\n  same parameters (name wl).\n\nmotorlib moves to the commit that makes the iC-MU driver build and\nreport position (unhuman-io/motorlib#367).\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NmAsccM8ME1gSedxTuRb7F\n\n* Add motor_wheel_right: the wheel firmware with the name wr\n\nThe same sources as motor_wheel (iC-PZ on SPI3); the parameter file is a\ncopy with the board name wr, so a robot's two wheel boards can be told\napart.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NmAsccM8ME1gSedxTuRb7F\n\n* remove extra project\n\n* update motor can baud rate\n\n* test_motor9: wait for the encoder command before conf write; motorlib conf_write host timeout\n\nconf_write failed whenever the auto calibration started just before it was\nstill running in the iC-PZ (about 5% of CI runs), so the test now polls\ncmd_result until the command has ended or failed, for up to 30 s.\n\nmotorlib: conf_write asks the host for as long as the firmware waits (200 ms).\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n* motorlib to develop\n\niC-MU encoder fix merged (motorlib #367), with the conf_write host timeout.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: leemagnusson <4740150+leemagnusson@users.noreply.github.com>\nCo-authored-by: Claude Fable 5.2 <noreply@anthropic.com>",
+          "timestamp": "2026-11-20T11:09:18-08:00",
+          "tree_id": "384eddfeede5be2de30a827c5231d3ceddf89681",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/4b72d2fffcc6f512521b95301617720d56e9d45f"
+        },
+        "date": 1795202212699,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles",
+            "value": 811,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period",
+            "value": 3400,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles",
+            "value": 2270,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period",
+            "value": 17000,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2309.81,
+            "unit": "cycles",
+            "extra": "2325 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3399.76,
+            "unit": "cycles",
+            "extra": "3400 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 818.96,
+            "unit": "cycles",
+            "extra": "820 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17000 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 231124,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 6916,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 231404,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 8704,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 87416,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2875,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 7748,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used",
+            "value": 1519,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime",
+            "value": 32766136,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1063.226318,
             "unit": "Hz",
             "extra": "0 times"
           }

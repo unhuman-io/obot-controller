@@ -65,6 +65,20 @@ def check_var_is_hex(item):
         sys.exit(1)
     print(item + " is a hex (" + str(val) + ")")
 
+def wait_for_command_done(timeout_s):
+    # The encoder does not complete a conf write while an earlier command (an auto
+    # calibration) is still running: wait for it to end (0x00) or to fail (0xff).
+    t_start = time.time()
+    while True:
+        result = mot["mcmd_result"].get()
+        if re.search(r"current command: 0x(00|ff),", result):
+            print("command done after %.1f s: %s" % (time.time() - t_start, result))
+            return
+        if time.time() - t_start > timeout_s:
+            print("ERROR: command still active after %d s (%s)" % (timeout_s, result))
+            sys.exit(1)
+        time.sleep(.1)
+
 m = motor.MotorManager()
 m.get_motors_by_name(['motor9'])
 print(m)
@@ -155,6 +169,7 @@ check_var_regex("mcmd_result", r"last command: 0xb2, current command: 0x(00|b2|f
 check_var("mauto_ecc", "ok")
 time.sleep(.2)
 check_var_regex("mcmd_result", r"last command: 0xb3, current command: 0x[a-f\d]{2}, result: 0x[a-f\d]{2}")
+wait_for_command_done(30)
 mot.set_timeout_ms(50)
 check_var("mconf_write", "conf write success")
 

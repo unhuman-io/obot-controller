@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794952287652,
+  "lastUpdate": 1795180805481,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -170299,6 +170299,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1029.670532,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lee.magnusson@figure.ai",
+            "name": "Lee Magnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "lee.magnusson@figure.ai",
+            "name": "Lee Magnusson",
+            "username": "leemagnusson"
+          },
+          "distinct": true,
+          "id": "5b43de056ee8d7583641145b0aff1e3931ae277c",
+          "message": "obot3: chrono clocks from the cycle counter, and a host's time over can\n\ncontrol/clock.cppm: two std::chrono clocks with nanoseconds. CycleClock is\nthe steady one, the time since start from the cpu's cycle counter;\nSyncedClock is a host's time on it, which steps when the host sets it and\nruns at the host's rate between. time() of either is seconds and\nnanoseconds without a 64 bit division, and time_at() the time of a cycle\ncount taken a moment ago. TimeSyncReceiver takes the host's time from the\nSYNC and follow up messages of AUTOSAR's time synchronization over CAN\n(CanTSyn, not CRC secured), which `motor_util time_sync` sends.\n\ntmotor driver: SteadyClock and SystemClock, moved on from the fast loop,\nwhich gdb never stops. The time frames come to all nodes on id 0x07F; when\na SYNC started is its count of TIM3, 100 ns a count, which the FDCAN notes\nat the start of every frame, so it does not depend on when the background\ngets to it. A frame that waited longer than the count tells is dropped.\nText api: time, uptime, time_syncs, time_step, time_rate, time_dropped.\n\nOn the board, with the host's kernel time for the sent frame (the PEAK pcan\ndriver has no hardware time for it): within about 3 us of each time sent at\n1 Hz, worst 10 us in 100 s. SteadyClock::time() takes 18 cycles,\nSystemClock::time() 130.\n\ncontrol/chrono_types.h is <chrono> for gcc. For clang it is libc++'s\nduration and time point headers only: all of <chrono> does not compile with\nthe single precision constants of these builds.\n\nHost test: control/test/test_clock.cpp, by run.sh.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Wcj1wL7bb9Ysfc9tsGEXbf",
+          "timestamp": "2026-11-17T13:43:29-08:00",
+          "tree_id": "0a39453ea61b5c8800a8ee3b8589bfcc0a74abb6",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/5b43de056ee8d7583641145b0aff1e3931ae277c"
+        },
+        "date": 1795180804183,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles_llvm",
+            "value": 817,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period_llvm",
+            "value": 3400,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles_llvm",
+            "value": 2731,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles_llvm",
+            "value": 2746.29,
+            "unit": "cycles",
+            "extra": "2765 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period_llvm",
+            "value": 3399.89,
+            "unit": "cycles",
+            "extra": "3400 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles_llvm",
+            "value": 821,
+            "unit": "cycles",
+            "extra": "821 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17000 times"
+          },
+          {
+            "name": "Benchmarkprogram_size_llvm",
+            "value": 170212,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size_llvm",
+            "value": 6924,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size_llvm",
+            "value": 172692,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size_llvm",
+            "value": 6520,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size_llvm",
+            "value": 87516,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used_llvm",
+            "value": 2551,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used_llvm",
+            "value": 6450,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used_llvm",
+            "value": 1519,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime_llvm",
+            "value": 32744997,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1400.074585,
             "unit": "Hz",
             "extra": "0 times"
           }

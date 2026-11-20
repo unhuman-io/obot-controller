@@ -98,6 +98,19 @@ echo "mode $(api mode), menc $(api menc), temperature $(api temperature)"
 # the gate driver: 0 errors means every register read back as written
 echo "drv_errors $(api drv_errors), drv_fault $(api drv_fault), drv_status $(api drv_status)"
 
+# the host's time: 3 s of motor_util time_sync at 10 Hz. Each pair of frames
+# sets the node's clock, none is dropped, and by the end a time moves the
+# clock by little: 2 ms allows for an adapter that is slow to say when a frame
+# went out.
+motor_util --help | grep -q time_sync || { echo "this motor_util has no time_sync: it is older than motor-realtime's develop"; exit 1; }
+syncs=$(api time_syncs)
+dropped=$(api time_dropped)
+timeout -s INT 3 motor_util time_sync --interface $interface --frequency 10 || [ $? -eq 124 ]
+check time_syncs $(( $(api time_syncs) - syncs )) 20 40
+check time_dropped $(( $(api time_dropped) - dropped )) -1 1
+check time_step_ns $(api time_step) -2000000 2000000
+echo "time_rate $(api time_rate) ppb"
+
 # still there after the watchdog period several times over
 sleep 3
 [ "$(name)" == obot3_tmotor_driver ]

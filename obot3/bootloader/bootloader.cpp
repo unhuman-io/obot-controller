@@ -48,7 +48,7 @@ extern "C" void Reset_Handler() {
     watchdog_start();
     const uint32_t reset_flags = RCC->CSR;
     RCC->CSR = reset_flags | RCC_CSR_RMVF;
-    volatile uint32_t& flag = *reinterpret_cast<volatile uint32_t*>(bootloader_flag_address);
+    volatile uint32_t& flag = bootloader_flag();
     const bool requested = (reset_flags & RCC_CSR_SFTRSTF) && flag == bootloader_flag_value;
     flag = 0;
     const uint32_t* application = reinterpret_cast<const uint32_t*>(application_address);

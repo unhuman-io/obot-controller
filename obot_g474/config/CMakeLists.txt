@@ -29,6 +29,8 @@ set(OBOT_CONFIGS
     motor_template
     motor_timing
     motor_wheel
+    motor_wheel_icmu
+    motor_wheel_right
     nucleo_spi
     nucleo_uart
     nucleo_uart_obot

@@ -1,0 +1,79 @@
+#include "../param/param_obot_g474_can.h"
+#include "st_device.h"
+#include "../../motorlib/encoder.h"
+#include "../../motorlib/torque_sensor.h"
+#include <coroutine>
+#include "task.h"
+#include "../../motorlib/peripheral/stm32g4/spi_dma_new.h"
+#include "../peripheral/stm32g4/pin_config.h"
+
+#define COMMS   COMMS_CAN
+
+using TorqueSensor = TorqueSensorBase;
+using MotorEncoder = EncoderBase;
+using OutputEncoder = EncoderBase;
+
+struct InitCode {
+    InitCode() {
+        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI1_TX;
+        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI1_RX;
+        RCC->AHB2ENR |= RCC_AHB2ENR_DAC1EN;
+        ms_delay(1);
+        GPIO_SETL(A, 4, GPIO_MODE::INPUT,  GPIO_SPEED::MEDIUM, 0);  
+        DAC1->CR = DAC_CR_EN1;
+    }
+};
+
+namespace config {
+    const uint32_t main_loop_frequency = 10000;    
+    const uint32_t pwm_frequency = 30000;
+    InitCode init_code;
+
+    TorqueSensor torque_sensor;
+    OutputEncoder output_encoder;
+    MotorEncoder motor_encoder;
+};
+
+#include "../../motorlib/boards/config_obot_g474_trace.cpp"
+
+Task<> init_sensor(CycleScheduler& sched) {
+    logger.log("sensor start");
+    co_await sched.async_delay_us(500);
+
+    SPIDMANew<SPIConfig {
+        .inst = SPIConfig::SP1,
+        .cs_port = SPIConfig::A,
+        .cs_pin = 4,
+        .tx_channel = DMA1_CH1,
+        .rx_channel = DMA1_CH2,
+        .regs_cr1 = SPI_CR1_MSTR | (7 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM
+    }> spi1;
+    uint8_t data_out[16], data_in[16];
+    logger.log("sensor mid1");
+    bool success = co_await spi1.readwrite_async(sched, data_out, data_in, 16);
+    logger.log_printf("sensor mid2, %d", success);
+    co_await sched.async_delay_us(500);
+    logger.log("sensor done");
+}
+
+Task<> init_adc(CycleScheduler& sched) {
+    logger.log("adc start");
+    co_await sched.async_delay_us(1200); 
+    logger.log("adc done");
+}
+
+void config_init() {
+    CycleScheduler init_scheduler;
+
+    auto sensor_task = init_sensor(init_scheduler);
+    auto adc_task = init_adc(init_scheduler);
+
+    logger.log("init start");
+    while (!sensor_task.is_done() || !adc_task.is_done()) {
+        init_scheduler.poll();
+    }
+    logger.log("init done");
+}
+
+void config_maintenance() {}
+

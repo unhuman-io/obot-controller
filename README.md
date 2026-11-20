@@ -85,7 +85,7 @@ obot-controller/obot_g474> dfu-util -a0 -s 0x8000000 -D ./build/motor_hall/motor
 
 Various motor control parameters that may be specific to the application are placed in a separate flash block that can be reprogrammed independently of the main firmware. The format is the struct [Param](/obot_g474/param/param_obot_g474.h). The built parameters can be flashed as follows:
 ```console
-obot-controller/obot_g474> dfu-util -a0 -s 0x8060000:leave -D ./build/motor_hall/motor_hall_param_only.bin
+obot-controller/obot_g474> dfu-util -a0 -s 0x8060000:leave -D ./build/motor_hall/motor_hall_param.bin
 ```
 
 ## Prebuilt firmware

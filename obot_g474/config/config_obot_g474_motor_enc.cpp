@@ -3,14 +3,18 @@
 #include "../../motorlib/qep_encoder.h"
 #include "../../motorlib/torque_sensor.h"
 #include "../../motorlib/gpio.h"
-#include "../../motorlib/sensors/encoders/ma7xx_encoder.h"
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
 #include "../../motorlib/peripheral/stm32g4/spi_dma.h"
+#include "../../motorlib/peripheral/stm32g4/spi.h"
+#include "../../motorlib/parameter_api.h"
+
+import ma7xx_encoder;
+
 #define COMMS   COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = QEPEncoder;
-using OutputEncoder = MA730Encoder;
+using OutputEncoder = MA730Encoder<SPI>;
 
 struct InitCode {
     InitCode() {
@@ -28,13 +32,14 @@ namespace config {
     QEPEncoder motor_encoder(*TIM2);
     TorqueSensor torque_sensor;
     GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
-    OutputEncoder output_encoder(*SPI3, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3]);
+    SPI spi3 {*SPI3};
+    OutputEncoder output_encoder(spi3, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3]);
 };
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    MA7XX_SET_DEBUG_VARIABLES("j", System::api, config::output_encoder);
+    config::output_encoder.add_debug_variables<"j">(System::api, System::communication_);
 
     System::api.add_api_variable("index_count", new APIUint32(&config::motor_encoder.index_count_));
 }

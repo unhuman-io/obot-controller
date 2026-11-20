@@ -24,7 +24,7 @@ void start_cs_trigger() {
 void stop_cs_trigger_and_wait_cs_high() {
     HRTIM1->sTimerxRegs[0].TIMxDIER = 0;
     // wait for CS high
-    us_delay(20);
+    us_delay(25);
     while(!(GPIOC->IDR & (1 << 13)));
     DMA1_Channel5->CCR &= ~DMA_CCR_EN;
     DMA1_Channel6->CCR &= ~DMA_CCR_EN;

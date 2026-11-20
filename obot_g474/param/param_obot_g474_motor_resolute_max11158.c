@@ -6,8 +6,8 @@
 const Param __attribute__ ((section ("flash_param"))) param_store = {
 #include "param_default.h"
 #include "param_motor.c"
-    .main_loop_param.output_encoder.cpr = pow(2,32),
-    .fast_loop_param.motor_encoder.cpr = pow(2,32)-1,
+    .main_loop_param.output_encoder.cpr = 1ull<<32,
+    .fast_loop_param.motor_encoder.cpr = (1ull<<32)-1,
     .name = "res_max",
 #ifdef PARAM_OVERRIDES
     PARAM_OVERRIDES

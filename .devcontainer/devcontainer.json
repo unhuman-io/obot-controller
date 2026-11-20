@@ -1,0 +1,8 @@
+{
+  "name": "obot-controller",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "vscode"
+}

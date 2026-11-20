@@ -289,14 +289,14 @@ void config_maintenance() {
         round_robin_logger.log_data(AMBIENT_TEMPERATURE_4_INDEX, Tambient4);
     }
     if(config::motor_encoder1.crc_error_count_ > 100 || config::motor_encoder1.error_count_ > 100 ||
-        config::motor_encoder1.warn_count_ > pow(2,31)) {
+        config::motor_encoder1.warn_count_ > powf(2,31)) {
             config::main_loop.status_.error.motor_encoder = true;
     }
     round_robin_logger.log_data(MOTOR_ENCODER_CRC_INDEX, config::motor_encoder1.crc_error_count_);
     round_robin_logger.log_data(MOTOR_ENCODER_ERROR_INDEX, config::motor_encoder1.error_count_);
 
     if(config::output_encoder1.crc_error_count_ > 100 || config::output_encoder1.error_count_ > 100 ||
-        config::output_encoder1.warn_count_ > pow(2,31)) {
+        config::output_encoder1.warn_count_ > powf(2,31)) {
             config::main_loop.status_.error.output_encoder = true;
     }
     round_robin_logger.log_data(OUTPUT_ENCODER_CRC_INDEX, config::output_encoder1.crc_error_count_);

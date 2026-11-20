@@ -13,6 +13,12 @@ extern "C" void (*__init_array_start[])(void);
 extern "C" void (*__init_array_end[])(void);
 int main();
 extern "C" void Reset_Handler(void) {
+#ifdef __ARM_FP
+    // the fpu is off out of reset: full access to cp10 and cp11, before any
+    // floating point instruction
+    SCB->CPACR = SCB->CPACR | 0xFu << 20;
+    __asm__ volatile("dsb\nisb");
+#endif
     clock_config();
     // Copy .data from Flash to RAM
     unsigned int *src = &_sidata;

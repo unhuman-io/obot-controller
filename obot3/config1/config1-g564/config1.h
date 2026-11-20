@@ -5,7 +5,7 @@ import device.can_init;
 import device.irq_init;
 
 struct SpecialEncoder {
-    void read() {}
+    int update() { return 0; }
 };
 
 struct Config1G564SensorStatus {
@@ -18,7 +18,7 @@ struct Config1G564SensorPolicy : Config1SensorPolicy {
 };
 
 struct Config1 : DefaultConfig1 {
-    using MotorEncoderType = SpecialEncoder;
+    using FastLoopSensorPolicy = SpecialEncoder;
     using MainLoopSensorPolicy = Config1G564SensorPolicy;
     int special_parameter = 11;
 };

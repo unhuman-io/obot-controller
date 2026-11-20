@@ -88,9 +88,58 @@ jobs:
           ${{ matrix.target.project }}_${{ matrix.target.config }}_${{ matrix.toolchain }}.tgz
         tag: main
 
+  build-obot3:
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [gcc, llvm]
+    runs-on: ubuntu-latest
+    container: leemagnusson/arm-gcc:15.3
+    steps:
+    - uses: actions/checkout@main
+      with:
+        fetch-depth: 0
+        submodules: recursive
+    - name: install dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -y -qq clang-tools-20 cmake ninja-build
+        ./motorlib/scripts/install_llvm.sh
+    - name: cmake obot3 tmotor_driver ${{ matrix.toolchain }}
+      run: |
+        git config --global --add safe.directory '*'
+        cmake --preset ${{ matrix.toolchain }}
+        cmake --build --preset ${{ matrix.toolchain }} -t obot3_tmotor_driver.elf -t obot3_tmotor_driver_release.elf -t obot3_bootloader.elf
+    - name: Archive obot3 tmotor_driver ${{ matrix.toolchain }}
+      uses: actions/upload-artifact@main
+      with:
+        name: obot3 tmotor_driver ${{ matrix.toolchain }}
+        path: |
+          build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.elf
+          build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver.bin
+          build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver_release.elf
+          build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver_release.bin
+          build/${{ matrix.toolchain }}/obot3/obot3_bootloader.elf
+          build/${{ matrix.toolchain }}/obot3/obot3_bootloader.bin
+
+  test-obot3-control:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+      with:
+        submodules: recursive
+    - name: control host test
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq g++-14
+        g++-14 --version
+        obot3/control/test/run.sh g++-14
+
   test-builds:
     timeout-minutes: 10
-    needs: [build]
+    needs: [build, build-obot3]
     strategy:
       max-parallel: 1 # Ensures GCC and LLVM tests do not collide on the same physical hardware
       fail-fast: false
@@ -224,11 +273,22 @@ jobs:
       run: |
         set -x
         # firmware loaded above - communicates over usb and can
-        # may need ip link set can0 up type can bitrate 2000000 dbitrate 10000000 fd on one-shot on
+        # the runner names its can adapters by usb port and brings them up at boot
+        # (/usr/local/sbin/can-setup there): can0 is this board at 1/5 Mbps, which is as
+        # fast as it gets, can1 the tmotor driver at 1/8 Mbps
         [ $(motor_util -f can0:1 --list-names-only) == can_test ]
-        [ $(motor_util -f --list-names-only | tail -n1) == can_test ]
+        # found without its address too. The tmotor driver on can1, left in its
+        # bootloader, may be in the list as well, before or after it
+        motor_util -f --list-names-only | grep -qx can_test
         PYTHONPATH=/usr/share/motor-realtime python3 obot_g474/test/system/test_motor_can.py
         
+    - name: test tmotor
+      run: |
+        set -x
+        # obot3 on the tmotor driver board, node 1 on can1: loaded through its can
+        # bootloader and left there afterwards
+        CAN_IF=can1 obot3/tmotor_driver/test_can.sh 1 "obot3 tmotor_driver ${{ matrix.toolchain }}/obot3_tmotor_driver.bin"
+
     - name: test uart
       run: |
         set -x

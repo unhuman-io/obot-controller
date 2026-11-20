@@ -145,11 +145,11 @@ void tmotor_startup() {
     auto adc3 = adc_calibrate_async<3>(sched);
     auto adc4 = adc_calibrate_async<4>(sched);
     auto adc5 = adc_calibrate_async<5>(sched);
-    auto drv8323 = drv8323_config_async<tmotor_drv8323_init, TMotorDRV8323IO>(sched);
-    while (!adc1.is_done() || !adc2.is_done() || !adc3.is_done() || !adc4.is_done() || !adc5.is_done() || !drv8323.is_done()) {
+    auto gate_driver = drv8323::config_async<tmotor_drv8323_init, TMotorDRV8323IO>(sched);
+    while (!adc1.is_done() || !adc2.is_done() || !adc3.is_done() || !adc4.is_done() || !adc5.is_done() || !gate_driver.is_done()) {
         sched.poll();
     }
-    tmotor_drv8323_configured(drv8323.get_result());
+    tmotor_drv8323_configured(gate_driver.get_result());
 }
 
 void debug_idle();

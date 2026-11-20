@@ -18,7 +18,7 @@ export import device.tim_init;
 export import device.can_init;
 export import device.irq_init;
 export import device.spi_init;
-export import device.drv8323_init;
+export import drivers.drv8323;
 export import device.system;
 export import control.motor_controller;
 export import control.clock;
@@ -354,26 +354,26 @@ constexpr auto tmotor_spi_init = SPIInit{
 
 // The DRV8323S gate driver, as the drv_regs of
 // obot_g474/param/param_obot_g474_tmotor_driver.c
-constexpr auto tmotor_drv8323_init = DRV8323Init{
-    .pwm_mode = DRV8323PWMMode::PWM_6X,
-    .high_side_source_current = 15,                 // 1 A
-    .high_side_sink_current = 15,                   // 2 A
-    .cycle_by_cycle = DRV8323Enable::DISABLED,
-    .drive_time = DRV8323DriveTime::NS_4000,
-    .low_side_source_current = 7,                   // 0.57 A
-    .low_side_sink_current = 15,                    // 2 A
-    .ocp_retry = DRV8323OCPRetry::MS_4,
-    .dead_time = DRV8323DeadTime::NS_50,
-    .ocp_mode = DRV8323OCPMode::LATCHED,
-    .ocp_deglitch = DRV8323OCPDeglitch::US_2,
-    .vds_level = 4,                                 // 0.31 V
-    .bidirectional = DRV8323Enable::ENABLED,
-    .csa_gain = DRV8323CSAGain::X5,
-    .sense_level = DRV8323SenseLevel::V_0_25,
+constexpr auto tmotor_drv8323_init = drv8323::Init{
+    .pwm_mode = drv8323::PWMMode::PWM_6X,
+    .high_side_source_current = drv8323::SourceCurrent::MA_1000,
+    .high_side_sink_current = drv8323::SinkCurrent::MA_2000,
+    .cycle_by_cycle = drv8323::Enable::DISABLED,
+    .drive_time = drv8323::DriveTime::NS_4000,
+    .low_side_source_current = drv8323::SourceCurrent::MA_190,
+    .low_side_sink_current = drv8323::SinkCurrent::MA_2000,
+    .ocp_retry = drv8323::OCPRetry::MS_4,
+    .dead_time = drv8323::DeadTime::NS_50,
+    .ocp_mode = drv8323::OCPMode::LATCHED,
+    .ocp_deglitch = drv8323::OCPDeglitch::US_2,
+    .vds_level = drv8323::VDSLevel::V_0_31,
+    .bidirectional = drv8323::Enable::ENABLED,
+    .csa_gain = drv8323::CSAGain::X5,
+    .sense_level = drv8323::SenseLevel::V_0_25,
 };
-static_assert(get_drv8323_reg(tmotor_drv8323_init, 0) == 0x000 && get_drv8323_reg(tmotor_drv8323_init, 1) == 0x3FF &&
-    get_drv8323_reg(tmotor_drv8323_init, 2) == 0x37F && get_drv8323_reg(tmotor_drv8323_init, 3) == 0x004 &&
-    get_drv8323_reg(tmotor_drv8323_init, 4) == 0x200, "the register values of the obot_g474 tmotor_driver");
+static_assert(drv8323::get_reg(tmotor_drv8323_init, 0) == 0x000 && drv8323::get_reg(tmotor_drv8323_init, 1) == 0x3FF &&
+    drv8323::get_reg(tmotor_drv8323_init, 2) == 0x37F && drv8323::get_reg(tmotor_drv8323_init, 3) == 0x004 &&
+    drv8323::get_reg(tmotor_drv8323_init, 4) == 0x200, "the register values of the obot_g474 tmotor_driver");
 
 // How the driver is reached
 // SPI1 is the gate driver's and the imu's, see spi_bus.h: 16 bit frames at
@@ -402,7 +402,7 @@ struct TMotorIMUIO {
     static void transfer_end() { TMotorBus::finish(); }
 };
 
-// The gate driver for device.drv8323_init. Its frames are plain functions'
+// The gate driver for drivers.drv8323. Its frames are plain functions'
 // (the startup, the status for the text api, what gdb calls), so they take
 // the bus as those can: after a frame of the imu that is on its way. A caller
 // that can wait in the scheduler does, for the lock: tmotor_bus_yield, when
@@ -431,6 +431,23 @@ struct TMotorDRV8323IO {
         TMotorBus::give(mine);
         return reply;
     }
+    // One frame, waited for
+    static uint16_t transfer(uint16_t word) {
+        transfer_start(word);
+        while (!transfer_ready());
+        return transfer_end();
+    }
+    // One frame of a task: the wait is the scheduler's
+    struct Reply {
+        CycleScheduler& sched;
+        bool await_ready() const { return transfer_ready(); }
+        void await_suspend(std::coroutine_handle<> h) { sched.when(transfer_ready).await_suspend(h); }
+        uint16_t await_resume() const { return transfer_end(); }
+    };
+    static Reply transfer_async(CycleScheduler& sched, uint16_t word) {
+        transfer_start(word);
+        return Reply{sched};
+    }
     static void enable(bool on) {
         if (on) gpio_set(gpio_port<'C'>(), 13);
         else gpio_clear(gpio_port<'C'>(), 13);
@@ -442,11 +459,11 @@ struct TMotorDRV8323IO {
 // outputs off.
 inline constinit volatile uint32_t tmotor_drv8323_errors = ~0u;
 DEBUG_CALL inline bool tmotor_drv8323_fault() { return !gpio_read(gpio_port<'C'>(), 14); }
-DEBUG_CALL inline uint32_t tmotor_drv8323_status() { return drv8323_status<TMotorDRV8323IO>(); }
+DEBUG_CALL inline uint32_t tmotor_drv8323_status() { return drv8323::status<TMotorDRV8323IO>(); }
 // The driver's registers one by one: 0 and 1 the fault status, 2 to 6 the control registers
-DEBUG_CALL inline uint32_t tmotor_drv8323_read(uint32_t address) { return drv8323_read<TMotorDRV8323IO>(address); }
-DEBUG_CALL inline void tmotor_drv8323_write(uint32_t address, uint32_t value) { drv8323_write<TMotorDRV8323IO>(address, value); }
-DEBUG_CALL inline void tmotor_drv8323_clear_faults() { drv8323_clear_faults<tmotor_drv8323_init, TMotorDRV8323IO>(); }
+DEBUG_CALL inline uint32_t tmotor_drv8323_read(uint32_t address) { return drv8323::read<TMotorDRV8323IO>(address); }
+DEBUG_CALL inline void tmotor_drv8323_write(uint32_t address, uint32_t value) { drv8323::write<TMotorDRV8323IO>(address, value); }
+DEBUG_CALL inline void tmotor_drv8323_clear_faults() { drv8323::clear_faults<tmotor_drv8323_init, TMotorDRV8323IO>(); }
 
 // Everything past the clocks and pins, in order: tmotor_startup_init(),
 // tmotor_startup(), tmotor_device_init(), and then the interrupts.
@@ -459,9 +476,9 @@ inline void tmotor_startup_init() {
     device_spi_config<tmotor_spi_init>();
 }
 
-// For the result of drv8323_config_async
+// For the result of drv8323::config_async
 inline void tmotor_drv8323_configured(uint32_t errors) {
-    if (errors != 0) drv8323_disable<TMotorDRV8323IO>();
+    if (errors != 0) drv8323::disable<TMotorDRV8323IO>();
     tmotor_drv8323_errors = errors;
 }
 
@@ -504,7 +521,7 @@ struct TMotorMeasurement {
 // per frame, summed over its roll-over. The frame takes 1.5 us and is waited
 // for.
 struct TMotorFastLoopSensors {
-    static constexpr float adc_gain = -3.3f / 4096 / (.033f * drv8323_csa_gain(tmotor_drv8323_init));   // A per count from mid scale: 33 mohm shunts through the driver's amplifiers
+    static constexpr float adc_gain = -3.3f / 4096 / (.033f * drv8323::csa_gain(tmotor_drv8323_init));   // A per count from mid scale: 33 mohm shunts through the driver's amplifiers
     static constexpr int32_t encoder_cpr = 65536;
     static constexpr int32_t encoder_dir = -1;                      // sign of the motor position
     static constexpr int32_t encoder_rollover = 1 << 24;            // counts: the position wraps at +-rollover

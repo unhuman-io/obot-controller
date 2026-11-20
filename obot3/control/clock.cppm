@@ -231,19 +231,18 @@ class SyncedClock {
 };
 
 // A host's time over can (motor-realtime: motor_util time_sync, which has the
-// same struct in can_time_sync.h). Two can fd frames to all nodes, both this
-// struct, little endian: the host sends a SYNC, finds out when exactly that
-// frame was sent and says so in a follow up. A node notes when the SYNC
-// arrived, on its steady clock, and knows the host's time for that moment
-// when the follow up is in.
-struct TimeSyncFrame {
-    uint8_t sequence;       // of the pair
-    uint8_t follow_up;      // 0: the SYNC, 1: its follow up
-    uint8_t reserved[2];
-    uint32_t seconds;       // in the follow up: when the SYNC was sent, since 1970
+// same struct in can_time_sync.h). Two can fd frames to all nodes: the host
+// sends a SYNC of one byte, its sequence, finds out when exactly that frame
+// was sent and says so in a follow up, this struct, little endian. A node
+// notes when the SYNC arrived, on its steady clock, and knows the host's time
+// for that moment when the follow up is in.
+struct TimeSyncFollowUp {
+    uint8_t sequence;       // of the SYNC that it is about
+    uint8_t reserved[3];
+    uint32_t seconds;       // when that SYNC was sent, since 1970
     uint32_t nanoseconds;
 };
-static_assert(sizeof(TimeSyncFrame) == 12);
+static_assert(sizeof(TimeSyncFollowUp) == 12);
 
 template<typename Synced>
 class TimeSyncReceiver {
@@ -253,17 +252,16 @@ class TimeSyncReceiver {
     // A frame of the time id, which started at `received` on the steady
     // clock. True if it has set the clock.
     static bool frame(const uint8_t* data, int length, ClockTime received) noexcept {
-        TimeSyncFrame time;
-        if (length != sizeof(time)) return false;
-        __builtin_memcpy(&time, data, sizeof(time));   // gcc 15 fails on std::memcpy in a module here
-        if (!time.follow_up) {
+        if (length == 1) {      // a SYNC
             if (pending_) dropped_ = dropped_ + 1;
             pending_ = true;
-            sequence_ = time.sequence;
+            sequence_ = data[0];
             received_ = received;
             return false;
         }
-        if (!pending_) return false;
+        TimeSyncFollowUp time;
+        if (length != sizeof(time) || !pending_) return false;
+        __builtin_memcpy(&time, data, sizeof(time));   // gcc 15 fails on std::memcpy in a module here
         pending_ = false;
         if (time.sequence != sequence_ || time.nanoseconds >= 1'000'000'000 ||
                 clock_difference(received, received_) > follow_up_timeout_ns) {

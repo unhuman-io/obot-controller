@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795220411747,
+  "lastUpdate": 1795220617835,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -175051,6 +175051,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1189.675415,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5a5b8a5e1debbaeb9569f3c0ffa4f00d6eda3d1d",
+          "message": "obot3 clock: time frames as one little endian can fd struct (#424)\n\n* obot3 clock: the time frames of motor_util time_sync as one little endian can fd struct\n\nTimeSyncFrame, 12 bytes: a SYNC and its follow up with the seconds and\nnanoseconds at which the SYNC was sent. It takes the place of the AUTOSAR\nframes, big endian and with a time domain, that the receiver took before.\nThe host side is unhuman-io/motor-realtime#270.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n* obot3 clock: the SYNC of the time frames is one byte\n\nIts sequence; the follow up is TimeSyncFollowUp. As motor-realtime#270.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n* ci: motor_util of motor-realtime's develop for the hardware tests; a time sync test for the tmotor driver\n\nThe test job takes the motor_util that motor-realtime's build publishes for\nits develop branch and puts it ahead of the one installed on the runner,\nwhich nothing kept up to date.\n\ntest_can.sh runs motor_util time_sync at 10 Hz for 3 s: every time has to\nset the node's clock, none dropped, and the last move it by less than 2 ms.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Fable 5.2 <noreply@anthropic.com>",
+          "timestamp": "2026-11-20T16:06:10-08:00",
+          "tree_id": "265c21f29d55eedd667ab3ecf796b6671848b0e2",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/5a5b8a5e1debbaeb9569f3c0ffa4f00d6eda3d1d"
+        },
+        "date": 1795220615694,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles_llvm",
+            "value": 806,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period_llvm",
+            "value": 3400,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles_llvm",
+            "value": 2733,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles_llvm",
+            "value": 2752.7,
+            "unit": "cycles",
+            "extra": "2774 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period_llvm",
+            "value": 3400,
+            "unit": "cycles",
+            "extra": "3400 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles_llvm",
+            "value": 809,
+            "unit": "cycles",
+            "extra": "809 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17000 times"
+          },
+          {
+            "name": "Benchmarkprogram_size_llvm",
+            "value": 170156,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size_llvm",
+            "value": 6924,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size_llvm",
+            "value": 172640,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size_llvm",
+            "value": 6520,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size_llvm",
+            "value": 87516,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used_llvm",
+            "value": 2538,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used_llvm",
+            "value": 6450,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used_llvm",
+            "value": 1519,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime_llvm",
+            "value": 32783333,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1084.938965,
             "unit": "Hz",
             "extra": "0 times"
           }

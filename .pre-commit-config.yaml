@@ -1,0 +1,12 @@
+# Formats the C and C++ files of a commit with clang-format, and stops the
+# commit if that changed any: add the changes and commit again.
+# Once in each clone:
+#   pipx install pre-commit        (or: pip install pre-commit)
+#   pre-commit install
+# The version is the one of .clang-format and of the check in CI.
+repos:
+- repo: https://github.com/pre-commit/mirrors-clang-format
+  rev: v23.1.5
+  hooks:
+  - id: clang-format
+    types_or: [c, c++]

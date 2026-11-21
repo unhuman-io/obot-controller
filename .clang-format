@@ -1,0 +1,62 @@
+# clang-format 23. The check in CI runs this version: use the same one,
+#   pipx run clang-format==23.1.5 -i <files>
+#
+# The settings follow what the code already did, so that formatting moves as
+# little as possible: 4 spaces, attached braces, lines as long as they were
+# written. Only white space changes: nothing is sorted, added or removed.
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AccessModifierOffset: -3            # " public:"
+PointerAlignment: Left              # int* p
+DerivePointerAlignment: false
+BitFieldColonSpacing: None          # uint8_t flag:1
+
+# No line length: a line is broken where its author broke it. A limit would
+# break up the tables of declarations with a comment each, which are wide.
+ColumnLimit: 0
+ReflowComments: Never
+AlignTrailingComments:
+  Kind: Leave                       # comments stay in the columns they were put in
+SpacesBeforeTrailingComments: 1
+SpacesInLineCommentPrefix:
+  Minimum: 0
+  Maximum: -1
+AlignConsecutiveAssignments:
+  Enabled: false
+  EnumAssignments: true             # the = of an enum's values line up
+  AcrossComments: true
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+AlignEscapedNewlines: DontAlign
+PackConstructorInitializers: Never  # one initializer per line
+BreakConstructorInitializers: AfterColon
+
+# Short things may stay on one line
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+AllowShortEnumsOnASingleLine: true
+
+IndentCaseLabels: true
+NamespaceIndentation: None
+IndentExportBlock: false            # export { ... } of a module
+IndentExternBlock: NoIndent         # extern "C" { ... }
+MaxEmptyLinesToKeep: 2
+KeepEmptyLines:
+  AtStartOfBlock: true
+  AtStartOfFile: false
+  AtEndOfFile: false
+
+# Nothing but white space
+SortIncludes: Never
+IncludeBlocks: Preserve
+SortUsingDeclarations: Never
+FixNamespaceComments: false
+InsertBraces: false

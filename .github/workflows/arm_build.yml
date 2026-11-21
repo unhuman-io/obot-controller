@@ -319,6 +319,16 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         auto-push: true
 
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: clang-format
+      # The version that .clang-format is written for; .clang-format-ignore
+      # names what is not ours to format. motorlib has its own check. To
+      # format: the same with -i in place of --dry-run --Werror.
+      run: pipx run clang-format==23.1.5 --dry-run --Werror $(git ls-files '*.h' '*.hpp' '*.c' '*.cc' '*.cpp' '*.cppm')
+
   test:
     runs-on: ubuntu-latest
     needs: test-builds

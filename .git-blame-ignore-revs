@@ -1,0 +1,4 @@
+# Commits that only reformat: git blame skips them with
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# and so does the blame view on GitHub.
+a83878330ce23193c54eec80e4f6d588774393da

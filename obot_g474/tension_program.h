@@ -5,7 +5,12 @@
 
 class TensionProgram {
  public:
-    enum State {OFF, LOW_VELOCITY, START_VELOCITY, TORQUE, END, ERROR};
+    enum State { OFF,
+                 LOW_VELOCITY,
+                 START_VELOCITY,
+                 TORQUE,
+                 END,
+                 ERROR };
     const std::string state_string[5] = {"OFF", "LOW_VELOCITY", "START_VELOCITY", "TORQUE", "ERROR"};
     std::string get_state() const { return state_string[state_]; }
     void loop() {
@@ -23,8 +28,8 @@ class TensionProgram {
         status_ = config::main_loop.get_status();
         config::gpio1.update();     // for deboucing
         config::gpio2.update();
-        float dt = (status_.fast_loop.timestamp - last_timestamp_)*(1.0/CPU_FREQUENCY_HZ);
-        float velocity = (status_.fast_loop.motor_position.position - last_motor_position_)/dt;
+        float dt = (status_.fast_loop.timestamp - last_timestamp_) * (1.0 / CPU_FREQUENCY_HZ);
+        float velocity = (status_.fast_loop.motor_position.position - last_motor_position_) / dt;
         last_timestamp_ = status_.fast_loop.timestamp;
         last_motor_position_ = status_.fast_loop.motor_position.position;
         float velocity_filtered = velocity_filter_.update(velocity);
@@ -81,7 +86,7 @@ class TensionProgram {
                 logger.log_once("torque");
                 command.mode_desired = MotorMode::TORQUE;
                 // A slope to try to cancel friction
-                torque_desired_current_ += torque_vs_position_ramp*velocity*dt;
+                torque_desired_current_ += torque_vs_position_ramp * velocity * dt;
                 torque_desired_current_ = fsat2(torque_desired_current_, min_torque_desired, torque_desired);
                 command.torque_desired = torque_desired_current_;
                 torque_dither_trajectory_.set_amplitude(dithering_torque);
@@ -123,6 +128,7 @@ class TensionProgram {
 
         config::main_loop.set_command(command);
     }
+
  private:
     uint64_t t_ms_ = 0;
     uint64_t t_ms_state_ = 0;

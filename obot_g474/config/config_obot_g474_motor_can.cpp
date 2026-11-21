@@ -5,9 +5,9 @@
 #include "../../motorlib/gpio.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#define COMMS   COMMS_CAN_USB
+#define COMMS             COMMS_CAN_USB
 #define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_1M, CAN::DataBaudRate::DATA_5M
-#define CAN_NUM CAN::CAN3
+#define CAN_NUM           CAN::CAN3
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = EncoderBase;
@@ -20,23 +20,22 @@ struct InitCode {
 
         RCC->APB1ENR1 |= RCC_APB1ENR1_FDCANEN;
 
-      // if defined(INTERFACE_BBS)
-      // PA0 TCS
-      GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); 
-      GPIOA->BSRR = GPIO_BSRR_BS0;
-      GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
-        
+        // if defined(INTERFACE_BBS)
+        // PA0 TCS
+        GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
+        GPIOA->BSRR = GPIO_BSRR_BS0;
+        GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
     }
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 50000;
-    InitCode init_code;
+const uint32_t main_loop_frequency = 10000;
+const uint32_t pwm_frequency = 50000;
+InitCode init_code;
 
-    MotorEncoder motor_encoder;
-    TorqueSensor torque_sensor;
-    OutputEncoder output_encoder;
+MotorEncoder motor_encoder;
+TorqueSensor torque_sensor;
+OutputEncoder output_encoder;
 };
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"

@@ -42,7 +42,7 @@ constexpr bool operator==(const ClockTime& a, const ClockTime& b) { return a.sec
 // a - b in nanoseconds, for times within 2^31 s of each other
 constexpr int64_t clock_difference(ClockTime a, ClockTime b) {
     return static_cast<int64_t>(static_cast<int32_t>(a.seconds - b.seconds)) * 1'000'000'000 +
-        static_cast<int32_t>(a.nanoseconds - b.nanoseconds);
+           static_cast<int32_t>(a.nanoseconds - b.nanoseconds);
 }
 
 // Any number of nanoseconds later or earlier: a 64 bit division
@@ -57,7 +57,7 @@ constexpr ClockTime clock_add(ClockTime time, int64_t nanoseconds) {
 }
 
 // cycles() is the counter: 32 bits that wrap, at frequency_hz
-template<uint32_t frequency_hz, uint32_t cycles()>
+template <uint32_t frequency_hz, uint32_t cycles()>
 class CycleClock {
  public:
     using rep = int64_t;
@@ -129,7 +129,7 @@ class CycleClock {
 // keeps time over the seconds between them better than one of them tells it,
 // and one that is off by more, a frame that had to wait for the bus, moves
 // it by that part only.
-template<typename Steady>
+template <typename Steady>
 class SyncedClock {
  public:
     using rep = int64_t;
@@ -148,9 +148,10 @@ class SyncedClock {
         int32_t nanoseconds = static_cast<int32_t>(steady.nanoseconds - sync.steady.nanoseconds);
         // what the host's time has gained on the steady clock since: by the
         // whole seconds, as far as the rate is trusted, and by the rest
-        const int32_t rate_seconds = seconds > rate_span_s ? rate_span_s : seconds < -rate_span_s ? -rate_span_s : seconds;
+        const int32_t rate_seconds = seconds > rate_span_s ? rate_span_s : seconds < -rate_span_s ? -rate_span_s
+                                                                                                  : seconds;
         const int32_t gained = rate_seconds * sync.rate_ppb +
-            static_cast<int32_t>(static_cast<int64_t>(nanoseconds) * sync.rate_q32 >> 32);
+                               static_cast<int32_t>(static_cast<int64_t>(nanoseconds) * sync.rate_q32 >> 32);
         ClockTime host{sync.host.seconds + static_cast<uint32_t>(seconds), 0};
         nanoseconds += static_cast<int32_t>(sync.host.nanoseconds);         // within -1e9 and 2e9
         if (nanoseconds < 0) {
@@ -201,7 +202,8 @@ class SyncedClock {
         sync.steady = steady;
         sync.host = to;
         sync_.write(sync);
-        last_step_ns_ = step > INT32_MAX ? INT32_MAX : step < INT32_MIN ? INT32_MIN : static_cast<int32_t>(step);
+        last_step_ns_ = step > INT32_MAX ? INT32_MAX : step < INT32_MIN ? INT32_MIN
+                                                                        : static_cast<int32_t>(step);
         count_ = count_ + 1;
         return step;
     }
@@ -244,7 +246,7 @@ struct TimeSyncFollowUp {
 };
 static_assert(sizeof(TimeSyncFollowUp) == 12);
 
-template<typename Synced>
+template <typename Synced>
 class TimeSyncReceiver {
  public:
     static constexpr int64_t follow_up_timeout_ns = 100'000'000;
@@ -264,7 +266,7 @@ class TimeSyncReceiver {
         __builtin_memcpy(&time, data, sizeof(time));   // gcc 15 fails on std::memcpy in a module here
         pending_ = false;
         if (time.sequence != sequence_ || time.nanoseconds >= 1'000'000'000 ||
-                clock_difference(received, received_) > follow_up_timeout_ns) {
+            clock_difference(received, received_) > follow_up_timeout_ns) {
             dropped_ = dropped_ + 1;
             return false;
         }

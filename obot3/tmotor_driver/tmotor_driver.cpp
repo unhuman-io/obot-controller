@@ -21,7 +21,7 @@
 #include <iterator>
 import tmotor_driver;
 
-template<auto config = TMotorConfig{}>
+template <auto config = TMotorConfig{}>
 struct Config : BasicConfig<config> {};
 
 using MySystem = System<Config<>>;
@@ -48,7 +48,7 @@ constinit CycleStats fast_loop_stats{"fast_loop"}, main_loop_stats{"main_loop"},
     status_task_stats{"status_task"}, imu_task_stats{"imu_task"}, led_task_stats{"led_task"},
     text_task_stats{"text_task"}, host_task_stats{"host_task"}, call_task_stats{"call_task"};
 constinit CycleStats* const cycle_stats[] = {&fast_loop_stats, &main_loop_stats, &text_isr_stats,
-    &status_task_stats, &imu_task_stats, &led_task_stats, &text_task_stats, &host_task_stats, &call_task_stats};
+                                             &status_task_stats, &imu_task_stats, &led_task_stats, &text_task_stats, &host_task_stats, &call_task_stats};
 
 // ADC5 end of injected sequence, 50 kHz
 void fast_loop_isr() {
@@ -109,8 +109,7 @@ constexpr DebugThread debug_threads[] = {
 };
 
 extern "C" void Reset_Handler();
-__attribute__((section(".isr_vector"), used))
-constinit const auto vector_table = []() consteval {
+__attribute__((section(".isr_vector"), used)) constinit const auto vector_table = []() consteval {
     auto table = get_vector_table<tmotor_irq_init>(&_estack, Reset_Handler);
     table.vector[DebugMonitor_IRQn + 15] = debug_monitor_entry;
     table.vector[PendSV_IRQn + 15] = debug_holder_entry;
@@ -126,8 +125,7 @@ constexpr auto tmotor_irq_init = []() consteval {
 }();
 
 extern "C" void Reset_Handler();
-__attribute__((section(".isr_vector"), used))
-constinit const auto vector_table = get_vector_table<tmotor_irq_init>(&_estack, Reset_Handler);
+__attribute__((section(".isr_vector"), used)) constinit const auto vector_table = get_vector_table<tmotor_irq_init>(&_estack, Reset_Handler);
 #endif
 
 void clock_config() {
@@ -196,7 +194,7 @@ volatile uint32_t temperature_reading, vrefint_reading, motor_thermistor_reading
 // 10 Hz: the watchdog condition and the slow ADC
 // channels. The injected sequences take 6 us per channel, so the results of
 // one pass are read at the start of the next.
-GlobalTask<void, 1, 160> status_task(CycleScheduler &sched) {
+GlobalTask<void, 1, 160> status_task(CycleScheduler& sched) {
     constexpr uint32_t PERIOD_CYCLES = CPU_FREQUENCY_HZ / status_frequency_hz;
     uint32_t target_wake_time = get_clock();
     uint32_t ticks = 0;
@@ -267,7 +265,7 @@ constexpr auto controller_param = tmotor_controller_param;
 // requests in preempts the main loop, so it only serves the gdb packets
 // itself; the others are left for the background, see text_poll.
 constexpr float fast_dt = 1.f / tmotor_pwm_frequency_hz;
-#define TUNE(name, value) text_float(name, [] { return static_cast<float>(value); }, [](float v) { value = v; })
+#define TUNE(name, value)         text_float(name, [] { return static_cast<float>(value); }, [](float v) { value = v; })
 #define FAST_STATUS(name, member) text_float(name, [] { return static_cast<float>(fast_loop.get_status().member); })
 constexpr TextVariable text_variables[] = {
     // the current controllers, in use by the fast loop
@@ -280,10 +278,9 @@ constexpr TextVariable text_variables[] = {
     TUNE("idki_limit", fast_loop.controller.pi_d().ki_limit),
     TUNE("idmax", fast_loop.controller.pi_d().command_max),
     text_float("iq_filter", [] { return fast_loop.controller.get_current_filter_frequency(); },    // Hz, both axes
-        [](float hz) { fast_loop.controller.set_current_filter_frequency(hz); }),
+               [](float hz) { fast_loop.controller.set_current_filter_frequency(hz); }),
     TUNE("vbus", fast_loop.sensors.vbus),                                   // V, what the pwm scale assumes
-    text_int("electrical_zero_pos", [] { return static_cast<int64_t>(fast_loop.sensors.electrical_zero); },
-        [](int64_t counts) { fast_loop.sensors.electrical_zero = counts; }),
+    text_int("electrical_zero_pos", [] { return static_cast<int64_t>(fast_loop.sensors.electrical_zero); }, [](int64_t counts) { fast_loop.sensors.electrical_zero = counts; }),
 
     // the position controller
     TUNE("kp", main_loop.controller.position_controller.pid().kp_),
@@ -291,18 +288,15 @@ constexpr TextVariable text_variables[] = {
     TUNE("ki", main_loop.controller.position_controller.pid().ki_),
     TUNE("ki_limit", main_loop.controller.position_controller.pid().ki_limit_),
     TUNE("max", main_loop.controller.position_controller.pid().command_max_),          // A
-    text_float("velocity_filter", [] { return main_loop.controller.position_controller.pid().get_velocity_filter_frequency(); },
-        [](float hz) { main_loop.controller.position_controller.pid().set_velocity_filter_frequency(hz); }),
-    text_float("output_filter", [] { return main_loop.controller.position_controller.pid().get_output_filter_frequency(); },
-        [](float hz) { main_loop.controller.position_controller.pid().set_output_filter_frequency(hz); }),
+    text_float("velocity_filter", [] { return main_loop.controller.position_controller.pid().get_velocity_filter_frequency(); }, [](float hz) { main_loop.controller.position_controller.pid().set_velocity_filter_frequency(hz); }),
+    text_float("output_filter", [] { return main_loop.controller.position_controller.pid().get_output_filter_frequency(); }, [](float hz) { main_loop.controller.position_controller.pid().set_output_filter_frequency(hz); }),
 
     // the velocity controller
     TUNE("vkp", main_loop.controller.velocity_controller.pid().kp_),
     TUNE("vki", main_loop.controller.velocity_controller.pid().ki_),
     TUNE("vki_limit", main_loop.controller.velocity_controller.pid().ki_limit_),
     TUNE("vmax", main_loop.controller.velocity_controller.pid().command_max_),
-    text_float("voutput_filt", [] { return main_loop.controller.velocity_controller.pid().get_output_filter_frequency(); },
-        [](float hz) { main_loop.controller.velocity_controller.pid().set_output_filter_frequency(hz); }),
+    text_float("voutput_filt", [] { return main_loop.controller.velocity_controller.pid().get_output_filter_frequency(); }, [](float hz) { main_loop.controller.velocity_controller.pid().set_output_filter_frequency(hz); }),
 
     // what the fast loop measures and puts out: A, V, rad, rad/s
     FAST_STATUS("ia", measured.i_a),
@@ -497,8 +491,7 @@ void text_send_more() {
             size = fit;
             if (fit <= text_reply_total - text_reply_offset) break;
         }
-        frame.header = {.control_packet_id = 0, .type = LONG_PACKET,
-            .long_packet = {.total_length = static_cast<uint16_t>(text_reply_total), .packet_number = text_reply_number}};
+        frame.header = {.control_packet_id = 0, .type = LONG_PACKET, .long_packet = {.total_length = static_cast<uint16_t>(text_reply_total), .packet_number = text_reply_number}};
         std::memcpy(frame.data, text_reply + text_reply_offset, size);
         if (!can_write<tmotor_can_init>(id, &frame, sizeof(frame.header) + size)) {
             can_interrupt_enable<tmotor_can_init>(can_interrupt_tx_empty);
@@ -514,7 +507,7 @@ void text_send(TextOut& out) {
     text_reply_total = 0;
     if (out.length() < 64) {
         can_write<tmotor_can_init>(obot_can_id(obot_can_ascii_response, tmotor_can_address()),
-            out.text(), out.length() > 1 ? out.length() + 1 : out.length());
+                                   out.text(), out.length() > 1 ? out.length() + 1 : out.length());
         return;
     }
     while (out.length() % 4 != 0 && out.room() != 0) out.put(' ');
@@ -579,7 +572,9 @@ void text_poll() {
 }
 
 #else
-struct TextLock { TextLock() {} };     // nothing else sends
+struct TextLock {
+    TextLock() {}
+};     // nothing else sends
 void text_poll() {}
 #endif
 
@@ -681,7 +676,9 @@ GlobalTask<void, 2, 160> imu_task(CycleScheduler& sched) {
 // of 200 a second.
 void led_update() {
     static uint32_t phase;
-    struct Color { uint8_t red, green, blue; };     // in halves
+    struct Color {
+        uint8_t red, green, blue;
+    };     // in halves
     constexpr Color red{2, 0, 0}, orange{2, 1, 0}, yellow{2, 2, 0}, chartreuse{1, 2, 0}, green{0, 2, 0},
         azure{0, 1, 2}, blue{0, 0, 2}, violet{1, 0, 2}, magenta{2, 0, 2}, rose{2, 0, 1};
     Color color = azure;
@@ -696,7 +693,10 @@ void led_update() {
         case obot::STATE: color = magenta; break;
         case obot::VOLTAGE: color = violet; break;
         case obot::PHASE_LOCK: color = yellow; break;
-        case obot::FAULT: color = red; rate = 2; break;
+        case obot::FAULT:
+            color = red;
+            rate = 2;
+            break;
         default: break;     // open
     }
     phase = (phase + rate) % 200;

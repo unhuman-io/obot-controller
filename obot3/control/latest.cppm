@@ -29,7 +29,7 @@ inline uint32_t latest_interrupts_off() { return 0; }
 inline void latest_interrupts_restore(uint32_t) {}
 #endif
 
-template<typename T>
+template <typename T>
 class Latest {
  public:
     constexpr Latest() = default;
@@ -50,6 +50,7 @@ class Latest {
         latest_interrupts_restore(state);
         return value;
     }
+
  private:
     T slots_[2] = {};
     volatile uint32_t sequence_ = 0;

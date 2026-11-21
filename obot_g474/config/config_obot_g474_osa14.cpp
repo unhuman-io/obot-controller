@@ -15,48 +15,48 @@ using OutputEncoder = TorqueSensorMultiplex<SPITorque, MA782Encoder<SPI>>::Secon
 
 struct InitCode {
     InitCode() {
-      // dma setup for spi torque
-      DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
-      DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
+        // dma setup for spi torque
+        DMAMUX1_Channel0->CCR = DMA_REQUEST_SPI3_TX;
+        DMAMUX1_Channel1->CCR = DMA_REQUEST_SPI3_RX;
     }
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 50000;
-    InitCode init_code;
+const uint32_t main_loop_frequency = 10000;
+const uint32_t pwm_frequency = 50000;
+InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
-    SPI spi1 {*SPI1};
-    MA782Encoder motor_encoder(spi1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
-    GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT); // spi3 cs1
-    SPITorque torque_sensor_direct(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2,  
-        SPIDMA::spi_pause[SPIDMA::SP3], 0);
-    GPIO output_encoder_cs(*GPIOB, 4, GPIO::OUTPUT); // spi3 cs2
-    SPI spi3 {*SPI3};
-    MA782Encoder output_encoder_direct(spi3, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3], 119);
-    TorqueSensorMultiplex<SPITorque, MA782Encoder<SPI>> torque_sensor(torque_sensor_direct, output_encoder_direct, 5);
-    OutputEncoder &output_encoder = torque_sensor.secondary();
+GPIO motor_encoder_cs(*GPIOA, 4, GPIO::OUTPUT);
+SPI spi1{*SPI1};
+MA782Encoder motor_encoder(spi1, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP1]);
+GPIO torque_sensor_cs(*GPIOD, 2, GPIO::OUTPUT); // spi3 cs1
+SPITorque torque_sensor_direct(*SPI3, torque_sensor_cs, *DMA1_Channel1, *DMA1_Channel2,
+                               SPIDMA::spi_pause[SPIDMA::SP3], 0);
+GPIO output_encoder_cs(*GPIOB, 4, GPIO::OUTPUT); // spi3 cs2
+SPI spi3{*SPI3};
+MA782Encoder output_encoder_direct(spi3, output_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3], 119);
+TorqueSensorMultiplex<SPITorque, MA782Encoder<SPI>> torque_sensor(torque_sensor_direct, output_encoder_direct, 5);
+OutputEncoder& output_encoder = torque_sensor.secondary();
 };
 
 #include "../../motorlib/boards/config_obot_g474_osa.cpp"
 
 void config_init() {
-    System::api.add_api_variable("mbct", new APICallbackUint8([](){ return config::motor_encoder.get_bct(); },
-                    [](uint8_t u){ config::motor_encoder.set_bct(u); }));
-    System::api.add_api_variable("met", new APICallbackUint8([](){ return config::motor_encoder.get_et(); },
-                    [](uint8_t u){ config::motor_encoder.set_et(u); }));
-    System::api.add_api_variable("mmgt", new APICallbackHex<uint16_t>([](){ return config::motor_encoder.get_magnetic_field_strength(); },
-                    [](uint16_t u){ config::motor_encoder.set_mgt(u); }));
-    System::api.add_api_variable("jbct", new APICallbackUint8([](){ return config::output_encoder_direct.get_bct(); },
-                    [](uint8_t u){ config::motor_encoder.set_bct(u); }));
-    System::api.add_api_variable("jet", new APICallbackUint8([](){ return config::output_encoder_direct.get_et(); },
-                    [](uint8_t u){ config::motor_encoder.set_et(u); }));
-    System::api.add_api_variable("jmgt", new APICallbackHex<uint16_t>([](){ return config::output_encoder_direct.get_magnetic_field_strength(); },
-                    [](uint16_t u){ config::motor_encoder.set_mgt(u); }));
+    System::api.add_api_variable("mbct", new APICallbackUint8([]() { return config::motor_encoder.get_bct(); },
+                                                              [](uint8_t u) { config::motor_encoder.set_bct(u); }));
+    System::api.add_api_variable("met", new APICallbackUint8([]() { return config::motor_encoder.get_et(); },
+                                                             [](uint8_t u) { config::motor_encoder.set_et(u); }));
+    System::api.add_api_variable("mmgt", new APICallbackHex<uint16_t>([]() { return config::motor_encoder.get_magnetic_field_strength(); },
+                                                                      [](uint16_t u) { config::motor_encoder.set_mgt(u); }));
+    System::api.add_api_variable("jbct", new APICallbackUint8([]() { return config::output_encoder_direct.get_bct(); },
+                                                              [](uint8_t u) { config::motor_encoder.set_bct(u); }));
+    System::api.add_api_variable("jet", new APICallbackUint8([]() { return config::output_encoder_direct.get_et(); },
+                                                             [](uint8_t u) { config::motor_encoder.set_et(u); }));
+    System::api.add_api_variable("jmgt", new APICallbackHex<uint16_t>([]() { return config::output_encoder_direct.get_magnetic_field_strength(); },
+                                                                      [](uint16_t u) { config::motor_encoder.set_mgt(u); }));
 
     System::api.add_api_variable("C1", new const APIUint32(&config::torque_sensor_direct.result0_));
-    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor_direct.result1_));     
+    System::api.add_api_variable("C2", new const APIUint32(&config::torque_sensor_direct.result1_));
 }
 
 void config_maintenance() {}

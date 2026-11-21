@@ -13,47 +13,47 @@ using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = ICPZDMA;
 using OutputEncoder = EncoderBase;
 
-#define COMMS  COMMS_USB
+#define COMMS COMMS_USB
 
 void start_cs_trigger() {
     DMA1_Channel5->CNDTR = 1;
     DMA1_Channel6->CCR |= DMA_CCR_EN;
     DMA1_Channel5->CCR |= DMA_CCR_EN;
-    HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE |  HRTIM_TIMDIER_CMP2DE;
+    HRTIM1->sTimerxRegs[0].TIMxDIER = HRTIM_TIMDIER_CMP1DE | HRTIM_TIMDIER_CMP2DE;
 }
 void stop_cs_trigger_and_wait_cs_high() {
     HRTIM1->sTimerxRegs[0].TIMxDIER = 0;
     // wait for CS high
     us_delay(25);
-    while(!(GPIOC->IDR & (1 << 13)));
+    while (!(GPIOC->IDR & (1 << 13)));
     DMA1_Channel5->CCR &= ~DMA_CCR_EN;
     DMA1_Channel6->CCR &= ~DMA_CCR_EN;
 }
 
-uint32_t gpio_cs_bsrr_r = {1 << (13+16)};
+uint32_t gpio_cs_bsrr_r = {1 << (13 + 16)};
 uint32_t gpio_cs_bsrr_s = {1 << 13};
 struct InitCode {
     InitCode() {
         //SPI3 PZ
-        DMAMUX1_Channel0->CCR =  DMA_REQUEST_SPI3_TX;
-        DMAMUX1_Channel1->CCR =  DMA_REQUEST_SPI3_RX;
+        DMAMUX1_Channel0->CCR = DMA_REQUEST_SPI3_TX;
+        DMAMUX1_Channel1->CCR = DMA_REQUEST_SPI3_RX;
         SPI3->CR1 = SPI_CR1_MSTR | (3 << SPI_CR1_BR_Pos) | SPI_CR1_SSI | SPI_CR1_SSM;    // baud = clock/16 spi mode 0
         SPI3->CR2 = (7 << SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;    // 8 bit
 
         // SPI3 setup for motor9 board
-        GPIO_SETH(C, 13, GPIO_MODE::OUTPUT,  GPIO_SPEED::HIGH, 0);
-        GPIO_SETL(B,  3, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 6);
-        GPIO_SETL(B,  4, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 6);
-        GPIO_SETL(B,  5, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 6);
+        GPIO_SETH(C, 13, GPIO_MODE::OUTPUT, GPIO_SPEED::HIGH, 0);
+        GPIO_SETL(B, 3, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 6);
+        GPIO_SETL(B, 4, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 6);
+        GPIO_SETL(B, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::HIGH, 6);
 
         // trigger motor encoder on HRTIM CHA
-        const uint32_t period = CPU_FREQUENCY_HZ*8/40000; // requires hrtim mult of 8, pwm 50khz
+        const uint32_t period = CPU_FREQUENCY_HZ * 8 / 40000; // requires hrtim mult of 8, pwm 50khz
         // read takes 170*8*5 = 6800 counts
         static_assert(period > 32767);
         static_assert(period < 65536);
-        HRTIM1->sTimerxRegs[0].CMP1xR = period - 6800*2.3 + 4000;
+        HRTIM1->sTimerxRegs[0].CMP1xR = period - 6800 * 2.3 + 4000;
         HRTIM1->sTimerxRegs[0].CMP2xR = period - 6800 + 4000;
-        HRTIM1->sTimerxRegs[0].PERxR = period; 
+        HRTIM1->sTimerxRegs[0].PERxR = period;
         HRTIM1->sTimerxRegs[0].TIMxCR |= HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU | HRTIM_TIMCR_CONT | 2 << HRTIM_TIMCR_CK_PSC_Pos;
 
         DMAMUX1_Channel4->CCR = 96; // hrtima
@@ -75,17 +75,17 @@ struct InitCode {
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 40000;
-    InitCode init_code;
+const uint32_t main_loop_frequency = 10000;
+const uint32_t pwm_frequency = 40000;
+InitCode init_code;
 
-    GPIO motor_encoder_cs = {*GPIOC, 13, GPIO::OUTPUT};
-    SPIDMA spi3_dma = {SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0, 100, 0};
-    ICPZDMA motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 13, 
-        start_cs_trigger, stop_cs_trigger_and_wait_cs_high, ICPZDMA::PZ03S);
+GPIO motor_encoder_cs = {*GPIOC, 13, GPIO::OUTPUT};
+SPIDMA spi3_dma = {SPIDMA::SP3, motor_encoder_cs, DMA1_CH1, DMA1_CH2, 0, 100, 0};
+ICPZDMA motor_encoder(spi3_dma, *DMAMUX1_Channel0, *DMAMUX1_Channel1, 13,
+                      start_cs_trigger, stop_cs_trigger_and_wait_cs_high, ICPZDMA::PZ03S);
 
-    EncoderBase output_encoder;
-    TorqueSensorBase torque_sensor;
+EncoderBase output_encoder;
+TorqueSensorBase torque_sensor;
 };
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"

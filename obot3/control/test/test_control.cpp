@@ -10,10 +10,14 @@ import control.motor_controller;
 import control.sincos;
 
 static int failures = 0;
-#define CHECK(condition, ...) do { \
-    const bool ok = (condition); \
-    if (!ok) failures++; \
-    std::printf("%s  ", ok ? "pass" : "FAIL"); std::printf(__VA_ARGS__); std::printf("\n"); } while (0)
+#define CHECK(condition, ...) \
+    do { \
+        const bool ok = (condition); \
+        if (!ok) failures++; \
+        std::printf("%s  ", ok ? "pass" : "FAIL"); \
+        std::printf(__VA_ARGS__); \
+        std::printf("\n"); \
+    } while (0)
 
 constexpr float fast_dt = 1.f / 50000, main_dt = 1.f / 10000;
 constexpr float num_poles = 14;
@@ -75,9 +79,16 @@ struct HostCommand {
 
 // What the loops hand to the controller policy
 struct Status {
-    struct ExpectedCommand { FOCCommand foc; };
-    struct { Measured measured; FOCStatus controller; } fast_loop;
-    struct { float output_position = 0, torque = 0; } sensors;
+    struct ExpectedCommand {
+        FOCCommand foc;
+    };
+    struct {
+        Measured measured;
+        FOCStatus controller;
+    } fast_loop;
+    struct {
+        float output_position = 0, torque = 0;
+    } sensors;
 };
 
 using TestFOC = FOC<foc_param, fast_dt>;
@@ -185,7 +196,7 @@ int main() {
         rig.run(1);
         const float electrical = std::remainder(rig.motor.position * num_poles, 2 * 3.14159265f);
         CHECK(std::fabs(std::fabs(electrical) - 3.14159265f) < .1f && std::fabs(rig.motor.velocity) < 1,    // lightly damped: still settling
-            "phase lock: rotor at electrical angle %g, %g rad/s", electrical, rig.motor.velocity);
+              "phase lock: rotor at electrical angle %g, %g rad/s", electrical, rig.motor.velocity);
         CHECK(std::fabs(rig.status.fast_loop.controller.i_d - 2) < .1f, "phase lock: i_d %g for 2 A at angle 0", rig.status.fast_loop.controller.i_d);
     }
 

@@ -3,7 +3,7 @@
 
 
 // Can be written by external methods, e.g. bootloader
-const Param __attribute__ ((section ("flash_param"))) param_store = {
+const Param __attribute__((section("flash_param"))) param_store = {
 #include "param_motor.c"
     .main_loop_param.torque_sensor.gain = 1,
     .main_loop_param.torque_sensor.bias = 0,

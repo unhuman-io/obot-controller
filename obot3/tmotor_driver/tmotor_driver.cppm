@@ -372,8 +372,9 @@ constexpr auto tmotor_drv8323_init = drv8323::Init{
     .sense_level = drv8323::SenseLevel::V_0_25,
 };
 static_assert(drv8323::get_reg(tmotor_drv8323_init, 0) == 0x000 && drv8323::get_reg(tmotor_drv8323_init, 1) == 0x3FF &&
-    drv8323::get_reg(tmotor_drv8323_init, 2) == 0x37F && drv8323::get_reg(tmotor_drv8323_init, 3) == 0x004 &&
-    drv8323::get_reg(tmotor_drv8323_init, 4) == 0x200, "the register values of the obot_g474 tmotor_driver");
+                  drv8323::get_reg(tmotor_drv8323_init, 2) == 0x37F && drv8323::get_reg(tmotor_drv8323_init, 3) == 0x004 &&
+                  drv8323::get_reg(tmotor_drv8323_init, 4) == 0x200,
+              "the register values of the obot_g474 tmotor_driver");
 
 // How the driver is reached
 // SPI1 is the gate driver's and the imu's, see spi_bus.h: 16 bit frames at
@@ -384,13 +385,16 @@ using TMotorBus = SPIBus<1, 1, 2>;
 inline const SPIChip tmotor_drv8323_chip = {
     .cr1 = SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE | 7 << SPI_CR1_BR_Pos | SPI_CR1_CPHA,
     .cr2 = 15 << SPI_CR2_DS_Pos,
-    .cs_port = GPIOA, .cs_pin = 4,
+    .cs_port = GPIOA,
+    .cs_pin = 4,
 };
 inline const SPIChip tmotor_imu_chip = {
     .cr1 = SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE | 4 << SPI_CR1_BR_Pos | SPI_CR1_CPOL | SPI_CR1_CPHA,
     .cr2 = 7 << SPI_CR2_DS_Pos | SPI_CR2_FRXTH,
-    .cs_port = GPIOC, .cs_pin = 4,
-    .request_rx = DMA_REQUEST_SPI1_RX, .request_tx = DMA_REQUEST_SPI1_TX,
+    .cs_port = GPIOC,
+    .cs_pin = 4,
+    .request_rx = DMA_REQUEST_SPI1_RX,
+    .request_tx = DMA_REQUEST_SPI1_TX,
 };
 
 // The imu for bmi270.h: every frame is a task's, with the lock
@@ -582,9 +586,9 @@ struct TMotorPWM {
     static constexpr float pwm_min = min_pulse_ticks, pwm_max = period - min_pulse_ticks;
     static constexpr HRTIMTimer phase_a = HRTIMTimer::D, phase_b = HRTIMTimer::F, phase_c = HRTIMTimer::E;
     static constexpr uint32_t high_sides = hrtim_output_mask(phase_a, true, false) | hrtim_output_mask(phase_b, true, false) |
-        hrtim_output_mask(phase_c, true, false);
+                                           hrtim_output_mask(phase_c, true, false);
     static constexpr uint32_t low_sides = hrtim_output_mask(phase_a, false, true) | hrtim_output_mask(phase_b, false, true) |
-        hrtim_output_mask(phase_c, false, true);
+                                          hrtim_output_mask(phase_c, false, true);
 
     void update(const FOCStatus& foc, const TMotorMeasurement& measured) {
         const FOCMode wanted = tmotor_drv8323_errors == 0 ? foc.mode : FOCMode::OPEN;
@@ -642,7 +646,7 @@ struct TMotorSensorStatus {
 };
 
 struct TMotorSensorPolicy {
-    template<typename FastLoopStatus>
+    template <typename FastLoopStatus>
     TMotorSensorStatus update(const FastLoopStatus& fast_loop) {
         count = count + 1;
         return {fast_loop.measured.motor_position / tmotor_gear_ratio, 0};
@@ -667,5 +671,4 @@ struct TMotorConfig : BasicDefaultConfig {
     using MainLoopSensorPolicy = TMotorSensorPolicy;
     using MainLoopControllerPolicy = MotorControllerPolicy<tmotor_controller_param, 1.f / tmotor_main_loop_frequency_hz, TMotorHostCommand>;
 };
-
 }

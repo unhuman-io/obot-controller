@@ -4,7 +4,10 @@
 import device.hrtim_init;
 
 struct Config1SensorPolicy {
-    int update() { count++; return 0; }
+    int update() {
+        count++;
+        return 0;
+    }
     int count = 0;
 };
 
@@ -13,7 +16,7 @@ struct DefaultConfig1 : BasicDefaultConfig {
     using MainLoopSensorPolicy = Config1SensorPolicy;
 };
 
-constexpr auto config1_default_gpio_init = [](){
+constexpr auto config1_default_gpio_init = []() {
     GPIOInit init = trace_gpio_init();
     init.a[2].mode = GPIOMode::ALTERNATE;
     return init;

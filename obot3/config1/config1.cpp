@@ -3,7 +3,7 @@
 #include "system.h"
 #include "config1.h"
 
-template<auto config = Config1{}>
+template <auto config = Config1{}>
 struct Config : BasicConfig<config> {
     int another_special_parameter = 12;
     volatile float voltage_sensor;
@@ -22,8 +22,7 @@ void tim2_isr() {
 }
 
 extern "C" void Reset_Handler();
-__attribute__((section(".isr_vector"), used))
-constinit const auto vector_table = get_vector_table<config1_irq_init>(&_estack, Reset_Handler);
+__attribute__((section(".isr_vector"), used)) constinit const auto vector_table = get_vector_table<config1_irq_init>(&_estack, Reset_Handler);
 
 void clock_config() {
     device_rcc_clock_config<config1_rcc_clock_init>();
@@ -40,9 +39,9 @@ void pin_config() {
 
 CycleScheduler sched;
 volatile uint32_t* const cpu_clock = &DWT->CYCCNT;
-GlobalTask<void, 1, 36> task1(CycleScheduler &sched){
+GlobalTask<void, 1, 36> task1(CycleScheduler& sched) {
     volatile int count = 0;
-    while(1) {
+    while (1) {
         count += 1;
         co_await sched.yield();
     }
@@ -50,7 +49,7 @@ GlobalTask<void, 1, 36> task1(CycleScheduler &sched){
 
 auto task1_task = task1(sched);
 
-GlobalTask<void, 2, 48> task2(CycleScheduler &sched){
+GlobalTask<void, 2, 48> task2(CycleScheduler& sched) {
     volatile int count2 = 0;
     constexpr uint32_t PERIOD_CYCLES = CPU_FREQUENCY_HZ / 10; // 10Hz
     uint32_t target_wake_time = get_clock();

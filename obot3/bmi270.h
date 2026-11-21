@@ -31,20 +31,22 @@ inline constexpr int bmi270_task_id = 120;      // GlobalCall instances from her
 
 // The configuration as the frame that loads it: the register, then the 8 K
 constexpr auto bmi270_load_frame = [] {
-    struct { uint8_t bytes[1 + sizeof(bmi270_config_file)]; } frame{};
+    struct {
+        uint8_t bytes[1 + sizeof(bmi270_config_file)];
+    } frame{};
     frame.bytes[0] = 0x5E;
     for (uint32_t i = 0; i < sizeof(bmi270_config_file); i++) frame.bytes[1 + i] = bmi270_config_file[i];
     return frame;
 }();
 
-template<typename IO>
+template <typename IO>
 inline GlobalCall<void, bmi270_task_id, 96> bmi270_transfer(CycleScheduler& sched, const uint8_t* out, uint8_t* in, uint32_t length) {
     IO::transfer_start(out, in, length);
     co_await IO::done(sched);
     IO::transfer_end();
 }
 
-template<typename IO>
+template <typename IO>
 inline GlobalCall<uint8_t, bmi270_task_id + 1, 96> bmi270_read(CycleScheduler& sched, uint8_t address) {
     uint8_t out[3] = {static_cast<uint8_t>(address | 0x80)};
     uint8_t in[3];
@@ -52,7 +54,7 @@ inline GlobalCall<uint8_t, bmi270_task_id + 1, 96> bmi270_read(CycleScheduler& s
     co_return in[2];
 }
 
-template<typename IO>
+template <typename IO>
 inline GlobalCall<void, bmi270_task_id + 2, 96> bmi270_write(CycleScheduler& sched, uint8_t address, uint8_t value) {
     uint8_t out[2] = {address, value};
     co_await bmi270_transfer<IO>(sched, out, nullptr, 2);
@@ -60,7 +62,7 @@ inline GlobalCall<void, bmi270_task_id + 2, 96> bmi270_write(CycleScheduler& sch
 }
 
 // A register, from any task
-template<typename IO>
+template <typename IO>
 inline GlobalCall<uint8_t, bmi270_task_id + 5, 96> bmi270_get(CycleScheduler& sched, uint8_t address) {
     co_await IO::lock(sched);
     const uint8_t value = co_await bmi270_read<IO>(sched, address);
@@ -73,7 +75,10 @@ inline GlobalCall<uint8_t, bmi270_task_id + 5, 96> bmi270_get(CycleScheduler& sc
 // at 400 Hz output. The steps are a table, which is a fraction of the code
 // that a co_await for each would be.
 struct BMI270Step {
-    enum Kind : uint8_t { READ, WRITE, LOAD, WAIT } kind;
+    enum Kind : uint8_t { READ,
+                          WRITE,
+                          LOAD,
+                          WAIT } kind;
     uint8_t address, value;
     uint16_t wait_us;       // after it
 };
@@ -96,7 +101,7 @@ inline constexpr BMI270Step bmi270_init_steps[] = {
 };
 inline constexpr uint32_t bmi270_chip_id_step = 3, bmi270_status_step = 8;
 
-template<typename IO>
+template <typename IO>
 inline GlobalCall<uint32_t, bmi270_task_id + 3, 160> bmi270_init(CycleScheduler& sched) {
     uint32_t chip_id = 0, status = 0;
     for (uint32_t i = 0; i < sizeof(bmi270_init_steps) / sizeof(bmi270_init_steps[0]); i++) {
@@ -117,7 +122,7 @@ inline GlobalCall<uint32_t, bmi270_task_id + 3, 160> bmi270_init(CycleScheduler&
     co_return chip_id << 8 | status;
 }
 
-template<typename IO>
+template <typename IO>
 inline GlobalCall<BMI270Data, bmi270_task_id + 4, 144> bmi270_data(CycleScheduler& sched) {
     uint8_t out[14] = {0x80 | 0x0C};
     uint8_t in[14];

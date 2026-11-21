@@ -31,7 +31,7 @@ struct SPIChip {
     uint8_t request_rx, request_tx;     // the port's dmamux requests, for the chips that use start()
 };
 
-template<int spi, int dma_rx, int dma_tx>
+template <int spi, int dma_rx, int dma_tx>
 struct SPIBus {
     static SPI_TypeDef& port() {
         if constexpr (spi == 1) return *SPI1;

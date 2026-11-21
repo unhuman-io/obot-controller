@@ -3,8 +3,8 @@
 
 
 // Can be written by external methods, e.g. bootloader
-const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
+const volatile Param __attribute__((section("flash_param"))) param_store = {
 #include "param_default.h"
-.name = "trace_can",
-.can_id = 1,
+    .name = "trace_can",
+    .can_id = 1,
 };

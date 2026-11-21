@@ -2,25 +2,25 @@
 #include "math.h"
 
 // Can be written by external methods, e.g. bootloader
-const Param __attribute__ ((section ("flash_param"))) param_store = {
+const Param __attribute__((section("flash_param"))) param_store = {
 #include "param_default.h"
-    .fast_loop_param.foc_param.pi_d.kp=.5,
-    .fast_loop_param.foc_param.pi_d.ki=.05,
+    .fast_loop_param.foc_param.pi_d.kp = .5,
+    .fast_loop_param.foc_param.pi_d.ki = .05,
     // .fast_loop_param.foc_param.pi_d.kp=5, // hd
     // .fast_loop_param.foc_param.pi_d.ki=0.4,
-    .fast_loop_param.foc_param.pi_d.ki_limit=4,
-    .fast_loop_param.foc_param.pi_d.command_max=10,
-    .fast_loop_param.foc_param.pi_q.kp=.5,
-    .fast_loop_param.foc_param.pi_q.ki=.05,
-    .fast_loop_param.foc_param.pi_q.ki_limit=4,
-    .fast_loop_param.foc_param.pi_q.command_max=10,
-    .fast_loop_param.foc_param.current_filter_frequency_hz=35000,
+    .fast_loop_param.foc_param.pi_d.ki_limit = 4,
+    .fast_loop_param.foc_param.pi_d.command_max = 10,
+    .fast_loop_param.foc_param.pi_q.kp = .5,
+    .fast_loop_param.foc_param.pi_q.ki = .05,
+    .fast_loop_param.foc_param.pi_q.ki_limit = 4,
+    .fast_loop_param.foc_param.pi_q.command_max = 10,
+    .fast_loop_param.foc_param.current_filter_frequency_hz = 35000,
     .fast_loop_param.foc_param.num_poles = 20,
     .fast_loop_param.cogging.gain = 1,
     .startup_param.startup_mode = OPEN,
-    .fast_loop_param.adc1_gain = 3.0/4096*(8475/2000.0),  // A/count
-    .fast_loop_param.adc2_gain = 3.0/4096*(8770/2000.0),
-    .fast_loop_param.adc3_gain = 3.0/4096*(8620/2000.0), 
+    .fast_loop_param.adc1_gain = 3.0 / 4096 * (8475 / 2000.0),  // A/count
+    .fast_loop_param.adc2_gain = 3.0 / 4096 * (8770 / 2000.0),
+    .fast_loop_param.adc3_gain = 3.0 / 4096 * (8620 / 2000.0),
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 20000,
@@ -29,7 +29,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     // .main_loop_param.torque_sensor.gain = 1,
     // .main_loop_param.torque_sensor.bias = 0,
     // .main_loop_param.torque_sensor.k_temp = 0,
-    .fast_loop_param.vbus_gain = 1.0/4096*(33+2.0)/2.0,
+    .fast_loop_param.vbus_gain = 1.0 / 4096 * (33 + 2.0) / 2.0,
     .main_loop_param.position_controller_param.position.kp = 20,
     .main_loop_param.position_controller_param.position.kd = .15,
     .main_loop_param.position_controller_param.position.velocity_filter_frequency_hz = 400,
@@ -60,10 +60,10 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .main_loop_param.host_timeout = 0,
     .main_loop_param.safe_mode = DAMPED,
     .fast_loop_param.cogging.table = {
-//#include "cog_small.csv"
+        //#include "cog_small.csv"
     },
     .fast_loop_param.motor_encoder.table = {
-//#include "tab.csv"
+        //#include "tab.csv"
     },
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = -5,

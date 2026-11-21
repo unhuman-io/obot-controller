@@ -45,7 +45,7 @@ struct FOCStatus {
 
 // The measurement type needs i_a, i_b, i_c (A) and motor_electrical_position
 // (rad at the motor shaft: the electrical angle is num_poles times it)
-template<FOCParam param, float dt>
+template <FOCParam param, float dt>
 class FOC {
  public:
     using Command = FOCCommand;
@@ -53,7 +53,7 @@ class FOC {
 
     constexpr FOC() = default;
 
-    template<typename Measured>
+    template <typename Measured>
     Output update(const Command& command, const Measured& measured) {
         constexpr float sqrt3 = std::numbers::sqrt3_v<float>;
         if (command.mode != status_.mode) {

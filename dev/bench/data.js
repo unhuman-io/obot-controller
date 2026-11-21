@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795223595460,
+  "lastUpdate": 1795224048289,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -176107,6 +176107,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 990.958374,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "leemagnusson@gmail.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2c52784a02d78d22debccf4811f7ec322c7d5148",
+          "message": "clang-format: settings, a formatting pass and a check in CI (#425)\n\n* clang-format: the settings, a check of them in CI, and a commit hook\n\nThe .clang-format of motor_messages, motorlib and motor-realtime:\nclang-format 23, with settings that follow what the code already does, and\nnothing but white space changed. scripts/parameters/CLI11.hpp is left as\nit is.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n* Format with clang-format\n\nWhite space only: the tokens of every file are the same as before.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n* git blame passes over the formatting commit\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n* clang-format: the style is motor_messages', through motorlib; motorlib to its formatting\n\n.clang-format inherits from motorlib's, which inherits from the one in its\nmotor_messages submodule: the same style as the copy that was here.\nmotorlib goes to the head of unhuman-io/motorlib#436 for that, which is\nmotorlib formatted; the pointer moves to develop once that is merged.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n* motorlib to develop\n\nunhuman-io/motorlib#436 is merged: develop is the same tree as the head of\nthat pull request, which this pointed at.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Fable 5.2 <noreply@anthropic.com>",
+          "timestamp": "2026-11-21T01:04:41Z",
+          "tree_id": "784b446309a83f0e00b4cbae5937efd45dc5e84c",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/2c52784a02d78d22debccf4811f7ec322c7d5148"
+        },
+        "date": 1795224046748,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles_llvm",
+            "value": 805,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period_llvm",
+            "value": 3400,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles_llvm",
+            "value": 2745,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles_llvm",
+            "value": 2739.07,
+            "unit": "cycles",
+            "extra": "2771 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period_llvm",
+            "value": 3400,
+            "unit": "cycles",
+            "extra": "3400 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles_llvm",
+            "value": 807.464,
+            "unit": "cycles",
+            "extra": "808 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period_llvm",
+            "value": 16999.8,
+            "unit": "cycles",
+            "extra": "17000 times"
+          },
+          {
+            "name": "Benchmarkprogram_size_llvm",
+            "value": 170156,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size_llvm",
+            "value": 6924,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size_llvm",
+            "value": 172640,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size_llvm",
+            "value": 6520,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size_llvm",
+            "value": 87516,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used_llvm",
+            "value": 2538,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used_llvm",
+            "value": 6450,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used_llvm",
+            "value": 1519,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime_llvm",
+            "value": 32786461,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1090.095215,
             "unit": "Hz",
             "extra": "0 times"
           }

@@ -154,6 +154,14 @@ jobs:
     - uses: actions/download-artifact@main
       with:
         path: .
+    - name: motor_util
+      # The one of motor-realtime's develop, as its build publishes it, ahead
+      # of the one that is installed on the runner: for this job only, and
+      # with nothing to install. The python module stays the installed one.
+      run: |
+        curl -sSfL https://github.com/unhuman-io/motor-realtime/releases/download/develop/artifacts_ubuntu-22.04.tgz | tar xz -C "$RUNNER_TEMP"
+        echo "$RUNNER_TEMP/artifacts/bin" >> "$GITHUB_PATH"
+        "$RUNNER_TEMP/artifacts/bin/motor_util" --version
     - name: test
       run: |
         set -x

@@ -125,24 +125,28 @@ static void test_frames() {
     Steady::update();
     const uint32_t count_before = Synced::count();
     const ClockTime received = Steady::time();
-    // 1'800'000'000 s, sequence 5, and a follow up with 2 s overflow and 123456789 ns
-    const uint8_t sync[8] = {0x10, 0, 0x05, 0, 0x6B, 0x49, 0xD2, 0x00};
-    const uint8_t follow_up[8] = {0x18, 0, 0x05, 0x02, 0x07, 0x5B, 0xCD, 0x15};
-    CHECK(!Receiver::frame(sync, 8, received), "a SYNC alone sets nothing");
+    // sequence 5, sent at 1'800'000'002.123456789 s
+    const uint8_t sync[1] = {5};
+    const TimeSyncFollowUp follow_up_frame = {.sequence = 5, .seconds = 1'800'000'002, .nanoseconds = 123'456'789};
+    const uint8_t* follow_up = reinterpret_cast<const uint8_t*>(&follow_up_frame);
+    // little endian on the bus: the seconds are 0x6B49D202
+    CHECK(follow_up[0] == 5 && follow_up[4] == 0x02 && follow_up[7] == 0x6B && follow_up[8] == 0x15, "the bytes of a follow up");
+    CHECK(!Receiver::frame(sync, 1, received), "a SYNC alone sets nothing");
     counter += 170'000;     // 1 ms
-    CHECK(Receiver::frame(follow_up, 8, Steady::time()) && Synced::count() == count_before + 1, "its follow up sets the clock");
+    CHECK(Receiver::frame(follow_up, 12, Steady::time()) && Synced::count() == count_before + 1, "its follow up sets the clock");
     const ClockTime time = Synced::time_at(static_cast<uint32_t>(counter - 170'000));
     CHECK(time.seconds == 1'800'000'002 && time.nanoseconds == 123'456'789, "to %u.%09u for the start of the SYNC", time.seconds, time.nanoseconds);
 
-    const uint8_t other_sequence[8] = {0x18, 0, 0x06, 0, 0, 0, 0, 0};
-    Receiver::frame(sync, 8, Steady::time());
-    CHECK(!Receiver::frame(other_sequence, 8, Steady::time()) && Receiver::dropped() == 1, "a follow up of another sequence is dropped");
-    CHECK(!Receiver::frame(follow_up, 8, Steady::time()), "a follow up without a SYNC is dropped");
-    Receiver::frame(sync, 8, Steady::time());
+    const TimeSyncFollowUp other_sequence_frame = {.sequence = 6, .seconds = 1'800'000'003};
+    const uint8_t* other_sequence = reinterpret_cast<const uint8_t*>(&other_sequence_frame);
+    Receiver::frame(sync, 1, Steady::time());
+    CHECK(!Receiver::frame(other_sequence, 12, Steady::time()) && Receiver::dropped() == 1, "a follow up of another sequence is dropped");
+    CHECK(!Receiver::frame(follow_up, 12, Steady::time()), "a follow up without a SYNC is dropped");
+    Receiver::frame(sync, 1, Steady::time());
     counter += 170'000'000 / 5;
-    CHECK(!Receiver::frame(follow_up, 8, Steady::time()), "a follow up 200 ms after its SYNC is dropped");
-    const uint8_t other_domain[8] = {0x10, 0, 0x15, 0, 0, 0, 0, 0};
-    CHECK(!Receiver::frame(other_domain, 8, Steady::time()) && !Receiver::frame(follow_up, 8, Steady::time()), "another time domain is not taken");
+    CHECK(!Receiver::frame(follow_up, 12, Steady::time()), "a follow up 200 ms after its SYNC is dropped");
+    Receiver::frame(sync, 1, Steady::time());
+    CHECK(!Receiver::frame(follow_up, 8, Steady::time()) && !Receiver::frame(follow_up, 16, Steady::time()), "a frame of another length is not taken");
 }
 
 int main() {

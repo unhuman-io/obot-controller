@@ -230,53 +230,52 @@ class SyncedClock {
     static inline constinit uint32_t count_ = 0, rates_ = 0;
 };
 
-// A host's time over can, in the frames of AUTOSAR's time synchronization
-// over CAN (CanTSyn, SWS_CanTSyn_00015 and 00016: the SYNC and FUP messages
-// that are not CRC secured): the host sends SYNC with the seconds,
-// finds out when exactly that frame was on the bus and says so in a follow
-// up. A node notes when the SYNC arrived, on its steady clock, and knows the
-// host's time for that moment when the follow up is in. 8 bytes each:
-//   SYNC        0x10, user byte, domain << 4 | sequence, user byte, seconds (big endian)
-//   follow up   0x18, user byte, domain << 4 | sequence, overflow of seconds in bits 1..0, nanoseconds (big endian)
-// The time of the SYNC is seconds + overflow + nanoseconds.
-template<typename Synced, uint8_t domain = 0>
+// A host's time over can (motor-realtime: motor_util time_sync, which has the
+// same struct in can_time_sync.h). Two can fd frames to all nodes: the host
+// sends a SYNC of one byte, its sequence, finds out when exactly that frame
+// was sent and says so in a follow up, this struct, little endian. A node
+// notes when the SYNC arrived, on its steady clock, and knows the host's time
+// for that moment when the follow up is in.
+struct TimeSyncFollowUp {
+    uint8_t sequence;       // of the SYNC that it is about
+    uint8_t reserved[3];
+    uint32_t seconds;       // when that SYNC was sent, since 1970
+    uint32_t nanoseconds;
+};
+static_assert(sizeof(TimeSyncFollowUp) == 12);
+
+template<typename Synced>
 class TimeSyncReceiver {
  public:
-    static constexpr uint8_t sync_type = 0x10, follow_up_type = 0x18;
     static constexpr int64_t follow_up_timeout_ns = 100'000'000;
 
     // A frame of the time id, which started at `received` on the steady
     // clock. True if it has set the clock.
     static bool frame(const uint8_t* data, int length, ClockTime received) noexcept {
-        if (length != 8 || data[2] >> 4 != domain) return false;
-        if (data[0] == sync_type) {
+        if (length == 1) {      // a SYNC
             if (pending_) dropped_ = dropped_ + 1;
             pending_ = true;
-            sequence_ = data[2] & 0xF;
-            seconds_ = big_endian(data + 4);
+            sequence_ = data[0];
             received_ = received;
-        } else if (data[0] == follow_up_type && pending_) {
-            pending_ = false;
-            const uint32_t nanoseconds = big_endian(data + 4);
-            if ((data[2] & 0xF) != sequence_ || nanoseconds >= 1'000'000'000 ||
-                    clock_difference(received, received_) > follow_up_timeout_ns) {
-                dropped_ = dropped_ + 1;
-                return false;
-            }
-            Synced::set(received_, {seconds_ + (data[3] & 3u), nanoseconds});
-            return true;
+            return false;
         }
-        return false;
+        TimeSyncFollowUp time;
+        if (length != sizeof(time) || !pending_) return false;
+        __builtin_memcpy(&time, data, sizeof(time));   // gcc 15 fails on std::memcpy in a module here
+        pending_ = false;
+        if (time.sequence != sequence_ || time.nanoseconds >= 1'000'000'000 ||
+                clock_difference(received, received_) > follow_up_timeout_ns) {
+            dropped_ = dropped_ + 1;
+            return false;
+        }
+        Synced::set(received_, {time.seconds, time.nanoseconds});
+        return true;
     }
     static uint32_t dropped() noexcept { return dropped_; }     // a SYNC without its follow up
 
  private:
-    static constexpr uint32_t big_endian(const uint8_t* bytes) {
-        return static_cast<uint32_t>(bytes[0]) << 24 | static_cast<uint32_t>(bytes[1]) << 16 |
-            static_cast<uint32_t>(bytes[2]) << 8 | bytes[3];
-    }
     static inline constinit ClockTime received_{};
-    static inline constinit uint32_t seconds_ = 0, dropped_ = 0;
+    static inline constinit uint32_t dropped_ = 0;
     static inline constinit uint8_t sequence_ = 0;
     static inline constinit bool pending_ = false;
 };

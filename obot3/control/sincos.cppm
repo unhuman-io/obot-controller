@@ -32,8 +32,7 @@ constexpr Table make_table() {
     for (int i = 0; i < table_length; i++) {
         // angle in -pi..pi for the series
         const double x = 2 * std::numbers::pi * (i < table_length / 2 ? i : i - table_length) / table_length;
-        const double xc = 2 * std::numbers::pi * ((i + table_length / 4) % table_length < table_length / 2 ?
-            (i + table_length / 4) % table_length : (i + table_length / 4) % table_length - table_length) / table_length;
+        const double xc = 2 * std::numbers::pi * ((i + table_length / 4) % table_length < table_length / 2 ? (i + table_length / 4) % table_length : (i + table_length / 4) % table_length - table_length) / table_length;
         table.sin[i] = sin_series(x);
         table.cos[i] = sin_series(xc);    // cos(x) = sin(x + pi/2)
     }
@@ -44,7 +43,7 @@ inline constexpr Table table = make_table();
 }
 
 export // x in radians, any range that fits an int32 of table steps
-inline Sincos sincos1(float x) {
+    inline Sincos sincos1(float x) {
     using namespace sincos_detail;
     const float table_x = x * static_cast<float>(table_length / 2 / std::numbers::pi);
     int32_t i = table_x;

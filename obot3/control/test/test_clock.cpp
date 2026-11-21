@@ -7,17 +7,21 @@
 import control.clock;
 
 static int failures = 0;
-#define CHECK(condition, ...) do { \
-    const bool ok = (condition); \
-    if (!ok) failures++; \
-    std::printf("%s  ", ok ? "pass" : "FAIL"); std::printf(__VA_ARGS__); std::printf("\n"); } while (0)
+#define CHECK(condition, ...) \
+    do { \
+        const bool ok = (condition); \
+        if (!ok) failures++; \
+        std::printf("%s  ", ok ? "pass" : "FAIL"); \
+        std::printf(__VA_ARGS__); \
+        std::printf("\n"); \
+    } while (0)
 
 static uint64_t counter;        // the cycles since the counter started, of which the clock sees 32 bits
 static uint32_t cycles() { return static_cast<uint32_t>(counter); }
 
 // A clock at a frequency against the time worked out in 64 bits, over many
 // turns of the counter
-template<uint32_t frequency_hz>
+template <uint32_t frequency_hz>
 static void test_steady(uint64_t first_count) {
     using Clock = CycleClock<frequency_hz, cycles>;
     static_assert(std::chrono::is_clock_v<Clock> && Clock::is_steady);
@@ -27,7 +31,7 @@ static void test_steady(uint64_t first_count) {
     const auto expected = [&](uint64_t count) {
         const uint64_t elapsed = count - first_count;
         return ClockTime{static_cast<uint32_t>(elapsed / frequency_hz),
-            static_cast<uint32_t>(static_cast<unsigned __int128>(elapsed % frequency_hz) * 1'000'000'000 / frequency_hz)};
+                         static_cast<uint32_t>(static_cast<unsigned __int128>(elapsed % frequency_hz) * 1'000'000'000 / frequency_hz)};
     };
     int wrong = 0, wrong_at = 0, wrong_now = 0, backwards = 0;
     ClockTime last{};
@@ -49,8 +53,8 @@ static void test_steady(uint64_t first_count) {
         if (Clock::time() != expected(counter)) wrong++;
     }
     CHECK(wrong == 0 && wrong_at == 0 && wrong_now == 0 && backwards == 0,
-        "steady clock at %u Hz from count %llu: %u s, %d wrong, %d wrong for an earlier count, %d wrong as chrono, %d backwards",
-        frequency_hz, static_cast<unsigned long long>(first_count), last.seconds, wrong, wrong_at, wrong_now, backwards);
+          "steady clock at %u Hz from count %llu: %u s, %d wrong, %d wrong for an earlier count, %d wrong as chrono, %d backwards",
+          frequency_hz, static_cast<unsigned long long>(first_count), last.seconds, wrong, wrong_at, wrong_now, backwards);
 }
 
 static void test_synced() {
@@ -89,10 +93,10 @@ static void test_synced() {
     }
     CHECK(Synced::rate_ppb() > 29'000 && Synced::rate_ppb() < 31'000, "rate %d ppb for a host 30000 ppb fast", Synced::rate_ppb());
     CHECK(worst_early > -25'000 && worst_late < 25'000, "off by %lld to %lld ns after a second, with settings up to 20000 ns late",
-        static_cast<long long>(worst_early), static_cast<long long>(worst_late));
+          static_cast<long long>(worst_early), static_cast<long long>(worst_late));
     const auto now = Synced::now();
     CHECK(std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() == Synced::time().seconds,
-        "chrono seconds %lld", static_cast<long long>(std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count()));
+          "chrono seconds %lld", static_cast<long long>(std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count()));
 
     // Without settings the rate carries on, and stops being extrapolated after rate_span_s
     const uint64_t count_last = counter;
@@ -109,7 +113,7 @@ static void test_synced() {
     error = clock_difference(Synced::time(), host_at(counter));
     const int64_t unextrapolated = static_cast<int64_t>((static_cast<double>(counter - count_last) / 170e6 - Synced::rate_span_s) * rate * 1e9);
     CHECK(error + unextrapolated > -2'000'000 && error + unextrapolated < 2'000'000,
-        "off by %lld ns after 4100 s without one, %lld of it past the rate's span", static_cast<long long>(error), static_cast<long long>(-unextrapolated));
+          "off by %lld ns after 4100 s without one, %lld of it past the rate's span", static_cast<long long>(error), static_cast<long long>(-unextrapolated));
 
     // The host's time is set back an hour: the clock follows at once
     const ClockTime earlier = clock_add(host_at(counter), -3600ll * 1'000'000'000);

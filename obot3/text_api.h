@@ -151,19 +151,23 @@ static_assert([] {
         }
         float back = 0;
         return text_to_float(text, back) && back - value < 1e-6f * (value < 0 ? -value : value) + 1e-30f &&
-            value - back < 1e-6f * (value < 0 ? -value : value) + 1e-30f;
+               value - back < 1e-6f * (value < 0 ? -value : value) + 1e-30f;
     };
     float f = 0;
     return same(0, "0") && same(1, "1") && same(-2.5f, "-2.5") && same(0.1f, "0.1") && same(1234.5f, "1234.5") &&
-        same(1e6f, "1000000") && same(1e7f, "1e7") && same(0.00123f, "0.00123") && same(1.5e-10f, "1.5e-10") &&
-        same(40000, "40000") && !text_to_float("", f) && !text_to_float("abc", f) && !text_to_float("1.5x", f) &&
-        text_to_float("  ", f) == false && text_to_float("3 ", f) && f == 3;
-}(), "float text conversions");
+           same(1e6f, "1000000") && same(1e7f, "1e7") && same(0.00123f, "0.00123") && same(1.5e-10f, "1.5e-10") &&
+           same(40000, "40000") && !text_to_float("", f) && !text_to_float("abc", f) && !text_to_float("1.5x", f) &&
+           text_to_float("  ", f) == false && text_to_float("3 ", f) && f == 3;
+}(),
+              "float text conversions");
 
 // Where a reply is put together. What does not fit is dropped.
 class TextOut {
  public:
-    TextOut(char* buffer, uint32_t capacity) : begin_(buffer), p_(buffer), end_(buffer + capacity - 1) { *p_ = 0; }
+    TextOut(char* buffer, uint32_t capacity) :
+        begin_(buffer),
+        p_(buffer),
+        end_(buffer + capacity - 1) { *p_ = 0; }
     void put(char c) {
         if (p_ < end_) *p_++ = c;
         *p_ = 0;
@@ -197,6 +201,7 @@ class TextOut {
         p_ = begin_;
         *p_ = 0;
     }
+
  private:
     char* begin_;
     char* p_;
@@ -206,7 +211,7 @@ class TextOut {
 // "name" gets and "name=value" sets one of the variables: the reply is the
 // value, or "name set value", or "name error" for a value that is no number or
 // a variable that can't be written. False if there is no such variable.
-template<uint32_t N>
+template <uint32_t N>
 bool text_variable_request(const TextVariable (&variables)[N], const char* request, TextOut& out) {
     const char* equal = std::strchr(request, '=');
     const uint32_t name_length = equal != nullptr ? equal - request : std::strlen(request);
@@ -239,7 +244,9 @@ bool text_variable_request(const TextVariable (&variables)[N], const char* reque
 }
 
 constexpr int hex_digit(char c) {
-    return c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c >= 'A' && c <= 'F' ? c - 'A' + 10 : -1;
+    return c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10
+                                        : c >= 'A' && c <= 'F'   ? c - 'A' + 10
+                                                                 : -1;
 }
 
 // A hex number at p, which is moved behind it. False if there is none.
@@ -275,7 +282,7 @@ inline uint32_t parse_hex_bytes(const char* p, uint8_t* data, uint32_t capacity)
 // Anything else gets the empty reply, which is gdb's "not supported".
 // Memory::read / write(address, data, length) return the bytes they got to.
 // monitor(request, out) is the text api itself.
-template<typename Memory, typename Monitor>
+template <typename Memory, typename Monitor>
 DEBUG_SMALL void gdb_request(const char* request, TextOut& out, Monitor monitor) {
     const char* p = request + 1;    // behind the $
     uint8_t data[256];

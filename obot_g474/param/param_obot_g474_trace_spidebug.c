@@ -3,9 +3,9 @@
 
 
 // Can be written by external methods, e.g. bootloader
-const volatile Param __attribute__ ((section ("flash_param"))) param_store = {
+const volatile Param __attribute__((section("flash_param"))) param_store = {
 #include "param_default.h"
-.name = "spi_debug",
-.fast_loop_param.foc_param.num_poles = 1,
-.fast_loop_param.motor_encoder.cpr = (1 << 16)*4,
+    .name = "spi_debug",
+    .fast_loop_param.foc_param.num_poles = 1,
+    .fast_loop_param.motor_encoder.cpr = (1 << 16) * 4,
 };

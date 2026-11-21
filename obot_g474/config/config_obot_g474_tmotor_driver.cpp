@@ -11,29 +11,31 @@
 
 import ma7xx_encoder;
 
-#define COMMS   COMMS_CAN_USB
+#define COMMS             COMMS_CAN_USB
 #define CAN_ARB_DATA_RATE CAN::ArbitrationBaudRate::ARB_1M, CAN::DataBaudRate::DATA_8M
-#define CAN_NUM CAN::CAN3
+#define CAN_NUM           CAN::CAN3
 #define TMR0
 
-template<class Encoder>
+template <class Encoder>
 class EncoderGearRatio : public EncoderBase {
  public:
-    EncoderGearRatio(Encoder &encoder, float gear_ratio) : 
-        EncoderBase(), encoder_(encoder) {
-            transmission_ratio_ = 1/gear_ratio;
-        }
+    EncoderGearRatio(Encoder& encoder, float gear_ratio) :
+        EncoderBase(),
+        encoder_(encoder) {
+        transmission_ratio_ = 1 / gear_ratio;
+    }
     int32_t read() {
         return get_value();
     }
     int32_t get_value() {
-        return encoder_.get_value()*transmission_ratio_;
+        return encoder_.get_value() * transmission_ratio_;
     }
     bool index_received() {
         return encoder_.index_received();
     }
+
  private:
-    Encoder &encoder_;
+    Encoder& encoder_;
     float transmission_ratio_;
 };
 
@@ -50,32 +52,31 @@ struct InitCode {
 
         RCC->APB1ENR1 |= RCC_APB1ENR1_FDCANEN;
 
-      // if defined(INTERFACE_BBS)
-      // PA0 TCS
-      GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0); 
-      GPIOA->BSRR = GPIO_BSRR_BS0;
-      GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
-        
+        // if defined(INTERFACE_BBS)
+        // PA0 TCS
+        GPIO_SETL(A, 0, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);
+        GPIOA->BSRR = GPIO_BSRR_BS0;
+        GPIOC->BSRR = GPIO_BSRR_BS3;  // hdr17 (1CS2), output encoder cs
     }
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 50000;
-    InitCode init_code;
+const uint32_t main_loop_frequency = 10000;
+const uint32_t pwm_frequency = 50000;
+InitCode init_code;
 
-    GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
-    SPI spi3 {*SPI3};
-    MA732Encoder motor_encoder(spi3, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3]);
-    TorqueSensor torque_sensor;
-    OutputEncoder output_encoder(motor_encoder, 6);
+GPIO motor_encoder_cs(*GPIOD, 2, GPIO::OUTPUT);
+SPI spi3{*SPI3};
+MA732Encoder motor_encoder(spi3, motor_encoder_cs, SPIDMA::spi_pause[SPIDMA::SP3]);
+TorqueSensor torque_sensor;
+OutputEncoder output_encoder(motor_encoder, 6);
 };
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
-    System::api.add_api_variable("can_send_decimation", new APICallbackUint16([](){ return can_communication.get_send_decimation(); },
-        [](uint16_t decimation){ can_communication.set_send_decimation(decimation); }));
+    System::api.add_api_variable("can_send_decimation", new APICallbackUint16([]() { return can_communication.get_send_decimation(); },
+                                                                              [](uint16_t decimation) { can_communication.set_send_decimation(decimation); }));
 }
 
 void config_maintenance() {}

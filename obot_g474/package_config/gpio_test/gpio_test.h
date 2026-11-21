@@ -1,2 +1,2 @@
 #define PARAM_OVERRIDES \
-.name = "gpio_test",
+    .name = "gpio_test",

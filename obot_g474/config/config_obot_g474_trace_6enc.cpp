@@ -16,12 +16,11 @@
 
 import ma782_encoder;
 
-#define COMMS   COMMS_USB
+#define COMMS COMMS_USB
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = EncoderBase;
 using OutputEncoder = EncoderBase;
-
 
 
 struct InitCode {
@@ -34,9 +33,9 @@ struct InitCode {
         GPIO_SETL(E, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
         GPIO_SETL(E, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
         //ETM->CR |= ETM_CR_ETMEN;
-        uint32_t *etmcr = (uint32_t *)0xE0041000;
+        uint32_t* etmcr = (uint32_t*)0xE0041000;
         *etmcr |= 1 << 11;
-        uint32_t *etmteevr = (uint32_t *)0xE0041020;
+        uint32_t* etmteevr = (uint32_t*)0xE0041020;
         *etmteevr = 0x000037ef; // ON
 
         SPI1->CR2 = (15 << SPI_CR2_DS_Pos);   // 16 bit
@@ -53,27 +52,27 @@ struct InitCode {
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 1000;    
-    const uint32_t pwm_frequency = 12000;
-    InitCode init_code;
+const uint32_t main_loop_frequency = 1000;
+const uint32_t pwm_frequency = 12000;
+InitCode init_code;
 
-    MotorEncoder motor_encoder;
-    TorqueSensor torque_sensor;
-    OutputEncoder output_encoder;
+MotorEncoder motor_encoder;
+TorqueSensor torque_sensor;
+OutputEncoder output_encoder;
 
-    GPIO gpio_cs1(*GPIOA, 0, GPIO::OUTPUT);
-    SPI spi1 {*SPI1};
-    MA782Encoder ma782_1(spi1, gpio_cs1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs2(*GPIOA, 1, GPIO::OUTPUT);
-    MA782Encoder ma782_2(spi1, gpio_cs2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs3(*GPIOA, 2, GPIO::OUTPUT);
-    MA782Encoder ma782_3(spi1, gpio_cs3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs4(*GPIOA, 3, GPIO::OUTPUT);
-    MA782Encoder ma782_4(spi1, gpio_cs4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs5(*GPIOA, 4, GPIO::OUTPUT);
-    MA782Encoder ma782_5(spi1, gpio_cs5, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs6(*GPIOA, 8, GPIO::OUTPUT);
-    MA782Encoder ma782_6(spi1, gpio_cs6, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs1(*GPIOA, 0, GPIO::OUTPUT);
+SPI spi1{*SPI1};
+MA782Encoder ma782_1(spi1, gpio_cs1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs2(*GPIOA, 1, GPIO::OUTPUT);
+MA782Encoder ma782_2(spi1, gpio_cs2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs3(*GPIOA, 2, GPIO::OUTPUT);
+MA782Encoder ma782_3(spi1, gpio_cs3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs4(*GPIOA, 3, GPIO::OUTPUT);
+MA782Encoder ma782_4(spi1, gpio_cs4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs5(*GPIOA, 4, GPIO::OUTPUT);
+MA782Encoder ma782_5(spi1, gpio_cs5, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs6(*GPIOA, 8, GPIO::OUTPUT);
+MA782Encoder ma782_6(spi1, gpio_cs6, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"

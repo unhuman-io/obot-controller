@@ -5,9 +5,9 @@
 #include "../../motorlib/gpio.h"
 #include <algorithm>
 #include "../../motorlib/peripheral/stm32g4/pin_config.h"
-#define COMMS   COMMS_UART
+#define COMMS               COMMS_UART
 #define COMMS_UART_BAUDRATE 4000000
-#define COMMS_UART_NUMBER 2
+#define COMMS_UART_NUMBER   2
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = EncoderBase;
@@ -19,13 +19,13 @@ struct InitCode {
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 10000;    
-    const uint32_t pwm_frequency = 50000;
-    InitCode init_code;
+const uint32_t main_loop_frequency = 10000;
+const uint32_t pwm_frequency = 50000;
+InitCode init_code;
 
-    MotorEncoder motor_encoder;
-    TorqueSensor torque_sensor;
-    OutputEncoder output_encoder;
+MotorEncoder motor_encoder;
+TorqueSensor torque_sensor;
+OutputEncoder output_encoder;
 };
 
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"

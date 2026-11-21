@@ -13,7 +13,11 @@ struct Config1G564SensorStatus {
 };
 
 struct Config1G564SensorPolicy : Config1SensorPolicy {
-    Config1G564SensorStatus update() { Config1SensorPolicy::update(); count += 2; return {adc_reading}; }
+    Config1G564SensorStatus update() {
+        Config1SensorPolicy::update();
+        count += 2;
+        return {adc_reading};
+    }
     volatile int adc_reading = 0;
 };
 
@@ -45,15 +49,15 @@ constexpr auto config1_gpio_init = []() consteval {
 
 constexpr auto config1_rcc_init = []() consteval {
     return RCCInit{.gpiog = RCCEnable::ENABLED,
-        .gpioe = RCCEnable::ENABLED,
-        .gpiod = RCCEnable::ENABLED,
-        .gpioc = RCCEnable::ENABLED,
-        .gpiob = RCCEnable::ENABLED,
-        .gpioa = RCCEnable::ENABLED,
-        .fdcan = RCCEnable::ENABLED,
-        .playapb = RCCEnable::ENABLED,
-        .play = RCCEnable::ENABLED,
-        .hrtim1 = RCCEnable::ENABLED};
+                   .gpioe = RCCEnable::ENABLED,
+                   .gpiod = RCCEnable::ENABLED,
+                   .gpioc = RCCEnable::ENABLED,
+                   .gpiob = RCCEnable::ENABLED,
+                   .gpioa = RCCEnable::ENABLED,
+                   .fdcan = RCCEnable::ENABLED,
+                   .playapb = RCCEnable::ENABLED,
+                   .play = RCCEnable::ENABLED,
+                   .hrtim1 = RCCEnable::ENABLED};
 }();
 
 // 280 MHz from the 24 MHz crystal (24 / 3 = 8 MHz, x 70 = 560 MHz VCO, / 2);

@@ -97,7 +97,8 @@ struct DebugFrame {
 
 // Where a debugger finds the caller of an entry, cfa_offset bytes of stack in
 #define DEBUG_FRAME_CFI(cfa_offset) \
-    ".cfi_def_cfa_offset " #cfa_offset "\n .cfi_offset 4, -36\n .cfi_offset 5, -32\n .cfi_offset 6, -28\n .cfi_offset 7, -24\n" \
+    ".cfi_def_cfa_offset " #cfa_offset \
+    "\n .cfi_offset 4, -36\n .cfi_offset 5, -32\n .cfi_offset 6, -28\n .cfi_offset 7, -24\n" \
     ".cfi_offset 8, -20\n .cfi_offset 9, -16\n .cfi_offset 10, -12\n .cfi_offset 11, -8\n .cfi_offset 14, -4\n"
 
 // An interrupt handler `name` that calls `extern "C" void body(DebugFrame*)`
@@ -151,12 +152,14 @@ struct DebugCall {
     uint32_t call_sp;               // the function's stack while it has yielded: d8 to d15, r4 to r11, lr
     volatile bool yielded;          // the function waits in debug_call_yield(): the background is the scheduler loop again
 };
-extern "C" { [[gnu::used]] inline constinit DebugCall debug_call{}; }
+extern "C" {
+[[gnu::used]] inline constinit DebugCall debug_call{};
+}
 alignas(8) inline constinit uint32_t debug_call_stack[DEBUG_CALL_STACK_WORDS]{};
 // as the switch below has them
 static_assert(offsetof(DebugCall, sp) == 52 && offsetof(DebugCall, lr) == 56 && offsetof(DebugCall, pc) == 60 &&
-    offsetof(DebugCall, xpsr) == 64 && offsetof(DebugCall, fpscr) == 68 && offsetof(DebugCall, d) == 72 &&
-    offsetof(DebugCall, parked_sp) == 200 && offsetof(DebugCall, call_sp) == 220 && offsetof(DebugCall, yielded) == 224);
+              offsetof(DebugCall, xpsr) == 64 && offsetof(DebugCall, fpscr) == 68 && offsetof(DebugCall, d) == 72 &&
+              offsetof(DebugCall, parked_sp) == 200 && offsetof(DebugCall, call_sp) == 220 && offsetof(DebugCall, yielded) == 224);
 
 struct DebugMonitor {
     const DebugThread* threads;             // [0] is thread 1
@@ -327,8 +330,8 @@ extern "C" [[gnu::used]] inline void debug_monitor(DebugFrame* frame) {
     // The thread of a step or of a stop that was asked for is the one gdb
     // named, also when a step has left its handler
     const bool stepped = (reason & DFSR_HALTED) != 0 && (reason & (DFSR_BKPT | DFSR_DWTTRAP)) == 0;
-    debug_event(event ? 5 : debug.pause_signal, stepped && debug.step_thread != 0 ? debug.step_thread :
-        !event && debug.pause_thread != 0 ? debug.pause_thread : top);
+    debug_event(event ? 5 : debug.pause_signal, stepped && debug.step_thread != 0 ? debug.step_thread : !event && debug.pause_thread != 0 ? debug.pause_thread
+                                                                                                                                          : top);
     const bool everything = !debug.non_stop || debug_is_interrupt(top) || debug_is_interrupt(debug.step_thread) || debug.pause_interrupts || debug.keep_interrupts;
     debug.pause_signal = 5;
     debug.pause_interrupts = false;
@@ -384,12 +387,10 @@ extern "C" [[gnu::used]] inline void debug_holder(DebugFrame* frame) {
 // floating point registers go below the frame, which also puts the others
 // into what the cpu stacked.
 [[gnu::naked]] inline void debug_monitor_entry() {
-    __asm__("push {r3-r11, lr}\n vpush {s16-s31}\n" DEBUG_FRAME_CFI(104)
-        "add r0, sp, #64\n bl debug_monitor\n vpop {s16-s31}\n pop {r3-r11, pc}");
+    __asm__("push {r3-r11, lr}\n vpush {s16-s31}\n" DEBUG_FRAME_CFI(104) "add r0, sp, #64\n bl debug_monitor\n vpop {s16-s31}\n pop {r3-r11, pc}");
 }
 [[gnu::naked]] inline void debug_holder_entry() {
-    __asm__("push {r3-r11, lr}\n vpush {s16-s31}\n" DEBUG_FRAME_CFI(104)
-        "add r0, sp, #64\n bl debug_holder\n vpop {s16-s31}\n pop {r3-r11, pc}");
+    __asm__("push {r3-r11, lr}\n vpush {s16-s31}\n" DEBUG_FRAME_CFI(104) "add r0, sp, #64\n bl debug_holder\n vpop {s16-s31}\n pop {r3-r11, pc}");
 }
 
 // For the hard fault's vector: a breakpoint where the monitor can't run is
@@ -468,12 +469,13 @@ DEBUG_SMALL inline DebugRegister debug_register(uint32_t thread, uint32_t n) {
         // only changes hands when a function is started
         reg.memory = debug_call.state <= DEBUG_CALL_RESUMED;
         uint32_t* set = reinterpret_cast<uint32_t*>(&debug_call);      // r0 to xpsr, fpscr, d0 to d15
-        reg.location = n < 17 ? set + n : n < 33 ? set + 18 + 2 * (n - 17) : set + 17;
+        reg.location = n < 17 ? set + n : n < 33 ? set + 18 + 2 * (n - 17)
+                                                 : set + 17;
         return reg;
     }
     const bool call_yielded = debug_call.state == DEBUG_CALL_ACTIVE && debug_call.yielded;
     if (debug_call.enabled && debug_call.state == DEBUG_CALL_ACTIVE &&
-            (call_yielded ? thread == debug_call_thread() : thread == 1)) {
+        (call_yielded ? thread == debug_call_thread() : thread == 1)) {
         // the scheduler loop while the call thread runs: where it left for
         // the function, with the registers that a call keeps. Or the function
         // while it has yielded: where it left for the scheduler loop.
@@ -547,7 +549,8 @@ DEBUG_SMALL inline void debug_put_stop(TextOut& out, bool select = false) {
     out.put('T');
     out.put_hex(&signal, 1);
     if (event && debug.watch_function != 0) {
-        out.put(debug.watch_function == 5 ? "rwatch:" : debug.watch_function == 6 ? "watch:" : "awatch:");
+        out.put(debug.watch_function == 5 ? "rwatch:" : debug.watch_function == 6 ? "watch:"
+                                                                                  : "awatch:");
         debug_put_hex(out, debug.watch_address);
         out.put(';');
     }
@@ -665,7 +668,10 @@ inline bool debug_resume(char background, char interrupts) {
 
 inline void debug_call_reset() {
     debug_call = DebugCall{.sp = reinterpret_cast<uint32_t>(debug_call_stack + DEBUG_CALL_STACK_WORDS),
-        .pc = reinterpret_cast<uint32_t>(&debug_call_idle) & ~1u, .xpsr = 1u << 24, .enabled = true, .count = debug_call.count};
+                           .pc = reinterpret_cast<uint32_t>(&debug_call_idle) & ~1u,
+                           .xpsr = 1u << 24,
+                           .enabled = true,
+                           .count = debug_call.count};
 }
 
 // After debug_monitor_init, if the scheduler loop calls debug_call_poll()
@@ -737,12 +743,12 @@ inline void debug_call_init() {
 inline bool debug_call_can_yield() {
     const uint32_t sp = __get_MSP();
     return debug_call.enabled && debug_call.state == DEBUG_CALL_ACTIVE && !debug_call.yielded && __get_IPSR() == 0 &&
-        sp > reinterpret_cast<uint32_t>(debug_call_stack) && sp <= reinterpret_cast<uint32_t>(debug_call_stack + DEBUG_CALL_STACK_WORDS);
+           sp > reinterpret_cast<uint32_t>(debug_call_stack) && sp <= reinterpret_cast<uint32_t>(debug_call_stack + DEBUG_CALL_STACK_WORDS);
 }
 
 // A coroutine of the scheduler from a function that gdb has called: its result,
 // when it has one, with the tasks running until then. A GlobalCall of task.h.
-template<typename Call>
+template <typename Call>
 inline auto debug_call_wait(Call call) {
     while (!call.is_done()) debug_call_yield();
     return call.result();
@@ -811,7 +817,8 @@ inline bool debug_call_resume(char action) {
         return true;
     }
     if (debug_call_has_function()) {
-        debug_call.restore = debug.waiting ? 2 : debug.stopped ? 1 : 0;
+        debug_call.restore = debug.waiting ? 2 : debug.stopped ? 1
+                                                               : 0;
         debug_call.lent = debug_call.restore;
         debug_call.state = DEBUG_CALL_REQUESTED;
     } else {
@@ -832,7 +839,8 @@ inline bool debug_vcont(const char* p) {
     char action[3] = {0, 0, 0};     // the background, the interrupts, the call thread while its function does not run
     const uint32_t background = debug_background(), call = debug_call_thread();
     while (*p == ';') {
-        const char a = p[1] == 'C' ? 'c' : p[1] == 'S' ? 's' : p[1];
+        const char a = p[1] == 'C' ? 'c' : p[1] == 'S' ? 's'
+                                                       : p[1];
         p += 2;
         while (*p != 0 && *p != ':' && *p != ';') p++;     // the signal of C and S
         uint32_t thread = 0;
@@ -842,8 +850,8 @@ inline bool debug_vcont(const char* p) {
         }
         for (uint32_t i = 0; i < 3; i++) {
             // thread 1 while the function runs is none of these: it goes on when that returns
-            const bool named = thread == 0 || (i == 0 ? thread == background : i == 1 ? debug_is_interrupt(thread) :
-                thread == call);
+            const bool named = thread == 0 || (i == 0 ? thread == background : i == 1 ? debug_is_interrupt(thread)
+                                                                                      : thread == call);
             if (named && action[i] == 0) action[i] = a;
         }
     }
@@ -940,9 +948,9 @@ DEBUG_SMALL inline bool debug_request(const char* request, TextOut& out) {
             // and what continues for a call is stopped again after it: for gdb it never ran
             const uint32_t interrupt_threads = ((1u << debug.thread_count) - 1) & ~1u;
             debug_put_hex(out, (background ? 1u << (debug_background() - 1) : 0) |
-                (interrupts ? interrupt_threads : 0) |
-                (debug_call.lent >= 1 ? 1u : 0) | (debug_call.lent == 2 ? interrupt_threads : 0) |
-                (call != 0 && debug_call.state == DEBUG_CALL_IDLE ? 1u << (call - 1) : 0));
+                                   (interrupts ? interrupt_threads : 0) |
+                                   (debug_call.lent >= 1 ? 1u : 0) | (debug_call.lent == 2 ? interrupt_threads : 0) |
+                                   (call != 0 && debug_call.state == DEBUG_CALL_IDLE ? 1u << (call - 1) : 0));
             out.put(';');
             debug_put_stop(out);
             return true;
@@ -1001,7 +1009,7 @@ DEBUG_SMALL inline bool debug_request(const char* request, TextOut& out) {
             }
             const DebugRegister reg = debug_register(thread, n);
             if ((!debug.stopped && !reg.memory) || reg.location == nullptr ||
-                    parse_hex_bytes(p, reinterpret_cast<uint8_t*>(value), sizeof(value)) != 4 * reg.words) {
+                parse_hex_bytes(p, reinterpret_cast<uint8_t*>(value), sizeof(value)) != 4 * reg.words) {
                 out.put("E01");
                 return true;
             }
@@ -1049,11 +1057,12 @@ DEBUG_SMALL inline bool debug_request(const char* request, TextOut& out) {
                 const bool call_yielded = debug_call.state == DEBUG_CALL_ACTIVE && debug_call.yielded;
                 const char* name = call ? "call" : debug.threads[info - 1].name;
                 out.put_hex(reinterpret_cast<const uint8_t*>(name), std::strlen(name));
-                const char* state = call && call_yielded ? ", waits in the scheduler" :
-                    call && !call_active ? (debug_call.state == DEBUG_CALL_REQUESTED ? ", starts" : ", idle") :
-                    info == 1 && call_active ? ", waits for the call" :
-                    info == debug_top_thread() ? "" : debug_thread_context(info) != nullptr ? ", interrupted" :
-                    debug.stopped && !debug.waiting ? ", running" : ", not active";
+                const char* state = call && call_yielded ? ", waits in the scheduler" : call && !call_active                ? (debug_call.state == DEBUG_CALL_REQUESTED ? ", starts" : ", idle")
+                                                                                    : info == 1 && call_active              ? ", waits for the call"
+                                                                                    : info == debug_top_thread()            ? ""
+                                                                                    : debug_thread_context(info) != nullptr ? ", interrupted"
+                                                                                    : debug.stopped && !debug.waiting       ? ", running"
+                                                                                                                            : ", not active";
                 out.put_hex(reinterpret_cast<const uint8_t*>(state), std::strlen(state));
             } else {
                 return false;

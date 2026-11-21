@@ -23,7 +23,7 @@ struct MotorControllerParam {
     float rollover = 0;                         // rad: the motor position wraps at +-rollover, 0: it doesn't
 };
 
-template<MotorControllerParam param, float dt>
+template <MotorControllerParam param, float dt>
 class PositionController {
  public:
     constexpr PositionController() = default;
@@ -42,7 +42,7 @@ class PositionController {
     SecondOrderLowPassFilter desired_filter_{dt, param.position_desired_filter_hz};
 };
 
-template<MotorControllerParam param, float dt>
+template <MotorControllerParam param, float dt>
 class VelocityController {
  public:
     constexpr VelocityController() = default;
@@ -51,8 +51,7 @@ class VelocityController {
         last_motor_position_ = motor_position;
     }
     float step(const obot::MotorCommand& command, float motor_position) {
-        const float difference = param.rollover == 0 ? motor_position - last_motor_position_ :
-            wrap1_diff(motor_position, last_motor_position_, param.rollover);
+        const float difference = param.rollover == 0 ? motor_position - last_motor_position_ : wrap1_diff(motor_position, last_motor_position_, param.rollover);
         last_motor_position_ = motor_position;
         const float velocity_measured = velocity_filter_.update(difference / dt);
         return controller_.step(command.velocity_desired, 0, velocity_measured, acceleration_limit) + command.current_desired;
@@ -65,7 +64,7 @@ class VelocityController {
     FirstOrderLowPassFilter velocity_filter_{dt, param.velocity.velocity_filter_frequency_hz};
 };
 
-template<MotorControllerParam param, float dt>
+template <MotorControllerParam param, float dt>
 class TorqueController {
  public:
     constexpr TorqueController() = default;
@@ -76,13 +75,14 @@ class TorqueController {
     float step(float torque_desired, float torque_dot_desired, float torque) {
         return controller_.step(torque_desired, torque_dot_desired, torque);
     }
+
  private:
     PIDController controller_{dt, param.torque};
 };
 
 // Stiffness and damping around a position give a torque, which the torque
 // controller turns into a current
-template<MotorControllerParam param, float dt>
+template <MotorControllerParam param, float dt>
 class ImpedanceController {
  public:
     constexpr ImpedanceController() = default;
@@ -96,11 +96,12 @@ class ImpedanceController {
         impedance_controller_.kp_ = command.stiffness == 0 ? param.impedance.kp : command.stiffness;
         impedance_controller_.kd_ = command.damping == 0 ? param.impedance.kd : command.damping;
         const float torque_desired = impedance_controller_.step(command.position_desired, command.velocity_desired, motor_position) +
-            command.torque_desired;
+                                     command.torque_desired;
         const float torque_dot_desired = (torque_desired - last_torque_desired_) / dt + command.torque_dot_desired;
         last_torque_desired_ = torque_desired;
         return torque_controller_.step(torque_desired, torque_dot_desired, torque) + command.current_desired;
     }
+
  private:
     PIDController impedance_controller_{dt, param.impedance};
     TorqueController<param, dt> torque_controller_{};
@@ -121,9 +122,9 @@ constexpr bool motor_command_valid(const obot::MotorCommand& command) {
             return is_finite(command.torque_desired) && is_finite(command.current_desired);
         case obot::IMPEDANCE:
             return is_finite(command.impedance.position_desired) && is_finite(command.impedance.velocity_desired) &&
-                is_finite(command.impedance.torque_desired) && is_finite(command.impedance.current_desired) &&
-                is_finite(command.impedance.torque_dot_desired) && is_finite(command.impedance.stiffness) &&
-                is_finite(command.impedance.damping);
+                   is_finite(command.impedance.torque_desired) && is_finite(command.impedance.current_desired) &&
+                   is_finite(command.impedance.torque_dot_desired) && is_finite(command.impedance.stiffness) &&
+                   is_finite(command.impedance.damping);
         case obot::VOLTAGE:
             return is_finite(command.voltage.voltage_desired);
         default:
@@ -139,9 +140,9 @@ constexpr bool motor_command_valid(const obot::MotorCommand& command) {
 // Modes: open, damped, current, position, velocity, torque, impedance,
 // voltage and phase lock. Any other mode is open. An invalid command is
 // dropped and the previous one stays.
-template<MotorControllerParam param, float dt, typename HostCommand>
+template <MotorControllerParam param, float dt, typename HostCommand>
 struct MotorControllerPolicy {
-    template<typename Status>
+    template <typename Status>
     typename Status::ExpectedCommand update(const Status& s) {
         const obot::MotorCommand host_command = HostCommand::read();
         if (motor_command_valid(host_command)) {

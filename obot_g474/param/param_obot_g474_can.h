@@ -1,7 +1,7 @@
 #pragma once
 #include "../../motorlib/messages.h"
 #define XSTR(x) STR(x)
-#define STR(x) #x
+#define STR(x)  #x
 
 typedef struct {
     uint8_t can_id;
@@ -13,4 +13,4 @@ typedef struct {
     char obot_hash[41];
 } Param;
 
-extern const Param * const param;
+extern const Param* const param;

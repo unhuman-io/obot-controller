@@ -33,12 +33,12 @@ struct MainLoop {
     using ControllerPolicy = typename decltype(config)::ControllerPolicy;
     ControllerPolicy controller;
 
-    Latest<FastLoopCommand> fast_loop_command {};
-    MainLoopStatus status {};
+    Latest<FastLoopCommand> fast_loop_command{};
+    MainLoopStatus status{};
     void update() {
         status.fast_loop = System::fast_loop.get_status();
         status.sensors = main_loop_sensors_update(sensors, status.fast_loop);
-      //  DiagnosticPolicy::update();
+        //  DiagnosticPolicy::update();
         fast_loop_command.write(controller.update(status));
     }
     FastLoopCommand get_command() const { return fast_loop_command.read(); }
@@ -76,7 +76,7 @@ struct FastLoop {
     struct FastLoopCommand {
         typename Controller::Command foc;
     };
-    Latest<FastLoopStatus> status {};
+    Latest<FastLoopStatus> status{};
     volatile uint32_t count = 0;
     void update() {
         const FastLoopCommand command = System::main_loop.get_command();

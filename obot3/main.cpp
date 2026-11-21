@@ -1,4 +1,3 @@
-
 // unsigned int go_to_bootloader;
 // unsigned int rcc_csr_copy;
 #include "st_device.h"
@@ -21,9 +20,9 @@ extern "C" void Reset_Handler(void) {
 #endif
     clock_config();
     // Copy .data from Flash to RAM
-    unsigned int *src = &_sidata;
-    unsigned int *dst = &_sdata;
-    
+    unsigned int* src = &_sidata;
+    unsigned int* dst = &_sdata;
+
     while (dst < &_edata) {
         *dst++ = *src++;
     }
@@ -34,15 +33,15 @@ extern "C" void Reset_Handler(void) {
 
     // 3. Run C++ constructors
     void (**p)() = __init_array_start;
-        while (p < __init_array_end) {
-            (*p)();
-            p++;
-        }
+    while (p < __init_array_end) {
+        (*p)();
+        p++;
+    }
 
     // 4. Jump straight to main
     main();
-    
-    while(1);
+
+    while (1);
 }
 
 void tim2_isr();
@@ -50,7 +49,7 @@ void os_loop();
 
 int main() {
     pin_config();
-    while(1) {
+    while (1) {
         tim2_isr();
         os_loop();
         //MySystem::MainLoop::update();

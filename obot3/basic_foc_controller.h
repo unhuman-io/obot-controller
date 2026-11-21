@@ -7,7 +7,10 @@ struct BasicFOCController {
         float iq, id, vq, vd;
     };
     struct Output {};
-    template<typename Measured>
-    Output update(const Command &command, const Measured &measured) { kp++; return {}; }
+    template <typename Measured>
+    Output update(const Command& command, const Measured& measured) {
+        kp++;
+        return {};
+    }
     int kp = 2;
 };

@@ -29,7 +29,7 @@ constexpr float fabsf2(float f) { return f >= 0 ? f : -f; }
 constexpr bool is_finite(float f) { return f - f == 0; }
 
 // value in -rollover..rollover
-template<class T>
+template <class T>
 constexpr T wrap1(T value, T rollover) {
     T diff = 2 * rollover;
     if (value > rollover) value -= diff;
@@ -38,7 +38,7 @@ constexpr T wrap1(T value, T rollover) {
 }
 
 // value - value2 across the rollover
-template<class T>
+template <class T>
 constexpr T wrap1_diff(T value, T value2, T rollover) {
     T diff = value - value2;
     T diff2 = 2 * rollover;
@@ -61,6 +61,7 @@ class FirstOrderLowPassFilter {
     // for tuning: a new corner frequency, and the one in use (0: no filtering)
     constexpr void set_frequency(float dt, float frequency_hz) { *this = FirstOrderLowPassFilter(dt, frequency_hz).with_value(value_); }
     constexpr float get_frequency(float dt) const { return alpha_ == 1 ? 0 : alpha_ / (1 - alpha_) / (2 * std::numbers::pi_v<float> * dt); }
+
  private:
     constexpr FirstOrderLowPassFilter with_value(float value) const {
         FirstOrderLowPassFilter filter = *this;
@@ -73,7 +74,9 @@ class FirstOrderLowPassFilter {
 
 class SecondOrderLowPassFilter {
  public:
-    constexpr SecondOrderLowPassFilter(float dt, float frequency_hz = 0) : low_pass_1_(dt, frequency_hz), low_pass_2_(dt, frequency_hz) {}
+    constexpr SecondOrderLowPassFilter(float dt, float frequency_hz = 0) :
+        low_pass_1_(dt, frequency_hz),
+        low_pass_2_(dt, frequency_hz) {}
     constexpr void init(float value) {
         low_pass_1_.init(value);
         low_pass_2_.init(value);
@@ -85,6 +88,7 @@ class SecondOrderLowPassFilter {
         low_pass_2_.set_frequency(dt, frequency_hz);
     }
     constexpr float get_frequency(float dt) const { return low_pass_1_.get_frequency(dt); }
+
  private:
     FirstOrderLowPassFilter low_pass_1_, low_pass_2_;
 };
@@ -92,7 +96,8 @@ class SecondOrderLowPassFilter {
 // limit per step, 0: no limit
 class RateLimiter {
  public:
-    constexpr RateLimiter(float limit = 0) : limit_(limit == 0 ? control_infinity : limit) {}
+    constexpr RateLimiter(float limit = 0) :
+        limit_(limit == 0 ? control_infinity : limit) {}
     constexpr void set_limit(float limit) { limit_ = limit == 0 ? control_infinity : limit; }
     constexpr void init(float value) { last_value_ = value; }
     constexpr float step(float value) {
@@ -105,6 +110,7 @@ class RateLimiter {
         last_value_ = out_value;
         return out_value;
     }
+
  private:
     float limit_;
     float last_value_ = 0;
@@ -117,7 +123,8 @@ struct PIParam {
 
 class PIController {
  public:
-    constexpr PIController(const PIParam& param) : param_(param) {}
+    constexpr PIController(const PIParam& param) :
+        param_(param) {}
     constexpr void init() { ki_sum_ = 0; }
     constexpr float step(float desired, float measured) {
         float error = desired - measured;
@@ -141,9 +148,15 @@ struct PIDParam {
 // velocity_limit limits the rate of the desired value.
 class PIDController {
  public:
-    constexpr PIDController(float dt, const PIDParam& param) : kp_(param.kp), kd_(param.kd), ki_(param.ki), ki_limit_(param.ki_limit),
-        command_max_(param.command_max), velocity_filter_(dt, param.velocity_filter_frequency_hz),
-        output_filter_(dt, param.output_filter_frequency_hz), dt_(dt) {}
+    constexpr PIDController(float dt, const PIDParam& param) :
+        kp_(param.kp),
+        kd_(param.kd),
+        ki_(param.ki),
+        ki_limit_(param.ki_limit),
+        command_max_(param.command_max),
+        velocity_filter_(dt, param.velocity_filter_frequency_hz),
+        output_filter_(dt, param.output_filter_frequency_hz),
+        dt_(dt) {}
     constexpr void init(float measured) {
         rate_limit_.init(measured);
         ki_sum_ = 0;

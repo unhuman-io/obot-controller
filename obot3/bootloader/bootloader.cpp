@@ -37,8 +37,7 @@ extern "C" void Reset_Handler();
 [[noreturn]] void bootloader();
 
 constexpr IRQInit irq_init{};   // no interrupts
-__attribute__((section(".isr_vector"), used))
-constinit const auto vector_table = get_vector_table<irq_init>(&_estack, Reset_Handler);
+__attribute__((section(".isr_vector"), used)) constinit const auto vector_table = get_vector_table<irq_init>(&_estack, Reset_Handler);
 
 constexpr uint32_t ram_base = 0x20000000, ram_end = 0x20020000;     // sram1, sram2 and the ccm sram behind them
 
@@ -54,7 +53,7 @@ extern "C" void Reset_Handler() {
     const uint32_t* application = reinterpret_cast<const uint32_t*>(application_address);
     const uint32_t stack = application[0], entry = application[1];
     const bool application_valid = stack > ram_base && stack <= ram_end && (stack & 3) == 0 &&
-        entry >= application_address && entry < flash_end() && (entry & 1) == 1;
+                                   entry >= application_address && entry < flash_end() && (entry & 1) == 1;
     if (application_valid && !requested && !(reset_flags & (RCC_CSR_IWDGRSTF | RCC_CSR_WWDGRSTF))) {
         __asm__ volatile("msr msp, %0\nbx %1" : : "r"(stack), "r"(entry));
     }
@@ -207,7 +206,7 @@ bool motor_command_reset(const BootloaderRequest& request, int length) {
     const bool bootloader_command = request.command >= BOOTLOADER_INFO && request.command <= BOOTLOADER_ENTER;
     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(&request);
     return !bootloader_command && length >= static_cast<int>(sizeof(obot::MotorCommand)) &&
-        bytes[offsetof(obot::MotorCommand, mode_desired)] == obot::BOARD_RESET;
+           bytes[offsetof(obot::MotorCommand, mode_desired)] == obot::BOARD_RESET;
 }
 
 // A string of two or more characters goes out with its terminator, as the

@@ -3,7 +3,7 @@
 
 
 // Can be written by external methods, e.g. bootloader
-const Param __attribute__ ((section ("flash_param"))) param_store = {
+const Param __attribute__((section("flash_param"))) param_store = {
 #include "param_default.h"
 #include "param_motor_km_8508.c"
     .fast_loop_param.cogging.gain = 0,
@@ -39,10 +39,10 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .startup_param.no_zero_current_sensors = 1,
     .main_loop_param.encoder_limits.output_hard_max = 1.9,
     .main_loop_param.encoder_limits.output_hard_min = -1.9,
-    .main_loop_param.encoder_limits.motor_controlled_max = 1.8*81,
-    .main_loop_param.encoder_limits.motor_controlled_min = -1.8*81,
-    .main_loop_param.encoder_limits.motor_hard_max = 1.9*81,
-    .main_loop_param.encoder_limits.motor_hard_min = -1.9*80,
+    .main_loop_param.encoder_limits.motor_controlled_max = 1.8 * 81,
+    .main_loop_param.encoder_limits.motor_controlled_min = -1.8 * 81,
+    .main_loop_param.encoder_limits.motor_hard_max = 1.9 * 81,
+    .main_loop_param.encoder_limits.motor_hard_min = -1.9 * 80,
     .fast_loop_param.beep_amplitude = 1,
     .fast_loop_param.beep_frequency = 300,
 

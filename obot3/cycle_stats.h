@@ -41,10 +41,11 @@ inline uint32_t cycle_stats_clock(uint32_t clock()) {
 
 // highest: nothing timed interrupts this scope, which saves it the stolen
 // cycles on the way in and out
-template<uint32_t clock(), bool highest = false>
+template <uint32_t clock(), bool highest = false>
 struct CycleTimer {
 #if CYCLE_STATS
-    [[gnu::always_inline]] explicit CycleTimer(CycleStats& stats) : stats_(stats) {
+    [[gnu::always_inline]] explicit CycleTimer(CycleStats& stats) :
+        stats_(stats) {
         const uint32_t wall = clock();
         if (stats.started) {
             const uint32_t period = wall - stats.last_start;
@@ -63,6 +64,7 @@ struct CycleTimer {
         stats_.sum += net;
         stats_.count = stats_.count + 1;
     }
+
  private:
     CycleStats& stats_;
     uint32_t start_;
@@ -73,7 +75,7 @@ struct CycleTimer {
 };
 
 // The numbers since the last call, with the interrupts off for the copy
-template<typename Lock>
+template <typename Lock>
 inline CycleStats cycle_stats_take(CycleStats& stats) {
     const Lock lock;
     const CycleStats taken = stats;

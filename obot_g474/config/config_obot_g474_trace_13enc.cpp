@@ -19,7 +19,7 @@
 
 import ma782_encoder;
 
-#define COMMS   COMMS_CAN
+#define COMMS COMMS_CAN
 
 using TorqueSensor = TorqueSensorBase;
 using MotorEncoder = EncoderBase;
@@ -35,9 +35,9 @@ struct InitCode {
         GPIO_SETL(E, 5, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
         GPIO_SETL(E, 6, GPIO_MODE::ALT_FUN, GPIO_SPEED::VERY_HIGH, 0);
         //ETM->CR |= ETM_CR_ETMEN;
-        uint32_t *etmcr = (uint32_t *)0xE0041000;
+        uint32_t* etmcr = (uint32_t*)0xE0041000;
         *etmcr |= 1 << 11;
-        uint32_t *etmteevr = (uint32_t *)0xE0041020;
+        uint32_t* etmteevr = (uint32_t*)0xE0041020;
         *etmteevr = 0x000037ef; // ON
 
         RCC->APB1ENR1 |= RCC_APB1ENR1_SPI2EN | RCC_APB1ENR1_SPI3EN | RCC_APB1ENR1_USART2EN;
@@ -88,7 +88,7 @@ struct InitCode {
         USART2->CR2 = 0 << USART_CR2_STOP_Pos | USART_CR2_CLKEN | USART_CR2_LBCL | USART_CR2_MSBFIRST;
         // note stop = 1 seems to have issues with receive
         USART2->CR3 = 1 << USART_CR3_RXFTCFG_Pos;
-        USART2->BRR = CPU_FREQUENCY_HZ/10'000'000;
+        USART2->BRR = CPU_FREQUENCY_HZ / 10'000'000;
         USART2->CR1 = USART_CR1_FIFOEN | USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
         GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
         GPIO_SETL(D, 3, GPIO_MODE::OUTPUT, GPIO_SPEED::LOW, 0);
@@ -101,56 +101,56 @@ struct InitCode {
 };
 
 namespace config {
-    const uint32_t main_loop_frequency = 1000;    
-    const uint32_t pwm_frequency = 20000;
-    InitCode init_code;
+const uint32_t main_loop_frequency = 1000;
+const uint32_t pwm_frequency = 20000;
+InitCode init_code;
 
-    MotorEncoder motor_encoder;
-    TorqueSensor torque_sensor;
-    OutputEncoder output_encoder;
+MotorEncoder motor_encoder;
+TorqueSensor torque_sensor;
+OutputEncoder output_encoder;
 
-    SPI spi1 {*SPI1};
-    SPI spi2 {*SPI2};
-    SPI spi3 {*SPI3};
-    SPI spi4 {*SPI4};
-    USART_SPI usart_spi2 {*USART2};
+SPI spi1{*SPI1};
+SPI spi2{*SPI2};
+SPI spi3{*SPI3};
+SPI spi4{*SPI4};
+USART_SPI usart_spi2{*USART2};
 
-    GPIO gpio_cs_a1(*GPIOA, 1, GPIO::OUTPUT);
-    MA782Encoder ma782_a1(spi1, gpio_cs_a1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_a2(*GPIOA, 2, GPIO::OUTPUT);
-    MA782Encoder ma782_a2(spi1, gpio_cs_a2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_a3(*GPIOA, 3, GPIO::OUTPUT);
-    MA782Encoder ma782_a3(spi1, gpio_cs_a3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_a4(*GPIOA, 4, GPIO::OUTPUT);
-    MA782Encoder ma782_a4(spi1, gpio_cs_a4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_a1(*GPIOA, 1, GPIO::OUTPUT);
+MA782Encoder ma782_a1(spi1, gpio_cs_a1, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_a2(*GPIOA, 2, GPIO::OUTPUT);
+MA782Encoder ma782_a2(spi1, gpio_cs_a2, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_a3(*GPIOA, 3, GPIO::OUTPUT);
+MA782Encoder ma782_a3(spi1, gpio_cs_a3, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_a4(*GPIOA, 4, GPIO::OUTPUT);
+MA782Encoder ma782_a4(spi1, gpio_cs_a4, SPIDMA::spi_pause[SPIDMA::SP1], MA782Encoder<SPI>::_4096);
 
-    GPIO gpio_cs_b1(*GPIOE, 9, GPIO::OUTPUT);
-    MA782Encoder ma782_b1(spi4, gpio_cs_b1, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_b2(*GPIOE, 10, GPIO::OUTPUT);
-    MA782Encoder ma782_b2(spi4, gpio_cs_b2, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_b3(*GPIOE, 11, GPIO::OUTPUT);
-    MA782Encoder ma782_b3(spi4, gpio_cs_b3, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_b1(*GPIOE, 9, GPIO::OUTPUT);
+MA782Encoder ma782_b1(spi4, gpio_cs_b1, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_b2(*GPIOE, 10, GPIO::OUTPUT);
+MA782Encoder ma782_b2(spi4, gpio_cs_b2, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_b3(*GPIOE, 11, GPIO::OUTPUT);
+MA782Encoder ma782_b3(spi4, gpio_cs_b3, SPIDMA::spi_pause[SPIDMA::SP4], MA782Encoder<SPI>::_4096);
 
-    GPIO gpio_cs_c1(*GPIOB, 10, GPIO::OUTPUT);
-    MA782Encoder ma782_c1(spi2, gpio_cs_c1, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_c2(*GPIOB, 11, GPIO::OUTPUT);
-    MA782Encoder ma782_c2(spi2, gpio_cs_c2, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_c3(*GPIOB, 12, GPIO::OUTPUT);
-    MA782Encoder ma782_c3(spi2, gpio_cs_c3, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_c1(*GPIOB, 10, GPIO::OUTPUT);
+MA782Encoder ma782_c1(spi2, gpio_cs_c1, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_c2(*GPIOB, 11, GPIO::OUTPUT);
+MA782Encoder ma782_c2(spi2, gpio_cs_c2, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_c3(*GPIOB, 12, GPIO::OUTPUT);
+MA782Encoder ma782_c3(spi2, gpio_cs_c3, SPIDMA::spi_pause[SPIDMA::SP2], MA782Encoder<SPI>::_4096);
 
-    GPIO gpio_cs_d1(*GPIOC, 7, GPIO::OUTPUT);
-    MA782Encoder ma782_d1(spi3, gpio_cs_d1, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_d2(*GPIOC, 8, GPIO::OUTPUT);
-    MA782Encoder ma782_d2(spi3, gpio_cs_d2, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
-    GPIO gpio_cs_d3(*GPIOC, 9, GPIO::OUTPUT);
-    MA782Encoder ma782_d3(spi3, gpio_cs_d3, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_d1(*GPIOC, 7, GPIO::OUTPUT);
+MA782Encoder ma782_d1(spi3, gpio_cs_d1, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_d2(*GPIOC, 8, GPIO::OUTPUT);
+MA782Encoder ma782_d2(spi3, gpio_cs_d2, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
+GPIO gpio_cs_d3(*GPIOC, 9, GPIO::OUTPUT);
+MA782Encoder ma782_d3(spi3, gpio_cs_d3, SPIDMA::spi_pause[SPIDMA::SP3], MA782Encoder<SPI>::_4096);
 
-    GPIO gpio_cs_e1(*GPIOD, 2, GPIO::OUTPUT);
-    MA782Encoder ma782_e1(usart_spi2, gpio_cs_e1, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
-    GPIO gpio_cs_e2(*GPIOD, 3, GPIO::OUTPUT);
-    MA782Encoder ma782_e2(usart_spi2, gpio_cs_e2, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
-    GPIO gpio_cs_e3(*GPIOD, 4, GPIO::OUTPUT);
-    MA782Encoder ma782_e3(usart_spi2, gpio_cs_e3, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
+GPIO gpio_cs_e1(*GPIOD, 2, GPIO::OUTPUT);
+MA782Encoder ma782_e1(usart_spi2, gpio_cs_e1, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
+GPIO gpio_cs_e2(*GPIOD, 3, GPIO::OUTPUT);
+MA782Encoder ma782_e2(usart_spi2, gpio_cs_e2, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
+GPIO gpio_cs_e3(*GPIOD, 4, GPIO::OUTPUT);
+MA782Encoder ma782_e3(usart_spi2, gpio_cs_e3, SPIDMA::spi_pause[SPIDMA_USART::SPI_USART2], MA782Encoder<USART_SPI>::_4096);
 };
 
 #include "../../motorlib/boards/config_obot_g474_trace.cpp"

@@ -3,8 +3,8 @@
 
 
 // Can be written by external methods, e.g. bootloader
-const Param __attribute__ ((section ("flash_param"))) param_store = {
-    #include "param_obot_g474_motor_aksim_base.c"
+const Param __attribute__((section("flash_param"))) param_store = {
+#include "param_obot_g474_motor_aksim_base.c"
     .fast_loop_param.motor_encoder.cpr = 1 << 19,
     .main_loop_param.output_encoder.cpr = 1 << 20,
 };

@@ -323,6 +323,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@main
+      with:
+        submodules: recursive   # .clang-format is the one of motor_messages, in motorlib
     - name: clang-format
       # The version that .clang-format is written for; .clang-format-ignore
       # names what is not ours to format. motorlib has its own check. To

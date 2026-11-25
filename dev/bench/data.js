@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795635892073,
+  "lastUpdate": 1795637769569,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -177031,6 +177031,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1103.0271,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "4740150+leemagnusson@users.noreply.github.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "4740150+leemagnusson@users.noreply.github.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "distinct": true,
+          "id": "c5941c788ff0ea7a0f53a873b441083a199034bc",
+          "message": "Wheel configs: wr amplifier gain 20, medium drive on the encoder SPI, encoder counters\n\n- wr (1 mOhm shunts): current sense amplifier gain 20 (csa_reg 0x280), 0.04 A\n  per ADC count like wl's board at gain 40\n- both wheel configs: SPI3 clock, data out and chip select at medium drive\n  strength instead of very high. The motor encoder is on single ended wires\n  and its clock is about 10 MHz.\n- motor_wheel (and with it motor_wheel_right): the iC-PZ debug variables\n  (mcrc_cnt, merr, mwarn, mdiag, ...) are in the api, as they are for the\n  iC-MU config\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NmAsccM8ME1gSedxTuRb7F",
+          "timestamp": "2026-11-25T12:07:44-08:00",
+          "tree_id": "cea684e267c35e11cdd4de281cc6be310e6ffa92",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/c5941c788ff0ea7a0f53a873b441083a199034bc"
+        },
+        "date": 1795637768295,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles",
+            "value": 790,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period",
+            "value": 3400,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles",
+            "value": 2344,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period",
+            "value": 17000,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles",
+            "value": 2307.32,
+            "unit": "cycles",
+            "extra": "2311 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period",
+            "value": 3399.73,
+            "unit": "cycles",
+            "extra": "3400 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles",
+            "value": 794.29,
+            "unit": "cycles",
+            "extra": "796 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17000 times"
+          },
+          {
+            "name": "Benchmarkprogram_size",
+            "value": 231124,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size",
+            "value": 6916,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size",
+            "value": 231420,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size",
+            "value": 8704,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size",
+            "value": 87416,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used",
+            "value": 2987,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used",
+            "value": 7708,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used",
+            "value": 1519,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime",
+            "value": 33199715,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1070.960571,
             "unit": "Hz",
             "extra": "0 times"
           }

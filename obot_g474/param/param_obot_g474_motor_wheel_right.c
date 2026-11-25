@@ -19,7 +19,7 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.num_poles = 15,
     .fast_loop_param.cogging.gain = 0,
     .startup_param.startup_mode = VOLTAGE,
-    // Current sense: an older board (it ran left_hip_z), 1 mOhm shunts, amplifier gain 10.
+    // Current sense: board motor_molex MR0 (number 105), 1 mOhm shunts, amplifier gain 10.
     // The original wheel boards have 5 mOhm; with that value here these boards' phase
     // currents are several times what the firmware believes. The factors are the
     // per-phase calibration this board carried in its previous firmware.

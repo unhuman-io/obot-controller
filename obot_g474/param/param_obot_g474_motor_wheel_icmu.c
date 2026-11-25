@@ -19,9 +19,13 @@ const Param __attribute__ ((section ("flash_param"))) param_store = {
     .fast_loop_param.foc_param.num_poles = 15,
     .fast_loop_param.cogging.gain = 0,
     .startup_param.startup_mode = VOLTAGE,
-    .fast_loop_param.adc1_gain = -3.3/4096/(.005*10),  // A/count
-    .fast_loop_param.adc2_gain = -3.3/4096/(.005*10),
-    .fast_loop_param.adc3_gain = -3.3/4096/(.005*10), 
+    // Current sense: board motor_molex MR2 (number 238), 0.5 mOhm shunts, amplifier gain 10.
+    // The original wheel boards have 5 mOhm; with that value here these boards' phase
+    // currents are several times what the firmware believes. The factors are the
+    // per-phase calibration this board carried in its previous firmware.
+    .fast_loop_param.adc1_gain = -3.3/4096/(.0005*10)*0.975,  // A/count
+    .fast_loop_param.adc2_gain = -3.3/4096/(.0005*10)*0.975,
+    .fast_loop_param.adc3_gain = -3.3/4096/(.0005*10)*0.986,
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 1,
     .fast_loop_param.motor_encoder.cpr = 1 << 24,

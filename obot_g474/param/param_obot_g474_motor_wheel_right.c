@@ -19,11 +19,17 @@ const Param __attribute__((section("flash_param"))) param_store = {
     .fast_loop_param.foc_param.num_poles = 15,
     .fast_loop_param.cogging.gain = 0,
     .startup_param.startup_mode = VOLTAGE,
-    .fast_loop_param.adc1_gain = -3.3 / 4096 / (.005 * 10),  // A/count
-    .fast_loop_param.adc2_gain = -3.3 / 4096 / (.005 * 10),
-    .fast_loop_param.adc3_gain = -3.3 / 4096 / (.005 * 10),
-    .fast_loop_param.motor_encoder.dir = -1,
-    .fast_loop_param.phase_mode = 1,
+    // Current sense: board motor_molex MR0 (number 105), 1 mOhm shunts, amplifier gain 10.
+    // The original wheel boards (config motor_wheel) have 5 mOhm shunts. With that value
+    // here this board measured a fraction of the real phase current, so that currents,
+    // limits and every gain in A were off by the same factor. The factors below are the
+    // per-phase calibration the board carried in its previous firmware.
+    .fast_loop_param.adc1_gain = -3.3 / 4096 / (.001 * 10) * 0.979,  // A/count
+    .fast_loop_param.adc2_gain = -3.3 / 4096 / (.001 * 10) * 0.959,
+    .fast_loop_param.adc3_gain = -3.3 / 4096 / (.001 * 10) * 0.969,
+    // Phase order and encoder direction of the right wheel as it is wired, found on the robot.
+    .fast_loop_param.motor_encoder.dir = 1,
+    .fast_loop_param.phase_mode = 0,
     .fast_loop_param.motor_encoder.cpr = 1 << 24,
     .fast_loop_param.motor_encoder.rollover = 1 << 24,
     .fast_loop_param.motor_encoder.use_index_electrical_offset_pos = 0,

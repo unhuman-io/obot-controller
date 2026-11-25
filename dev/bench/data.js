@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795635591232,
+  "lastUpdate": 1795635892073,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -176899,6 +176899,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1078.697144,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "4740150+leemagnusson@users.noreply.github.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "4740150+leemagnusson@users.noreply.github.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "distinct": true,
+          "id": "cfbc11f07063c3597ea417ba5695da83b29b45f1",
+          "message": "Wheel configs wl / wr: current sense scale of their boards, wr phase order\n\nmotor_wheel_icmu and motor_wheel_right were copies of motor_wheel, whose adc\ngains are for the original wheel boards' 5 mOhm shunts. The boards they run on\nhave 0.5 mOhm (wl, motor_molex MR2 #238) and 1 mOhm (wr, motor_molex MR0 #105),\nso the real phase current was about 10 and 5 times what the firmware measured:\nthe 5 A start-up phase lock tripped the DRV8323 VDS over-current on wl at\nevery start.\n\n- adc gains per board, with the per-phase calibration from each board's\n  previous firmware\n- wl: amplifier gain 40 (csa_reg 0x2C0)\n- wr: phase_mode 0 and motor encoder direction +1, as found on the robot\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NmAsccM8ME1gSedxTuRb7F",
+          "timestamp": "2026-11-25T11:32:03-08:00",
+          "tree_id": "254df3a5b10ea3447190e4fa60e61dd92780d64f",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/cfbc11f07063c3597ea417ba5695da83b29b45f1"
+        },
+        "date": 1795635890662,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles_llvm",
+            "value": 802,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period_llvm",
+            "value": 3400,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles_llvm",
+            "value": 2710,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles_llvm",
+            "value": 2709.87,
+            "unit": "cycles",
+            "extra": "2743 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period_llvm",
+            "value": 3399.87,
+            "unit": "cycles",
+            "extra": "3400 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles_llvm",
+            "value": 805.223,
+            "unit": "cycles",
+            "extra": "806 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17000 times"
+          },
+          {
+            "name": "Benchmarkprogram_size_llvm",
+            "value": 170172,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size_llvm",
+            "value": 6924,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size_llvm",
+            "value": 172656,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size_llvm",
+            "value": 6520,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size_llvm",
+            "value": 87516,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used_llvm",
+            "value": 2551,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used_llvm",
+            "value": 6450,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used_llvm",
+            "value": 1519,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime_llvm",
+            "value": 33197889,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1103.0271,
             "unit": "Hz",
             "extra": "0 times"
           }

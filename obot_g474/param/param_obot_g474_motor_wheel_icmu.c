@@ -19,9 +19,15 @@ const Param __attribute__((section("flash_param"))) param_store = {
     .fast_loop_param.foc_param.num_poles = 15,
     .fast_loop_param.cogging.gain = 0,
     .startup_param.startup_mode = VOLTAGE,
-    .fast_loop_param.adc1_gain = -3.3 / 4096 / (.005 * 10),  // A/count
-    .fast_loop_param.adc2_gain = -3.3 / 4096 / (.005 * 10),
-    .fast_loop_param.adc3_gain = -3.3 / 4096 / (.005 * 10),
+    // Current sense: board motor_molex MR2 (number 238), 0.5 mOhm shunts, amplifier gain 40
+    // (csa_reg below): 0.04 A per ADC count and +-80 A.
+    // The original wheel boards (config motor_wheel) have 5 mOhm shunts. With that value
+    // here this board measured a fraction of the real phase current, so that currents,
+    // limits and every gain in A were off by the same factor. The factors below are the
+    // per-phase calibration the board carried in its previous firmware.
+    .fast_loop_param.adc1_gain = -3.3 / 4096 / (.0005 * 40) * 0.975,  // A/count
+    .fast_loop_param.adc2_gain = -3.3 / 4096 / (.0005 * 40) * 0.975,
+    .fast_loop_param.adc3_gain = -3.3 / 4096 / (.0005 * 40) * 0.986,
     .fast_loop_param.motor_encoder.dir = -1,
     .fast_loop_param.phase_mode = 1,
     .fast_loop_param.motor_encoder.cpr = 1 << 24,
@@ -69,7 +75,7 @@ const Param __attribute__((section("flash_param"))) param_store = {
                                         // moderate drive current (.57,1.14A)
         (5 << 11) | 0x000,  // ocp_reg     0x00 -> 50 ns dead time,
                                     //latched ocp, 2 us ocp deglitch, 0.06 Vds thresh
-        (6 << 11) | 0x240, // csa_reg     0x240 -> bidirectional current, 10V/V
+        (6 << 11) | 0x2C0, // csa_reg     0x2C0 -> bidirectional current, 40V/V
     },
     .startup_param.do_phase_lock = 1,
     .startup_param.phase_lock_current = -5,

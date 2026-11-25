@@ -37,6 +37,14 @@ OutputEncoder output_encoder;
 #include "../../motorlib/boards/config_obot_g474_motor.cpp"
 
 void config_init() {
+    // The motor encoder is on single ended wires. Its clock is about 10 MHz: medium drive
+    // strength is enough for that and makes slower edges, with less ringing and less
+    // coupling into the neighbouring wires, than the very high the board sets by default.
+    GPIO_SETH(C, 10, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 6);  // SPI3 CLK
+    GPIO_SETH(C, 12, GPIO_MODE::ALT_FUN, GPIO_SPEED::MEDIUM, 6);  // SPI3 HODI
+    GPIO_SETL(D, 2, GPIO_MODE::OUTPUT, GPIO_SPEED::MEDIUM, 0);    // SPI3 CS
+    // mcrc_cnt, merr, mwarn, ...: how the encoder and its readings are doing
+    ICPZ_SET_DEBUG_VARIABLES("m", System::api, config::motor_encoder);
     System::api.add_api_variable("spi", new APICallback([]() { return config::spi_debug.read(); },
                                                         [](std::string s) { config::spi_debug.write(s); }));
 }

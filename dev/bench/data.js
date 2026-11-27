@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795793514794,
+  "lastUpdate": 1795793700659,
   "repoUrl": "https://github.com/unhuman-io/obot-controller",
   "entries": {
     "Benchmark": [
@@ -177427,6 +177427,138 @@ window.BENCHMARK_DATA = {
           {
             "name": "Benchmarkbandwidth",
             "value": 1308.390015,
+            "unit": "Hz",
+            "extra": "0 times"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "4740150+leemagnusson@users.noreply.github.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "committer": {
+            "email": "4740150+leemagnusson@users.noreply.github.com",
+            "name": "leemagnusson",
+            "username": "leemagnusson"
+          },
+          "distinct": true,
+          "id": "680f165a377335e338c948b39d020365bfb1c67d",
+          "message": "power board radio module and e-stop remote: firmware (STM32WBA5MMG)\n\npower_radio (always powered: power button, remote, dock, display, lights, the\nconverters, its own line to hold the motor bus off) and power_remote (red\nbutton on two contacts, pause, display, lights). Neither has run on hardware.\n\n- Over the air without connections: each node advertises one authenticated\n  frame again and again and listens for the other's address. The remote's\n  heartbeat every 20 ms, the board's status every 100 ms (every second, with\n  30 ms of listening, while the robot is off).\n- Pairing is putting the remote on the dock: a key over the dock's data\n  contact (power.dock, tested with both ends talking).\n- port.h / port.c: what the two applications need from the processor and the\n  radio, on ST's HAL and link layer. They are built on ST's example\n  BLE_BeaconHCI from STM32CubeWBA v1.11.0, compiled from the package unchanged\n  (fetch_stm32cubewba.sh fetches it; nothing of ST's is copied here), with the\n  module's start-up and linker script from ST's project for its module board.\n- gcc and clang both build all three programs; CI builds them and runs the\n  host tests.\n\nREADME.md: how it behaves, what is assumed and still to be checked on a board,\nwhat is not written.\n\nCo-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NmAsccM8ME1gSedxTuRb7F",
+          "timestamp": "2026-11-27T07:13:05-08:00",
+          "tree_id": "56345b6c764c0649e538c3047f916e023d64a26b",
+          "url": "https://github.com/unhuman-io/obot-controller/commit/680f165a377335e338c948b39d020365bfb1c67d"
+        },
+        "date": 1795793699509,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "Benchmarkmax_fast_loop_cycles_llvm",
+            "value": 801,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_fast_loop_period_llvm",
+            "value": 3400,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_cycles_llvm",
+            "value": 2708,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmax_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_cycles_llvm",
+            "value": 2715.51,
+            "unit": "cycles",
+            "extra": "2742 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_period_llvm",
+            "value": 3400,
+            "unit": "cycles",
+            "extra": "3400 times"
+          },
+          {
+            "name": "Benchmarkmean_fast_loop_cycles_llvm",
+            "value": 804.588,
+            "unit": "cycles",
+            "extra": "805 times"
+          },
+          {
+            "name": "Benchmarkmean_main_loop_period_llvm",
+            "value": 17000,
+            "unit": "cycles",
+            "extra": "17000 times"
+          },
+          {
+            "name": "Benchmarkprogram_size_llvm",
+            "value": 170172,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkparam_size_llvm",
+            "value": 6924,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktext_size_llvm",
+            "value": 172656,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkdata_size_llvm",
+            "value": 6520,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbss_size_llvm",
+            "value": 87516,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkstack_used_llvm",
+            "value": 2551,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkheap_used_llvm",
+            "value": 6450,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkapi_used_llvm",
+            "value": 1519,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarktotal_uptime_llvm",
+            "value": 33355547,
+            "unit": "bytes",
+            "extra": "0 times"
+          },
+          {
+            "name": "Benchmarkbandwidth",
+            "value": 1190.843628,
             "unit": "Hz",
             "extra": "0 times"
           }

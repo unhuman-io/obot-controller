@@ -9,7 +9,7 @@ build=$(mktemp -d)
 trap 'rm -rf "$build"' EXIT
 cd "$build"
 flags="-std=c++23 -O2 -Wall -Wextra -Werror -fmodules-ts"
-modules="frame font aes messages logic screen"
+modules="frame font aes messages logic screen ina228"
 objects=""
 for module in $modules; do
     $cxx $flags -x c++ -c "$power/common/$module.cppm" -o $module.o

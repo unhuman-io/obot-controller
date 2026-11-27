@@ -58,3 +58,13 @@ target_link_options(obot3_bootloader.elf PRIVATE -nostartfiles -Wl,--defsym=BOOT
     "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/obot3_bootloader.map")
 add_custom_command(TARGET obot3_bootloader.elf POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:obot3_bootloader.elf> ${CMAKE_CURRENT_BINARY_DIR}/obot3_bootloader.bin)
+
+# The power board and the e-stop remote of obot-cad/electronics, see power/README.md.
+# power_main: the power board's main controller, STM32G564
+add_obot3_target(power_main device_stm32g564 power/main power/main/power_main.cpp)
+target_sources(power_main.elf PRIVATE FILE_SET CXX_MODULES BASE_DIRS ${CMAKE_CURRENT_LIST_DIR} FILES
+    power/common/aes.cppm power/common/messages.cppm power/common/logic.cppm power/common/ina228.cppm
+    power/main/uart.cppm power/main/i2c.cppm)
+target_compile_definitions(power_main.elf PRIVATE ${OBOT3_VERSION_DEFINITIONS})
+add_custom_command(TARGET power_main.elf POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:power_main.elf> ${CMAKE_CURRENT_BINARY_DIR}/power_main.bin)

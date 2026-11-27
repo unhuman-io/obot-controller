@@ -63,6 +63,16 @@ constexpr bool robot_is_on(RobotState state) {
     return state != RobotState::OFF && state != RobotState::CHARGING;
 }
 
+// How full a 15 cell pack is, from its voltage, in per cent: a rough figure
+// (a lithium pack's voltage says little in the middle and sags under load),
+// good for "half" and "nearly empty". 255 when there is no voltage to go by.
+constexpr uint8_t battery_percent(uint16_t battery_cv) {
+    constexpr int empty_cv = 4950, full_cv = 6230;      // 3.3 and 4.15 V a cell
+    if (battery_cv < 3000) return 255;
+    const int percent = (static_cast<int>(battery_cv) - empty_cv) * 100 / (full_cv - empty_cv);
+    return static_cast<uint8_t>(percent < 0 ? 0 : percent > 100 ? 100 : percent);
+}
+
 // ---- the radio module of the power board ----------------------------------------
 struct ControllerInputs {
     uint32_t now_ms = 0;
@@ -73,6 +83,7 @@ struct ControllerInputs {
     bool main_fresh = false;            // a report from the main controller less than main_timeout_ms old
     MainReport main{};
     bool dock_charge_wanted = false;    // the remote is on the dock and its cell wants charging
+    uint16_t battery_cv = 0;            // by the radio module's own divider; 0: not measured
 };
 
 struct ControllerOutputs {
@@ -189,7 +200,101 @@ struct ControllerLogic {
             out.status.battery_cv = in.main.battery_cv;
             out.status.battery_ca = in.main.battery_ca;
             out.status.bus_cv = in.main.bus_cv;
+            out.status.battery_percent = battery_percent(in.main.battery_cv);
+        } else if (in.battery_cv != 0) {
+            out.status.battery_cv = in.battery_cv;          // the radio module's own divider: all there is while the rest is off
+            out.status.battery_percent = battery_percent(in.battery_cv);
         }
+        return out;
+    }
+};
+
+// ---- the main controller of the power board --------------------------------------------
+// It measures, switches the computer's 12 V output, and is one of the two
+// that have to agree before the motor bus is on: it drives the bus eFuse's
+// enable high only while the radio module, which it must have heard from in
+// the last radio_timeout_ms, allows it and the battery is in range. The radio
+// module can pull the same line low by itself.
+inline constexpr uint32_t radio_timeout_ms = 300;       // the radio module reports 20 a second
+inline constexpr uint32_t settle_ms = 500;              // an eFuse told to switch on has this long to say "good"
+// The pack is 15 lithium cells in series (63 V full; the board's own over-voltage lock-out is at 64.8 V)
+inline constexpr uint16_t battery_low_cv = 4500, battery_low_clear_cv = 4700;       // 3.0 V a cell
+inline constexpr uint16_t battery_high_cv = 6350, battery_high_clear_cv = 6300;
+
+struct MainInputs {
+    uint32_t now_ms = 0;
+    bool radio_fresh = false;           // a report from the radio module less than radio_timeout_ms old
+    RadioReport radio{};
+    bool monitors_ok = false;           // all three power monitors answer
+    uint16_t battery_cv = 0;
+    int16_t battery_ca = 0;
+    uint16_t bus_cv = 0;
+    int16_t out12_ca = 0, out5_ca = 0;
+    bool bus_good = false;              // the bus eFuse's power good
+    bool outputs_good = false;          // the computer outputs' power good (both, wired together)
+};
+
+struct MainOutputs {
+    bool bus_enable = false;            // BUS_EN
+    bool output12_on = false;           // OUT12_ON (the 5 V output is on whenever its converter runs)
+    MainReport report{};
+};
+
+struct MainLogic {
+    bool battery_low = false, battery_high = false;
+    bool bus_enable = false, output12_on = false;
+    uint32_t bus_since = 0, output_since = 0, last_ms = 0;
+    bool started = false;
+    uint64_t energy_uws = 0;            // V x A x ms, out of the battery
+
+    constexpr MainOutputs update(const MainInputs& in) {
+        if (!started) {
+            started = true;
+            last_ms = bus_since = output_since = in.now_ms;
+        }
+        uint8_t faults = 0;
+        if (!in.monitors_ok) {
+            faults |= fault::MONITOR;       // no voltage to judge by: the limits below keep what they said last
+        } else {
+            battery_low = in.battery_cv < (battery_low ? battery_low_clear_cv : battery_low_cv);
+            battery_high = in.battery_cv > (battery_high ? battery_high_clear_cv : battery_high_cv);
+            if (in.battery_ca > 0) energy_uws += static_cast<uint64_t>(in.battery_cv) * static_cast<uint64_t>(in.battery_ca) * (in.now_ms - last_ms) / 10;
+        }
+        last_ms = in.now_ms;
+        if (battery_low) faults |= fault::BATTERY_LOW;
+        if (battery_high) faults |= fault::BATTERY_HIGH;
+        if (!in.radio_fresh) faults |= fault::RADIO_SILENT;
+
+        const bool enable = in.radio_fresh && in.radio.allow_bus && !battery_low && !battery_high;
+        if (enable != bus_enable) {
+            bus_enable = enable;
+            bus_since = in.now_ms;
+        }
+        // The computer's supply follows the radio module while it is heard, and
+        // stays as it is while it is not: a radio module that restarts must not
+        // switch the computer off.
+        if (in.radio_fresh && in.radio.computer_on != output12_on) {
+            output12_on = in.radio.computer_on;
+            output_since = in.now_ms;
+        }
+        // enabled, given time, and not on: tripped (it retries by itself), or held off by the radio module
+        if (bus_enable && !in.bus_good && in.now_ms - bus_since >= settle_ms) faults |= fault::BUS;
+        if (output12_on && !in.outputs_good && in.now_ms - output_since >= settle_ms) faults |= fault::OUTPUT;
+
+        MainOutputs out;
+        out.bus_enable = bus_enable;
+        out.output12_on = output12_on;
+        out.report.faults = faults;
+        out.report.bus_enabled = bus_enable;
+        out.report.bus_on = in.bus_good;
+        out.report.outputs_good = in.outputs_good;
+        out.report.computer_on = output12_on;
+        out.report.battery_cv = in.battery_cv;
+        out.report.battery_ca = in.battery_ca;
+        out.report.bus_cv = in.bus_cv;
+        out.report.out12_ca = in.out12_ca;
+        out.report.out5_ca = in.out5_ca;
+        out.report.energy_mwh = static_cast<uint32_t>(energy_uws / 3'600'000);
         return out;
     }
 };

@@ -342,6 +342,32 @@ constexpr MainReport unpack_main_report(const uint8_t* at) {
     return m;
 }
 
+// ---- on the CAN bus ----------------------------------------------------------------------
+// The power board is an obot node (id = message << 7 | address) and sends this
+// as its status, ten a second: what the motor controllers need (is there a
+// pause), and what the computer shows and logs. 20 bytes, a CAN FD frame.
+//
+//   0 state (RobotState)   1 faults   2 flags: 1 bus on, 2 computer on, 4 pause, 8 remote heard, 16 remote on the dock
+//   3 the red button (StopSwitch) in the low 4 bits, the remote's cell level (0..5) in the high 4
+//   4 battery V/100 (u16)   6 battery A/100 (i16, out of the battery positive)   8 motor bus V/100 (u16)
+//   10 12 V output A/100 (i16)   12 5 V output A/100 (i16)   14 0   16 energy out of the battery, mWh (u32)
+inline constexpr std::size_t can_status_size = 20;
+constexpr void make_can_status(const RadioReport& radio, const MainReport& main, uint8_t* frame) {
+    uint8_t* at = frame;
+    put8(at, static_cast<uint8_t>(radio.state));
+    put8(at, static_cast<uint8_t>(radio.faults | main.faults));
+    put8(at, static_cast<uint8_t>((main.bus_on ? 1 : 0) | (main.computer_on ? 2 : 0) | (radio.pause ? 4 : 0) | (radio.remote_linked ? 8 : 0) |
+                                  (radio.remote_docked ? 16 : 0)));
+    put8(at, static_cast<uint8_t>(static_cast<uint8_t>(radio.stop) | radio.remote_cell_level << 4));
+    put16(at, main.battery_cv);
+    put16(at, static_cast<uint16_t>(main.battery_ca));
+    put16(at, main.bus_cv);
+    put16(at, static_cast<uint16_t>(main.out12_ca));
+    put16(at, static_cast<uint16_t>(main.out5_ca));
+    put16(at, 0);
+    put32(at, main.energy_mwh);
+}
+
 // The receiving end: bytes go in one at a time as the UART has them; a
 // complete frame with the right check comes out. Anything else (noise while
 // the other processor starts, half a frame) is dropped and the search for a

@@ -12,6 +12,7 @@ import power.aes;
 import power.messages;
 import power.logic;
 import power.screen;
+import power.ina228;
 
 static int failures = 0;
 #define CHECK(condition) \
@@ -446,6 +447,75 @@ static void test_remote() {
     CHECK(cell_level(3300) == 0 && cell_level(3400) == 1 && cell_level(3699) == 2 && cell_level(3900) == 4 && cell_level(4150) == 5);
 }
 
+static void test_main_controller() {
+    MainLogic logic;
+    MainInputs in{.now_ms = 1000, .radio_fresh = true, .radio = {.allow_bus = false, .computer_on = true}, .monitors_ok = true,
+                  .battery_cv = 5400, .battery_ca = 100, .outputs_good = false};
+    MainOutputs out = logic.update(in);
+    CHECK(!out.bus_enable && out.output12_on && out.report.faults == 0 && out.report.computer_on);
+    in.now_ms += settle_ms + 10;                // the output never said good
+    out = logic.update(in);
+    CHECK(out.report.faults == fault::OUTPUT);
+    in.outputs_good = true;
+    in.radio.allow_bus = true;
+    out = logic.update(in);
+    CHECK(out.bus_enable && out.report.faults == 0 && out.report.bus_enabled && !out.report.bus_on);
+    in.now_ms += settle_ms + 10;                // enabled and still not on: tripped, or held off
+    out = logic.update(in);
+    CHECK(out.bus_enable && out.report.faults == fault::BUS);
+    in.bus_good = true;
+    out = logic.update(in);
+    CHECK(out.report.faults == 0 && out.report.bus_on);
+
+    // the radio module silent: the bus off at once, the computer left as it is
+    in.radio_fresh = false;
+    in.radio.computer_on = false;
+    out = logic.update(in);
+    CHECK(!out.bus_enable && out.output12_on && out.report.faults == fault::RADIO_SILENT);
+    in.radio_fresh = true;
+    in.radio.computer_on = true;
+    out = logic.update(in);
+    CHECK(out.bus_enable && out.report.faults == 0);
+
+    // the battery too low, with room between off and on again
+    in.battery_cv = 4490;
+    out = logic.update(in);
+    CHECK(!out.bus_enable && out.report.faults == fault::BATTERY_LOW);
+    in.battery_cv = 4600;
+    CHECK(!logic.update(in).bus_enable);
+    in.battery_cv = 4710;
+    CHECK(logic.update(in).bus_enable);
+    in.battery_cv = 6400;
+    CHECK(!logic.update(in).bus_enable && logic.update(in).report.faults == fault::BATTERY_HIGH);
+    in.battery_cv = 5400;
+    CHECK(logic.update(in).bus_enable);
+    // a monitor that does not answer: said, and the limits keep what they knew
+    in.monitors_ok = false;
+    in.battery_cv = 0;
+    out = logic.update(in);
+    CHECK(out.bus_enable && out.report.faults == fault::MONITOR);
+
+    // energy: 54 V x 10 A for an hour is 540 Wh
+    MainLogic meter;
+    MainInputs load{.now_ms = 0, .monitors_ok = true, .battery_cv = 5400, .battery_ca = 1000};
+    meter.update(load);
+    for (int k = 0; k < 3600 * 20; k++) {
+        load.now_ms += 50;
+        out = meter.update(load);
+    }
+    CHECK(out.report.energy_mwh == 540'000);
+    CHECK(battery_percent(6300) == 100 && battery_percent(4950) == 0 && battery_percent(5590) == 50 && battery_percent(0) == 255);
+
+    // the power monitor's registers
+    constexpr ina228::Monitor battery{0x40, 3000, false}, output{0x41, 2000, true};
+    const uint8_t volts[3] = {0x43, 0x80, 0x00};                    // 0x43800 steps of 195.3125 uV = 54.0 V
+    CHECK(ina228::bus_mv(volts) == 54000);
+    const uint8_t plus[3] = {0x17, 0x70, 0x00}, minus[3] = {0xE8, 0x90, 0x00};      // +-0x17700 steps of 312.5 nV = +-30 mV
+    CHECK(ina228::current_ma(battery, plus) == 10000 && ina228::current_ma(battery, minus) == -10000);
+    const uint8_t small[3] = {0x1F, 0x40, 0x00};                    // 0x1F400 steps of 78.125 nV = 10 mV across 2 mOhm
+    CHECK(ina228::current_ma(output, small) == 5000 && ina228::config(output) == 0x10 && ina228::config(battery) == 0);
+}
+
 static void test_lights() {
     CHECK(lights(RobotState::RUNNING, true, false, true, 500) == (Lights{.green = true}));
     CHECK(lights(RobotState::PAUSED, true, false, true, 500) == (Lights{.red = true, .green = true}));
@@ -529,6 +599,7 @@ int main(int argc, char** argv) {
     test_messages();
     test_controller();
     test_remote();
+    test_main_controller();
     test_lights();
     test_screens(argc > 1 ? argv[1] : nullptr);
     std::printf(failures ? "%d FAILED\n" : "all passed\n", failures);

@@ -14,7 +14,7 @@ set(WBA ${STM32CUBE_WBA})
 set(WBA_APP ${WBA}/Projects/NUCLEO-WBA55CG/Applications/BLE/BLE_BeaconHCI)
 set(WBA_MODULE ${WBA}/Projects/B-WBA5M-WPAN/Applications/BLE/BLE_HR_P2PServer/STM32CubeIDE)
 set(WBA_WPAN ${WBA}/Middlewares/ST/STM32_WPAN)
-set(POWER_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+get_filename_component(POWER_DIR ${CMAKE_CURRENT_LIST_DIR}/.. ABSOLUTE)   # no ".." left in it: cmake 3.28 needs that for module files
 
 add_library(power_wba_platform OBJECT
     ${CMAKE_CURRENT_LIST_DIR}/port.c

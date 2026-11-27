@@ -103,7 +103,8 @@ constexpr void draw_screen(Frame& frame, const ScreenData& data) {
         } else if (data.remote.docked) {
             draw_text(frame, 88, 113, "DOCK");
         } else if (data.is_remote || data.remote.stop != StopSwitch::RUN) {
-            draw_text(frame, 88, 113, data.remote.stop == StopSwitch::RUN ? "OUT" : data.remote.stop == StopSwitch::STOP ? "STOP" : "WIRE?");
+            draw_text(frame, 88, 113, data.remote.stop == StopSwitch::RUN ? "OUT" : data.remote.stop == StopSwitch::STOP ? "STOP"
+                                                                                                                         : "WIRE?");
         }
     } else {
         draw_text(frame, 4, 113, "NO REMOTE");

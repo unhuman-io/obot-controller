@@ -19,14 +19,14 @@ export {
 
 // ---- what the robot is doing, as the screens and the CAN bus say it --------
 enum class RobotState : uint8_t {
-    OFF = 0,            // computer supply off; only the radio module is awake, asleep most of the time
-    STARTING = 1,       // converters on, waiting for the main controller
-    STOPPED = 2,        // on, motor bus off: the red button is in, or there is no remote
-    PAUSED = 3,         // motor bus on, motors asked to hold still
-    RUNNING = 4,
+    OFF           = 0,            // computer supply off; only the radio module is awake, asleep most of the time
+    STARTING      = 1,       // converters on, waiting for the main controller
+    STOPPED       = 2,        // on, motor bus off: the red button is in, or there is no remote
+    PAUSED        = 3,         // motor bus on, motors asked to hold still
+    RUNNING       = 4,
     SHUTTING_DOWN = 5,  // motor bus off, the computer has been told and still has power
-    CHARGING = 6,       // off, but the converters run for the remote on the dock
-    FAULT = 7,          // motor bus off for a reason in the fault bits
+    CHARGING      = 6,       // off, but the converters run for the remote on the dock
+    FAULT         = 7,          // motor bus off for a reason in the fault bits
 };
 constexpr const char* robot_state_name(RobotState state) {
     constexpr const char* names[] = {"OFF", "START", "STOP", "PAUSE", "RUN", "HALT", "CHARGE", "FAULT"};
@@ -35,8 +35,8 @@ constexpr const char* robot_state_name(RobotState state) {
 
 // the red button, by its two contacts
 enum class StopSwitch : uint8_t {
-    RUN = 0,        // out: the normally closed contact closed AND the normally open one open
-    STOP = 1,       // in
+    RUN    = 0,        // out: the normally closed contact closed AND the normally open one open
+    STOP   = 1,       // in
     BROKEN = 2,     // the two disagree (a wire off, the plug out): treated as STOP, shown as a fault
 };
 
@@ -136,7 +136,8 @@ constexpr void pack(const RemoteStatus& s, uint8_t*& at) {
 constexpr RemoteStatus unpack_remote_status(const uint8_t*& at) {
     RemoteStatus s;
     const uint8_t stop = get8(at);
-    s.stop = stop == 0 ? StopSwitch::RUN : stop == 1 ? StopSwitch::STOP : StopSwitch::BROKEN;    // anything unknown is not RUN
+    s.stop = stop == 0 ? StopSwitch::RUN : stop == 1 ? StopSwitch::STOP
+                                                     : StopSwitch::BROKEN;    // anything unknown is not RUN
     s.pause_presses = get8(at);
     const uint8_t flags = get8(at);
     s.docked = flags & 1;
@@ -262,7 +263,7 @@ struct MainReport {                 // main controller -> radio module, 20 a sec
 inline constexpr uint8_t link_start = 0xA5;
 inline constexpr uint8_t link_kind_radio = 1, link_kind_main = 2;
 inline constexpr std::size_t radio_report_size = 5, main_report_size = 16;
-inline constexpr std::size_t link_frame_max = 3 + 16 + 2;
+inline constexpr std::size_t link_frame_max = 3 + 24 + 2;       // (the dock's frames use the same form and are longer)
 
 constexpr uint16_t crc16(const uint8_t* data, std::size_t length) {
     uint16_t crc = 0xFFFF;
@@ -320,7 +321,8 @@ constexpr RadioReport unpack_radio_report(const uint8_t* at) {
     r.remote_linked = flags & 8;
     r.remote_docked = flags & 16;
     const uint8_t stop = get8(at);
-    r.stop = stop == 0 ? StopSwitch::RUN : stop == 1 ? StopSwitch::STOP : StopSwitch::BROKEN;
+    r.stop = stop == 0 ? StopSwitch::RUN : stop == 1 ? StopSwitch::STOP
+                                                     : StopSwitch::BROKEN;
     r.remote_cell_level = get8(at);
     return r;
 }

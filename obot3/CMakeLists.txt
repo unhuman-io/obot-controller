@@ -68,3 +68,12 @@ target_sources(power_main.elf PRIVATE FILE_SET CXX_MODULES BASE_DIRS ${CMAKE_CUR
 target_compile_definitions(power_main.elf PRIVATE ${OBOT3_VERSION_DEFINITIONS})
 add_custom_command(TARGET power_main.elf POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:power_main.elf> ${CMAKE_CURRENT_BINARY_DIR}/power_main.bin)
+
+# power_radio, power_remote: the radio module of the power board and the remote, STM32WBA5MMG.
+# They need ST's STM32CubeWBA package, which is not in this repository (power/fetch_stm32cubewba.sh).
+set(STM32CUBE_WBA "$ENV{STM32CUBE_WBA}" CACHE PATH "ST's STM32CubeWBA package, v1.11.0 (obot3/power/fetch_stm32cubewba.sh)")
+if(STM32CUBE_WBA AND EXISTS "${STM32CUBE_WBA}/Middlewares/ST/STM32_WPAN/ble/stack/lib/stm32wba_ble_stack_llo.a")
+    include(power/wba/wba.cmake)
+else()
+    message(STATUS "obot3 power: power_radio and power_remote are not built (STM32CUBE_WBA is not set: obot3/power/README.md)")
+endif()

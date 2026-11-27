@@ -78,8 +78,7 @@ inline bool power_outputs_good() { return gpio_read(gpio_port<'A'>(), 8); }
 
 inline constexpr auto power_can_init = CANInit{.kernel_clock_hz = power_rcc_clock_init.pll1_q_frequency_hz, .standard_filter_count = 2};
 inline constexpr auto power_link_init = UARTInit{.instance = 2, .kernel_clock_hz = power_apb1_hz, .baud = 115'200, .receive_interrupt = true};
-inline constexpr auto power_i2c_init = I2CInit{.instance = 2, .kernel_clock_hz = power_apb1_hz, .speed_hz = 400'000,
-                                              .timeout_cycles = power_cpu_hz / 1000};       // 1 ms a byte: 40 bit times
+inline constexpr auto power_i2c_init = I2CInit{.instance = 2, .kernel_clock_hz = power_apb1_hz, .speed_hz = 400'000, .timeout_cycles = power_cpu_hz / 1000};       // 1 ms a byte: 40 bit times
 
 // The motor bus voltage: ADC1 converts channel 1 again and again, the newest
 // result is read when it is wanted. The divider is megohms, so the sampling

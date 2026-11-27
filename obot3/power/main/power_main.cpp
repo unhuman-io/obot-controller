@@ -121,7 +121,8 @@ GlobalTask<void, 2, 256> control_task(CycleScheduler& sched) {
     co_await sched.async_delay_us(2000);
     uint32_t wake = get_clock();
     for (;;) {
-        const auto centi = [](int32_t milli) { return static_cast<int16_t>(milli / 10 > 32767 ? 32767 : milli / 10 < -32768 ? -32768 : milli / 10); };
+        const auto centi = [](int32_t milli) { return static_cast<int16_t>(milli / 10 > 32767 ? 32767 : milli / 10 < -32768 ? -32768
+                                                                                                                            : milli / 10); };
         MainInputs in;
         in.now_ms = now_ms;
         in.radio_fresh = radio_heard && now_ms - radio_heard_ms < radio_timeout_ms;

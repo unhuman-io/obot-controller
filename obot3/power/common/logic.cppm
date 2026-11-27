@@ -31,7 +31,9 @@ inline constexpr uint32_t power_request_ms = 5000;      // how long a held PAUSE
 // comes when it is let go, LONG as soon as it has been down long enough (and
 // then no SHORT follows).
 struct Button {
-    enum class Event : uint8_t { NONE, SHORT, LONG };
+    enum class Event : uint8_t { NONE,
+                                 SHORT,
+                                 LONG };
     bool down = false;
     bool reported = false;
     bool raw = false;
@@ -70,7 +72,8 @@ constexpr uint8_t battery_percent(uint16_t battery_cv) {
     constexpr int empty_cv = 4950, full_cv = 6230;      // 3.3 and 4.15 V a cell
     if (battery_cv < 3000) return 255;
     const int percent = (static_cast<int>(battery_cv) - empty_cv) * 100 / (full_cv - empty_cv);
-    return static_cast<uint8_t>(percent < 0 ? 0 : percent > 100 ? 100 : percent);
+    return static_cast<uint8_t>(percent < 0 ? 0 : percent > 100 ? 100
+                                                                : percent);
 }
 
 // ---- the radio module of the power board ----------------------------------------
@@ -95,7 +98,11 @@ struct ControllerOutputs {
 };
 
 struct ControllerLogic {
-    enum class Power : uint8_t { OFF, CHARGING, STARTING, ON, SHUTTING_DOWN };
+    enum class Power : uint8_t { OFF,
+                                 CHARGING,
+                                 STARTING,
+                                 ON,
+                                 SHUTTING_DOWN };
     Power power = Power::OFF;
     uint32_t since = 0;                 // when `power` became what it is
     bool paused = true;
@@ -174,7 +181,9 @@ struct ControllerLogic {
             case Power::STARTING: state = RobotState::STARTING; break;
             case Power::SHUTTING_DOWN: state = RobotState::SHUTTING_DOWN; break;
             case Power::ON:
-                state = (faults & fault::BLOCKING) ? RobotState::FAULT : !allow_bus ? RobotState::STOPPED : paused ? RobotState::PAUSED : RobotState::RUNNING;
+                state = (faults & fault::BLOCKING) ? RobotState::FAULT : !allow_bus ? RobotState::STOPPED
+                                                                     : paused       ? RobotState::PAUSED
+                                                                                    : RobotState::RUNNING;
                 break;
         }
 

@@ -13,6 +13,7 @@ import power.messages;
 import power.logic;
 import power.screen;
 import power.ina228;
+import power.dock;
 
 static int failures = 0;
 #define CHECK(condition) \
@@ -48,14 +49,15 @@ static void test_aes() {
     // RFC 4493, section 4
     uint8_t message[64], mac[16];
     bytes("2b7e151628aed2a6abf7158809cf4f3c", key);
-    bytes("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51"
-          "30c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710", message);
+    bytes(
+        "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51"
+        "30c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710",
+        message);
     const Aes128 aes(key);
     const struct {
         std::size_t length;
         const char* mac;
-    } cases[] = {{0, "bb1d6929e95937287fa37d129b756746"}, {16, "070a16b46b4d4144f79bdd9dd04a287c"},
-                 {40, "dfa66747de9ae63030ca32611497c827"}, {64, "51f0bebf7e3b9d92fc49741779363cfe"}};
+    } cases[] = {{0, "bb1d6929e95937287fa37d129b756746"}, {16, "070a16b46b4d4144f79bdd9dd04a287c"}, {40, "dfa66747de9ae63030ca32611497c827"}, {64, "51f0bebf7e3b9d92fc49741779363cfe"}};
     for (const auto& c : cases) {
         bytes(c.mac, expected);
         aes_cmac(aes, message, c.length, mac);
@@ -118,8 +120,7 @@ static void test_display() {
 }
 
 static void test_messages() {
-    RobotStatus robot{.state = RobotState::RUNNING, .faults = fault::MONITOR, .bus_on = true, .computer_on = true, .remote_linked = true,
-                      .battery_cv = 5423, .battery_ca = -314, .bus_cv = 5410, .battery_percent = 80};
+    RobotStatus robot{.state = RobotState::RUNNING, .faults = fault::MONITOR, .bus_on = true, .computer_on = true, .remote_linked = true, .battery_cv = 5423, .battery_ca = -314, .bus_cv = 5410, .battery_percent = 80};
     uint8_t buffer[32];
     uint8_t* at = buffer;
     pack(robot, at);
@@ -172,10 +173,8 @@ static void test_messages() {
 
     // the two processors of the board, over their UART
     CHECK(crc16(reinterpret_cast<const uint8_t*>("123456789"), 9) == 0x29B1);
-    const RadioReport radio{.state = RobotState::PAUSED, .faults = fault::STOP_WIRING, .allow_bus = true, .computer_on = true, .pause = true,
-                            .remote_linked = true, .remote_docked = false, .stop = StopSwitch::RUN, .remote_cell_level = 3};
-    const MainReport main{.faults = fault::OUTPUT, .bus_enabled = true, .bus_on = true, .outputs_good = false, .computer_on = true, .battery_cv = 5423,
-                          .battery_ca = -314, .bus_cv = 5410, .out12_ca = 250, .out5_ca = 120, .energy_mwh = 123456};
+    const RadioReport radio{.state = RobotState::PAUSED, .faults = fault::STOP_WIRING, .allow_bus = true, .computer_on = true, .pause = true, .remote_linked = true, .remote_docked = false, .stop = StopSwitch::RUN, .remote_cell_level = 3};
+    const MainReport main{.faults = fault::OUTPUT, .bus_enabled = true, .bus_on = true, .outputs_good = false, .computer_on = true, .battery_cv = 5423, .battery_ca = -314, .bus_cv = 5410, .out12_ca = 250, .out5_ca = 120, .energy_mwh = 123456};
     uint8_t link[link_frame_max * 2 + 8];
     std::size_t n = 0;
     link[n++] = 0x00;                       // noise
@@ -449,8 +448,7 @@ static void test_remote() {
 
 static void test_main_controller() {
     MainLogic logic;
-    MainInputs in{.now_ms = 1000, .radio_fresh = true, .radio = {.allow_bus = false, .computer_on = true}, .monitors_ok = true,
-                  .battery_cv = 5400, .battery_ca = 100, .outputs_good = false};
+    MainInputs in{.now_ms = 1000, .radio_fresh = true, .radio = {.allow_bus = false, .computer_on = true}, .monitors_ok = true, .battery_cv = 5400, .battery_ca = 100, .outputs_good = false};
     MainOutputs out = logic.update(in);
     CHECK(!out.bus_enable && out.output12_on && out.report.faults == 0 && out.report.computer_on);
     in.now_ms += settle_ms + 10;                // the output never said good
@@ -516,6 +514,71 @@ static void test_main_controller() {
     CHECK(ina228::current_ma(output, small) == 5000 && ina228::config(output) == 0x10 && ina228::config(battery) == 0);
 }
 
+// The remote on the dock: frames go from one end's functions to the other's
+// through the same receiver the firmware uses.
+static void test_dock() {
+    const uint8_t remote_address[6] = {1, 2, 3, 4, 5, 6}, board_address[6] = {9, 8, 7, 6, 5, 4};
+    uint8_t random[16];
+    for (int k = 0; k < 16; k++) random[k] = static_cast<uint8_t>(0x30 + k);
+    DockRemote remote;
+    DockBoard board;
+    Pairing remote_has, board_has;
+    uint8_t frame[link_frame_max], reply[link_frame_max];
+    LinkReceiver to_board, to_remote;
+    bool changed, docked, wants;
+    const auto deliver = [](LinkReceiver& receiver, const uint8_t* bytes, std::size_t length) {
+        bool whole = false;
+        for (std::size_t k = 0; k < length; k++) whole = receiver.put(bytes[k]);
+        return whole;
+    };
+    // never paired: HELLO, KEY, TAKEN, and both have the same key
+    std::size_t n = remote.hello(remote_has, remote_address, true, frame);
+    CHECK(n == 3 + dock_hello_size + 2 && deliver(to_board, frame, n));
+    n = board.receive(to_board.kind(), to_board.payload(), to_board.length(), board_address, random, board_has, changed, docked, wants, reply);
+    CHECK(n == 3 + dock_key_size + 2 && docked && wants && !changed && !board_has.valid);
+    CHECK(deliver(to_remote, reply, n));
+    n = remote.receive(to_remote.kind(), to_remote.payload(), to_remote.length(), remote_address, remote_has, changed, frame);
+    CHECK(n == 3 + dock_taken_size + 2 && changed && remote_has.valid && std::memcmp(remote_has.peer, board_address, 6) == 0);
+    CHECK(deliver(to_board, frame, n));
+    n = board.receive(to_board.kind(), to_board.payload(), to_board.length(), board_address, random, board_has, changed, docked, wants, reply);
+    CHECK(n == 0 && changed && board_has.valid && std::memcmp(board_has.key, remote_has.key, 16) == 0 && std::memcmp(board_has.peer, remote_address, 6) == 0);
+    // stored and read back
+    uint8_t record[pairing_record_size];
+    pack(board_has, record);
+    const Pairing read = unpack_pairing(record);
+    CHECK(read.valid && std::memcmp(read.key, board_has.key, 16) == 0 && std::memcmp(read.peer, board_has.peer, 6) == 0);
+    const uint8_t erased[pairing_record_size] = {0xFF, 0xFF};
+    CHECK(!unpack_pairing(erased).valid);
+
+    // docked again: known, nothing changes
+    n = remote.hello(remote_has, remote_address, false, frame);
+    CHECK(deliver(to_board, frame, n));
+    n = board.receive(to_board.kind(), to_board.payload(), to_board.length(), board_address, random, board_has, changed, docked, wants, reply);
+    CHECK(n == 3 + 0 + 2 && docked && !wants && !changed && deliver(to_remote, reply, n) && to_remote.kind() == dock_kind_known);
+    CHECK(remote.receive(to_remote.kind(), to_remote.payload(), to_remote.length(), remote_address, remote_has, changed, frame) == 0 && !changed);
+
+    // the remote lost its key (or is another remote with this address): a new key, the old one stays until TAKEN
+    Pairing blank;
+    random[0] ^= 0xFF;
+    n = remote.hello(blank, remote_address, false, frame);
+    CHECK(deliver(to_board, frame, n));
+    n = board.receive(to_board.kind(), to_board.payload(), to_board.length(), board_address, random, board_has, changed, docked, wants, reply);
+    CHECK(n == 3 + dock_key_size + 2 && !changed && board_has.key[0] == 0x30);
+    // a TAKEN that proves the wrong key is not taken
+    uint8_t wrong[4] = {1, 2, 3, 4};
+    n = dock_frame(dock_kind_taken, wrong, 4, frame);
+    CHECK(deliver(to_board, frame, n));
+    board.receive(to_board.kind(), to_board.payload(), to_board.length(), board_address, random, board_has, changed, docked, wants, reply);
+    CHECK(!changed && board_has.key[0] == 0x30);
+    // a remote of another robot (another key): its proof fails here, it gets a new key
+    Pairing other = remote_has;
+    other.key[5] ^= 1;
+    n = remote.hello(other, remote_address, false, frame);
+    CHECK(deliver(to_board, frame, n));
+    n = board.receive(to_board.kind(), to_board.payload(), to_board.length(), board_address, random, board_has, changed, docked, wants, reply);
+    CHECK(n == 3 + dock_key_size + 2);
+}
+
 static void test_lights() {
     CHECK(lights(RobotState::RUNNING, true, false, true, 500) == (Lights{.green = true}));
     CHECK(lights(RobotState::PAUSED, true, false, true, 500) == (Lights{.red = true, .green = true}));
@@ -539,8 +602,7 @@ static void save(const Frame& frame, const std::string& path) {
 }
 
 static void test_screens(const char* directory) {
-    const RobotStatus running{.state = RobotState::RUNNING, .bus_on = true, .computer_on = true, .remote_linked = true,
-                              .battery_cv = 5423, .battery_ca = 314, .bus_cv = 5410, .battery_percent = 70};
+    const RobotStatus running{.state = RobotState::RUNNING, .bus_on = true, .computer_on = true, .remote_linked = true, .battery_cv = 5423, .battery_ca = 314, .bus_cv = 5410, .battery_percent = 70};
     RobotStatus stopped = running, faulted = running, off{};
     stopped.state = RobotState::STOPPED;
     stopped.bus_on = false;
@@ -600,6 +662,7 @@ int main(int argc, char** argv) {
     test_controller();
     test_remote();
     test_main_controller();
+    test_dock();
     test_lights();
     test_screens(argc > 1 ? argv[1] : nullptr);
     std::printf(failures ? "%d FAILED\n" : "all passed\n", failures);

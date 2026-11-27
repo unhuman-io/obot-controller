@@ -110,7 +110,7 @@ jobs:
       run: |
         git config --global --add safe.directory '*'
         cmake --preset ${{ matrix.toolchain }}
-        cmake --build --preset ${{ matrix.toolchain }} -t obot3_tmotor_driver.elf -t obot3_tmotor_driver_release.elf -t obot3_bootloader.elf
+        cmake --build --preset ${{ matrix.toolchain }} -t obot3_tmotor_driver.elf -t obot3_tmotor_driver_release.elf -t obot3_bootloader.elf -t power_main.elf
     - name: Archive obot3 tmotor_driver ${{ matrix.toolchain }}
       uses: actions/upload-artifact@main
       with:
@@ -122,6 +122,52 @@ jobs:
           build/${{ matrix.toolchain }}/obot3/obot3_tmotor_driver_release.bin
           build/${{ matrix.toolchain }}/obot3/obot3_bootloader.elf
           build/${{ matrix.toolchain }}/obot3/obot3_bootloader.bin
+          build/${{ matrix.toolchain }}/obot3/power_main.elf
+          build/${{ matrix.toolchain }}/obot3/power_main.bin
+
+  # The radio programs of the power board and the e-stop remote (obot3/power): built on ST's
+  # STM32CubeWBA package, fetched here and kept between runs.
+  build-obot3-power-radio:
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [gcc, llvm]
+    runs-on: ubuntu-latest
+    container: leemagnusson/arm-gcc:15.3
+    steps:
+    - uses: actions/checkout@main
+      with:
+        fetch-depth: 0
+        submodules: recursive
+    - name: install dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -y -qq clang-tools-20 cmake ninja-build
+        ./motorlib/scripts/install_llvm.sh
+    - name: STM32CubeWBA
+      id: cube
+      uses: actions/cache@v4
+      with:
+        path: STM32CubeWBA
+        key: stm32cubewba-v1.11.0
+    - name: fetch STM32CubeWBA
+      if: steps.cube.outputs.cache-hit != 'true'
+      run: obot3/power/fetch_stm32cubewba.sh $PWD/STM32CubeWBA
+    - name: cmake obot3 power radio ${{ matrix.toolchain }}
+      run: |
+        git config --global --add safe.directory '*'
+        cmake --preset ${{ matrix.toolchain }} -DSTM32CUBE_WBA=$PWD/STM32CubeWBA
+        cmake --build --preset ${{ matrix.toolchain }} -t power_radio.elf -t power_remote.elf
+    - name: Archive obot3 power radio ${{ matrix.toolchain }}
+      uses: actions/upload-artifact@main
+      with:
+        name: obot3 power radio ${{ matrix.toolchain }}
+        path: |
+          build/${{ matrix.toolchain }}/obot3/power_radio.elf
+          build/${{ matrix.toolchain }}/obot3/power_radio.bin
+          build/${{ matrix.toolchain }}/obot3/power_remote.elf
+          build/${{ matrix.toolchain }}/obot3/power_remote.bin
 
   test-obot3-control:
     timeout-minutes: 5
@@ -136,6 +182,7 @@ jobs:
         sudo apt-get install -y -qq g++-14
         g++-14 --version
         obot3/control/test/run.sh g++-14
+        obot3/power/test/run.sh g++-14
 
   test-builds:
     timeout-minutes: 10

@@ -25,6 +25,7 @@ consteval Glyph glyph(char character, std::string_view picture) {
     return g;
 }
 
+// clang-format off: one glyph a line, its seven rows side by side
 inline constexpr Glyph font[] = {
     glyph('0', ".###." "#...#" "#..##" "#.#.#" "##..#" "#...#" ".###."),
     glyph('1', "..#.." ".##.." "..#.." "..#.." "..#.." "..#.." ".###."),
@@ -74,6 +75,7 @@ inline constexpr Glyph font[] = {
     glyph('<', "....#" "...#." "..#.." ".#..." "..#.." "...#." "....#"),
     glyph('=', "....." "....." "#####" "....." "#####" "....." "....."),
 };
+// clang-format on
 
 // the glyph for a character; small letters as capitals; nullptr for a space or what the font does not have
 constexpr const Glyph* find_glyph(char character) {
